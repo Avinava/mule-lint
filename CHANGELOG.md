@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2024-12-16
+
+### Added
+
+#### New Rules (11 rules)
+- **MULE-101**: Flow Casing - Flow names should follow kebab-case
+- **MULE-102**: Variable Naming - Variables should be camelCase
+- **MULE-201**: Hardcoded Credentials - Passwords should use `${secure::}`
+- **MULE-202**: Insecure TLS - TLS should not have insecure="true"
+- **MULE-301**: Logger Payload - Don't log entire payload
+- **MULE-303**: Logger in Until-Successful - Avoid loggers in retry loops
+- **MULE-401**: HTTP User-Agent - Include User-Agent header
+- **MULE-501**: Scatter-Gather Routes - Limit parallel routes
+- **MULE-502**: Async Error Handler - Async needs error handling
+- **MULE-601**: Flow Description - Flows should have doc:description
+- **MULE-701**: Deprecated Components - Detect deprecated Mule elements
+
+#### New Rule Categories
+- **HTTP**: Rules for HTTP connector best practices
+- **Documentation**: Rules for MuleSoft documentation standards
+- **Performance**: Rules for performance anti-patterns
+
+### Changed
+- Extended rules index from 10 to 21 total rules
+- Updated README with new rules tables
+
+---
+
 ## [1.0.0] - 2024-12-16
 
 ### Added
@@ -39,18 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `-c, --config`: Custom config file
 - `--fail-on-warning`: CI/CD mode
 - `-q, --quiet`: Errors only
-
-#### Configuration
-- `.mulelintrc.json` configuration file support
-- Per-rule configuration options
-- Include/exclude patterns
-
-#### Documentation
-- Comprehensive README
-- Rules catalog with examples
-- Architecture documentation
-- Contributing guide
-- Agent workflows for adding rules and releasing
 
 ### Technical Details
 - TypeScript 5.x with strict mode
