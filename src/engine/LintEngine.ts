@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import { Rule, Issue, RuleConfig, ValidationContext, Severity } from '../types';
 import { LintConfig, DEFAULT_CONFIG } from '../types/Config';
 import { LintReport, LintSummary, FileResult } from '../types/Report';
@@ -36,13 +37,29 @@ export class LintEngine {
      */
     public async scan(targetPath: string): Promise<LintReport> {
         const startTime = Date.now();
-        const projectRoot = path.resolve(targetPath);
+        let projectRoot = path.resolve(targetPath);
+        let isStandalone = false;
 
-        this.log(`Scanning: ${projectRoot}`);
+        const stats = fs.statSync(projectRoot);
+        const isFile = stats.isFile();
+
+        if (isFile) {
+            // Try to find actual project root
+            const detectedRoot = this.findProjectRoot(path.dirname(projectRoot));
+            if (detectedRoot) {
+                projectRoot = detectedRoot;
+            } else {
+                // Standalone file logic
+                projectRoot = path.dirname(projectRoot);
+                isStandalone = true;
+            }
+        }
+
+        this.log(`Scanning: ${projectRoot} ${isStandalone ? '(Standalone)' : ''}`);
         this.log(`Rules enabled: ${this.getEnabledRules().length}`);
 
         // Discover files
-        const files = await scanDirectory(projectRoot, {
+        const files = await scanDirectory(isFile ? targetPath : projectRoot, {
             include: this.config.include,
             exclude: this.config.exclude,
         });
@@ -52,7 +69,7 @@ export class LintEngine {
         // Process each file
         const fileResults: FileResult[] = [];
         for (const file of files) {
-            const result = this.processFile(file, projectRoot);
+            const result = this.processFile(file, projectRoot, isStandalone);
             fileResults.push(result);
         }
 
@@ -73,6 +90,23 @@ export class LintEngine {
     }
 
     /**
+     * Find project root by looking for marker files
+     */
+    private findProjectRoot(startDir: string): string | null {
+        let currentDir = startDir;
+        const root = path.parse(startDir).root;
+
+        while (currentDir !== root) {
+            if (fs.existsSync(path.join(currentDir, 'pom.xml')) || 
+                fs.existsSync(path.join(currentDir, 'mule-artifact.json'))) {
+                return currentDir;
+            }
+            currentDir = path.dirname(currentDir);
+        }
+        return null;
+    }
+
+    /**
      * Scan XML content directly (useful for VS Code extension)
      */
     public scanContent(content: string, filePath: string): Issue[] {
@@ -88,7 +122,8 @@ export class LintEngine {
             }];
         }
 
-        return this.runRules(parseResult.document, filePath, filePath);
+        // For direct content scan, we assume standalone unless we can infer otherwise (out of scope here)
+        return this.runRules(parseResult.document, filePath, path.dirname(filePath), true);
     }
 
     /**
@@ -104,7 +139,7 @@ export class LintEngine {
     /**
      * Process a single file
      */
-    private processFile(file: ScannedFile, projectRoot: string): FileResult {
+    private processFile(file: ScannedFile, projectRoot: string, isStandalone: boolean = false): FileResult {
         this.log(`  Processing: ${file.relativePath}`);
 
         try {
@@ -121,7 +156,7 @@ export class LintEngine {
                 };
             }
 
-            const issues = this.runRules(parseResult.document, file.absolutePath, projectRoot);
+            const issues = this.runRules(parseResult.document, file.absolutePath, projectRoot, isStandalone);
 
             return {
                 filePath: file.absolutePath,
@@ -144,11 +179,16 @@ export class LintEngine {
     /**
      * Run all enabled rules against a document
      */
-    private runRules(doc: Document, filePath: string, projectRoot: string): Issue[] {
+    private runRules(doc: Document, filePath: string, projectRoot: string, isStandalone: boolean = false): Issue[] {
         const issues: Issue[] = [];
         const enabledRules = this.getEnabledRules();
 
         for (const rule of enabledRules) {
+            // Skip structure rules for standalone files
+            if (isStandalone && rule.category === 'structure') {
+                continue;
+            }
+
             try {
                 const context: ValidationContext = {
                     filePath,
