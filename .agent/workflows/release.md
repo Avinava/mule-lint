@@ -1,140 +1,57 @@
----
-description: How to release a new version of mule-lint
----
+# Release Workflow
 
-# Releasing a New Version
+This document describes how to release new versions of mule-lint.
 
-Follow these steps to release a new version of mule-lint.
+## Automatic Release Process
 
-## Pre-Release Checklist
+The release is fully automated. Just push a version tag!
 
-- [ ] All tests pass: `npm test`
-- [ ] Lint passes: `npm run lint`
-- [ ] Build succeeds: `npm run build`
-- [ ] CHANGELOG is updated
-- [ ] Version is bumped in package.json
+### Steps
 
-## Version Bump
+1. **Update version in package.json**
+   ```bash
+   npm version patch   # 1.3.1 -> 1.3.2
+   # or
+   npm version minor   # 1.3.1 -> 1.4.0
+   # or
+   npm version major   # 1.3.1 -> 2.0.0
+   ```
 
-Use semantic versioning:
+2. **Push with tags**
+   ```bash
+   git push origin master --tags
+   ```
 
-- **MAJOR**: Breaking changes (e.g., removed rules, changed API)
-- **MINOR**: New features (e.g., new rules, new config options)
-- **PATCH**: Bug fixes
+3. **Done!** GitHub Actions will:
+   - Run tests
+   - Publish to npm
+   - Create GitHub Release with auto-generated notes
 
-```bash
-# Bump version (updates package.json)
-npm version patch   # 1.0.0 -> 1.0.1
-npm version minor   # 1.0.0 -> 1.1.0
-npm version major   # 1.0.0 -> 2.0.0
-```
-
-## Release Steps
-
-### 1. Update CHANGELOG
-
-Add entry to CHANGELOG.md:
-
-```markdown
-## [1.1.0] - 2024-12-16
-
-### Added
-- MULE-011: New rule for database connection pooling
-
-### Fixed
-- Fixed false positive in MULE-004 for localhost URLs
-
-### Changed
-- Improved error messages for MULE-003
-```
-
-### 2. Build and Test
+## Manual Release (if needed)
 
 ```bash
-npm run build
-npm test
-npm run lint
+# 1. Update version
+npm version minor -m "chore: bump to %s"
+
+# 2. Push tag
+git push origin master --tags
+
+# Or push tag only
+git tag v1.4.0
+git push origin v1.4.0
 ```
 
-### 3. Create Git Tag
+## Versioning Guide
 
-```bash
-# Create tag
-git tag -a v1.1.0 -m "Release v1.1.0"
+| Change Type | Command | Example |
+|-------------|---------|---------|
+| Bug fix | `npm version patch` | 1.3.1 → 1.3.2 |
+| New feature | `npm version minor` | 1.3.1 → 1.4.0 |
+| Breaking change | `npm version major` | 1.3.1 → 2.0.0 |
 
-# Push changes and tags
-git push origin main --tags
-```
+## CI/CD Workflows
 
-### 4. Publish to npm
-
-```bash
-# Login to npm (if not already)
-npm login
-
-# Publish
-npm publish
-```
-
-### 5. Create GitHub Release
-
-1. Go to GitHub Releases
-2. Click "Draft a new release"
-3. Select the tag (e.g., v1.1.0)
-4. Add release notes from CHANGELOG
-5. Publish release
-
-## Tag Naming Convention
-
-- **Release tags**: `v1.0.0`, `v1.1.0`, `v2.0.0`
-- **Pre-release tags**: `v1.1.0-beta.1`, `v1.1.0-rc.1`
-
-## Post-Release
-
-- [ ] Verify npm package: `npm view mule-lint`
-- [ ] Test installation: `npm install -g mule-lint@latest`
-- [ ] Update documentation if needed
-- [ ] Announce release (if applicable)
-
-## Rollback
-
-If a release needs to be reverted:
-
-```bash
-# Unpublish from npm (within 72 hours)
-npm unpublish mule-lint@1.1.0
-
-# Delete tag
-git tag -d v1.1.0
-git push origin :refs/tags/v1.1.0
-```
-
-## CI/CD Release (Future)
-
-For automated releases, add GitHub Actions:
-
-```yaml
-# .github/workflows/release.yml
-name: Release
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-```
+| Workflow | Trigger | Action |
+|----------|---------|--------|
+| `ci.yml` | Push/PR | Test on Node 18/20/22 |
+| `publish.yml` | Push tag `v*` | Build, test, publish to npm, create release |
