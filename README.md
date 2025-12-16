@@ -281,6 +281,8 @@ Generates a modern, interactive single-page report with:
 
 Built with **Tailwind CSS**, **Chart.js**, and **Tabulator**.
 
+![HTML Report Dashboard](docs/images/html-report-dashboard.png)
+
 ```bash
 mule-lint src/main/mule -f html -o report.html
 ```
