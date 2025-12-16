@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+                          http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+    <!-- This file contains naming violations for testing -->
+    
+    <!-- MULE-002: Flow should end with -flow -->
+    <flow name="getOrders" doc:name="Get Orders">
+        <http:listener config-ref="httpListener" path="/orders" doc:name="HTTP Listener"/>
+        
+        <!-- MULE-006: Logger missing category -->
+        <logger level="INFO" message="Getting orders" doc:name="Log"/>
+        
+        <!-- MULE-003: Flow missing error handler -->
+    </flow>
+    
+    <!-- MULE-002: Sub-flow should end with -subflow -->
+    <sub-flow name="transformOrders" doc:name="Transform Orders">
+        <!-- MULE-006: Logger missing category -->
+        <logger level="DEBUG" message="Transforming" doc:name="Log"/>
+    </sub-flow>
+    
+    <!-- Flow named correctly but with other issues -->
+    <flow name="process-order-flow" doc:name="Process Order Flow">
+        <http:listener config-ref="httpListener" path="/orders/process" doc:name="HTTP Listener"/>
+        
+        <error-handler>
+            <!-- MULE-009: Using generic ANY type -->
+            <on-error-continue type="ANY">
+                <!-- MULE-005: Missing httpStatus variable -->
+                <!-- MULE-007: Missing correlationId reference -->
+                <logger level="ERROR" message="Error occurred" doc:name="Log Error"/>
+            </on-error-continue>
+        </error-handler>
+    </flow>
+
+</mule>
