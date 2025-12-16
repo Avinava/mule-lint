@@ -68,20 +68,54 @@ export class YamlParser {
 
     /**
      * Check if a key name suggests it contains sensitive data
+     * Uses word-boundary matching to avoid false positives
      */
     static isSensitiveKey(key: string): boolean {
-        const sensitivePatterns = [
+        const lowerKey = key.toLowerCase();
+        
+        // Patterns that indicate a secret - must be at word boundary (end of key or before .)
+        const secretKeyEndings = [
             'password',
+            'passwd',
             'secret',
             'apikey',
             'api-key',
             'api_key',
-            'token',
-            'credential',
-            'private',
-            'auth',
+            'accesstoken',
+            'access-token',
+            'access_token',
+            'refreshtoken',
+            'refresh-token', 
+            'refresh_token',
+            'clientsecret',
+            'client-secret',
+            'client_secret',
+            'privatekey',
+            'private-key',
+            'private_key',
+            'credentials',
+            'authtoken',
+            'auth-token',
+            'auth_token',
+            'bearertoken',
+            'bearer-token',
+            'bearer_token',
+            'consumerkey',
+            'consumer-key',
+            'consumer_key',
+            'consumersecret',
+            'consumer-secret',
+            'consumer_secret',
+            'tokensecret',
+            'token-secret',
+            'token_secret',
         ];
-        const lowerKey = key.toLowerCase();
-        return sensitivePatterns.some(pattern => lowerKey.includes(pattern));
+        
+        // Get the last segment of the key (after the last .)
+        const segments = lowerKey.split('.');
+        const lastSegment = segments[segments.length - 1];
+        
+        // Check if the last segment matches any secret pattern
+        return secretKeyEndings.some(pattern => lastSegment === pattern || lastSegment.endsWith(pattern));
     }
 }

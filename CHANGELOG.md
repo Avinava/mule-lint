@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2024-12-16
+
+### Fixed
+- **YAML-004 False Positives**: Updated sensitive key detection to use word-boundary matching
+  - No longer flags `http.private.port`, `authorizationUrl`, or company names
+  - Still correctly catches `password`, `secret`, `clientSecret`, `tokenSecret`, etc.
+
+### Improved
+- **Dashboard Charts**: Added subtitles to all chart sections for better context
+- **Category Chart**: Each category now has a distinct color instead of uniform gray
+- **Dynamic Version**: Report now displays actual package version instead of hardcoded value
+
+---
+
 ## [1.6.0] - 2024-12-16
 
 ### Added
