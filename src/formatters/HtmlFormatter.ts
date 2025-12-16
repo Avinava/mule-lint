@@ -210,6 +210,7 @@ export function formatHtml(report: LintReport): string {
                         <nav class="ml-10 flex space-x-1 bg-gray-100 p-1 rounded-lg">
                             <button onclick="router.navigate('dashboard')" 
                                 id="nav-dashboard"
+                                data-active="true"
                                 class="px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 hover:text-gray-900 data-[active=true]:bg-white data-[active=true]:text-brand-600 data-[active=true]:shadow-sm">
                                 Dashboard
                             </button>
@@ -330,9 +331,9 @@ export function formatHtml(report: LintReport): string {
             </div>
 
             <!-- Issues View -->
-            <div id="view-issues" class="hidden min-h-[calc(100vh-140px)] flex flex-col p-6">
+            <div id="view-issues" class="hidden h-[calc(100vh-80px)] flex flex-col px-6 py-4 overflow-hidden">
                 <!-- Filters Toolbar -->
-                <div class="bg-white p-4 rounded-t-xl border border-gray-200 border-b-0 shadow-sm flex flex-wrap gap-4 items-center justify-between">
+                <div class="bg-white p-4 rounded-t-xl border border-gray-200 border-b-0 shadow-sm flex flex-wrap gap-4 items-center justify-between flex-shrink-0">
                     <div class="flex items-center gap-4 flex-1">
                         <div class="relative flex-1 max-w-md">
                             <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
@@ -353,8 +354,8 @@ export function formatHtml(report: LintReport): string {
                     </div>
                 </div>
 
-                <!-- Tabulator Container -->
-                <div id="issues-table-container" class="flex-1 bg-white border border-gray-200 rounded-b-xl overflow-hidden shadow-sm" style="min-height: 600px;"></div>
+                <!-- Tabulator Container - uses remaining height -->
+                <div id="issues-table-container" class="flex-1 bg-white border border-gray-200 rounded-b-xl overflow-hidden shadow-sm"></div>
             </div>
         </main>
     </div>
@@ -502,6 +503,7 @@ export function formatHtml(report: LintReport): string {
                     layout: "fitColumns",
                     height: "100%",
                     placeholder: "No issues found matching filters",
+                    frozenRows: 0, // Header is always frozen in Tabulator by default
                     
                     columns: [
                         { 
