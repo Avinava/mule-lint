@@ -124,7 +124,7 @@ export function formatHtml(report: LintReport): string {
             background-color: #e0f2fe !important;
         }
         .tabulator-cell {
-            padding: 12px 16px !important;
+            padding: 14px 20px !important;
             border-right: none !important;
             font-size: 0.9rem !important;
         }
@@ -239,10 +239,10 @@ export function formatHtml(report: LintReport): string {
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main class="flex-1 w-full">
             
             <!-- Dashboard View -->
-            <div id="view-dashboard" class="space-y-6">
+            <div id="view-dashboard" class="space-y-6 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Error Card -->
@@ -330,7 +330,7 @@ export function formatHtml(report: LintReport): string {
             </div>
 
             <!-- Issues View -->
-            <div id="view-issues" class="hidden h-[calc(100vh-140px)] flex flex-col">
+            <div id="view-issues" class="hidden min-h-[calc(100vh-140px)] flex flex-col p-6">
                 <!-- Filters Toolbar -->
                 <div class="bg-white p-4 rounded-t-xl border border-gray-200 border-b-0 shadow-sm flex flex-wrap gap-4 items-center justify-between">
                     <div class="flex items-center gap-4 flex-1">
@@ -354,7 +354,7 @@ export function formatHtml(report: LintReport): string {
                 </div>
 
                 <!-- Tabulator Container -->
-                <div id="issues-table-container" class="flex-1 bg-white border border-gray-200 rounded-b-xl overflow-hidden shadow-sm"></div>
+                <div id="issues-table-container" class="flex-1 bg-white border border-gray-200 rounded-b-xl overflow-hidden shadow-sm" style="min-height: 600px;"></div>
             </div>
         </main>
     </div>
