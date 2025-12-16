@@ -15,7 +15,11 @@ export type RuleCategory =
     | 'performance'
     | 'documentation'
     | 'standards'
-    | 'complexity';
+    | 'complexity'
+    | 'dataweave'
+    | 'structure'
+    | 'api-led'
+    | 'experimental';
 
 /**
  * Represents a single lint issue found during validation

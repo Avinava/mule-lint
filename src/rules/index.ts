@@ -48,6 +48,18 @@ import { FlowComplexityRule } from './complexity/FlowComplexityRule';
 // Import all rules - YAML
 import { EnvironmentFilesRule, PropertyNamingRule, PlaintextSecretsRule } from './yaml/YamlRules';
 
+// Import all rules - Structure
+import { ProjectStructureRule, GlobalConfigRule, MonolithicXmlRule } from './structure/StructureRules';
+
+// Import all rules - DataWeave
+import { ExternalDwlRule, DwlNamingRule, DwlModulesRule } from './dataweave/DataWeaveRules';
+
+// Import all rules - API-Led
+import { ExperienceLayerRule, ProcessLayerRule, SystemLayerRule } from './api-led/ApiLedRules';
+
+// Import all rules - Experimental
+import { FlowRefDepthRule, ConnectorConfigNamingRule, MUnitCoverageRule } from './experimental/ExperimentalRules';
+
 import { Rule } from '../types';
 
 // Export individual rules - Error Handling
@@ -144,6 +156,26 @@ export const ALL_RULES: Rule[] = [
     new EnvironmentFilesRule(),
     new PropertyNamingRule(),
     new PlaintextSecretsRule(),
+
+    // Structure Rules (MULE-802, 803, 804)
+    new ProjectStructureRule(),
+    new GlobalConfigRule(),
+    new MonolithicXmlRule(),
+
+    // DataWeave Rules (DW-001, 002, 003)
+    new ExternalDwlRule(),
+    new DwlNamingRule(),
+    new DwlModulesRule(),
+
+    // API-Led Rules (API-001, 002, 003)
+    new ExperienceLayerRule(),
+    new ProcessLayerRule(),
+    new SystemLayerRule(),
+
+    // Experimental Rules (EXP-001, 002, 003)
+    new FlowRefDepthRule(),
+    new ConnectorConfigNamingRule(),
+    new MUnitCoverageRule(),
 ];
 
 /**

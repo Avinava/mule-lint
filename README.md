@@ -135,27 +135,53 @@ mule-lint ./src/main/mule --fail-on-warning
 | MULE-009 | Generic Error Type | Warning | Error Handling | Avoid catching type="ANY" |
 | MULE-010 | DWL Standards | Info | Standards | Standard DataWeave files should exist |
 
-### Extended Rules (v1.1.0+)
+### Extended Rules
 
 | ID | Name | Severity | Category | Description |
 |----|------|----------|----------|-------------|
-| MULE-101 | Flow Casing | Warning | Naming | Flow names should be kebab-case |
-| MULE-102 | Variable Naming | Warning | Naming | Variables should be camelCase |
-| MULE-201 | Hardcoded Credentials | Error | Security | Passwords should use `${secure::}` |
-| MULE-202 | Insecure TLS | Error | Security | TLS should not have insecure="true" |
+| MULE-101 | Flow Casing | Warning | Naming | kebab-case for flows |
+| MULE-102 | Variable Naming | Warning | Naming | camelCase for variables |
+| MULE-201 | Hardcoded Credentials | Error | Security | Use `${secure::}` |
+| MULE-202 | Insecure TLS | Error | Security | No insecure="true" |
 | MULE-301 | Logger Payload | Warning | Logging | Don't log entire payload |
-| MULE-303 | Logger in Until-Successful | Warning | Logging | Avoid loggers in retry loops |
-| MULE-401 | HTTP User-Agent | Warning | HTTP | Include User-Agent header |
+| MULE-303 | Logger in Retry | Warning | Logging | Avoid loggers in until-successful |
+| MULE-401 | HTTP User-Agent | Warning | HTTP | Include User-Agent |
 | MULE-402 | HTTP Content-Type | Warning | HTTP | POST/PUT needs Content-Type |
 | MULE-403 | HTTP Timeout | Warning | HTTP | Set responseTimeout |
-| MULE-501 | Scatter-Gather Routes | Info | Performance | Limit parallel routes |
-| MULE-502 | Async Error Handler | Warning | Performance | Async needs error handling |
-| MULE-503 | Large Choice Blocks | Warning | Performance | Max 7 when clauses |
+| MULE-501 | Scatter-Gather | Info | Performance | Limit parallel routes |
+| MULE-502 | Async Error | Warning | Performance | Async needs error handling |
+| MULE-503 | Large Choice | Warning | Performance | Max 7 when clauses |
 | MULE-601 | Flow Description | Info | Documentation | Add doc:description |
 | MULE-604 | Missing doc:name | Warning | Documentation | Key components need doc:name |
-| MULE-701 | Deprecated Components | Warning | Standards | Detect deprecated elements |
+| MULE-701 | Deprecated | Warning | Standards | Detect deprecated elements |
+| MULE-801 | Flow Complexity | Warning | Complexity | Cyclomatic complexity threshold |
+| MULE-802 | Project Structure | Warning | Structure | Validate folder structure |
+| MULE-803 | Global Config | Warning | Structure | global.xml should exist |
+| MULE-804 | Monolithic XML | Warning | Structure | Split large XML files |
 
-**Total: 25 rules** across 8 categories.
+### DataWeave & API-Led Rules
+
+| ID | Name | Severity | Category | Description |
+|----|------|----------|----------|-------------|
+| DW-001 | External DWL | Warning | DataWeave | Externalize complex transforms |
+| DW-002 | DWL Naming | Info | DataWeave | kebab-case for .dwl files |
+| DW-003 | DWL Modules | Info | DataWeave | Use common modules |
+| API-001 | Experience Layer | Info | API-Led | Experience API patterns |
+| API-002 | Process Layer | Info | API-Led | Process layer orchestration |
+| API-003 | System Layer | Info | API-Led | System layer connections |
+
+### Experimental Rules
+
+| ID | Name | Severity | Category | Description |
+|----|------|----------|----------|-------------|
+| EXP-001 | Flow Ref Depth | Info | Experimental | Limit flow-ref chains |
+| EXP-002 | Config Naming | Info | Experimental | Connector config naming |
+| EXP-003 | MUnit Coverage | Info | Experimental | Check for MUnit tests |
+| YAML-001 | Env Files | Warning | Standards | Environment YAML files |
+| YAML-003 | Property Naming | Info | Standards | Property key format |
+| YAML-004 | Plaintext Secrets | Error | Security | Encrypted secrets |
+
+**Total: 41 rules** across 13 categories.
 
 See [Rules Catalog](docs/rules-catalog.md) for detailed documentation.
 
