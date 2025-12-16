@@ -12,36 +12,67 @@ mule-lint/
 │   ├── core/                # Core utilities
 │   │   ├── XmlParser.ts     # XML parsing with error handling
 │   │   ├── XPathHelper.ts   # Namespace-aware XPath utilities
-│   │   └── FileScanner.ts   # File discovery with glob patterns
+│   │   ├── YamlParser.ts    # YAML parsing utilities
+│   │   ├── FileScanner.ts   # File discovery with glob patterns
+│   │   └── ComplexityCalculator.ts
 │   ├── engine/              # Lint engine
 │   │   ├── LintEngine.ts    # Main orchestrator
-│   │   ├── RuleLoader.ts    # Dynamic rule loading
 │   │   └── types.ts         # Engine-specific types
-│   ├── rules/               # Rule implementations
+│   ├── rules/               # Rule implementations (40 rules)
 │   │   ├── index.ts         # Rule registry/exports
 │   │   ├── base/            # Base classes for rules
 │   │   │   └── BaseRule.ts  # Abstract rule with utilities
-│   │   ├── naming/          # Naming convention rules
-│   │   │   ├── FlowNamingRule.ts
-│   │   │   └── SubflowNamingRule.ts
+│   │   ├── api-led/         # API-Led connectivity patterns
+│   │   │   └── ApiLedRules.ts (API-001, 002, 003)
+│   │   ├── complexity/      # Complexity analysis
+│   │   │   └── FlowComplexityRule.ts (MULE-801)
+│   │   ├── dataweave/       # DataWeave file validation
+│   │   │   └── DataWeaveRules.ts (DW-001, 002, 003)
+│   │   ├── documentation/   # Documentation requirements
+│   │   │   ├── FlowDescriptionRule.ts (MULE-601)
+│   │   │   └── MissingDocNameRule.ts (MULE-604)
 │   │   ├── error-handling/  # Error handling rules
-│   │   │   ├── GlobalErrorHandlerRule.ts
-│   │   │   ├── MissingErrorHandlerRule.ts
-│   │   │   ├── GenericErrorRule.ts
-│   │   │   ├── HttpStatusRule.ts
-│   │   │   └── CorrelationIdRule.ts
-│   │   ├── security/        # Security rules
-│   │   │   └── HardcodedHttpRule.ts
+│   │   │   ├── GlobalErrorHandlerRule.ts (MULE-001)
+│   │   │   ├── MissingErrorHandlerRule.ts (MULE-003)
+│   │   │   ├── HttpStatusRule.ts (MULE-005)
+│   │   │   ├── CorrelationIdRule.ts (MULE-007)
+│   │   │   └── GenericErrorRule.ts (MULE-009)
+│   │   ├── experimental/    # Beta rules
+│   │   │   └── ExperimentalRules.ts (EXP-001, 002, 003)
+│   │   ├── http/            # HTTP configuration
+│   │   │   ├── HttpUserAgentRule.ts (MULE-401)
+│   │   │   ├── HttpContentTypeRule.ts (MULE-402)
+│   │   │   └── HttpTimeoutRule.ts (MULE-403)
 │   │   ├── logging/         # Logging rules
-│   │   │   └── LoggerCategoryRule.ts
-│   │   └── standards/       # Standards/best practices
-│   │       ├── DwlStandardsRule.ts
-│   │       └── ChoiceAntiPatternRule.ts
+│   │   │   ├── LoggerCategoryRule.ts (MULE-006)
+│   │   │   ├── LoggerPayloadRule.ts (MULE-301)
+│   │   │   └── LoggerInUntilSuccessfulRule.ts (MULE-303)
+│   │   ├── naming/          # Naming conventions
+│   │   │   ├── FlowNamingRule.ts (MULE-002)
+│   │   │   ├── FlowCasingRule.ts (MULE-101)
+│   │   │   └── VariableNamingRule.ts (MULE-102)
+│   │   ├── performance/     # Performance anti-patterns
+│   │   │   ├── ScatterGatherRoutesRule.ts (MULE-501)
+│   │   │   ├── AsyncErrorHandlerRule.ts (MULE-502)
+│   │   │   └── LargeChoiceBlockRule.ts (MULE-503)
+│   │   ├── security/        # Security rules
+│   │   │   ├── HardcodedHttpRule.ts (MULE-004)
+│   │   │   ├── HardcodedCredentialsRule.ts (MULE-201)
+│   │   │   └── InsecureTlsRule.ts (MULE-202)
+│   │   ├── standards/       # Best practices
+│   │   │   ├── ChoiceAntiPatternRule.ts (MULE-008)
+│   │   │   ├── DwlStandardsRule.ts (MULE-010)
+│   │   │   └── DeprecatedComponentRule.ts (MULE-701)
+│   │   ├── structure/       # Project structure
+│   │   │   └── StructureRules.ts (MULE-802, 803, 804)
+│   │   └── yaml/            # YAML validation
+│   │       └── YamlRules.ts (YAML-001, 003, 004)
 │   ├── formatters/          # Output formatters
 │   │   ├── index.ts         # Formatter factory
 │   │   ├── TableFormatter.ts
 │   │   ├── JsonFormatter.ts
-│   │   └── SarifFormatter.ts
+│   │   ├── SarifFormatter.ts
+│   │   └── HtmlFormatter.ts
 │   ├── config/              # Configuration handling
 │   │   ├── ConfigLoader.ts  # Load .mulelintrc.json
 │   │   ├── defaults.ts      # Default configuration
@@ -55,30 +86,21 @@ mule-lint/
 ├── tests/                    # Test suite
 │   ├── fixtures/            # Test XML files
 │   │   ├── valid/           # Valid Mule configurations
-│   │   │   ├── proper-flow.xml
-│   │   │   └── with-error-handler.xml
-│   │   ├── invalid/         # Invalid configurations (should fail)
-│   │   │   ├── bad-naming.xml
-│   │   │   └── hardcoded-urls.xml
+│   │   ├── invalid/         # Invalid configurations
 │   │   └── edge-cases/      # Edge case scenarios
-│   │       └── empty-flow.xml
 │   ├── unit/                # Unit tests
 │   │   ├── rules/           # Rule-specific tests
 │   │   └── core/            # Core utility tests
 │   ├── integration/         # Integration tests
-│   │   └── engine.test.ts
 │   └── setup.ts             # Test configuration
 ├── docs/                     # Documentation
-│   ├── architecture.md
-│   ├── folder-structure.md
+│   ├── README.md            # Documentation index
+│   ├── architecture.md      # System design
+│   ├── folder-structure.md  # This file
 │   ├── naming-conventions.md
-│   ├── rule-engine.md
-│   ├── rules/               # Per-rule documentation
-│   │   └── MULE-001.md
-│   └── extending.md
-├── examples/                 # Usage examples
-│   ├── sample-project/      # Sample Mule project for testing
-│   └── ci-integration/      # CI/CD integration examples
+│   ├── rule-engine.md       # Rule engine internals
+│   ├── rules-catalog.md     # All rules documented
+│   └── extending.md         # Custom rules guide
 ├── .mulelintrc.json         # Default configuration
 ├── package.json
 ├── tsconfig.json
@@ -86,6 +108,7 @@ mule-lint/
 ├── .eslintrc.js
 ├── .prettierrc
 ├── CHANGELOG.md
+├── CONTRIBUTING.md
 ├── LICENSE
 └── README.md
 ```
@@ -115,24 +138,45 @@ mule-lint/
 |------|----------------|
 | `XmlParser.ts` | Parse XML string to DOM, handle errors gracefully |
 | `XPathHelper.ts` | Namespace-aware XPath queries |
-| `FileScanner.ts` | Discover `.xml` files using glob patterns |
+| `YamlParser.ts` | Parse YAML files, detect sensitive keys |
+| `FileScanner.ts` | Discover `.xml` and `.yaml` files using glob patterns |
+| `ComplexityCalculator.ts` | Calculate cyclomatic complexity of flows |
 
 ### `/src/rules`
 
 **Purpose:** All validation rules, organized by category.
 
-**Categories:**
-- `naming/` - Naming convention violations
-- `error-handling/` - Error handler checks
-- `security/` - Security concerns (hardcoded secrets, HTTP)
-- `logging/` - Logging best practices
-- `standards/` - General coding standards
+**Rule Families (40 total):**
 
-**Convention:** Each rule file exports a single class implementing `Rule`.
+| Family | Directory | Rules |
+|--------|-----------|-------|
+| API-Led | `api-led/` | API-001, 002, 003 |
+| Complexity | `complexity/` | MULE-801 |
+| DataWeave | `dataweave/` | DW-001, 002, 003 |
+| Documentation | `documentation/` | MULE-601, 604 |
+| Error Handling | `error-handling/` | MULE-001, 003, 005, 007, 009 |
+| Experimental | `experimental/` | EXP-001, 002, 003 |
+| HTTP | `http/` | MULE-401, 402, 403 |
+| Logging | `logging/` | MULE-006, 301, 303 |
+| Naming | `naming/` | MULE-002, 101, 102 |
+| Performance | `performance/` | MULE-501, 502, 503 |
+| Security | `security/` | MULE-004, 201, 202 |
+| Standards | `standards/` | MULE-008, 010, 701 |
+| Structure | `structure/` | MULE-802, 803, 804 |
+| YAML | `yaml/` | YAML-001, 003, 004 |
+
+**Convention:** Each rule file exports one or more classes implementing `Rule`.
 
 ### `/src/formatters`
 
 **Purpose:** Transform `LintReport` to various output formats.
+
+| Formatter | Use Case |
+|-----------|----------|
+| `TableFormatter.ts` | Human-readable CLI output |
+| `JsonFormatter.ts` | Script/automation consumption |
+| `SarifFormatter.ts` | AI agents and IDE integration |
+| `HtmlFormatter.ts` | Standalone HTML reports |
 
 ### `/src/config`
 
@@ -181,6 +225,7 @@ import { XPathHelper } from '@core/XPathHelper';
 | Type | Convention | Example |
 |------|------------|---------|
 | Rule class | PascalCase + `Rule` suffix | `FlowNamingRule.ts` |
+| Multi-rule file | Feature + `Rules` suffix | `YamlRules.ts` |
 | Utility class | PascalCase | `XPathHelper.ts` |
 | Type definition | PascalCase | `Issue.ts` |
 | Test file | Match source + `.test.ts` | `FlowNamingRule.test.ts` |
