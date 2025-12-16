@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  Test Fixture: Complexity Testing
+  Tests MULE-801 (Flow Complexity)
+-->
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- High complexity flow with many decision points -->
+    <flow name="high-complexity-flow" doc:name="Complex Flow" doc:description="Flow with high cyclomatic complexity">
+        <http:listener config-ref="HTTP_Listener" path="/complex" doc:name="Listener"/>
+        
+        <!-- Decision point 1-8: Large choice block -->
+        <choice doc:name="Status Router">
+            <when expression="#[vars.status == 'new']">
+                <logger message="New" level="INFO" category="app" doc:name="Log New"/>
+            </when>
+            <when expression="#[vars.status == 'pending']">
+                <logger message="Pending" level="INFO" category="app" doc:name="Log Pending"/>
+            </when>
+            <when expression="#[vars.status == 'processing']">
+                <logger message="Processing" level="INFO" category="app" doc:name="Log Processing"/>
+            </when>
+            <when expression="#[vars.status == 'shipped']">
+                <logger message="Shipped" level="INFO" category="app" doc:name="Log Shipped"/>
+            </when>
+            <when expression="#[vars.status == 'delivered']">
+                <logger message="Delivered" level="INFO" category="app" doc:name="Log Delivered"/>
+            </when>
+            <when expression="#[vars.status == 'cancelled']">
+                <logger message="Cancelled" level="INFO" category="app" doc:name="Log Cancelled"/>
+            </when>
+            <when expression="#[vars.status == 'refunded']">
+                <logger message="Refunded" level="INFO" category="app" doc:name="Log Refunded"/>
+            </when>
+            <when expression="#[vars.status == 'hold']">
+                <logger message="Hold" level="INFO" category="app" doc:name="Log Hold"/>
+            </when>
+            <otherwise>
+                <logger message="Unknown" level="WARN" category="app" doc:name="Log Unknown"/>
+            </otherwise>
+        </choice>
+        
+        <!-- Decision point 9: Try scope -->
+        <try doc:name="Try Block">
+            <logger message="In try" level="INFO" category="app" doc:name="Log Try"/>
+            <error-handler>
+                <!-- Decision point 10-11: Error handlers -->
+                <on-error-continue type="HTTP:CONNECTIVITY" doc:name="Connectivity Error">
+                    <set-variable variableName="httpStatus" value="503" doc:name="Set Status"/>
+                    <set-variable variableName="correlationId" value="#[correlationId]" doc:name="Set CorrelationId"/>
+                    <logger message="#[correlationId]" level="ERROR" category="error" doc:name="Log Error"/>
+                </on-error-continue>
+                <on-error-propagate type="VALIDATION:INVALID_*" doc:name="Validation Error">
+                    <set-variable variableName="httpStatus" value="400" doc:name="Set Status"/>
+                    <set-variable variableName="correlationId" value="#[correlationId]" doc:name="Set CorrelationId"/>
+                    <logger message="#[correlationId]" level="WARN" category="error" doc:name="Log Warn"/>
+                </on-error-propagate>
+            </error-handler>
+        </try>
+        
+        <!-- Decision point 12: Until-successful -->
+        <until-successful maxRetries="3" doc:name="Retry">
+            <http:request method="GET" config-ref="HTTP_Request" path="/api" doc:name="API Call">
+                <http:headers><![CDATA[#[{"User-Agent": "Test/1.0"}]]]></http:headers>
+            </http:request>
+        </until-successful>
+        
+        <!-- Decision point 13: Foreach -->
+        <foreach doc:name="Iterate">
+            <logger message="Item" level="DEBUG" category="app" doc:name="Log Item"/>
+        </foreach>
+        
+        <error-handler ref="global-error-handler"/>
+    </flow>
+
+    <!-- Global error handler -->
+    <error-handler name="global-error-handler" doc:name="Global Error Handler">
+        <on-error-propagate doc:name="Default Error">
+            <set-variable variableName="httpStatus" value="500" doc:name="Set Status"/>
+            <set-variable variableName="correlationId" value="#[correlationId]" doc:name="Set CorrelationId"/>
+            <logger message="#[correlationId]" level="ERROR" category="error" doc:name="Log"/>
+        </on-error-propagate>
+    </error-handler>
+
+</mule>

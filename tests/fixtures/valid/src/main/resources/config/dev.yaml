@@ -1,0 +1,14 @@
+# Development properties
+api:
+  host: localhost
+  port: 8081
+  basePath: /api/v1
+
+db:
+  host: localhost
+  port: 3306
+  name: orders_dev
+
+logging:
+  level: DEBUG
+  category: com.myorg
