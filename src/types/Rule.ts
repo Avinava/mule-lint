@@ -14,7 +14,8 @@ export type RuleCategory =
     | 'http'
     | 'performance'
     | 'documentation'
-    | 'standards';
+    | 'standards'
+    | 'complexity';
 
 /**
  * Represents a single lint issue found during validation
