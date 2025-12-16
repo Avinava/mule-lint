@@ -87,9 +87,26 @@ describe('FlowNamingRule', () => {
         });
 
         it('should skip excluded patterns', () => {
+            const context = createContext();
+            context.config.options!.excludePatterns = [
+                '*-api-main',
+                '*-main',
+                'get:*',
+                'post:*'
+            ];
+
             const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="orders-api-main">
+                        <logger message="test"/>
+                    </flow>
+                    <flow name="some-other-main">
+                        <logger message="test"/>
+                    </flow>
+                    <flow name="get:\health:api-config">
+                        <logger message="test"/>
+                    </flow>
+                    <flow name="post:\orders:api-config">
                         <logger message="test"/>
                     </flow>
                 </mule>
@@ -97,7 +114,7 @@ describe('FlowNamingRule', () => {
             const result = parseXml(xml);
             expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
+            const issues = rule.validate(result.document!, context);
             expect(issues).toHaveLength(0);
         });
 
