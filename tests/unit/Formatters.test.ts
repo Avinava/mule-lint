@@ -69,9 +69,9 @@ describe('Formatters', () => {
             expect(output).toContain('file1.xml');
             expect(output).toContain('Test error message');
             expect(output).toContain('TEST-001');
-            expect(output).toContain('class="severity-cell color-error"');
-            expect(output).toContain('Health Score');
-            expect(output).toContain('score-ring');
+            expect(output).toContain('class="severity-badge bg-error"');
+            expect(output).toContain('id="issuesTable"');
+            expect(output).toContain('placeholder="Search');
         });
 
         it('should handle parse errors in HTML', () => {
