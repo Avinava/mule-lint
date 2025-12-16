@@ -33,7 +33,8 @@
         "lint:fix": "eslint src/ --ext .ts --fix",
         "format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
         "clean": "rm -rf dist",
-        "prepublishOnly": "npm run clean && npm run build && npm test"
+        "prepublishOnly": "npm run clean && npm run build && npm test",
+        "release": "git tag v$(node -p 'require(\"./package.json\").version') && git push origin v$(node -p 'require(\"./package.json\").version')"
     },
     "dependencies": {
         "@xmldom/xmldom": "^0.8.10",
