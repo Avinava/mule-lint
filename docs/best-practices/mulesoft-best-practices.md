@@ -1,11 +1,12 @@
 # MuleSoft Development Best Practices
 
-> **Purpose:** This guide documents MuleSoft development best practices that mule-lint enforces. Use this as a reference for building maintainable, secure, and performant Mule applications.
+> **Purpose:** Comprehensive guide for building maintainable, secure, and performant Mule applications. This guide covers both practices enforced by mule-lint and general development guidelines for MuleSoft developers.
 
 ---
 
 ## Table of Contents
 
+### Linter-Enforced Practices
 - [API-Led Connectivity](#api-led-connectivity)
 - [Error Handling](#error-handling)
 - [Logging Standards](#logging-standards)
@@ -16,6 +17,13 @@
 - [Configuration Management](#configuration-management)
 - [DataWeave Best Practices](#dataweave-best-practices)
 - [Documentation Standards](#documentation-standards)
+
+### General Developer Guidelines
+- [Testing with MUnit](#testing-with-munit)
+- [CI/CD Integration](#cicd-integration)
+- [API Versioning](#api-versioning)
+- [Deployment Practices](#deployment-practices)
+- [Monitoring and Observability](#monitoring-and-observability)
 
 ---
 
@@ -565,3 +573,330 @@ Document for maintainability.
 | **Structure** | Separate files by domain | Monolithic XML files |
 | **Config** | Environment-specific YAML files | Hardcoded values |
 | **DataWeave** | External .dwl files, reusable modules | Large inline transforms |
+
+---
+
+# General Developer Guidelines
+
+> The following sections cover general MuleSoft development best practices that are not enforced by the linter but are important for building production-ready applications.
+
+---
+
+## Testing with MUnit
+
+MUnit is MuleSoft's native testing framework. Comprehensive testing is essential for reliable integrations.
+
+### Test Coverage Goals
+
+| Test Type | Coverage Target | Purpose |
+|-----------|-----------------|---------|
+| Unit Tests | 80%+ flow coverage | Validate individual flow logic |
+| Integration Tests | All critical paths | Validate end-to-end scenarios |
+| Error Scenario Tests | All error handlers | Validate error responses |
+
+### MUnit Best Practices
+
+```xml
+<!-- test/munit/orders-api-test-suite.xml -->
+<munit:test name="create-order-success-test"
+            description="Validates successful order creation">
+    
+    <!-- Mock external dependencies -->
+    <munit:behavior>
+        <munit-tools:mock-when processor="http:request">
+            <munit-tools:with-attributes>
+                <munit-tools:with-attribute attributeName="config-ref" 
+                                            whereValue="Orders_HTTP_Config"/>
+            </munit-tools:with-attributes>
+            <munit-tools:then-return>
+                <munit-tools:payload value='{"orderId": "12345"}'/>
+            </munit-tools:then-return>
+        </munit-tools:mock-when>
+    </munit:behavior>
+    
+    <!-- Execute -->
+    <munit:execution>
+        <flow-ref name="create-order-flow"/>
+    </munit:execution>
+    
+    <!-- Assert -->
+    <munit:validation>
+        <munit-tools:assert-that expression="#[payload.orderId]" 
+                                  is="#[MunitTools::notNullValue()]"/>
+    </munit:validation>
+</munit:test>
+```
+
+### Test Organization
+
+```
+src/test/munit/
+├── orders-api-test-suite.xml      # API endpoint tests
+├── orders-flows-test-suite.xml    # Business logic tests
+├── error-handling-test-suite.xml  # Error scenario tests
+└── common-test-resources.xml      # Shared mocks and utilities
+```
+
+### Key Principles
+
+1. **Mock external dependencies** - Don't call real systems in unit tests
+2. **Test error scenarios** - Verify all error handlers work correctly
+3. **Use descriptive test names** - Names should describe the scenario
+4. **Isolate tests** - Each test should be independent
+
+---
+
+## CI/CD Integration
+
+Automate build, test, and deployment for consistent, reliable releases.
+
+### Recommended Pipeline Stages
+
+```
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│  Build   │ → │  Lint    │ → │  Test    │ → │  Package │ → │  Deploy  │
+│          │    │          │    │          │    │          │    │          │
+│ mvn      │    │ mule-    │    │ mvn test │    │ mvn      │    │ anypoint │
+│ compile  │    │ lint     │    │          │    │ package  │    │ deploy   │
+└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+```
+
+### GitHub Actions Example
+
+```yaml
+# .github/workflows/mule-ci.yml
+name: Mule CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          
+      - name: Build with Maven
+        run: mvn -B clean compile
+        
+      - name: Run mule-lint
+        run: npx @sfdxy/mule-lint ./src/main/mule -f sarif -o lint-results.sarif
+        
+      - name: Run MUnit tests
+        run: mvn -B test
+        
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: lint-results.sarif
+```
+
+### Git Branch Strategy
+
+| Branch | Purpose | Deployment Target |
+|--------|---------|-------------------|
+| `main` | Production-ready code | Production |
+| `develop` | Integration branch | QA/Staging |
+| `feature/*` | New features | Development |
+| `hotfix/*` | Production fixes | Production |
+
+---
+
+## API Versioning
+
+Plan for API evolution from the start.
+
+### URL-Based Versioning (Recommended)
+
+```
+/api/v1/orders
+/api/v2/orders
+```
+
+### Implementation Pattern
+
+```xml
+<!-- src/main/mule/orders-api-v1.xml -->
+<flow name="orders-api-v1-main-flow">
+    <http:listener config-ref="HTTPS_Listener" path="/api/v1/orders/*"/>
+    <apikit:router config-ref="orders-v1-config"/>
+</flow>
+
+<!-- src/main/mule/orders-api-v2.xml -->
+<flow name="orders-api-v2-main-flow">
+    <http:listener config-ref="HTTPS_Listener" path="/api/v2/orders/*"/>
+    <apikit:router config-ref="orders-v2-config"/>
+</flow>
+```
+
+### Version Deprecation Strategy
+
+1. **Announce deprecation** - Communicate timeline to consumers
+2. **Add deprecation headers** - Return `Deprecation` header in responses
+3. **Monitor usage** - Track v1 vs v2 adoption
+4. **Sunset gracefully** - Remove only after consumer migration
+
+```xml
+<!-- Add deprecation warning -->
+<set-variable variableName="outboundHeaders" value="#[{
+    'Deprecation': 'true',
+    'Sunset': 'Sat, 01 Jan 2025 00:00:00 GMT',
+    'Link': '&lt;/api/v2/orders&gt;; rel="successor-version"'
+}]"/>
+```
+
+---
+
+## Deployment Practices
+
+Deploy safely and consistently across environments.
+
+### Environment Promotion
+
+```
+Development → QA → Staging → Production
+    ↓           ↓       ↓          ↓
+  dev.yaml   qa.yaml  stg.yaml  prod.yaml
+```
+
+### Deployment Checklist
+
+| Item | Description |
+|------|-------------|
+| ✅ All tests pass | MUnit and integration tests |
+| ✅ Lint checks pass | No errors from mule-lint |
+| ✅ Properties configured | Environment YAML verified |
+| ✅ Secrets encrypted | No plaintext credentials |
+| ✅ API Manager policies | Authentication, rate limiting |
+| ✅ Monitoring configured | Dashboards and alerts ready |
+
+### Blue-Green Deployment
+
+For zero-downtime deployments:
+
+1. Deploy new version to "green" workers
+2. Run smoke tests against green
+3. Switch load balancer to green
+4. Monitor for issues
+5. Decommission "blue" workers (or keep for rollback)
+
+### Rollback Strategy
+
+```bash
+# Anypoint CLI rollback example
+anypoint-cli runtime-mgr cloudhub-application modify \
+  --environment Production \
+  --applicationName orders-api \
+  --runtime 4.4.0 \
+  --artifact-id orders-api-1.2.0.jar
+```
+
+---
+
+## Monitoring and Observability
+
+Production applications need comprehensive monitoring.
+
+### The Three Pillars
+
+| Pillar | Tool | Purpose |
+|--------|------|---------|
+| **Logs** | Anypoint Monitoring, Splunk, ELK | Debug issues, audit trail |
+| **Metrics** | Anypoint Monitoring, Grafana | Performance, health status |
+| **Traces** | Anypoint Monitoring, Jaeger | Request flow, latency analysis |
+
+### Key Metrics to Monitor
+
+```
+Application Health:
+├── Response time (p50, p95, p99)
+├── Error rate (%)
+├── Throughput (requests/sec)
+├── Active connections
+└── Worker CPU/Memory usage
+
+Business Metrics:
+├── Orders processed per hour
+├── Failed transactions
+├── API calls by consumer
+└── Integration latency by backend
+```
+
+### Alerting Best Practices
+
+| Alert Level | Condition | Response |
+|-------------|-----------|----------|
+| **Critical** | Error rate > 10%, App down | Immediate on-call response |
+| **Warning** | Error rate > 5%, Latency > 5s | Investigate within 1 hour |
+| **Info** | Unusual patterns, Resource > 70% | Review in daily standup |
+
+### Correlation ID Pattern
+
+Ensure correlation IDs flow through all systems:
+
+```xml
+<!-- Set correlation ID at entry point -->
+<set-variable variableName="correlationId" 
+              value="#[correlationId default uuid()]"/>
+
+<!-- Include in all outbound requests -->
+<http:request config-ref="HTTP_Config" path="/downstream">
+    <http:headers><![CDATA[#[{
+        'X-Correlation-ID': vars.correlationId
+    }]]]></http:headers>
+</http:request>
+
+<!-- Include in all log messages -->
+<logger category="com.myorg" 
+        message="#['[' ++ vars.correlationId ++ '] Processing request...']"/>
+```
+
+### Health Check Endpoint
+
+Expose a health endpoint for load balancers and monitoring:
+
+```xml
+<flow name="health-check-flow">
+    <http:listener config-ref="HTTPS_Listener" path="/health"/>
+    <set-payload value='#[%dw 2.0
+output application/json
+---
+{
+    status: "UP",
+    timestamp: now(),
+    version: p("app.version"),
+    environment: p("mule.env")
+}]'/>
+</flow>
+```
+
+---
+
+## Summary
+
+This guide covers both linter-enforced practices and general developer guidelines:
+
+| Category | Linter Enforced | General Guidelines |
+|----------|-----------------|-------------------|
+| Code Quality | ✅ Naming, Structure, Complexity | Testing, Code Review |
+| Security | ✅ Hardcoded secrets, TLS | Secrets Management, IAM |
+| Operations | ✅ Error handling, Logging | CI/CD, Monitoring, Deployment |
+| Architecture | ✅ API-Led patterns | Versioning, Documentation |
+
+For linter rule details, see the [Rules Catalog](rules-catalog.md).
+
