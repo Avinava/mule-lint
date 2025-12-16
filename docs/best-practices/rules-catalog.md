@@ -722,7 +722,7 @@ db.password: "![encryptedValue]"
 
 ## Configuration
 
-See [Extending mule-lint](./extending.md) for instructions on adding organization-specific rules and customizing rule behavior.
+See [Extending mule-lint](../linter/extending.md) for instructions on adding organization-specific rules and customizing rule behavior.
 
 ### Disabling Rules
 
