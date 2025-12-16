@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.2] - 2024-12-16
+
+### Fixed
+- **False Positives**: Significantly improved accuracy based on field QA validation
+- **MULE-002**: Excluded `*-main` and APIKit auto-generated flow names
+- **MULE-003/101**: Excluded APIKit flows from error handling and casing rules
+- **MULE-201**: Allowed regular property placeholders (`${...}`) not just `${secure::...}`
+- **MULE-008**: Allowed `raise-error` inside `until-successful` (valid retry pattern)
+- **MULE-001**: Lowered severity to Warning to support modular error handling patterns
+- **YAML-001**: Added `properties/` to environment file search paths
+- **YAML-003**: Relaxed regex to allow hyphens in categories and underscores in properties
+
 ## [1.7.1] - 2024-12-16
 
 ### Fixed
