@@ -1,0 +1,65 @@
+{
+    "$schema": "https://json.schemastore.org/mulelintrc",
+    "rules": {
+        "MULE-001": {
+            "enabled": true
+        },
+        "MULE-002": {
+            "enabled": true,
+            "options": {
+                "flowSuffix": "-flow",
+                "subflowSuffix": "-subflow",
+                "excludePatterns": [
+                    "*-api-main",
+                    "*-api-console"
+                ]
+            }
+        },
+        "MULE-003": {
+            "enabled": true,
+            "options": {
+                "excludePatterns": [
+                    "*-api-main",
+                    "*api-main*"
+                ]
+            }
+        },
+        "MULE-004": {
+            "enabled": true
+        },
+        "MULE-005": {
+            "enabled": true
+        },
+        "MULE-006": {
+            "enabled": true
+        },
+        "MULE-007": {
+            "enabled": true
+        },
+        "MULE-008": {
+            "enabled": true
+        },
+        "MULE-009": {
+            "enabled": true
+        },
+        "MULE-010": {
+            "enabled": true,
+            "severity": "info",
+            "options": {
+                "expectedFiles": [
+                    "src/main/resources/dwl/standard-error.dwl"
+                ]
+            }
+        }
+    },
+    "include": [
+        "src/main/mule/**/*.xml"
+    ],
+    "exclude": [
+        "**/target/**",
+        "**/*.munit.xml",
+        "**/test/**"
+    ],
+    "defaultFormatter": "table",
+    "failOnWarning": false
+}

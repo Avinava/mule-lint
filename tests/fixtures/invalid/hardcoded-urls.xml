@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+                          http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+    <!-- This file contains hardcoded URLs for testing MULE-004 -->
+    
+    <http:request-config name="externalApi" 
+                         host="${api.host}" 
+                         port="${api.port}" 
+                         basePath="/api/v1"
+                         doc:name="External API Config">
+    </http:request-config>
+    
+    <flow name="call-external-api-flow" doc:name="Call External API">
+        <http:listener config-ref="httpListener" path="/proxy" doc:name="HTTP Listener"/>
+        
+        <!-- MULE-004: Hardcoded HTTP URL -->
+        <http:request method="GET" 
+                      url="http://api.example.com/orders" 
+                      doc:name="Hardcoded URL Request"/>
+        
+        <!-- MULE-004: Another hardcoded URL in attribute -->
+        <set-variable variableName="backupUrl" 
+                      value="https://backup.example.com/api" 
+                      doc:name="Hardcoded Backup"/>
+        
+        <logger level="INFO" 
+                message="Request completed" 
+                category="com.myorg.proxy" 
+                doc:name="Log"/>
+        
+        <error-handler>
+            <on-error-propagate type="HTTP:CONNECTIVITY">
+                <set-variable variableName="httpStatus" value="503"/>
+                <logger level="ERROR" 
+                        message="#[correlationId ++ ': Connection failed']" 
+                        category="com.myorg.proxy.error"/>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    
+    <!-- This flow uses property placeholders correctly -->
+    <flow name="call-configured-api-flow" doc:name="Call Configured API">
+        <http:listener config-ref="httpListener" path="/configured" doc:name="HTTP Listener"/>
+        
+        <!-- This is fine - uses property placeholder -->
+        <http:request method="GET" 
+                      url="${external.api.url}/orders" 
+                      doc:name="Configured URL Request"/>
+        
+        <!-- This is also fine - uses DataWeave expression -->
+        <set-variable variableName="dynamicUrl" 
+                      value="#['http://' ++ vars.host ++ '/api']" 
+                      doc:name="Dynamic URL"/>
+        
+        <error-handler>
+            <on-error-propagate type="HTTP:CONNECTIVITY">
+                <set-variable variableName="httpStatus" value="503"/>
+                <logger level="ERROR" 
+                        message="#[correlationId ++ ': Connection failed']" 
+                        category="com.myorg.proxy.error"/>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+</mule>
