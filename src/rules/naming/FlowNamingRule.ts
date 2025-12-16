@@ -22,6 +22,7 @@ export class FlowNamingRule extends BaseRule {
         const subflowSuffix = this.getOption(context, 'subflowSuffix', '-subflow');
         const excludePatterns = this.getOption<string[]>(context, 'excludePatterns', [
             '*-api-main',
+            '*-main', // Common pattern for main flows
             '*-api-console',
             // APIKit auto-generated flow patterns (HTTP verb:resource:config format)
             'get:*',

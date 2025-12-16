@@ -13,7 +13,7 @@ export class GlobalErrorHandlerRule extends BaseRule {
     id = 'MULE-001';
     name = 'Global Error Handler Exists';
     description = 'Project should have a global error handler configuration for consistent error handling';
-    severity = 'error' as const;
+    severity = 'warning' as const;
     category = 'error-handling' as const;
 
     validate(doc: Document, context: ValidationContext): Issue[] {
