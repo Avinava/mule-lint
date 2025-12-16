@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- Edge Case 1: Boolean attribute with 'token' in name (False Positive Check) -->
+    <!-- Should PASS MULE-201 because 'true' is not a secret, even if attr name has 'token' -->
+    <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config">
+        <http:listener-connection host="0.0.0.0" port="8081" usePersistentConnections="true" useToken="true"/>
+    </http:listener-config>
+    
+    <!-- Edge Case 2: Secure Property enforcement -->
+    <!-- Should FAIL MULE-201 because it uses plain property ${db.password}, not ${secure::db.password} -->
+    <db:config name="Database_Config" doc:name="Database Config">
+        <db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" />
+    </db:config>
+
+    <!-- Edge Case 3: Namespaces (using 'core' prefix for Mule core) -->
+    <!-- Should PASS validation if parser handles namespaces correctly (matches by URI not prefix) -->
+    <core:flow name="namespace-test-flow" doc:name="Flow" xmlns:core="http://www.mulesoft.org/schema/mule/core">
+        <core:logger level="INFO" doc:name="Logger" category="edge-case"/>
+    </core:flow>
+
+    <!-- Edge Case 4: Weird spacing in attributes -->
+    <flow name=" spacing-test-flow " doc:name="Flow">
+         <logger message="test" level="INFO" doc:name="Logger" category="spacing"/>
+    </flow>
+
+</mule>
