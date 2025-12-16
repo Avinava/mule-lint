@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation">
+
+    <!-- DW-001: Large inline transform should be externalized -->
+    <flow name="large-inline-dwl-flow" doc:name="Flow">
+        <transform doc:name="Large Transform">
+            <message>
+                <set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    customer: {
+        id: payload.id,
+        name: payload.name,
+        address: {
+            street: payload.street,
+            city: payload.city,
+            state: payload.state,
+            zip: payload.zip
+        },
+        orders: payload.orders map {
+            id: $.id,
+            total: $.total,
+            items: $.items
+        },
+        metadata: {
+            created: now(),
+            source: "API"
+        }
+    }
+}]]></set-payload>
+            </message>
+        </transform>
+    </flow>
+
+</mule>

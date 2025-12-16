@@ -109,12 +109,26 @@ mule-lint ./src/main/mule --fail-on-warning
 
 | Option | Description |
 |--------|-------------|
-| `-f, --format <type>` | Output format: `table`, `json`, `sarif` (default: table) |
-| `-o, --output <file>` | Write output to file |
+| `-f, --format <type>` | Output format: `table`, `json`, `sarif` (default: `table`) |
+| `-o, --output <file>` | Write output to file instead of stdout |
 | `-c, --config <file>` | Path to configuration file |
-| `-q, --quiet` | Show only errors |
+| `-q, --quiet` | Show only errors (suppress warnings and info) |
+| `-e, --experimental` | **Enable experimental rules (opt-in)** |
 | `--fail-on-warning` | Exit with error code if warnings found |
 | `-v, --verbose` | Show verbose output |
+
+### Examples
+
+```bash
+# Basic scan
+mule-lint .
+
+# Scan with experimental rules
+mule-lint . --experimental
+
+# Output SARIF for VS Code
+mule-lint src/main/mule -f sarif -o results.sarif
+```
 
 ---
 

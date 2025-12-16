@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation">
+
+    <!-- API-001: Experience API (no listener) -->
+    <flow name="my-exp-api-flow" doc:name="Flow">
+        <logger message="Experience Logic" category="app" doc:name="Log"/>
+    </flow>
+
+    <!-- API-002: Process API (logic instead of orchestration) -->
+    <flow name="order-proc-api-flow" doc:name="Flow">
+        <transform doc:name="Business Logic">
+            <message>
+                <set-payload><![CDATA[%dw 2.0 output json --- { status: "processed" }]]></set-payload>
+            </message>
+        </transform>
+    </flow>
+
+    <!-- API-003: System API (no connectivity) -->
+    <flow name="customer-sys-api-flow" doc:name="Flow">
+        <logger message="System Logic" category="app" doc:name="Log"/>
+    </flow>
+
+</mule>

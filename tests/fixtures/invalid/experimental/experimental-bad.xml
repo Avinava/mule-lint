@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation">
+
+    <!-- EXP-001: Deep flow reference chain (Depth > 5) -->
+    <flow name="deep-flow-ref-chain" doc:name="Flow">
+        <flow-ref name="helper1" doc:name="Call 1"/>
+        <flow-ref name="helper2" doc:name="Call 2"/>
+        <flow-ref name="helper3" doc:name="Call 3"/>
+        <flow-ref name="helper4" doc:name="Call 4"/>
+        <flow-ref name="helper5" doc:name="Call 5"/>
+        <flow-ref name="helper6" doc:name="Call 6"/>
+    </flow>
+
+    <!-- EXP-002: Bad config naming -->
+    <http:request-config name="badConfigName" doc:name="HTTP"/>
+
+</mule>
