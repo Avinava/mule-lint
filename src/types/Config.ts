@@ -3,7 +3,7 @@ import { RuleConfig } from './Rule';
 /**
  * Formatter type for output
  */
-export type FormatterType = 'table' | 'json' | 'sarif';
+export type FormatterType = 'table' | 'json' | 'sarif' | 'html' | 'csv';
 
 /**
  * Main configuration for mule-lint
