@@ -229,7 +229,7 @@ export function formatHtml(report: LintReport): string {
                             Generated <span id="timestamp-display" class="font-mono text-gray-700"></span>
                         </span>
                         <div class="h-6 w-px bg-gray-200"></div>
-                        <a href="https://github.com/mulesoft-labs/mule-lint" target="_blank" class="text-gray-500 hover:text-gray-900 transition-colors">
+                        <a href="https://github.com/Avinava/mule-lint" target="_blank" class="text-gray-500 hover:text-gray-900 transition-colors">
                             <i data-lucide="github" class="w-5 h-5"></i>
                         </a>
                         <button onclick="window.print()" class="text-gray-500 hover:text-brand-600 transition-colors" title="Print Report">
