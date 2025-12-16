@@ -135,7 +135,7 @@ mule-lint ./src/main/mule --fail-on-warning
 | MULE-009 | Generic Error Type | Warning | Error Handling | Avoid catching type="ANY" |
 | MULE-010 | DWL Standards | Info | Standards | Standard DataWeave files should exist |
 
-### Extended Rules (v1.1.0)
+### Extended Rules (v1.1.0+)
 
 | ID | Name | Severity | Category | Description |
 |----|------|----------|----------|-------------|
@@ -146,12 +146,19 @@ mule-lint ./src/main/mule --fail-on-warning
 | MULE-301 | Logger Payload | Warning | Logging | Don't log entire payload |
 | MULE-303 | Logger in Until-Successful | Warning | Logging | Avoid loggers in retry loops |
 | MULE-401 | HTTP User-Agent | Warning | HTTP | Include User-Agent header |
+| MULE-402 | HTTP Content-Type | Warning | HTTP | POST/PUT needs Content-Type |
+| MULE-403 | HTTP Timeout | Warning | HTTP | Set responseTimeout |
 | MULE-501 | Scatter-Gather Routes | Info | Performance | Limit parallel routes |
 | MULE-502 | Async Error Handler | Warning | Performance | Async needs error handling |
-| MULE-601 | Flow Description | Info | Documentation | Flows should have doc:description |
-| MULE-701 | Deprecated Components | Warning | Standards | Detect deprecated Mule elements |
+| MULE-503 | Large Choice Blocks | Warning | Performance | Max 7 when clauses |
+| MULE-601 | Flow Description | Info | Documentation | Add doc:description |
+| MULE-604 | Missing doc:name | Warning | Documentation | Key components need doc:name |
+| MULE-701 | Deprecated Components | Warning | Standards | Detect deprecated elements |
+
+**Total: 25 rules** across 8 categories.
 
 See [Rules Catalog](docs/rules-catalog.md) for detailed documentation.
+
 
 
 ---

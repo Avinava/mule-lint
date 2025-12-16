@@ -30,13 +30,17 @@ import { DeprecatedComponentRule } from './standards/DeprecatedComponentRule';
 
 // Import all rules - HTTP
 import { HttpUserAgentRule } from './http/HttpUserAgentRule';
+import { HttpContentTypeRule } from './http/HttpContentTypeRule';
+import { HttpTimeoutRule } from './http/HttpTimeoutRule';
 
 // Import all rules - Documentation
 import { FlowDescriptionRule } from './documentation/FlowDescriptionRule';
+import { MissingDocNameRule } from './documentation/MissingDocNameRule';
 
 // Import all rules - Performance
 import { ScatterGatherRoutesRule } from './performance/ScatterGatherRoutesRule';
 import { AsyncErrorHandlerRule } from './performance/AsyncErrorHandlerRule';
+import { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 
 import { Rule } from '../types';
 
@@ -69,16 +73,21 @@ export { DeprecatedComponentRule } from './standards/DeprecatedComponentRule';
 
 // Export individual rules - HTTP
 export { HttpUserAgentRule } from './http/HttpUserAgentRule';
+export { HttpContentTypeRule } from './http/HttpContentTypeRule';
+export { HttpTimeoutRule } from './http/HttpTimeoutRule';
 
 // Export individual rules - Documentation
 export { FlowDescriptionRule } from './documentation/FlowDescriptionRule';
+export { MissingDocNameRule } from './documentation/MissingDocNameRule';
 
 // Export individual rules - Performance
 export { ScatterGatherRoutesRule } from './performance/ScatterGatherRoutesRule';
 export { AsyncErrorHandlerRule } from './performance/AsyncErrorHandlerRule';
+export { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 
 /**
  * All available rules - instantiated and ready to use
+ * Total: 25 rules
  */
 export const ALL_RULES: Rule[] = [
     // Error Handling Rules (MULE-001, 003, 005, 007, 009)
@@ -108,15 +117,19 @@ export const ALL_RULES: Rule[] = [
     new DwlStandardsRule(),
     new DeprecatedComponentRule(),
 
-    // HTTP Rules (MULE-401)
+    // HTTP Rules (MULE-401, 402, 403)
     new HttpUserAgentRule(),
+    new HttpContentTypeRule(),
+    new HttpTimeoutRule(),
 
-    // Documentation Rules (MULE-601)
+    // Documentation Rules (MULE-601, 604)
     new FlowDescriptionRule(),
+    new MissingDocNameRule(),
 
-    // Performance Rules (MULE-501, 502)
+    // Performance Rules (MULE-501, 502, 503)
     new ScatterGatherRoutesRule(),
     new AsyncErrorHandlerRule(),
+    new LargeChoiceBlockRule(),
 ];
 
 /**
