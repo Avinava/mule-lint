@@ -42,6 +42,12 @@ import { ScatterGatherRoutesRule } from './performance/ScatterGatherRoutesRule';
 import { AsyncErrorHandlerRule } from './performance/AsyncErrorHandlerRule';
 import { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 
+// Import all rules - Complexity
+import { FlowComplexityRule } from './complexity/FlowComplexityRule';
+
+// Import all rules - YAML
+import { EnvironmentFilesRule, PropertyNamingRule, PlaintextSecretsRule } from './yaml/YamlRules';
+
 import { Rule } from '../types';
 
 // Export individual rules - Error Handling
@@ -130,6 +136,14 @@ export const ALL_RULES: Rule[] = [
     new ScatterGatherRoutesRule(),
     new AsyncErrorHandlerRule(),
     new LargeChoiceBlockRule(),
+
+    // Complexity Rules (MULE-801)
+    new FlowComplexityRule(),
+
+    // YAML Rules (YAML-001, 003, 004)
+    new EnvironmentFilesRule(),
+    new PropertyNamingRule(),
+    new PlaintextSecretsRule(),
 ];
 
 /**
