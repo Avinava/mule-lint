@@ -1,5 +1,5 @@
 {
-    "name": "mule-lint",
+    "name": "@sfdxy/mule-lint",
     "version": "1.3.0",
     "description": "Static analysis tool for MuleSoft applications - supports humans, AI agents, and CI/CD pipelines",
     "author": "Avinava",
@@ -58,10 +58,10 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/mule-lint/mule-lint.git"
+        "url": "https://github.com/Avinava/mule-lint.git"
     },
     "bugs": {
-        "url": "https://github.com/mule-lint/mule-lint/issues"
+        "url": "https://github.com/Avinava/mule-lint/issues"
     },
-    "homepage": "https://github.com/mule-lint/mule-lint#readme"
+    "homepage": "https://github.com/Avinava/mule-lint#readme"
 }
