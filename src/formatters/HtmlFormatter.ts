@@ -6,18 +6,16 @@ import { ALL_RULES } from '../rules';
  */
 export function formatHtml(report: LintReport): string {
     // 1. Enrich Data
-    // We want to attach rule metadata (Category, Description) to every issue
-    // for easier filtering in the frontend.
     const enrichedFiles = report.files.map(file => ({
         ...file,
-        issues:   file.issues.map(issue => {
+        issues: file.issues.map(issue => {
             const ruleDef = ALL_RULES.find(r => r.id === issue.ruleId);
             return {
                 ...issue,
                 category: ruleDef?.category || 'General',
                 ruleDescription: ruleDef?.description || 'No description available',
                 ruleName: ruleDef?.name || issue.ruleId,
-                file: file.relativePath // Add file path for the flat table
+                file: file.relativePath
             };
         })
     }));
@@ -26,17 +24,16 @@ export function formatHtml(report: LintReport): string {
     const clientData = {
         metadata: {
             timestamp: report.timestamp,
-            version: '1.0.0', // Could typically come from package.json
+            version: '1.0.0',
             filesScanned: report.files.length,
-            duration: 0 // If we had duration, we'd pass it
+            duration: 0
         },
         summary: report.summary,
         files: enrichedFiles,
-        // Also pass all rule definitions for reference or "Rules" tab if needed later
         rules: ALL_RULES.map(r => ({ id: r.id, name: r.name, category: r.category, severity: r.severity }))
     };
 
-    const jsonPayload = JSON.stringify(clientData).replace(/</g, '\\u003c'); // Safe JSON embedding
+    const jsonPayload = JSON.stringify(clientData).replace(/</g, '\\u003c');
 
     return `<!DOCTYPE html>
 <html lang="en" class="bg-gray-50 text-slate-800">
@@ -64,7 +61,7 @@ export function formatHtml(report: LintReport): string {
                         brand: {
                             50: '#f0f9ff',
                             100: '#e0f2fe',
-                            500: '#0ea5e9', // Sky 500
+                            500: '#0ea5e9',
                             600: '#0284c7',
                             900: '#0c4a6e',
                         },
@@ -96,7 +93,7 @@ export function formatHtml(report: LintReport): string {
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Tabulator Overrides for Tailwind-like feel */
+        /* Tabulator Overrides */
         .tabulator {
             border: none !important;
             background-color: transparent !important;
@@ -132,8 +129,9 @@ export function formatHtml(report: LintReport): string {
             font-size: 0.9rem !important;
         }
         
-        /* Header Filter Inputs - Improved Visibility */
-        .tabulator-header-filter input {
+        /* Header Filter Inputs */
+        .tabulator-header-filter input,
+        .tabulator-header-filter select {
             width: 100% !important;
             padding: 6px 10px !important;
             border: 2px solid #cbd5e1 !important;
@@ -143,12 +141,35 @@ export function formatHtml(report: LintReport): string {
             color: #334155 !important;
             outline: none !important;
         }
-        .tabulator-header-filter input:focus {
+        .tabulator-header-filter input:focus,
+        .tabulator-header-filter select:focus {
             border-color: #0ea5e9 !important;
             box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
         }
         .tabulator-header-filter input::placeholder {
             color: #94a3b8 !important;
+        }
+        
+        /* Tabulator List Filter Styling */
+        .tabulator-edit-list {
+            background: white !important;
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1) !important;
+            max-height: 200px !important;
+            overflow-y: auto !important;
+        }
+        .tabulator-edit-list-item {
+            padding: 8px 12px !important;
+            font-size: 0.85rem !important;
+            color: #334155 !important;
+        }
+        .tabulator-edit-list-item:hover {
+            background-color: #f1f5f9 !important;
+        }
+        .tabulator-edit-list-item.active {
+            background-color: #0ea5e9 !important;
+            color: white !important;
         }
         
         /* Chart Container */
@@ -320,7 +341,7 @@ export function formatHtml(report: LintReport): string {
                         </div>
                         <div class="text-sm text-gray-500 italic">
                             <i data-lucide="filter" class="w-4 h-4 inline mr-1"></i>
-                            Use column headers to filter by Severity, Rule, Category, etc.
+                            Use column headers to filter (multiselect supported)
                         </div>
                     </div>
                     
@@ -346,10 +367,9 @@ export function formatHtml(report: LintReport): string {
         // Flatten issues for the table
         const allIssues = report.files.flatMap(f => f.issues.map(i => ({
             ...i,
-            fileName: f.relativePath // Ensure file name is accessible top level
+            fileName: f.relativePath
         })));
 
-        // --- Router ---
         // --- Router ---
         const router = {
             navigate(view) {
@@ -364,9 +384,7 @@ export function formatHtml(report: LintReport): string {
             
             filterBySeverity(severity) {
                 this.navigate('issues');
-                // Clear existing filters
-                window.tableInstance.clearHeaderFilter(); // Clear all header filters
-                window.tableInstance.setHeaderFilterValue("severity", severity); // Set column filter programmatically
+                window.tableInstance.setHeaderFilterValue("severity", [severity]);
             }
         };
 
@@ -389,12 +407,12 @@ export function formatHtml(report: LintReport): string {
             renderCharts() {
                 const colors = { error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
                 
-                // 1. Top Rules (Bar) - Using Names
+                // Top Rules (Bar) - Using Names
                 const ruleCounts = {};
                 const ruleNames = {};
                 allIssues.forEach(i => {
                     ruleCounts[i.ruleId] = (ruleCounts[i.ruleId] || 0) + 1;
-                    ruleNames[i.ruleId] = i.ruleName; // Map ID to Name
+                    ruleNames[i.ruleId] = i.ruleName;
                 });
                 
                 const sortedRules = Object.entries(ruleCounts)
@@ -407,7 +425,7 @@ export function formatHtml(report: LintReport): string {
                         labels: sortedRules.map(x => {
                             const id = x[0];
                             const name = ruleNames[id];
-                            return name.length > 30 ? name.substring(0, 27) + '...' : name; // Truncate long names
+                            return name.length > 30 ? name.substring(0, 27) + '...' : name;
                         }),
                         datasets: [{
                             label: 'Violations',
@@ -423,7 +441,6 @@ export function formatHtml(report: LintReport): string {
                             tooltip: {
                                 callbacks: {
                                     title: (ctx) => {
-                                        // Show full name and ID in tooltip
                                         const idx = ctx[0].dataIndex;
                                         const id = sortedRules[idx][0];
                                         return \`\${ruleNames[id]} (\${id})\`;
@@ -435,7 +452,7 @@ export function formatHtml(report: LintReport): string {
                     }
                 });
 
-                // 2. Severity (Doughnut)
+                // Severity (Doughnut)
                 new Chart(document.getElementById('chart-severity'), {
                     type: 'doughnut',
                     data: {
@@ -453,7 +470,7 @@ export function formatHtml(report: LintReport): string {
                     }
                 });
                 
-                // 3. Categories (Bar)
+                // Categories (Bar)
                 const catCounts = {};
                 allIssues.forEach(i => catCounts[i.category] = (catCounts[i.category] || 0) + 1);
                 const sortedCats = Object.entries(catCounts).sort((a,b) => b[1] - a[1]);
@@ -461,7 +478,7 @@ export function formatHtml(report: LintReport): string {
                  new Chart(document.getElementById('chart-categories'), {
                     type: 'bar',
                     data: {
-                        labels: sortedCats.map(x => x[0].charAt(0).toUpperCase() + x[0].slice(1)), // Capitalize
+                        labels: sortedCats.map(x => x[0].charAt(0).toUpperCase() + x[0].slice(1)),
                         datasets: [{
                             label: 'Issues',
                             data: sortedCats.map(x => x[1]),
@@ -483,50 +500,59 @@ export function formatHtml(report: LintReport): string {
                 const table = new Tabulator("#issues-table-container", {
                     data: allIssues,
                     layout: "fitColumns",
-                    height: "100%", // Fit container
+                    height: "100%",
                     placeholder: "No issues found matching filters",
-                    // No pagination - show all rows
                     
                     columns: [
                         { 
                             title: "Severity", 
                             field: "severity", 
                             width: 140,
-                            headerFilter: "input",
-                            headerFilterPlaceholder: "Filter...",
+                            headerFilter: "list",
+                            headerFilterParams: {
+                                valuesLookup: true,
+                                multiselect: true,
+                                clearable: true
+                            },
+                            headerFilterFunc: "in",
                             formatter: (cell) => {
                                 const val = cell.getValue();
-                                const colors = {
+                                const colorMap = {
                                     error: "bg-red-100 text-red-700 border-red-200",
                                     warning: "bg-orange-100 text-orange-700 border-orange-200",
                                     info: "bg-blue-100 text-blue-700 border-blue-200"
                                 };
-                                return \`<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border \${colors[val] || 'bg-gray-100'} uppercase tracking-wide">\${val}</span>\`;
+                                return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ' + (colorMap[val] || 'bg-gray-100') + ' uppercase tracking-wide">' + val + '</span>';
                             }
                         },
                         { 
                             title: "Rule", 
-                            field: "ruleName", // Use Name for display
+                            field: "ruleName",
                             width: 250,
-                            headerFilter: "input",
-                            headerFilterPlaceholder: "Filter...",
+                            headerFilter: "list",
+                            headerFilterParams: {
+                                valuesLookup: true,
+                                multiselect: true,
+                                clearable: true
+                            },
+                            headerFilterFunc: "in",
                             formatter: (cell) => {
                                 const row = cell.getRow().getData();
-                                return \`
-                                    <div class="flex flex-col">
-                                        <span class="font-medium text-sm text-gray-900">\${cell.getValue()}</span>
-                                        <span class="text-xs text-gray-500 font-mono">\${row.ruleId}</span>
-                                    </div>
-                                \`;
+                                return '<div class="flex flex-col"><span class="font-medium text-sm text-gray-900">' + cell.getValue() + '</span><span class="text-xs text-gray-500 font-mono">' + row.ruleId + '</span></div>';
                             }
                         },
                         { 
                             title: "Category", 
                             field: "category", 
                             width: 140, 
-                            headerFilter: "input",
-                            headerFilterPlaceholder: "Filter...",
-                            formatter: (cell) => \`<span class="text-sm text-gray-600 capitalize">\${cell.getValue()}</span>\` 
+                            headerFilter: "list",
+                            headerFilterParams: {
+                                valuesLookup: true,
+                                multiselect: true,
+                                clearable: true
+                            },
+                            headerFilterFunc: "in",
+                            formatter: (cell) => '<span class="text-sm text-gray-600 capitalize">' + cell.getValue() + '</span>'
                         },
                         { 
                             title: "File Path", 
@@ -535,25 +561,19 @@ export function formatHtml(report: LintReport): string {
                             headerFilterPlaceholder: "Filter...",
                             formatter: (cell) => {
                                 const row = cell.getRow().getData();
-                                return \`
-                                    <div class="flex flex-col">
-                                        <span class="font-mono text-sm text-brand-600 font-medium truncate" title="\${row.fileName}">\${row.fileName}</span>
-                                        <span class="text-xs text-gray-400 font-mono">Line: \${row.line}</span>
-                                    </div>
-                                \`;
+                                return '<div class="flex flex-col"><span class="font-mono text-sm text-brand-600 font-medium truncate" title="' + row.fileName + '">' + row.fileName + '</span><span class="text-xs text-gray-400 font-mono">Line: ' + row.line + '</span></div>';
                             },
                         },
                         { 
                             title: "Message", 
                             field: "message", 
                             widthGrow: 2,
-                            headerFilter: "input", // Keep simple text for message
-                            formatter: (cell) => \`
-                                <div class="flex flex-col gap-1">
-                                    <span class="text-sm text-gray-700">\${cell.getValue()}</span>
-                                    <span class="text-xs text-gray-400">\${cell.getRow().getData().ruleDescription}</span>
-                                </div>
-                            \`
+                            headerFilter: "input",
+                            headerFilterPlaceholder: "Filter...",
+                            formatter: (cell) => {
+                                const row = cell.getRow().getData();
+                                return '<div class="flex flex-col gap-1"><span class="text-sm text-gray-700">' + cell.getValue() + '</span><span class="text-xs text-gray-400">' + row.ruleDescription + '</span></div>';
+                            }
                         }
                     ],
                     initialSort: [{ column: "severity", dir: "asc" }]
@@ -561,7 +581,7 @@ export function formatHtml(report: LintReport): string {
                 
                 window.tableInstance = table;
 
-                // Quick Search Overlay
+                // Quick Search
                 document.getElementById('global-search').addEventListener('keyup', (e) => {
                     const term = e.target.value.toLowerCase();
                     if (!term) { table.clearFilter(); return; }
@@ -589,4 +609,3 @@ export function formatHtml(report: LintReport): string {
 </body>
 </html>`;
 }
-
