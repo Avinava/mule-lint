@@ -20,6 +20,7 @@ program
     .option('-c, --config <file>', 'Path to configuration file')
     .option('-q, --quiet', 'Show only errors (suppress warnings and info)')
     .option('--fail-on-warning', 'Exit with error code if warnings found')
+    .option('-e, --experimental', 'Enable experimental rules (opt-in)')
     .option('-v, --verbose', 'Show verbose output')
     .action(async (targetPath: string, options) => {
         try {
@@ -37,6 +38,7 @@ interface CliOptions {
     config?: string;
     quiet?: boolean;
     failOnWarning?: boolean;
+    experimental?: boolean;
     verbose?: boolean;
 }
 
@@ -59,9 +61,18 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
         config = JSON.parse(configContent);
     }
 
+    // Filter rules based on keys (experimental is opt-in)
+    const effectiveRules = options.experimental
+        ? ALL_RULES
+        : ALL_RULES.filter(rule => rule.category !== 'experimental');
+
+    if (options.verbose) {
+        console.log(`Loaded ${effectiveRules.length} rules (Experimental: ${options.experimental ? 'ON' : 'OFF'})`);
+    }
+
     // Create engine
     const engine = new LintEngine({
-        rules: ALL_RULES,
+        rules: effectiveRules,
         config,
         verbose: options.verbose,
     });
