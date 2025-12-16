@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:db="http://www.mulesoft.org/schema/mule/db"
+      xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+                          http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+                          http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+                          http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+
+    <!-- MULE-201: Hardcoded password (BAD) -->
+    <db:config name="Database_Config">
+        <db:my-sql-connection host="localhost" port="3306" 
+                              user="admin" 
+                              password="SuperSecret123!"/>
+    </db:config>
+
+    <!-- MULE-202: Insecure TLS (BAD) -->
+    <tls:context name="Insecure_TLS_Context">
+        <tls:trust-store insecure="true"/>
+    </tls:context>
+
+    <!-- MULE-403: HTTP config without timeout (BAD) -->
+    <http:request-config name="Bad_HTTP_Config">
+        <http:request-connection host="api.example.com" port="443"/>
+    </http:request-config>
+
+    <!-- MULE-003/MULE-101: Bad flow naming, no error handler -->
+    <flow name="GetOrders">
+        <http:listener config-ref="HTTP_Listener_config" path="/orders"/>
+        
+        <!-- MULE-006: Logger without category -->
+        <logger message="Processing request" level="INFO"/>
+        
+        <!-- MULE-301: Logger with full payload (BAD) -->
+        <logger message="#[payload]" level="DEBUG" category="app"/>
+        
+        <!-- MULE-604: Missing doc:name on key components -->
+        <set-variable variableName="OrderID" value="#[attributes.queryParams.id]"/>
+        
+        <!-- MULE-102: Bad variable naming (should be camelCase) -->
+        <set-variable variableName="order_status" value="pending"/>
+        <set-variable variableName="Customer-Name" value="John"/>
+        
+        <!-- MULE-401/402: HTTP request without User-Agent or Content-Type -->
+        <http:request method="POST" config-ref="Bad_HTTP_Config" path="/api/orders"/>
+        
+        <!-- MULE-503: Large choice block (>7 when clauses) -->
+        <choice>
+            <when expression="#[vars.status == 'new']">
+                <logger message="New order" level="INFO"/>
+            </when>
+            <when expression="#[vars.status == 'pending']">
+                <logger message="Pending order" level="INFO"/>
+            </when>
+            <when expression="#[vars.status == 'processing']">
+                <logger message="Processing order" level="INFO"/>
+            </when>
+            <when expression="#[vars.status == 'shipped']">
+                <logger message="Shipped order" level="INFO"/>
+            </when>
+            <when expression="#[vars.status == 'delivered']">
+                <logger message="Delivered order" level="INFO"/>
+            </when>
+            <when expression="#[vars.status == 'cancelled']">
+                <logger message="Cancelled order" level="INFO"/>
+            </when>
+            <when expression="#[vars.status == 'refunded']">
+                <logger message="Refunded order" level="INFO"/>
+            </when>
+            <when expression="#[vars.status == 'on_hold']">
+                <logger message="On hold order" level="INFO"/>
+            </when>
+            <otherwise>
+                <raise-error type="APP:UNKNOWN" description="Unknown status"/>
+            </otherwise>
+        </choice>
+    </flow>
+
+    <!-- MULE-502: Async without error handler -->
+    <flow name="async-processing-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/async"/>
+        
+        <async>
+            <!-- No error handler inside async - bad practice -->
+            <logger message="Async processing" level="INFO" category="app"/>
+            <http:request method="GET" config-ref="Bad_HTTP_Config" path="/slow-endpoint"/>
+        </async>
+        
+        <error-handler>
+            <!-- MULE-009: Generic error type -->
+            <on-error-continue type="ANY">
+                <!-- MULE-005/007: Missing httpStatus and correlationId -->
+                <logger message="Error occurred" level="ERROR" category="error"/>
+            </on-error-continue>
+        </error-handler>
+    </flow>
+
+    <!-- MULE-303: Logger in until-successful -->
+    <flow name="retry-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/retry"/>
+        
+        <until-successful maxRetries="5" millisBetweenRetries="1000">
+            <!-- Bad: logger will flood logs on retries -->
+            <logger message="Attempting request..." level="INFO" category="app"/>
+            <http:request method="GET" config-ref="Bad_HTTP_Config" path="/unreliable"/>
+        </until-successful>
+        
+        <error-handler>
+            <on-error-propagate type="HTTP:TIMEOUT">
+                <set-variable variableName="httpStatus" value="504"/>
+                <logger message="#[correlationId ++ ': Timeout']" level="ERROR" category="error"/>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- MULE-602/601: Sub-flow without description -->
+    <sub-flow name="helper">
+        <logger message="Helper subflow" level="DEBUG" category="app"/>
+    </sub-flow>
+
+</mule>

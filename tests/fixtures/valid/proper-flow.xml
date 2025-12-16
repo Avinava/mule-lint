@@ -1,65 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
       xmlns:http="http://www.mulesoft.org/schema/mule/http"
       xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
                           http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
                           http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 
-    <!-- This is a valid Mule configuration that should pass all rules -->
-    
-    <flow name="orders-get-flow" doc:name="Orders Get Flow">
-        <http:listener config-ref="httpListener" path="/orders" doc:name="HTTP Listener"/>
+    <!-- Well-structured HTTP configuration with timeout -->
+    <http:request-config name="HTTP_Request_Configuration" 
+                         doc:name="HTTP Request Configuration"
+                         responseTimeout="30000">
+        <http:request-connection host="${api.host}" port="${api.port}" />
+    </http:request-config>
+
+    <!-- Global Error Handler - Best Practice -->
+    <error-handler name="global-error-handler" doc:name="Global Error Handler">
+        <on-error-propagate type="HTTP:CONNECTIVITY" doc:name="On Error Propagate">
+            <set-variable variableName="httpStatus" value="503" doc:name="Set HTTP Status"/>
+            <set-variable variableName="correlationId" value="#[correlationId]" doc:name="Set Correlation ID"/>
+            <logger level="ERROR" 
+                    category="com.myorg.error" 
+                    message='#[%dw 2.0 output application/json --- {"error": error.description, "correlationId": vars.correlationId}]'
+                    doc:name="Log Error"/>
+        </on-error-propagate>
+        <on-error-propagate type="APIKIT:BAD_REQUEST" doc:name="On Error Propagate">
+            <set-variable variableName="httpStatus" value="400" doc:name="Set HTTP Status"/>
+            <set-variable variableName="correlationId" value="#[correlationId]" doc:name="Set Correlation ID"/>
+            <logger level="WARN" 
+                    category="com.myorg.error" 
+                    message='#[%dw 2.0 output application/json --- {"error": "Bad Request", "correlationId": vars.correlationId}]'
+                    doc:name="Log Warning"/>
+        </on-error-propagate>
+    </error-handler>
+
+    <!-- Main API flow with proper naming and error handling -->
+    <flow name="orders-api-flow" doc:name="Orders API Flow" doc:description="Main entry point for Orders API">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/v1/orders" doc:name="HTTP Listener"/>
         
         <logger level="INFO" 
-                message="#[%dw 2.0 output application/json --- { correlationId: correlationId, action: 'fetching orders' }]" 
                 category="com.myorg.orders" 
+                message='#[%dw 2.0 output application/json --- {"message": "Received order request", "orderId": attributes.queryParams.orderId}]'
                 doc:name="Log Request"/>
         
-        <ee:transform doc:name="Transform Response">
+        <flow-ref name="validate-order-subflow" doc:name="Validate Order"/>
+        <flow-ref name="process-order-subflow" doc:name="Process Order"/>
+        
+        <ee:transform doc:name="Build Response">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-    orders: []
+    status: "success",
+    orderId: vars.orderId,
+    correlationId: correlationId
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
         
-        <error-handler>
-            <on-error-propagate type="HTTP:CONNECTIVITY">
-                <set-variable variableName="httpStatus" value="503" doc:name="Set HTTP Status"/>
-                <logger level="ERROR" 
-                        message="#[%dw 2.0 output application/json --- { correlationId: correlationId, error: error.description }]" 
-                        category="com.myorg.orders.error" 
-                        doc:name="Log Error"/>
-            </on-error-propagate>
-            <on-error-propagate type="VALIDATION:INVALID_JSON">
-                <set-variable variableName="httpStatus" value="400" doc:name="Set HTTP Status"/>
-                <logger level="ERROR" 
-                        message="#[%dw 2.0 output application/json --- { correlationId: correlationId, error: error.description }]" 
-                        category="com.myorg.orders.error" 
-                        doc:name="Log Error"/>
-            </on-error-propagate>
-        </error-handler>
+        <error-handler ref="global-error-handler"/>
     </flow>
-    
-    <sub-flow name="orders-transform-subflow" doc:name="Orders Transform Subflow">
-        <logger level="DEBUG" 
-                message="#[%dw 2.0 output application/json --- { action: 'transforming' }]" 
-                category="com.myorg.orders.transform" 
-                doc:name="Log Transform"/>
-        <ee:transform doc:name="Transform">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-payload]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+
+    <!-- Sub-flow with proper naming -->
+    <sub-flow name="validate-order-subflow" doc:name="Validate Order Subflow" doc:description="Validates incoming order data">
+        <set-variable variableName="orderId" value="#[attributes.queryParams.orderId]" doc:name="Extract Order ID"/>
+        
+        <choice doc:name="Check Order Type">
+            <when expression="#[vars.orderId != null]">
+                <logger level="DEBUG" category="com.myorg.validation" message="Order ID is valid" doc:name="Log Valid"/>
+            </when>
+            <otherwise>
+                <raise-error type="APP:INVALID_ORDER" description="Missing order ID" doc:name="Raise Error"/>
+            </otherwise>
+        </choice>
+    </sub-flow>
+
+    <!-- Processing sub-flow -->
+    <sub-flow name="process-order-subflow" doc:name="Process Order Subflow" doc:description="Processes the validated order">
+        <http:request method="POST" config-ref="HTTP_Request_Configuration" path="/orders" doc:name="Create Order">
+            <http:headers><![CDATA[#[{
+                "Content-Type": "application/json",
+                "User-Agent": "OrdersAPI/1.0",
+                "X-Correlation-ID": correlationId
+            }]]]></http:headers>
+        </http:request>
+        
+        <logger level="INFO" 
+                category="com.myorg.orders" 
+                message='#[%dw 2.0 output application/json --- {"message": "Order processed", "orderId": vars.orderId}]'
+                doc:name="Log Success"/>
     </sub-flow>
 
 </mule>
