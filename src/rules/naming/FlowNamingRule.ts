@@ -23,6 +23,14 @@ export class FlowNamingRule extends BaseRule {
         const excludePatterns = this.getOption<string[]>(context, 'excludePatterns', [
             '*-api-main',
             '*-api-console',
+            // APIKit auto-generated flow patterns (HTTP verb:resource:config format)
+            'get:*',
+            'post:*',
+            'put:*',
+            'patch:*',
+            'delete:*',
+            'options:*',
+            'head:*',
         ]);
 
         // Check flows

@@ -24,6 +24,17 @@ export class ChoiceAntiPatternRule extends BaseRule {
         );
 
         for (const raiseError of raiseErrorsInOtherwise) {
+            // Skip if the raise-error is inside an until-successful block
+            // This is a valid retry pattern where raise-error triggers the retry
+            const isInsideUntilSuccessful = this.select(
+                'ancestor::mule:until-successful',
+                raiseError
+            ).length > 0;
+
+            if (isInsideUntilSuccessful) {
+                continue; // Valid retry pattern, skip
+            }
+
             const errorType = this.getAttribute(raiseError, 'type') ?? 'unknown';
 
             issues.push(this.createIssue(

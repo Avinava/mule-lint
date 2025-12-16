@@ -14,6 +14,9 @@ export class FlowCasingRule extends BaseRule {
     category = 'naming' as const;
 
     private readonly KEBAB_CASE_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*(-flow|-subflow)?$/;
+    
+    // APIKit auto-generated flow patterns (HTTP verb:resource:config format)
+    private readonly APIKIT_PATTERN = /^(get|post|put|patch|delete|options|head):\\/;
 
     validate(doc: Document, _context: ValidationContext): Issue[] {
         const issues: Issue[] = [];
@@ -23,6 +26,11 @@ export class FlowCasingRule extends BaseRule {
         for (const flow of flows) {
             const name = this.getNameAttribute(flow);
             if (!name) continue;
+
+            // Skip APIKit auto-generated flows (e.g., "get:\\healthCheck:tns-billing-papi-config")
+            if (this.APIKIT_PATTERN.test(name)) {
+                continue;
+            }
 
             if (!this.KEBAB_CASE_PATTERN.test(name)) {
                 issues.push(this.createIssue(
