@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.1] - 2024-12-16
+
+### Fixed
+- Corrected GitHub URL in HTML report header
+
+---
+
 ## [1.7.0] - 2024-12-16
 
 ### Fixed
