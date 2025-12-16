@@ -20,7 +20,7 @@
 **Mule-Lint** is a TypeScript-based linting tool designed to enforce best practices and standards for MuleSoft applications. It provides:
 
 - ✅ **10+ Built-in Rules** covering error handling, naming conventions, security, and logging
-- ✅ **Multiple Output Formats** - Table (human), JSON (scripts), SARIF (AI agents/VS Code)
+- ✅ **Multiple Output Formats** - Table, JSON, SARIF, HTML, CSV <!-- id: 4 -->
 - ✅ **CI/CD Ready** - Exit codes and machine-readable output
 - ✅ **TypeScript** - Fully typed for VS Code extension integration
 - ✅ **Extensible** - Add custom rules for your organization
@@ -65,7 +65,7 @@ flowchart LR
     B --> C["Execute Rules"]
     C --> D["Collect Issues"]
     D --> E["Format Output"]
-    E --> F["Table / JSON / SARIF"]
+    E --> F["Table / JSON / SARIF / HTML / CSV"]
 ```
 
 
@@ -75,10 +75,10 @@ flowchart LR
 
 ```bash
 # Global installation
-npm install -g mule-lint
+npm install -g @sfdxy/mule-lint
 
 # Or as a dev dependency
-npm install --save-dev mule-lint
+npm install --save-dev @sfdxy/mule-lint
 ```
 
 ---
@@ -109,7 +109,7 @@ mule-lint ./src/main/mule --fail-on-warning
 
 | Option | Description |
 |--------|-------------|
-| `-f, --format <type>` | Output format: `table`, `json`, `sarif` (default: `table`) |
+| `-f, --format <type>` | Output format: `table`, `json`, `sarif`, `html`, `csv` (default: `table`) |
 | `-o, --output <file>` | Write output to file instead of stdout |
 | `-c, --config <file>` | Path to configuration file |
 | `-q, --quiet` | Show only errors (suppress warnings and info) |
@@ -259,6 +259,24 @@ Machine-readable for scripting:
 }
 ```
 
+### HTML (Human Readable)
+
+Generates a visual report with summary cards and correct issue highlighting:
+
+```bash
+mule-lint src/main/mule -f html -o report.html
+```
+
+### CSV (Spreadsheet)
+
+Generates a comma-separated values file for Excel import:
+
+```csv
+Severity,Rule,File,Line,Column,Message
+error,MULE-001,src/main/mule/app.xml,10,5,"Global Error Handler missing"
+warning,MULE-002,src/main/mule/app.xml,15,4,"Flow name not kebab-case"
+```
+
 ---
 
 ## Configuration
@@ -298,7 +316,7 @@ Create a `.mulelintrc.json` file in your project root:
 Import directly into your TypeScript/JavaScript projects:
 
 ```typescript
-import { LintEngine, ALL_RULES, formatSarif } from 'mule-lint';
+import { LintEngine, ALL_RULES, formatSarif } from '@sfdxy/mule-lint';
 
 // Create engine with all rules
 const engine = new LintEngine({
@@ -325,7 +343,7 @@ const issues = engine.scanContent(xmlContent, 'file.xml');
 See [Extending Guide](docs/extending.md) for detailed instructions on creating custom rules.
 
 ```typescript
-import { BaseRule, ValidationContext, Issue } from 'mule-lint';
+import { BaseRule, ValidationContext, Issue } from '@sfdxy/mule-lint';
 
 export class MyCustomRule extends BaseRule {
     id = 'CUSTOM-001';
