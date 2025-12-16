@@ -120,6 +120,8 @@ mule-lint ./src/main/mule --fail-on-warning
 
 ## Rules
 
+### Core Rules (MVP)
+
 | ID | Name | Severity | Category | Description |
 |----|------|----------|----------|-------------|
 | MULE-001 | Global Error Handler | Error | Error Handling | Project should have global error handler |
@@ -133,7 +135,24 @@ mule-lint ./src/main/mule --fail-on-warning
 | MULE-009 | Generic Error Type | Warning | Error Handling | Avoid catching type="ANY" |
 | MULE-010 | DWL Standards | Info | Standards | Standard DataWeave files should exist |
 
-See [Rules Catalog](docs/rules-catalog.md) for detailed documentation of each rule.
+### Extended Rules (v1.1.0)
+
+| ID | Name | Severity | Category | Description |
+|----|------|----------|----------|-------------|
+| MULE-101 | Flow Casing | Warning | Naming | Flow names should be kebab-case |
+| MULE-102 | Variable Naming | Warning | Naming | Variables should be camelCase |
+| MULE-201 | Hardcoded Credentials | Error | Security | Passwords should use `${secure::}` |
+| MULE-202 | Insecure TLS | Error | Security | TLS should not have insecure="true" |
+| MULE-301 | Logger Payload | Warning | Logging | Don't log entire payload |
+| MULE-303 | Logger in Until-Successful | Warning | Logging | Avoid loggers in retry loops |
+| MULE-401 | HTTP User-Agent | Warning | HTTP | Include User-Agent header |
+| MULE-501 | Scatter-Gather Routes | Info | Performance | Limit parallel routes |
+| MULE-502 | Async Error Handler | Warning | Performance | Async needs error handling |
+| MULE-601 | Flow Description | Info | Documentation | Flows should have doc:description |
+| MULE-701 | Deprecated Components | Warning | Standards | Detect deprecated Mule elements |
+
+See [Rules Catalog](docs/rules-catalog.md) for detailed documentation.
+
 
 ---
 
