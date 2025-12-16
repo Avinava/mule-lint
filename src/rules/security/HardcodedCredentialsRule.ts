@@ -67,11 +67,11 @@ export class HardcodedCredentialsRule extends BaseRule {
         // Ignore boolean/numeric flags (e.g. useToken="true", timeout="1000")
         if (value === 'true' || value === 'false' || !isNaN(Number(value))) return false;
 
-        // Check for secure property placeholder
-        // Must start with ${secure:: and end with }
-        if (value.startsWith('${secure::') && value.endsWith('}')) return false;
+        // Check for any property placeholder - value defined elsewhere
+        // Allows ${...}, ${secure::...}, ${p(...)}, #[...], etc.
+        if (value.includes('${') || value.startsWith('#[')) return false;
 
-        // Any other value is considered "hardcoded" or "insecure" in this context
+        // Any other value is considered "hardcoded" in this context
         return true;
     }
 }

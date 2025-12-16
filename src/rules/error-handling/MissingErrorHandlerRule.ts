@@ -22,6 +22,14 @@ export class MissingErrorHandlerRule extends BaseRule {
             '*-api-main',
             '*api-main*',
             '*-console',
+            // APIKit auto-generated flow patterns (HTTP verb:resource:config format)
+            'get:*',
+            'post:*',
+            'put:*',
+            'patch:*',
+            'delete:*',
+            'options:*',
+            'head:*',
         ]);
 
         // Find flows without error handlers

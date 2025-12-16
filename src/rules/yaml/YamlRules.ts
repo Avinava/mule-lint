@@ -106,10 +106,11 @@ export class PropertyNamingRule extends BaseRule {
 
     private isValidPropertyName(key: string): boolean {
         // Valid: db.host, api.client.timeout, http.port, salesforce.authorizationUrl
-        // Invalid: DBHOST, db-host, DbHost
-        // Now allows camelCase for property names (e.g., authorizationUrl)
-        return /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/.test(key) ||
-            /^[a-z][a-zA-Z0-9]*$/.test(key); // Single word keys OK too
+        // Valid: external-sapi.basepath, ramp.polling.max_retries
+        // Invalid: DBHOST, DbHost (no uppercase at start of segment)
+        // Now allows camelCase, hyphens in categories, underscores in properties
+        return /^[a-z][a-zA-Z0-9_-]*(\.[a-z][a-zA-Z0-9_-]*)+$/.test(key) ||
+            /^[a-z][a-zA-Z0-9_-]*$/.test(key); // Single word keys OK too
     }
 
     private findYamlFiles(dir: string): string[] {
