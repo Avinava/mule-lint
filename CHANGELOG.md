@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2024-12-16
+
+### Added
+- **MULE-802 Fix**: Smart detection for standalone files (skips structure validation)
+- **Developer Experience**: Added Prettier and EditorConfig support
+- **Maintenance**: Updated dependencies
+
+---
+
 ## [1.3.0] - 2024-12-16
 
 ### Added
