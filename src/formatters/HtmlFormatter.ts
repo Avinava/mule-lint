@@ -1,5 +1,6 @@
 import { LintReport } from '../types/Report';
 import { ALL_RULES } from '../rules';
+import packageJson from '../../package.json';
 
 /**
  * Format lint report as a modern, interactive HTML Single Page Application
@@ -24,9 +25,9 @@ export function formatHtml(report: LintReport): string {
     const clientData = {
         metadata: {
             timestamp: report.timestamp,
-            version: '1.0.0',
+            version: packageJson.version,
             filesScanned: report.files.length,
-            duration: 0
+            duration: report.durationMs || 0
         },
         summary: report.summary,
         files: enrichedFiles,
@@ -300,7 +301,10 @@ export function formatHtml(report: LintReport): string {
                     <!-- Top Rules -->
                     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold text-gray-800">Top 5 Violated Rules</h3>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Top 5 Violated Rules</h3>
+                                <p class="text-sm text-gray-500 mt-1">Most frequently triggered lint rules</p>
+                            </div>
                         </div>
                         <div class="chart-container">
                             <canvas id="chart-top-rules"></canvas>
@@ -310,7 +314,10 @@ export function formatHtml(report: LintReport): string {
                     <!-- Severity Distribution -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold text-gray-800">Severity Breakdown</h3>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Severity Breakdown</h3>
+                                <p class="text-sm text-gray-500 mt-1">Distribution by issue type</p>
+                            </div>
                         </div>
                         <div class="chart-container flex items-center justify-center">
                             <canvas id="chart-severity"></canvas>
@@ -321,7 +328,10 @@ export function formatHtml(report: LintReport): string {
                  <!-- Categories Section -->
                  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold text-gray-800">Issues by Category</h3>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Issues by Category</h3>
+                            <p class="text-sm text-gray-500 mt-1">Grouped by rule category</p>
+                        </div>
                         <button onclick="router.navigate('issues')" class="text-sm text-brand-600 hover:text-brand-900 font-medium">View All Issues &rarr;</button>
                     </div>
                     <div class="h-[300px] w-full relative">
@@ -471,10 +481,16 @@ export function formatHtml(report: LintReport): string {
                     }
                 });
                 
-                // Categories (Bar)
+                // Categories (Bar) - Colorful
                 const catCounts = {};
                 allIssues.forEach(i => catCounts[i.category] = (catCounts[i.category] || 0) + 1);
                 const sortedCats = Object.entries(catCounts).sort((a,b) => b[1] - a[1]);
+                
+                // Color palette for categories
+                const categoryColors = [
+                    '#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444',
+                    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+                ];
                 
                  new Chart(document.getElementById('chart-categories'), {
                     type: 'bar',
@@ -483,7 +499,7 @@ export function formatHtml(report: LintReport): string {
                         datasets: [{
                             label: 'Issues',
                             data: sortedCats.map(x => x[1]),
-                            backgroundColor: '#64748b',
+                            backgroundColor: sortedCats.map((_, i) => categoryColors[i % categoryColors.length]),
                             borderRadius: 4,
                             barThickness: 20
                         }]
