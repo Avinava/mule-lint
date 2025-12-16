@@ -98,6 +98,10 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
         const outputPath = path.resolve(options.output);
         fs.writeFileSync(outputPath, output, 'utf-8');
         console.log(`Report written to: ${outputPath}`);
+    } else if (formatterType === 'html') {
+        const outputPath = path.resolve('report.html');
+        fs.writeFileSync(outputPath, output, 'utf-8');
+        console.log(`Report written to: ${outputPath}`);
     } else {
         console.log(output);
     }
