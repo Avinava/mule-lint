@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2024-12-16
+
+### Added
+- **Modern HTML Report**: Completely rewritten interactive dashboard
+  - Dashboard with summary cards and Chart.js charts (severity donut, top rules bar, categories bar)
+  - Tabulator-based issues table with multiselect column filters
+  - Frozen table header for better navigation
+  - Full-width expandable layout
+  - Global search and CSV export
+  - Built with Tailwind CSS, Chart.js, and Tabulator
+
+### Changed
+- Updated README architecture diagram to include HTML formatter stack
+- Enhanced HTML output documentation
+
+---
+
 ## [1.4.0] - 2024-12-16
 
 ### Added

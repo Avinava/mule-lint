@@ -49,12 +49,22 @@ flowchart TB
         I[Table]
         J[JSON]
         K[SARIF]
+        L[HTML Dashboard]
+        M[CSV]
+    end
+    
+    subgraph HTMLStack["HTML Report Stack"]
+        L --> N[Tailwind CSS]
+        L --> O[Chart.js]
+        L --> P[Tabulator]
     end
     
     A --> B
     D --> I
     D --> J
     D --> K
+    D --> L
+    D --> M
 ```
 
 ### Data Flow
@@ -259,9 +269,17 @@ Machine-readable for scripting:
 }
 ```
 
-### HTML (Human Readable)
+### HTML (Interactive Dashboard)
 
-Generates a visual report with summary cards and correct issue highlighting:
+Generates a modern, interactive single-page report with:
+
+- **Dashboard View**: Summary cards, severity donut chart, top violated rules bar chart, issues by category
+- **Issues Browser**: Full-width searchable table with multiselect filters
+- **Frozen Headers**: Table header stays visible when scrolling
+- **Export**: Download filtered results as CSV
+- **Responsive**: Works on desktop and mobile
+
+Built with **Tailwind CSS**, **Chart.js**, and **Tabulator**.
 
 ```bash
 mule-lint src/main/mule -f html -o report.html
