@@ -21,9 +21,10 @@ export class EnvironmentFilesRule extends BaseRule {
 
         const configDir = path.join(context.projectRoot, 'src/main/resources');
         const configSubDir = path.join(configDir, 'config');
+        const propertiesDir = path.join(configDir, 'properties');
 
-        // Check both possible locations
-        const searchDirs = [configDir, configSubDir].filter(d => fs.existsSync(d));
+        // Check all possible locations for property files
+        const searchDirs = [configDir, configSubDir, propertiesDir].filter(d => fs.existsSync(d));
 
         if (searchDirs.length === 0) {
             return []; // No config directory found
@@ -104,10 +105,11 @@ export class PropertyNamingRule extends BaseRule {
     }
 
     private isValidPropertyName(key: string): boolean {
-        // Valid: db.host, api.client.timeout, http.port
+        // Valid: db.host, api.client.timeout, http.port, salesforce.authorizationUrl
         // Invalid: DBHOST, db-host, DbHost
-        return /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/.test(key) ||
-            /^[a-z][a-z0-9]*$/.test(key); // Single word keys OK too
+        // Now allows camelCase for property names (e.g., authorizationUrl)
+        return /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/.test(key) ||
+            /^[a-z][a-zA-Z0-9]*$/.test(key); // Single word keys OK too
     }
 
     private findYamlFiles(dir: string): string[] {
