@@ -207,7 +207,7 @@ mule-lint src/main/mule -f sarif -o results.sarif
 
 **Total: 41 rules** across 13 categories.
 
-See [Rules Catalog](docs/rules-catalog.md) for detailed documentation.
+See [Rules Catalog](docs/best-practices/rules-catalog.md) for detailed documentation.
 
 
 
@@ -360,7 +360,7 @@ const issues = engine.scanContent(xmlContent, 'file.xml');
 
 ### Adding Custom Rules
 
-See [Extending Guide](docs/extending.md) for detailed instructions on creating custom rules.
+See [Extending Guide](docs/linter/extending.md) for detailed instructions on creating custom rules.
 
 ```typescript
 import { BaseRule, ValidationContext, Issue } from '@sfdxy/mule-lint';
@@ -400,10 +400,11 @@ While the original project uses Groovy and a custom DSL, this TypeScript impleme
 
 | Document | Description |
 |----------|-------------|
-| [Architecture](docs/architecture.md) | System design and data flow |
-| [Rules Catalog](docs/rules-catalog.md) | Complete list of all rules |
-| [Extending](docs/extending.md) | How to add custom rules |
-| [Naming Conventions](docs/naming-conventions.md) | Code style guide |
+| [Architecture](docs/linter/architecture.md) | System design and data flow |
+| [Rules Catalog](docs/best-practices/rules-catalog.md) | Complete list of all rules |
+| [Best Practices](docs/best-practices/mulesoft-best-practices.md) | MuleSoft development guidelines |
+| [Extending](docs/linter/extending.md) | How to add custom rules |
+| [Naming Conventions](docs/linter/naming-conventions.md) | Code style guide |
 
 ---
 
