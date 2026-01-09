@@ -203,9 +203,19 @@ mule-lint src/main/mule -f sarif -o results.sarif
 | EXP-003 | MUnit Coverage | Info | Experimental | Check for MUnit tests |
 | YAML-001 | Env Files | Warning | Standards | Environment YAML files |
 | YAML-003 | Property Naming | Info | Standards | Property key format |
-| YAML-004 | Plaintext Secrets | Error | Security | Encrypted secrets |
+### 2025-2026 Best Practices Rules (NEW)
 
-**Total: 41 rules** across 13 categories.
+| ID | Name | Severity | Category | Description |
+|----|------|----------|----------|-------------|
+| SEC-002 | TLS Version | Error | Security | Detect deprecated TLS versions (< 1.2) |
+| SEC-003 | Rate Limiting | Warning | Security | APIs should have rate limiting configured |
+| SEC-004 | Input Validation | Warning | Security | Incoming payloads should be validated |
+| LOG-001 | Structured Logging | Info | Logging | Recommend JSON logger format |
+| LOG-004 | Sensitive Data Logging | Error | Logging | Detect PII/secrets in log statements |
+| ERR-001 | Try Scope | Info | Error Handling | Complex operations should use Try scope |
+| PERF-002 | Connection Pooling | Warning | Performance | DB/HTTP should configure connection pools |
+
+**Total: 48 rules** across 13 categories.
 
 See [Rules Catalog](docs/best-practices/rules-catalog.md) for detailed documentation.
 
