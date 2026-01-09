@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.3] - 2026-01-10
+
+### Validated
+- **MCP Server**: Full validation of MCP server implementation
+  - All 3 tools working: `run_lint_analysis`, `get_rule_details`, `validate_snippet`
+  - All 8 resources working: rules list and 7 documentation endpoints
+- **CLI Scan**: Verified on real MuleSoft project (tns-external-sapi)
+- **All Tests Passing**: 43 tests passing
+
+### Fixed
+- **MCP Version Sync**: Updated MCP server version to match package.json
+
+---
+
 ## [1.8.2] - 2026-01-09
 
 ### Fixed
