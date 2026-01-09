@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-201: Hardcoded Credentials
- * 
+ *
  * Passwords and secrets should use secure property placeholders.
  */
 export class HardcodedCredentialsRule extends BaseRule {
@@ -40,13 +40,15 @@ export class HardcodedCredentialsRule extends BaseRule {
 
                 // Check if this is a sensitive attribute
                 if (this.isSensitiveAttribute(attrName) && this.isHardcoded(value)) {
-                    issues.push(this.createIssue(
-                        element,
-                        `Hardcoded ${attr.name} found - use secure property placeholder`,
-                        {
-                            suggestion: `Use \${secure::${attr.name}} instead of hardcoded value`
-                        }
-                    ));
+                    issues.push(
+                        this.createIssue(
+                            element,
+                            `Hardcoded ${attr.name} found - use secure property placeholder`,
+                            {
+                                suggestion: `Use \${secure::${attr.name}} instead of hardcoded value`,
+                            },
+                        ),
+                    );
                 }
             }
         }
@@ -55,9 +57,7 @@ export class HardcodedCredentialsRule extends BaseRule {
     }
 
     private isSensitiveAttribute(attrName: string): boolean {
-        return this.SENSITIVE_ATTRS.some(sensitive =>
-            attrName.includes(sensitive.toLowerCase())
-        );
+        return this.SENSITIVE_ATTRS.some((sensitive) => attrName.includes(sensitive.toLowerCase()));
     }
 
     private isHardcoded(value: string): boolean {

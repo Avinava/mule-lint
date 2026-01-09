@@ -5,7 +5,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-802: Project Structure Validation
- * 
+ *
  * Validates standard MuleSoft project folder structure.
  */
 export class ProjectStructureRule extends BaseRule {
@@ -15,10 +15,7 @@ export class ProjectStructureRule extends BaseRule {
     severity = 'warning' as const;
     category = 'structure' as const;
 
-    private readonly REQUIRED_DIRS = [
-        'src/main/mule',
-        'src/main/resources',
-    ];
+    private readonly REQUIRED_DIRS = ['src/main/mule', 'src/main/resources'];
 
     private readonly RECOMMENDED_DIRS = [
         'src/main/resources/dwl',
@@ -39,7 +36,7 @@ export class ProjectStructureRule extends BaseRule {
                     message: `Missing required directory: ${dir}`,
                     ruleId: this.id,
                     severity: 'error',
-                    suggestion: `Create directory: mkdir -p ${dir}`
+                    suggestion: `Create directory: mkdir -p ${dir}`,
                 });
             }
         }
@@ -53,7 +50,7 @@ export class ProjectStructureRule extends BaseRule {
                     message: `Missing recommended directory: ${dir}`,
                     ruleId: this.id,
                     severity: 'info',
-                    suggestion: `Consider creating: ${dir}`
+                    suggestion: `Consider creating: ${dir}`,
                 });
             }
         }
@@ -64,7 +61,7 @@ export class ProjectStructureRule extends BaseRule {
 
 /**
  * MULE-803: Global Config File
- * 
+ *
  * Project should have global configuration file.
  */
 export class GlobalConfigRule extends BaseRule {
@@ -88,7 +85,7 @@ export class GlobalConfigRule extends BaseRule {
                 message: 'Missing global.xml configuration file',
                 ruleId: this.id,
                 severity: this.severity,
-                suggestion: 'Create src/main/mule/global.xml for shared configurations'
+                suggestion: 'Create src/main/mule/global.xml for shared configurations',
             });
         }
 
@@ -98,9 +95,7 @@ export class GlobalConfigRule extends BaseRule {
     private findGlobalConfig(dir: string): boolean {
         try {
             const files = fs.readdirSync(dir);
-            return files.some(f =>
-                f.toLowerCase().includes('global') && f.endsWith('.xml')
-            );
+            return files.some((f) => f.toLowerCase().includes('global') && f.endsWith('.xml'));
         } catch {
             return false;
         }
@@ -109,7 +104,7 @@ export class GlobalConfigRule extends BaseRule {
 
 /**
  * MULE-804: Monolithic XML File
- * 
+ *
  * XML files should not be too large.
  */
 export class MonolithicXmlRule extends BaseRule {
@@ -134,7 +129,7 @@ export class MonolithicXmlRule extends BaseRule {
                 message: `File has ${totalFlows} flows/sub-flows - consider splitting`,
                 ruleId: this.id,
                 severity: this.severity,
-                suggestion: 'Split into multiple XML files by domain or function'
+                suggestion: 'Split into multiple XML files by domain or function',
             });
         }
 

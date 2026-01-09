@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-401: HTTP Request User-Agent
- * 
+ *
  * HTTP requests should include User-Agent header for proper API identification.
  */
 export class HttpUserAgentRule extends BaseRule {
@@ -29,13 +29,16 @@ export class HttpUserAgentRule extends BaseRule {
 
             if (!hasUserAgent) {
                 const docName = this.getDocName(request) ?? 'HTTP Request';
-                issues.push(this.createIssue(
-                    request,
-                    `HTTP request "${docName}" is missing User-Agent header`,
-                    {
-                        suggestion: 'Add header: <http:header headerName="User-Agent" value="MyApp/1.0"/>'
-                    }
-                ));
+                issues.push(
+                    this.createIssue(
+                        request,
+                        `HTTP request "${docName}" is missing User-Agent header`,
+                        {
+                            suggestion:
+                                'Add header: <http:header headerName="User-Agent" value="MyApp/1.0"/>',
+                        },
+                    ),
+                );
             }
         }
 

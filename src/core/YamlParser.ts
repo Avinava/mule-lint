@@ -72,7 +72,7 @@ export class YamlParser {
      */
     static isSensitiveKey(key: string): boolean {
         const lowerKey = key.toLowerCase();
-        
+
         // Patterns that indicate a secret - must be at word boundary (end of key or before .)
         const secretKeyEndings = [
             'password',
@@ -85,7 +85,7 @@ export class YamlParser {
             'access-token',
             'access_token',
             'refreshtoken',
-            'refresh-token', 
+            'refresh-token',
             'refresh_token',
             'clientsecret',
             'client-secret',
@@ -110,12 +110,14 @@ export class YamlParser {
             'token-secret',
             'token_secret',
         ];
-        
+
         // Get the last segment of the key (after the last .)
         const segments = lowerKey.split('.');
         const lastSegment = segments[segments.length - 1];
-        
+
         // Check if the last segment matches any secret pattern
-        return secretKeyEndings.some(pattern => lastSegment === pattern || lastSegment.endsWith(pattern));
+        return secretKeyEndings.some(
+            (pattern) => lastSegment === pattern || lastSegment.endsWith(pattern),
+        );
     }
 }

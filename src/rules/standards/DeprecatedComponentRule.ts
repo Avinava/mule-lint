@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-701: Deprecated Component Usage
- * 
+ *
  * Detect usage of deprecated Mule components.
  */
 export class DeprecatedComponentRule extends BaseRule {
@@ -28,13 +28,15 @@ export class DeprecatedComponentRule extends BaseRule {
             const elements = this.select(`//mule:${deprecated.element}`, doc);
 
             for (const element of elements) {
-                issues.push(this.createIssue(
-                    element,
-                    `Deprecated component "${deprecated.element}" found`,
-                    {
-                        suggestion: `Use ${deprecated.replacement} instead`
-                    }
-                ));
+                issues.push(
+                    this.createIssue(
+                        element,
+                        `Deprecated component "${deprecated.element}" found`,
+                        {
+                            suggestion: `Use ${deprecated.replacement} instead`,
+                        },
+                    ),
+                );
             }
         }
 

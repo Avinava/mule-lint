@@ -4,7 +4,7 @@ import { ComplexityCalculator } from '../../core/ComplexityCalculator';
 
 /**
  * MULE-801: Flow Complexity
- * 
+ *
  * Warns if flow cyclomatic complexity exceeds threshold.
  */
 export class FlowComplexityRule extends BaseRule {
@@ -32,7 +32,7 @@ export class FlowComplexityRule extends BaseRule {
                     message: `Flow "${flowName}" has high complexity (${result.complexity}) - refactor recommended`,
                     ruleId: this.id,
                     severity: 'error',
-                    suggestion: this.formatSuggestion(result)
+                    suggestion: this.formatSuggestion(result),
                 });
             } else if (result.complexity > warnThreshold) {
                 issues.push({
@@ -40,7 +40,7 @@ export class FlowComplexityRule extends BaseRule {
                     message: `Flow "${flowName}" has moderate complexity (${result.complexity})`,
                     ruleId: this.id,
                     severity: 'warning',
-                    suggestion: this.formatSuggestion(result)
+                    suggestion: this.formatSuggestion(result),
                 });
             }
         }
@@ -49,9 +49,7 @@ export class FlowComplexityRule extends BaseRule {
     }
 
     private formatSuggestion(result: { details: { type: string; count: number }[] }): string {
-        const breakdown = result.details
-            .map(d => `${d.type}: ${d.count}`)
-            .join(', ');
+        const breakdown = result.details.map((d) => `${d.type}: ${d.count}`).join(', ');
         return `Complexity breakdown: ${breakdown}. Consider extracting to sub-flows.`;
     }
 

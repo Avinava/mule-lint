@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-004: Hardcoded HTTP URLs
- * 
+ *
  * HTTP/HTTPS URLs should use property placeholders, not hardcoded values.
  * Hardcoded URLs make environment promotion difficult and can lead to errors.
  */
@@ -19,17 +19,13 @@ export class HardcodedHttpRule extends BaseRule {
 
     // Patterns that indicate the value is dynamic (allowed)
     private readonly ALLOWED_PATTERNS = [
-        /\$\{[^}]+\}/,      // Property placeholders ${...}
-        /#\[[^\]]+\]/,      // DataWeave expressions #[...]
-        /p\(['"]/,          // Property function p('...')
+        /\$\{[^}]+\}/, // Property placeholders ${...}
+        /#\[[^\]]+\]/, // DataWeave expressions #[...]
+        /p\(['"]/, // Property function p('...')
     ];
 
     // Attributes that should be ignored (not user-configurable URLs)
-    private readonly IGNORED_ATTRIBUTES = [
-        'xmlns',
-        'xsi:schemaLocation',
-        'schemaLocation',
-    ];
+    private readonly IGNORED_ATTRIBUTES = ['xmlns', 'xsi:schemaLocation', 'schemaLocation'];
 
     // Attributes to check for URLs
     private readonly URL_ATTRIBUTES = [
@@ -64,13 +60,16 @@ export class HardcodedHttpRule extends BaseRule {
 
                 // Check if this looks like a hardcoded URL
                 if (this.isHardcodedUrl(value)) {
-                    issues.push(this.createIssue(
-                        element,
-                        `Hardcoded URL "${this.truncate(value)}" found in attribute "${attrName}"`,
-                        {
-                            suggestion: 'Use property placeholder: ${http.baseUrl} or ${env.api.host}'
-                        }
-                    ));
+                    issues.push(
+                        this.createIssue(
+                            element,
+                            `Hardcoded URL "${this.truncate(value)}" found in attribute "${attrName}"`,
+                            {
+                                suggestion:
+                                    'Use property placeholder: ${http.baseUrl} or ${env.api.host}',
+                            },
+                        ),
+                    );
                 }
             }
         }

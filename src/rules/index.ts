@@ -49,16 +49,25 @@ import { FlowComplexityRule } from './complexity/FlowComplexityRule';
 import { EnvironmentFilesRule, PropertyNamingRule, PlaintextSecretsRule } from './yaml/YamlRules';
 
 // Import all rules - Structure
-import { ProjectStructureRule, GlobalConfigRule, MonolithicXmlRule } from './structure/StructureRules';
+import {
+    ProjectStructureRule,
+    GlobalConfigRule,
+    MonolithicXmlRule,
+} from './structure/StructureRules';
 
 // Import all rules - DataWeave
 import { ExternalDwlRule, DwlNamingRule, DwlModulesRule } from './dataweave/DataWeaveRules';
+import { Java17DWErrorHandlingRule } from './dataweave/Java17DWErrorHandlingRule';
 
 // Import all rules - API-Led
 import { ExperienceLayerRule, ProcessLayerRule, SystemLayerRule } from './api-led/ApiLedRules';
 
 // Import all rules - Experimental
-import { FlowRefDepthRule, ConnectorConfigNamingRule, MUnitCoverageRule } from './experimental/ExperimentalRules';
+import {
+    FlowRefDepthRule,
+    ConnectorConfigNamingRule,
+    MUnitCoverageRule,
+} from './experimental/ExperimentalRules';
 
 import { Rule } from '../types';
 
@@ -105,7 +114,7 @@ export { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 
 /**
  * All available rules - instantiated and ready to use
- * Total: 25 rules
+ * Total: 26 rules
  */
 export const ALL_RULES: Rule[] = [
     // Error Handling Rules (MULE-001, 003, 005, 007, 009)
@@ -162,12 +171,14 @@ export const ALL_RULES: Rule[] = [
     new GlobalConfigRule(),
     new MonolithicXmlRule(),
 
-    // DataWeave Rules (DW-001, 002, 003)
+    // DataWeave Rules (DW-001, 002, 003, 004)
     new ExternalDwlRule(),
     new DwlNamingRule(),
     new DwlModulesRule(),
+    new Java17DWErrorHandlingRule(),
 
     // API-Led Rules (API-001, 002, 003)
+
     new ExperienceLayerRule(),
     new ProcessLayerRule(),
     new SystemLayerRule(),
@@ -182,19 +193,19 @@ export const ALL_RULES: Rule[] = [
  * Get rules by category
  */
 export function getRulesByCategory(category: string): Rule[] {
-    return ALL_RULES.filter(rule => rule.category === category);
+    return ALL_RULES.filter((rule) => rule.category === category);
 }
 
 /**
  * Get rule by ID
  */
 export function getRuleById(id: string): Rule | undefined {
-    return ALL_RULES.find(rule => rule.id === id);
+    return ALL_RULES.find((rule) => rule.id === id);
 }
 
 /**
  * Get all rule IDs
  */
 export function getAllRuleIds(): string[] {
-    return ALL_RULES.map(rule => rule.id);
+    return ALL_RULES.map((rule) => rule.id);
 }

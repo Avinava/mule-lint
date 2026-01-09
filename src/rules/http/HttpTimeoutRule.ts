@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-403: HTTP Request Timeout
- * 
+ *
  * HTTP requests should have explicit timeout configuration.
  */
 export class HttpTimeoutRule extends BaseRule {
@@ -24,13 +24,15 @@ export class HttpTimeoutRule extends BaseRule {
 
             if (!hasTimeout) {
                 const name = this.getNameAttribute(config) ?? 'HTTP Request Config';
-                issues.push(this.createIssue(
-                    config,
-                    `HTTP config "${name}" has no responseTimeout - defaults may cause issues`,
-                    {
-                        suggestion: 'Add responseTimeout="30000" or appropriate value'
-                    }
-                ));
+                issues.push(
+                    this.createIssue(
+                        config,
+                        `HTTP config "${name}" has no responseTimeout - defaults may cause issues`,
+                        {
+                            suggestion: 'Add responseTimeout="30000" or appropriate value',
+                        },
+                    ),
+                );
             }
         }
 

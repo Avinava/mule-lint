@@ -21,12 +21,7 @@ export interface ScanOptions {
  */
 export const DEFAULT_SCAN_OPTIONS: ScanOptions = {
     include: ['**/*.xml'],
-    exclude: [
-        '**/target/**',
-        '**/node_modules/**',
-        '**/.git/**',
-        '**/*.munit.xml',
-    ],
+    exclude: ['**/target/**', '**/node_modules/**', '**/.git/**', '**/*.munit.xml'],
     followSymlinks: false,
 };
 
@@ -44,14 +39,14 @@ export interface ScannedFile {
 
 /**
  * Scan a directory for XML files
- * 
+ *
  * @param rootPath - Root directory to scan
  * @param options - Scan options (include/exclude patterns)
  * @returns Array of scanned file info
  */
 export async function scanDirectory(
     rootPath: string,
-    options: Partial<ScanOptions> = {}
+    options: Partial<ScanOptions> = {},
 ): Promise<ScannedFile[]> {
     const opts: ScanOptions = { ...DEFAULT_SCAN_OPTIONS, ...options };
     const absoluteRoot = path.resolve(rootPath);
@@ -65,11 +60,13 @@ export async function scanDirectory(
 
     // If it's a single file, return just that file
     if (stats.isFile()) {
-        return [{
-            absolutePath: absoluteRoot,
-            relativePath: path.basename(absoluteRoot),
-            size: stats.size,
-        }];
+        return [
+            {
+                absolutePath: absoluteRoot,
+                relativePath: path.basename(absoluteRoot),
+                size: stats.size,
+            },
+        ];
     }
 
     // Use fast-glob for directory scanning
@@ -82,7 +79,7 @@ export async function scanDirectory(
         deep: opts.maxDepth,
     });
 
-    return files.map(filePath => ({
+    return files.map((filePath) => ({
         absolutePath: filePath,
         relativePath: path.relative(absoluteRoot, filePath),
         size: fs.statSync(filePath).size,
@@ -94,7 +91,7 @@ export async function scanDirectory(
  */
 export function scanDirectorySync(
     rootPath: string,
-    options: Partial<ScanOptions> = {}
+    options: Partial<ScanOptions> = {},
 ): ScannedFile[] {
     const opts: ScanOptions = { ...DEFAULT_SCAN_OPTIONS, ...options };
     const absoluteRoot = path.resolve(rootPath);
@@ -108,11 +105,13 @@ export function scanDirectorySync(
 
     // If it's a single file, return just that file
     if (stats.isFile()) {
-        return [{
-            absolutePath: absoluteRoot,
-            relativePath: path.basename(absoluteRoot),
-            size: stats.size,
-        }];
+        return [
+            {
+                absolutePath: absoluteRoot,
+                relativePath: path.basename(absoluteRoot),
+                size: stats.size,
+            },
+        ];
     }
 
     // Use fast-glob sync for directory scanning
@@ -125,7 +124,7 @@ export function scanDirectorySync(
         deep: opts.maxDepth,
     });
 
-    return files.map(filePath => ({
+    return files.map((filePath) => ({
         absolutePath: filePath,
         relativePath: path.relative(absoluteRoot, filePath),
         size: fs.statSync(filePath).size,
@@ -145,8 +144,6 @@ export function readFileContent(filePath: string): string {
 export function fileExists(filePath: string): boolean {
     return fs.existsSync(filePath);
 }
-
-
 
 /**
  * Get the Mule project source directory

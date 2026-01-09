@@ -40,11 +40,7 @@ export interface LintConfig {
 export const DEFAULT_CONFIG: LintConfig = {
     rules: {},
     include: ['src/main/mule/**/*.xml'],
-    exclude: [
-        '**/test/**',
-        '**/*.munit.xml',
-        '**/target/**',
-    ],
+    exclude: ['**/test/**', '**/*.munit.xml', '**/target/**'],
     defaultFormatter: 'table',
     failOnWarning: false,
 };

@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-601: Flow Missing Description
- * 
+ *
  * Flows should have doc:description for documentation.
  */
 export class FlowDescriptionRule extends BaseRule {
@@ -24,13 +24,11 @@ export class FlowDescriptionRule extends BaseRule {
             const name = this.getNameAttribute(flow) ?? 'unnamed';
 
             if (!description || description.trim() === '') {
-                issues.push(this.createIssue(
-                    flow,
-                    `Flow "${name}" is missing doc:description`,
-                    {
-                        suggestion: 'Add doc:description="Description of what this flow does"'
-                    }
-                ));
+                issues.push(
+                    this.createIssue(flow, `Flow "${name}" is missing doc:description`, {
+                        suggestion: 'Add doc:description="Description of what this flow does"',
+                    }),
+                );
             }
         }
 

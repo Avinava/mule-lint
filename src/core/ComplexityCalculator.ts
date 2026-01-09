@@ -2,9 +2,9 @@ import { getLineNumber } from './XPathHelper';
 
 /**
  * Calculates cyclomatic complexity for Mule flows
- * 
+ *
  * Complexity = 1 + (number of decision points)
- * 
+ *
  * Decision points in Mule XML:
  * - <choice> with N <when> clauses = N decision points
  * - <until-successful> = 1 decision point
@@ -27,7 +27,7 @@ export class ComplexityCalculator {
             details.push({
                 type: 'choice/when',
                 count: whenClauses.length,
-                contribution: whenClauses.length
+                contribution: whenClauses.length,
             });
         }
 
@@ -38,7 +38,7 @@ export class ComplexityCalculator {
             details.push({
                 type: 'until-successful',
                 count: untilSuccessful.length,
-                contribution: untilSuccessful.length
+                contribution: untilSuccessful.length,
             });
         }
 
@@ -49,7 +49,7 @@ export class ComplexityCalculator {
             details.push({
                 type: 'foreach',
                 count: foreach.length,
-                contribution: foreach.length
+                contribution: foreach.length,
             });
         }
 
@@ -60,7 +60,7 @@ export class ComplexityCalculator {
             details.push({
                 type: 'scatter-gather',
                 count: scatterGather.length,
-                contribution: scatterGather.length
+                contribution: scatterGather.length,
             });
         }
 
@@ -71,25 +71,28 @@ export class ComplexityCalculator {
             details.push({
                 type: 'try',
                 count: tryScopes.length,
-                contribution: tryScopes.length
+                contribution: tryScopes.length,
             });
         }
 
         // Count on-error handlers (each error type adds complexity)
-        const errorHandlers = this.selectNodes('.//mule:on-error-continue | .//mule:on-error-propagate', flowNode);
+        const errorHandlers = this.selectNodes(
+            './/mule:on-error-continue | .//mule:on-error-propagate',
+            flowNode,
+        );
         if (errorHandlers.length > 0) {
             complexity += errorHandlers.length;
             details.push({
                 type: 'error-handler',
                 count: errorHandlers.length,
-                contribution: errorHandlers.length
+                contribution: errorHandlers.length,
             });
         }
 
         return {
             complexity,
             details,
-            rating: this.getRating(complexity)
+            rating: this.getRating(complexity),
         };
     }
 
@@ -107,7 +110,7 @@ export class ComplexityCalculator {
      */
     private static selectNodes(xpath: string, contextNode: Node): Node[] {
         const select = require('xpath').useNamespaces({
-            'mule': 'http://www.mulesoft.org/schema/mule/core'
+            mule: 'http://www.mulesoft.org/schema/mule/core',
         });
 
         try {

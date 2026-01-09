@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-102: Variable Naming Convention
- * 
+ *
  * Variables should follow camelCase naming.
  */
 export class VariableNamingRule extends BaseRule {
@@ -25,13 +25,11 @@ export class VariableNamingRule extends BaseRule {
             if (!varName) continue;
 
             if (!this.CAMEL_CASE_PATTERN.test(varName)) {
-                issues.push(this.createIssue(
-                    setVar,
-                    `Variable "${varName}" should be camelCase`,
-                    {
-                        suggestion: `Rename to "${this.toCamelCase(varName)}"`
-                    }
-                ));
+                issues.push(
+                    this.createIssue(setVar, `Variable "${varName}" should be camelCase`, {
+                        suggestion: `Rename to "${this.toCamelCase(varName)}"`,
+                    }),
+                );
             }
         }
 
@@ -40,7 +38,7 @@ export class VariableNamingRule extends BaseRule {
 
     private toCamelCase(name: string): string {
         return name
-            .replace(/[-_\s]+(.)?/g, (_, c) => c ? c.toUpperCase() : '')
-            .replace(/^[A-Z]/, c => c.toLowerCase());
+            .replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ''))
+            .replace(/^[A-Z]/, (c) => c.toLowerCase());
     }
 }

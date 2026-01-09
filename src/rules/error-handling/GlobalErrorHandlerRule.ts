@@ -5,14 +5,15 @@ import * as path from 'path';
 
 /**
  * MULE-001: Global Error Handler Exists
- * 
- * Every Mule project should have a global error handler file with a 
+ *
+ * Every Mule project should have a global error handler file with a
  * reusable error-handler configuration.
  */
 export class GlobalErrorHandlerRule extends BaseRule {
     id = 'MULE-001';
     name = 'Global Error Handler Exists';
-    description = 'Project should have a global error handler configuration for consistent error handling';
+    description =
+        'Project should have a global error handler configuration for consistent error handling';
     severity = 'warning' as const;
     category = 'error-handling' as const;
 
@@ -23,7 +24,7 @@ export class GlobalErrorHandlerRule extends BaseRule {
         const expectedFile = this.getOption(
             context,
             'filePath',
-            'src/main/mule/global-error-handler.xml'
+            'src/main/mule/global-error-handler.xml',
         );
 
         const fullPath = path.join(context.projectRoot, expectedFile);
@@ -34,7 +35,7 @@ export class GlobalErrorHandlerRule extends BaseRule {
             // Check if current file could serve as global error handler
             const hasGlobalErrorHandler = this.exists(
                 '//mule:error-handler[@name="global-error-handler"]',
-                doc
+                doc,
             );
 
             // If current file has a global-error-handler, that's acceptable
@@ -42,16 +43,19 @@ export class GlobalErrorHandlerRule extends BaseRule {
                 // Check if any error-handler with ref to global exists
                 const hasGlobalRef = this.exists(
                     '//mule:flow/mule:error-handler[@ref="global-error-handler"]',
-                    doc
+                    doc,
                 );
 
                 if (!hasGlobalRef && context.relativePath.includes('global')) {
-                    issues.push(this.createFileIssue(
-                        `Global error handler configuration not found at "${expectedFile}"`,
-                        {
-                            suggestion: 'Create a global-error-handler.xml file with a named error-handler element'
-                        }
-                    ));
+                    issues.push(
+                        this.createFileIssue(
+                            `Global error handler configuration not found at "${expectedFile}"`,
+                            {
+                                suggestion:
+                                    'Create a global-error-handler.xml file with a named error-handler element',
+                            },
+                        ),
+                    );
                 }
             }
         }

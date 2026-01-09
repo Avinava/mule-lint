@@ -4,7 +4,7 @@ import { getTextContent } from '../../core/XPathHelper';
 
 /**
  * MULE-007: Correlation ID in Error Handler
- * 
+ *
  * Error handlers should include correlation ID for traceability.
  * This helps track errors across distributed systems.
  */
@@ -42,13 +42,16 @@ export class CorrelationIdRule extends BaseRule {
             const hasCorrelationId = this.containsCorrelationId(handler);
 
             if (!hasCorrelationId) {
-                issues.push(this.createIssue(
-                    handler,
-                    `Error handler in "${contextName}" should include correlationId for traceability`,
-                    {
-                        suggestion: 'Include correlationId in error response or logging for distributed tracing'
-                    }
-                ));
+                issues.push(
+                    this.createIssue(
+                        handler,
+                        `Error handler in "${contextName}" should include correlationId for traceability`,
+                        {
+                            suggestion:
+                                'Include correlationId in error response or logging for distributed tracing',
+                        },
+                    ),
+                );
             }
         }
 

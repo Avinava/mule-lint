@@ -78,7 +78,9 @@ export class LintEngine {
         const summary = this.buildSummary(fileResults);
 
         this.log(`Scan complete in ${durationMs}ms`);
-        this.log(`Found ${summary.bySeverity.error} errors, ${summary.bySeverity.warning} warnings`);
+        this.log(
+            `Found ${summary.bySeverity.error} errors, ${summary.bySeverity.warning} warnings`,
+        );
 
         return {
             projectRoot,
@@ -97,8 +99,10 @@ export class LintEngine {
         const root = path.parse(startDir).root;
 
         while (currentDir !== root) {
-            if (fs.existsSync(path.join(currentDir, 'pom.xml')) || 
-                fs.existsSync(path.join(currentDir, 'mule-artifact.json'))) {
+            if (
+                fs.existsSync(path.join(currentDir, 'pom.xml')) ||
+                fs.existsSync(path.join(currentDir, 'mule-artifact.json'))
+            ) {
                 return currentDir;
             }
             currentDir = path.dirname(currentDir);
@@ -113,13 +117,15 @@ export class LintEngine {
         const parseResult = parseXml(content, filePath);
 
         if (!parseResult.success || !parseResult.document) {
-            return [{
-                line: parseResult.errorLine ?? 1,
-                column: parseResult.errorColumn,
-                message: parseResult.error ?? 'Failed to parse XML',
-                ruleId: 'PARSE-ERROR',
-                severity: 'error',
-            }];
+            return [
+                {
+                    line: parseResult.errorLine ?? 1,
+                    column: parseResult.errorColumn,
+                    message: parseResult.error ?? 'Failed to parse XML',
+                    ruleId: 'PARSE-ERROR',
+                    severity: 'error',
+                },
+            ];
         }
 
         // For direct content scan, we assume standalone unless we can infer otherwise (out of scope here)
@@ -130,7 +136,7 @@ export class LintEngine {
      * Get all enabled rules based on configuration
      */
     public getEnabledRules(): Rule[] {
-        return this.rules.filter(rule => {
+        return this.rules.filter((rule) => {
             const ruleConfig = this.getRuleConfig(rule.id);
             return ruleConfig.enabled;
         });
@@ -139,7 +145,11 @@ export class LintEngine {
     /**
      * Process a single file
      */
-    private processFile(file: ScannedFile, projectRoot: string, isStandalone: boolean = false): FileResult {
+    private processFile(
+        file: ScannedFile,
+        projectRoot: string,
+        isStandalone: boolean = false,
+    ): FileResult {
         this.log(`  Processing: ${file.relativePath}`);
 
         try {
@@ -156,7 +166,12 @@ export class LintEngine {
                 };
             }
 
-            const issues = this.runRules(parseResult.document, file.absolutePath, projectRoot, isStandalone);
+            const issues = this.runRules(
+                parseResult.document,
+                file.absolutePath,
+                projectRoot,
+                isStandalone,
+            );
 
             return {
                 filePath: file.absolutePath,
@@ -179,7 +194,12 @@ export class LintEngine {
     /**
      * Run all enabled rules against a document
      */
-    private runRules(doc: Document, filePath: string, projectRoot: string, isStandalone: boolean = false): Issue[] {
+    private runRules(
+        doc: Document,
+        filePath: string,
+        projectRoot: string,
+        isStandalone: boolean = false,
+    ): Issue[] {
         const issues: Issue[] = [];
         const enabledRules = this.getEnabledRules();
 
@@ -202,7 +222,7 @@ export class LintEngine {
                 // Apply severity override from config
                 const configSeverity = context.config.severity;
                 if (configSeverity) {
-                    ruleIssues.forEach(issue => {
+                    ruleIssues.forEach((issue) => {
                         issue.severity = configSeverity;
                     });
                 }

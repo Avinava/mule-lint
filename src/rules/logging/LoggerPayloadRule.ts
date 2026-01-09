@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-301: Logger Payload Reference
- * 
+ *
  * Loggers should not directly reference #[payload] for security/performance.
  */
 export class LoggerPayloadRule extends BaseRule {
@@ -24,13 +24,15 @@ export class LoggerPayloadRule extends BaseRule {
             // Check for direct payload logging
             if (this.hasDirectPayloadReference(message)) {
                 const docName = this.getDocName(logger) ?? 'Logger';
-                issues.push(this.createIssue(
-                    logger,
-                    `Logger "${docName}" logs entire payload - security/performance risk`,
-                    {
-                        suggestion: 'Log specific fields instead: #[payload.orderId]'
-                    }
-                ));
+                issues.push(
+                    this.createIssue(
+                        logger,
+                        `Logger "${docName}" logs entire payload - security/performance risk`,
+                        {
+                            suggestion: 'Log specific fields instead: #[payload.orderId]',
+                        },
+                    ),
+                );
             }
         }
 
@@ -39,8 +41,10 @@ export class LoggerPayloadRule extends BaseRule {
 
     private hasDirectPayloadReference(message: string): boolean {
         // Match #[payload] but not #[payload.something]
-        return /\#\[payload\s*\]/.test(message) ||
+        return (
+            /\#\[payload\s*\]/.test(message) ||
             /\#\[\s*payload\s*\]/.test(message) ||
-            message === '#[payload]';
+            message === '#[payload]'
+        );
     }
 }

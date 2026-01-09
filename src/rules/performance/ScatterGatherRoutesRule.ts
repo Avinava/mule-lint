@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-501: Scatter-Gather Route Count
- * 
+ *
  * Scatter-gather with many routes may cause memory issues.
  */
 export class ScatterGatherRoutesRule extends BaseRule {
@@ -23,13 +23,16 @@ export class ScatterGatherRoutesRule extends BaseRule {
             const routes = this.select('./mule:route', sg as Document);
 
             if (routes.length > maxRoutes) {
-                issues.push(this.createIssue(
-                    sg,
-                    `Scatter-gather has ${routes.length} routes (max recommended: ${maxRoutes})`,
-                    {
-                        suggestion: 'Consider using batch processing for large parallel operations'
-                    }
-                ));
+                issues.push(
+                    this.createIssue(
+                        sg,
+                        `Scatter-gather has ${routes.length} routes (max recommended: ${maxRoutes})`,
+                        {
+                            suggestion:
+                                'Consider using batch processing for large parallel operations',
+                        },
+                    ),
+                );
             }
         }
 
