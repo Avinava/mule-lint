@@ -7,6 +7,7 @@ import { LintConfig, ValidationContext } from '../types';
 import { ALL_RULES, getRuleById } from '../rules';
 import { parseXml } from '../core/XmlParser';
 import * as path from 'path';
+import * as fs from 'fs';
 import { DOMParser } from '@xmldom/xmldom';
 
 /**
@@ -29,12 +30,12 @@ export class MuleLintMcpServer {
             include: [],
             exclude: [],
             defaultFormatter: 'json',
-            failOnWarning: false
+            failOnWarning: false,
         };
         // LintEngine takes EngineOptions, not just config
         this.engine = new LintEngine({
             rules: ALL_RULES,
-            config: defaultConfig
+            config: defaultConfig,
         });
 
         this.setupTools();
@@ -47,7 +48,9 @@ export class MuleLintMcpServer {
             'run_lint_analysis',
             'Runs the scanning engine on a specified directory. Returns a JSON summary of errors, warnings, and code references.',
             {
-                projectPath: z.string().describe('Absolute path to the MuleSoft project directory to scan')
+                projectPath: z
+                    .string()
+                    .describe('Absolute path to the MuleSoft project directory to scan'),
             },
             async ({ projectPath }) => {
                 try {
@@ -55,30 +58,35 @@ export class MuleLintMcpServer {
 
                     const summary = {
                         totalFiles: report.summary.totalFiles,
-                        totalIssues: report.summary.bySeverity.error + report.summary.bySeverity.warning + report.summary.bySeverity.info,
+                        totalIssues:
+                            report.summary.bySeverity.error +
+                            report.summary.bySeverity.warning +
+                            report.summary.bySeverity.info,
                         errors: report.summary.bySeverity.error,
                         warnings: report.summary.bySeverity.warning,
-                        issues: report.files.map(r => ({
-                            file: r.relativePath,
-                            issues: r.issues.map(i => ({
-                                ruleId: i.ruleId,
-                                message: i.message,
-                                line: i.line,
-                                column: i.column,
-                                severity: i.severity,
-                                suggestion: i.suggestion,
-                                codeSnippet: i.codeSnippet
+                        issues: report.files
+                            .map((r) => ({
+                                file: r.relativePath,
+                                issues: r.issues.map((i) => ({
+                                    ruleId: i.ruleId,
+                                    message: i.message,
+                                    line: i.line,
+                                    column: i.column,
+                                    severity: i.severity,
+                                    suggestion: i.suggestion,
+                                    codeSnippet: i.codeSnippet,
+                                })),
                             }))
-                        })).filter(r => r.issues.length > 0)
+                            .filter((r) => r.issues.length > 0),
                     };
 
                     return {
                         content: [
                             {
                                 type: 'text',
-                                text: JSON.stringify(summary, null, 2)
-                            }
-                        ]
+                                text: JSON.stringify(summary, null, 2),
+                            },
+                        ],
                     };
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -86,13 +94,13 @@ export class MuleLintMcpServer {
                         content: [
                             {
                                 type: 'text',
-                                text: `Analysis failed: ${errorMessage}`
-                            }
+                                text: `Analysis failed: ${errorMessage}`,
+                            },
                         ],
-                        isError: true
+                        isError: true,
                     };
                 }
-            }
+            },
         );
 
         // Tool: get_rule_details
@@ -100,7 +108,9 @@ export class MuleLintMcpServer {
             'get_rule_details',
             'Returns the full documentation and rationale for a specific rule.',
             {
-                ruleId: z.string().describe('The ID of the rule to retrieve (e.g., "MULE-001", "DW-004")')
+                ruleId: z
+                    .string()
+                    .describe('The ID of the rule to retrieve (e.g., "MULE-001", "DW-004")'),
             },
             async ({ ruleId }) => {
                 const rule = getRuleById(ruleId);
@@ -109,10 +119,10 @@ export class MuleLintMcpServer {
                         content: [
                             {
                                 type: 'text',
-                                text: `Rule not found: ${ruleId}`
-                            }
+                                text: `Rule not found: ${ruleId}`,
+                            },
                         ],
-                        isError: true
+                        isError: true,
                     };
                 }
 
@@ -120,17 +130,21 @@ export class MuleLintMcpServer {
                     content: [
                         {
                             type: 'text',
-                            text: JSON.stringify({
-                                id: rule.id,
-                                name: rule.name,
-                                description: rule.description,
-                                category: rule.category,
-                                severity: rule.severity
-                            }, null, 2)
-                        }
-                    ]
+                            text: JSON.stringify(
+                                {
+                                    id: rule.id,
+                                    name: rule.name,
+                                    description: rule.description,
+                                    category: rule.category,
+                                    severity: rule.severity,
+                                },
+                                null,
+                                2,
+                            ),
+                        },
+                    ],
                 };
-            }
+            },
         );
 
         // Tool: validate_snippet
@@ -139,7 +153,7 @@ export class MuleLintMcpServer {
             'Quickly validates a small chunk of code without a full project structure.',
             {
                 code: z.string().describe('The code snippet to validate'),
-                type: z.enum(['xml', 'dwl']).describe('The type of code (xml or dwl)')
+                type: z.enum(['xml', 'dwl']).describe('The type of code (xml or dwl)'),
             },
             async ({ code, type }) => {
                 try {
@@ -148,11 +162,11 @@ export class MuleLintMcpServer {
                         filePath: 'snippet.xml',
                         relativePath: 'snippet.xml',
                         projectRoot: '/tmp',
-                        config: { enabled: true, severity: 'info', options: {} }
+                        config: { enabled: true, severity: 'info', options: {} },
                     };
 
                     // Filter relevant rules
-                    const applicableRules = ALL_RULES.filter(r => {
+                    const applicableRules = ALL_RULES.filter((r) => {
                         if (type === 'dwl') return r.category === 'dataweave';
                         return r.category !== 'dataweave'; // Approximate, XML rules
                     });
@@ -163,7 +177,7 @@ export class MuleLintMcpServer {
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(code, 'text/xml');
                         // Simple check for parse errors
-                        const parseErrors = doc.getElementsByTagName("parsererror");
+                        const parseErrors = doc.getElementsByTagName('parsererror');
                         if (parseErrors.length > 0) {
                             throw new Error('XML Parse Error');
                         }
@@ -173,7 +187,12 @@ export class MuleLintMcpServer {
                         }
                     } else if (type === 'dwl') {
                         return {
-                            content: [{ type: 'text', text: "DWL snippet validation currently requires file context." }]
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: 'DWL snippet validation currently requires file context.',
+                                },
+                            ],
                         };
                     }
 
@@ -181,51 +200,122 @@ export class MuleLintMcpServer {
                         content: [
                             {
                                 type: 'text',
-                                text: JSON.stringify(issues, null, 2)
-                            }
-                        ]
+                                text: JSON.stringify(issues, null, 2),
+                            },
+                        ],
                     };
-
                 } catch (error) {
                     return {
                         content: [
                             {
                                 type: 'text',
-                                text: `Validation failed: ${error}`
-                            }
+                                text: `Validation failed: ${error}`,
+                            },
                         ],
-                        isError: true
+                        isError: true,
                     };
                 }
-            }
+            },
         );
     }
 
     private setupResources() {
         // Resource: rules
-        this.server.resource(
-            'rules',
-            'mule-lint://rules',
-            async (uri) => {
-                const rulesList = ALL_RULES.map(r => ({
-                    id: r.id,
-                    name: r.name,
-                    category: r.category,
-                    severity: r.severity,
-                    description: r.description
-                }));
+        this.server.resource('rules', 'mule-lint://rules', async (uri) => {
+            const rulesList = ALL_RULES.map((r) => ({
+                id: r.id,
+                name: r.name,
+                category: r.category,
+                severity: r.severity,
+                description: r.description,
+            }));
 
+            return {
+                contents: [
+                    {
+                        uri: uri.href,
+                        text: JSON.stringify(rulesList, null, 2),
+                        mimeType: 'application/json',
+                    },
+                ],
+            };
+        });
+
+        // Resource: docs
+        this.server.resource('docs', 'mule-lint://docs/{slug}', async (uri) => {
+            const slug = uri.href.split('/').pop();
+            const docsMap: Record<string, string> = {
+                architecture: 'docs/linter/architecture.md',
+                'best-practices': 'docs/best-practices/mulesoft-best-practices.md',
+                extending: 'docs/linter/extending.md',
+                naming: 'docs/linter/naming-conventions.md',
+                'rules-catalog': 'docs/best-practices/rules-catalog.md',
+            };
+
+            const relativePath = docsMap[slug as string];
+            if (!relativePath) {
                 return {
                     contents: [
                         {
                             uri: uri.href,
-                            text: JSON.stringify(rulesList, null, 2),
-                            mimeType: 'application/json'
-                        }
-                    ]
+                            text: `Document not found: ${slug}. Available: ${Object.keys(docsMap).join(', ')}`,
+                            mimeType: 'text/plain',
+                        },
+                    ],
                 };
             }
-        );
+
+            try {
+                // Start looking from probable project root (cwd where server is started or package root)
+                // Since we are running as a tool, we might be installed in node_modules or run locally.
+                // Best effort: look relative to CWD if running locally, or handle package structure.
+                // For now, assuming standard repo structure or npm package usage where docs are included.
+                // CAUTION: 'docs' folder might not be in 'dist'. We need to ensure docs are shipped or read from repo.
+
+                // Simple heuristic: try to find docs relative to process.cwd() first (local dev),
+                // then relative to __dirname (installed package).
+                let docPath = path.resolve(process.cwd(), relativePath);
+                if (!fs.existsSync(docPath)) {
+                    // Try resolving from package root if we are in dist/bin
+                    // __dirname is dist/bin or src/mcp.
+                    // Go up 2 levels from dist/bin -> package root
+                    docPath = path.resolve(__dirname, '../../', relativePath);
+                }
+
+                if (fs.existsSync(docPath)) {
+                    const content = fs.readFileSync(docPath, 'utf-8');
+                    return {
+                        contents: [
+                            {
+                                uri: uri.href,
+                                text: content,
+                                mimeType: 'text/markdown',
+                            },
+                        ],
+                    };
+                } else {
+                    return {
+                        contents: [
+                            {
+                                uri: uri.href,
+                                text: `Document file not found at: ${docPath}`,
+                                mimeType: 'text/plain',
+                            },
+                        ],
+                    };
+                }
+            } catch (error) {
+                return {
+                    contents: [
+                        {
+                            uri: uri.href,
+                            text: `Error reading document: ${error}`,
+                            mimeType: 'text/plain',
+                        },
+                    ],
+                };
+            }
+        });
     }
 
     public async start() {
