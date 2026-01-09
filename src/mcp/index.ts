@@ -268,8 +268,18 @@ export class MuleLintMcpServer {
                                 mimeType: 'text/markdown',
                             },
                             {
+                                uri: 'mule-lint://docs/documentation-standards',
+                                name: 'Documentation Standards',
+                                mimeType: 'text/markdown',
+                            },
+                            {
                                 uri: 'mule-lint://docs/extending',
                                 name: 'Extending',
+                                mimeType: 'text/markdown',
+                            },
+                            {
+                                uri: 'mule-lint://docs/folder-structure',
+                                name: 'Folder Structure',
                                 mimeType: 'text/markdown',
                             },
                             {
@@ -296,7 +306,9 @@ export class MuleLintMcpServer {
                 const docsMap: Record<string, string> = {
                     architecture: 'docs/linter/architecture.md',
                     'best-practices': 'docs/best-practices/mulesoft-best-practices.md',
+                    'documentation-standards': 'docs/best-practices/documentation-standards.md',
                     extending: 'docs/linter/extending.md',
+                    'folder-structure': 'docs/best-practices/folder-structure.md',
                     naming: 'docs/linter/naming-conventions.md',
                     'rules-catalog': 'docs/best-practices/rules-catalog.md',
                 };
