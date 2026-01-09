@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0] - 2026-01-10
+
+### Added
+- **7 New Rules** based on 2025-2026 MuleSoft best practices (total 48 rules):
+  - **SEC-002**: TLS Version Check - Detect deprecated TLS versions (< 1.2)
+  - **SEC-003**: Rate Limiting - APIs should have rate limiting configured
+  - **SEC-004**: Input Validation - Incoming payloads should be validated
+  - **LOG-001**: Structured Logging - Recommend JSON logger format
+  - **LOG-004**: Sensitive Data Logging - Detect PII/secrets in log statements
+  - **ERR-001**: Try Scope Best Practice - Complex operations should use Try scope
+  - **PERF-002**: Connection Pooling - DB/HTTP should configure connection pools
+
+### Validated
+- **MCP Server**: Confirmed all tools and resources working correctly
+- **QA Testing**: All new rules validated against real MuleSoft project
+
+---
+
 ## [1.8.3] - 2026-01-10
 
 ### Validated
