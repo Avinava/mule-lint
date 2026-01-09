@@ -41,7 +41,7 @@ Pre-defined prompts to help users interacting with the agent.
 
 ### Phase 1: Foundation (The "Reader" Agent)
 > [!NOTE]
-> **Status**: In Progress on branch `feat/mcp-server`. Version bumped to `1.8.0`.
+> **Status**: Completed. Available on NPM as `@sfdxy/mule-lint`.
 
 *Goal: Allow an agent to see what rules exist and run a scan.*
 - [x] Install `@modelcontextprotocol/sdk`.
@@ -52,7 +52,7 @@ Pre-defined prompts to help users interacting with the agent.
 
 ### Phase 2: Interactive Context (The "Helper" Agent)
 > [!NOTE]
-> **Status**: In Progress on branch `feat/mcp-server`.
+> **Status**: Completed.
 
 *Goal: Allow the agent to understand *why* things failed.*
 - [x] Implement `get_rule_details` tool.

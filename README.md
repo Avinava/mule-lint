@@ -372,8 +372,8 @@ Add the following to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "mule-lint": {
-      "command": "node",
-      "args": ["/path/to/mule-lint/dist/bin/mule-lint-mcp.js"]
+      "command": "npx",
+      "args": ["-y", "@sfdxy/mule-lint", "mule-lint-mcp"]
     }
   }
 }
