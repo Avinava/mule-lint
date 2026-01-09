@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * EXP-001: Flow Reference Depth
- * 
+ *
  * Limit the depth of flow-ref chains.
  */
 export class FlowRefDepthRule extends BaseRule {
@@ -24,11 +24,13 @@ export class FlowRefDepthRule extends BaseRule {
 
             if (flowRefs.length > maxDepth) {
                 const name = this.getNameAttribute(flow) ?? 'unnamed';
-                issues.push(this.createIssue(
-                    flow,
-                    `Flow "${name}" has ${flowRefs.length} flow-refs (max: ${maxDepth})`,
-                    { suggestion: 'Consider consolidating or reducing flow-ref usage' }
-                ));
+                issues.push(
+                    this.createIssue(
+                        flow,
+                        `Flow "${name}" has ${flowRefs.length} flow-refs (max: ${maxDepth})`,
+                        { suggestion: 'Consider consolidating or reducing flow-ref usage' },
+                    ),
+                );
             }
         }
 
@@ -38,7 +40,7 @@ export class FlowRefDepthRule extends BaseRule {
 
 /**
  * EXP-002: Connector Config Naming
- * 
+ *
  * Connector configurations should follow naming convention.
  */
 export class ConnectorConfigNamingRule extends BaseRule {
@@ -52,17 +54,22 @@ export class ConnectorConfigNamingRule extends BaseRule {
         const issues: Issue[] = [];
 
         // Find all config elements
-        const configs = this.select('//*[contains(local-name(), "-config") or contains(local-name(), "_config")]', doc);
+        const configs = this.select(
+            '//*[contains(local-name(), "-config") or contains(local-name(), "_config")]',
+            doc,
+        );
 
         for (const config of configs) {
             const name = this.getNameAttribute(config);
 
             if (name && !this.isValidConfigName(name)) {
-                issues.push(this.createIssue(
-                    config,
-                    `Config "${name}" should follow Convention_Type pattern`,
-                    { suggestion: 'Use pattern: HTTP_Request_Config, Database_Config' }
-                ));
+                issues.push(
+                    this.createIssue(
+                        config,
+                        `Config "${name}" should follow Convention_Type pattern`,
+                        { suggestion: 'Use pattern: HTTP_Request_Config, Database_Config' },
+                    ),
+                );
             }
         }
 
@@ -77,7 +84,7 @@ export class ConnectorConfigNamingRule extends BaseRule {
 
 /**
  * EXP-003: MUnit Test Coverage
- * 
+ *
  * Check for MUnit test files.
  */
 export class MUnitCoverageRule extends BaseRule {
@@ -102,7 +109,7 @@ export class MUnitCoverageRule extends BaseRule {
                     message: `Project has ${flows.length} flows but no MUnit tests`,
                     ruleId: this.id,
                     severity: this.severity,
-                    suggestion: 'Create src/test/munit/ directory with test files'
+                    suggestion: 'Create src/test/munit/ directory with test files',
                 });
             }
         }

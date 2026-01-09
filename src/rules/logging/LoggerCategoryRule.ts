@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-006: Logger Category Required
- * 
+ *
  * All loggers must have a category attribute for proper log filtering.
  * Without categories, logs are harder to filter and analyze.
  */
@@ -27,13 +27,11 @@ export class LoggerCategoryRule extends BaseRule {
             const docName = this.getDocName(logger) ?? 'Logger';
             const suggestedCategory = this.suggestCategory(context.relativePath);
 
-            issues.push(this.createIssue(
-                logger,
-                `Logger "${docName}" is missing 'category' attribute`,
-                {
-                    suggestion: `Add category="${suggestedCategory}"`
-                }
-            ));
+            issues.push(
+                this.createIssue(logger, `Logger "${docName}" is missing 'category' attribute`, {
+                    suggestion: `Add category="${suggestedCategory}"`,
+                }),
+            );
         }
 
         // If required prefix is set, verify all loggers use it
@@ -45,14 +43,16 @@ export class LoggerCategoryRule extends BaseRule {
                 if (category && !category.startsWith(requiredPrefix)) {
                     const docName = this.getDocName(logger) ?? 'Logger';
 
-                    issues.push(this.createIssue(
-                        logger,
-                        `Logger "${docName}" category "${category}" should start with "${requiredPrefix}"`,
-                        {
-                            suggestion: `Update category to "${requiredPrefix}.${category}"`,
-                            severity: 'info'
-                        }
-                    ));
+                    issues.push(
+                        this.createIssue(
+                            logger,
+                            `Logger "${docName}" category "${category}" should start with "${requiredPrefix}"`,
+                            {
+                                suggestion: `Update category to "${requiredPrefix}.${category}"`,
+                                severity: 'info',
+                            },
+                        ),
+                    );
                 }
             }
         }

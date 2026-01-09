@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-402: HTTP Request Content-Type
- * 
+ *
  * POST/PUT HTTP requests should include Content-Type header.
  */
 export class HttpContentTypeRule extends BaseRule {
@@ -31,13 +31,16 @@ export class HttpContentTypeRule extends BaseRule {
 
                 if (!hasContentType) {
                     const docName = this.getDocName(request) ?? 'HTTP Request';
-                    issues.push(this.createIssue(
-                        request,
-                        `${method} request "${docName}" is missing Content-Type header`,
-                        {
-                            suggestion: 'Add header: <http:header headerName="Content-Type" value="application/json"/>'
-                        }
-                    ));
+                    issues.push(
+                        this.createIssue(
+                            request,
+                            `${method} request "${docName}" is missing Content-Type header`,
+                            {
+                                suggestion:
+                                    'Add header: <http:header headerName="Content-Type" value="application/json"/>',
+                            },
+                        ),
+                    );
                 }
             }
         }

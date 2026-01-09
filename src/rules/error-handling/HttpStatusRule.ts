@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-005: HTTP Status in Error Handler
- * 
+ *
  * Error handlers should set an httpStatus variable for proper API responses.
  * This ensures clients receive appropriate HTTP status codes.
  */
@@ -32,24 +32,26 @@ export class HttpStatusRule extends BaseRule {
             // Check if any on-error block sets the httpStatus variable
             const hasHttpStatus = this.exists(
                 `.//mule:set-variable[@variableName="${variableName}"]`,
-                handler
+                handler,
             );
 
             if (!hasHttpStatus) {
                 // Also check for ee:set-variable (DataWeave version)
                 const hasEeHttpStatus = this.exists(
                     `.//ee:set-variable[@variableName="${variableName}"]`,
-                    handler
+                    handler,
                 );
 
                 if (!hasEeHttpStatus) {
-                    issues.push(this.createIssue(
-                        handler,
-                        `Error handler in "${contextName}" should set "${variableName}" variable`,
-                        {
-                            suggestion: `Add <set-variable variableName="${variableName}" value="500"/> or use appropriate status based on error type`
-                        }
-                    ));
+                    issues.push(
+                        this.createIssue(
+                            handler,
+                            `Error handler in "${contextName}" should set "${variableName}" variable`,
+                            {
+                                suggestion: `Add <set-variable variableName="${variableName}" value="500"/> or use appropriate status based on error type`,
+                            },
+                        ),
+                    );
                 }
             }
         }

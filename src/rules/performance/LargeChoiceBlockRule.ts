@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-503: Large Choice Blocks
- * 
+ *
  * Choice blocks with many when clauses should be refactored.
  */
 export class LargeChoiceBlockRule extends BaseRule {
@@ -23,13 +23,16 @@ export class LargeChoiceBlockRule extends BaseRule {
             const whenClauses = this.select('./mule:when', choice as Document);
 
             if (whenClauses.length > maxWhenClauses) {
-                issues.push(this.createIssue(
-                    choice,
-                    `Choice has ${whenClauses.length} when clauses (max recommended: ${maxWhenClauses})`,
-                    {
-                        suggestion: 'Consider using DataWeave lookup table or flow-ref with dynamic routing'
-                    }
-                ));
+                issues.push(
+                    this.createIssue(
+                        choice,
+                        `Choice has ${whenClauses.length} when clauses (max recommended: ${maxWhenClauses})`,
+                        {
+                            suggestion:
+                                'Consider using DataWeave lookup table or flow-ref with dynamic routing',
+                        },
+                    ),
+                );
             }
         }
 

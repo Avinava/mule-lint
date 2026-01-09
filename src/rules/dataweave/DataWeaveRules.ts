@@ -5,7 +5,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * DW-001: External DWL for Complex Transforms
- * 
+ *
  * Complex DataWeave transforms should be in external .dwl files.
  */
 export class ExternalDwlRule extends BaseRule {
@@ -23,21 +23,26 @@ export class ExternalDwlRule extends BaseRule {
         const transforms = this.select('//*[local-name()="transform"]', doc);
 
         for (const transform of transforms) {
-            const setPayload = this.select('.//*[local-name()="set-payload"]', transform as Document);
+            const setPayload = this.select(
+                './/*[local-name()="set-payload"]',
+                transform as Document,
+            );
 
             for (const payload of setPayload) {
                 const content = payload.textContent ?? '';
-                const lines = content.split('\n').filter(l => l.trim().length > 0);
+                const lines = content.split('\n').filter((l) => l.trim().length > 0);
 
                 if (lines.length > maxInlineLines) {
                     const docName = this.getDocName(transform) ?? 'Transform';
-                    issues.push(this.createIssue(
-                        transform,
-                        `Transform "${docName}" has ${lines.length} lines - externalize to .dwl file`,
-                        {
-                            suggestion: `Move to src/main/resources/dwl/ and use: resource("dwl/transform-name.dwl")`
-                        }
-                    ));
+                    issues.push(
+                        this.createIssue(
+                            transform,
+                            `Transform "${docName}" has ${lines.length} lines - externalize to .dwl file`,
+                            {
+                                suggestion: `Move to src/main/resources/dwl/ and use: resource("dwl/transform-name.dwl")`,
+                            },
+                        ),
+                    );
                 }
             }
         }
@@ -48,7 +53,7 @@ export class ExternalDwlRule extends BaseRule {
 
 /**
  * DW-002: DWL File Naming Convention
- * 
+ *
  * DataWeave files should follow naming convention.
  */
 export class DwlNamingRule extends BaseRule {
@@ -75,7 +80,7 @@ export class DwlNamingRule extends BaseRule {
                     message: `DWL file "${basename}.dwl" should use kebab-case naming`,
                     ruleId: this.id,
                     severity: this.severity,
-                    suggestion: 'Rename to kebab-case: my-transform.dwl'
+                    suggestion: 'Rename to kebab-case: my-transform.dwl',
                 });
             }
         }
@@ -108,7 +113,7 @@ export class DwlNamingRule extends BaseRule {
 
 /**
  * DW-003: DWL Modules Usage
- * 
+ *
  * Common DataWeave functions should be in reusable modules.
  */
 export class DwlModulesRule extends BaseRule {
@@ -133,7 +138,7 @@ export class DwlModulesRule extends BaseRule {
                 message: 'No common/utils DWL module found',
                 ruleId: this.id,
                 severity: this.severity,
-                suggestion: 'Create common.dwl or utils.dwl for reusable functions'
+                suggestion: 'Create common.dwl or utils.dwl for reusable functions',
             });
         }
 
@@ -143,7 +148,7 @@ export class DwlModulesRule extends BaseRule {
     private hasFile(dir: string, pattern: string): boolean {
         try {
             const files = fs.readdirSync(dir);
-            return files.some(f => f.toLowerCase().includes(pattern));
+            return files.some((f) => f.toLowerCase().includes(pattern));
         } catch {
             return false;
         }

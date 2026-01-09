@@ -3,72 +3,71 @@ import * as xpath from 'xpath';
 // DOM types from global lib.dom (used by @xmldom/xmldom)
 // Note: @xmldom/xmldom uses standard DOM interfaces
 
-
 /**
  * MuleSoft XML namespace mappings
  * These are the standard namespaces used in Mule 4 applications
  */
 export const MULE_NAMESPACES: Record<string, string> = {
     // Core Mule
-    'mule': 'http://www.mulesoft.org/schema/mule/core',
+    mule: 'http://www.mulesoft.org/schema/mule/core',
 
     // HTTP Connector
-    'http': 'http://www.mulesoft.org/schema/mule/http',
-    'https': 'http://www.mulesoft.org/schema/mule/https',
+    http: 'http://www.mulesoft.org/schema/mule/http',
+    https: 'http://www.mulesoft.org/schema/mule/https',
 
     // DataWeave / EE
-    'ee': 'http://www.mulesoft.org/schema/mule/ee/core',
+    ee: 'http://www.mulesoft.org/schema/mule/ee/core',
 
     // Documentation
-    'doc': 'http://www.mulesoft.org/schema/mule/documentation',
+    doc: 'http://www.mulesoft.org/schema/mule/documentation',
 
     // Security / TLS
-    'tls': 'http://www.mulesoft.org/schema/mule/tls',
+    tls: 'http://www.mulesoft.org/schema/mule/tls',
     'secure-properties': 'http://www.mulesoft.org/schema/mule/secure-properties',
 
     // Database
-    'db': 'http://www.mulesoft.org/schema/mule/db',
+    db: 'http://www.mulesoft.org/schema/mule/db',
 
     // File connectors
-    'file': 'http://www.mulesoft.org/schema/mule/file',
-    'sftp': 'http://www.mulesoft.org/schema/mule/sftp',
-    'ftp': 'http://www.mulesoft.org/schema/mule/ftp',
+    file: 'http://www.mulesoft.org/schema/mule/file',
+    sftp: 'http://www.mulesoft.org/schema/mule/sftp',
+    ftp: 'http://www.mulesoft.org/schema/mule/ftp',
 
     // Messaging
-    'vm': 'http://www.mulesoft.org/schema/mule/vm',
-    'jms': 'http://www.mulesoft.org/schema/mule/jms',
-    'amqp': 'http://www.mulesoft.org/schema/mule/amqp',
+    vm: 'http://www.mulesoft.org/schema/mule/vm',
+    jms: 'http://www.mulesoft.org/schema/mule/jms',
+    amqp: 'http://www.mulesoft.org/schema/mule/amqp',
 
     // API
-    'apikit': 'http://www.mulesoft.org/schema/mule/mule-apikit',
+    apikit: 'http://www.mulesoft.org/schema/mule/mule-apikit',
     'api-gateway': 'http://www.mulesoft.org/schema/mule/api-gateway',
 
     // Object Store
-    'os': 'http://www.mulesoft.org/schema/mule/os',
+    os: 'http://www.mulesoft.org/schema/mule/os',
 
     // Batch
-    'batch': 'http://www.mulesoft.org/schema/mule/batch',
+    batch: 'http://www.mulesoft.org/schema/mule/batch',
 
     // Salesforce
-    'salesforce': 'http://www.mulesoft.org/schema/mule/salesforce',
+    salesforce: 'http://www.mulesoft.org/schema/mule/salesforce',
 
     // Email
-    'email': 'http://www.mulesoft.org/schema/mule/email',
+    email: 'http://www.mulesoft.org/schema/mule/email',
 
     // Validation
-    'validation': 'http://www.mulesoft.org/schema/mule/validation',
+    validation: 'http://www.mulesoft.org/schema/mule/validation',
 
     // Scripting
-    'scripting': 'http://www.mulesoft.org/schema/mule/scripting',
+    scripting: 'http://www.mulesoft.org/schema/mule/scripting',
 
     // Java
-    'java': 'http://www.mulesoft.org/schema/mule/java',
+    java: 'http://www.mulesoft.org/schema/mule/java',
 
     // Sockets
-    'sockets': 'http://www.mulesoft.org/schema/mule/sockets',
+    sockets: 'http://www.mulesoft.org/schema/mule/sockets',
 
     // Web Service Consumer
-    'wsc': 'http://www.mulesoft.org/schema/mule/wsc',
+    wsc: 'http://www.mulesoft.org/schema/mule/wsc',
 };
 
 /**

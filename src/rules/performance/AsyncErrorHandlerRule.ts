@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-502: Async Without Error Handler
- * 
+ *
  * Async scopes should have their own error handling.
  */
 export class AsyncErrorHandlerRule extends BaseRule {
@@ -20,18 +20,21 @@ export class AsyncErrorHandlerRule extends BaseRule {
 
         for (const async of asyncScopes) {
             // Check if async has error-handler or try scope
-            const hasErrorHandling = this.exists('./mule:error-handler', async as Document) ||
+            const hasErrorHandling =
+                this.exists('./mule:error-handler', async as Document) ||
                 this.exists('./mule:try', async as Document);
 
             if (!hasErrorHandling) {
                 const docName = this.getDocName(async) ?? 'Async scope';
-                issues.push(this.createIssue(
-                    async,
-                    `${docName} has no error handling - errors won't propagate to parent`,
-                    {
-                        suggestion: 'Add error-handler or wrap content in try scope'
-                    }
-                ));
+                issues.push(
+                    this.createIssue(
+                        async,
+                        `${docName} has no error handling - errors won't propagate to parent`,
+                        {
+                            suggestion: 'Add error-handler or wrap content in try scope',
+                        },
+                    ),
+                );
             }
         }
 

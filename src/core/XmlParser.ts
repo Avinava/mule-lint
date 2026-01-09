@@ -27,7 +27,7 @@ interface ParserError {
 
 /**
  * Parse XML content into a DOM Document
- * 
+ *
  * @param content - XML content as string
  * @param filePath - File path for error messages (optional)
  * @returns ParseResult with document or error information
@@ -127,7 +127,7 @@ function formatParseError(error: ParserError, filePath?: string): string {
 export function looksLikeXml(content: string): boolean {
     const trimmed = content.trim();
 
-    // Must start with < 
+    // Must start with <
     if (!trimmed.startsWith('<')) {
         return false;
     }

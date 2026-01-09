@@ -7,18 +7,18 @@ import packageJson from '../../package.json';
  */
 export function formatHtml(report: LintReport): string {
     // 1. Enrich Data
-    const enrichedFiles = report.files.map(file => ({
+    const enrichedFiles = report.files.map((file) => ({
         ...file,
-        issues: file.issues.map(issue => {
-            const ruleDef = ALL_RULES.find(r => r.id === issue.ruleId);
+        issues: file.issues.map((issue) => {
+            const ruleDef = ALL_RULES.find((r) => r.id === issue.ruleId);
             return {
                 ...issue,
                 category: ruleDef?.category || 'General',
                 ruleDescription: ruleDef?.description || 'No description available',
                 ruleName: ruleDef?.name || issue.ruleId,
-                file: file.relativePath
+                file: file.relativePath,
             };
-        })
+        }),
     }));
 
     // Reconstruct report data for the client
@@ -27,11 +27,16 @@ export function formatHtml(report: LintReport): string {
             timestamp: report.timestamp,
             version: packageJson.version,
             filesScanned: report.files.length,
-            duration: report.durationMs || 0
+            duration: report.durationMs || 0,
         },
         summary: report.summary,
         files: enrichedFiles,
-        rules: ALL_RULES.map(r => ({ id: r.id, name: r.name, category: r.category, severity: r.severity }))
+        rules: ALL_RULES.map((r) => ({
+            id: r.id,
+            name: r.name,
+            category: r.category,
+            severity: r.severity,
+        })),
     };
 
     const jsonPayload = JSON.stringify(clientData).replace(/</g, '\\u003c');

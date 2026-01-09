@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-002: Flow Naming Convention
- * 
+ *
  * Flows must end with "-flow" suffix, sub-flows with "-subflow".
  * This ensures consistent naming across the project.
  */
@@ -48,11 +48,11 @@ export class FlowNamingRule extends BaseRule {
             }
 
             if (!name.endsWith(flowSuffix)) {
-                issues.push(this.createIssue(
-                    flow,
-                    `Flow "${name}" should end with "${flowSuffix}"`,
-                    { suggestion: `Rename to "${name}${flowSuffix}"` }
-                ));
+                issues.push(
+                    this.createIssue(flow, `Flow "${name}" should end with "${flowSuffix}"`, {
+                        suggestion: `Rename to "${name}${flowSuffix}"`,
+                    }),
+                );
             }
         }
 
@@ -70,11 +70,13 @@ export class FlowNamingRule extends BaseRule {
             }
 
             if (!name.endsWith(subflowSuffix)) {
-                issues.push(this.createIssue(
-                    subflow,
-                    `Sub-flow "${name}" should end with "${subflowSuffix}"`,
-                    { suggestion: `Rename to "${name}${subflowSuffix}"` }
-                ));
+                issues.push(
+                    this.createIssue(
+                        subflow,
+                        `Sub-flow "${name}" should end with "${subflowSuffix}"`,
+                        { suggestion: `Rename to "${name}${subflowSuffix}"` },
+                    ),
+                );
             }
         }
 

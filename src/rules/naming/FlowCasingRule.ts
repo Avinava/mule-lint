@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-101: Flow Name Casing
- * 
+ *
  * Flow names should follow consistent casing (kebab-case recommended).
  */
 export class FlowCasingRule extends BaseRule {
@@ -14,7 +14,7 @@ export class FlowCasingRule extends BaseRule {
     category = 'naming' as const;
 
     private readonly KEBAB_CASE_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*(-flow|-subflow)?$/;
-    
+
     // APIKit auto-generated flow patterns (HTTP verb:resource:config format)
     private readonly APIKIT_PATTERN = /^(get|post|put|patch|delete|options|head):\\/;
 
@@ -33,13 +33,11 @@ export class FlowCasingRule extends BaseRule {
             }
 
             if (!this.KEBAB_CASE_PATTERN.test(name)) {
-                issues.push(this.createIssue(
-                    flow,
-                    `Flow name "${name}" should be kebab-case`,
-                    {
-                        suggestion: `Rename to "${this.toKebabCase(name)}"`
-                    }
-                ));
+                issues.push(
+                    this.createIssue(flow, `Flow name "${name}" should be kebab-case`, {
+                        suggestion: `Rename to "${this.toKebabCase(name)}"`,
+                    }),
+                );
             }
         }
 

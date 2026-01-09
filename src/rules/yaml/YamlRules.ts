@@ -6,7 +6,7 @@ import { YamlParser } from '../../core/YamlParser';
 
 /**
  * YAML-001: Environment Properties Files
- * 
+ *
  * Checks that environment-specific YAML files exist.
  */
 export class EnvironmentFilesRule extends BaseRule {
@@ -24,19 +24,23 @@ export class EnvironmentFilesRule extends BaseRule {
         const propertiesDir = path.join(configDir, 'properties');
 
         // Check all possible locations for property files
-        const searchDirs = [configDir, configSubDir, propertiesDir].filter(d => fs.existsSync(d));
+        const searchDirs = [configDir, configSubDir, propertiesDir].filter((d) => fs.existsSync(d));
 
         if (searchDirs.length === 0) {
             return []; // No config directory found
         }
 
-        const requiredEnvs = this.getOption(context, 'environments', ['dev', 'qa', 'prod']) as string[];
+        const requiredEnvs = this.getOption(context, 'environments', [
+            'dev',
+            'qa',
+            'prod',
+        ]) as string[];
         const existingFiles = new Set<string>();
 
         for (const dir of searchDirs) {
             try {
                 const files = fs.readdirSync(dir);
-                files.forEach(f => existingFiles.add(f.toLowerCase()));
+                files.forEach((f) => existingFiles.add(f.toLowerCase()));
             } catch {
                 // Directory not readable
             }
@@ -56,7 +60,7 @@ export class EnvironmentFilesRule extends BaseRule {
                     message: `Missing environment properties file for "${env}"`,
                     ruleId: this.id,
                     severity: this.severity,
-                    suggestion: `Create ${env}.yaml or config-${env}.yaml in src/main/resources/`
+                    suggestion: `Create ${env}.yaml or config-${env}.yaml in src/main/resources/`,
                 });
             }
         }
@@ -67,7 +71,7 @@ export class EnvironmentFilesRule extends BaseRule {
 
 /**
  * YAML-003: Property Naming Convention
- * 
+ *
  * Property keys should follow category.property format.
  */
 export class PropertyNamingRule extends BaseRule {
@@ -88,7 +92,7 @@ export class PropertyNamingRule extends BaseRule {
             if (!content) continue;
 
             const keys = YamlParser.getAllKeys(content);
-            const invalidKeys = keys.filter(key => !this.isValidPropertyName(key));
+            const invalidKeys = keys.filter((key) => !this.isValidPropertyName(key));
 
             if (invalidKeys.length > 0) {
                 issues.push({
@@ -96,7 +100,7 @@ export class PropertyNamingRule extends BaseRule {
                     message: `Invalid property names in ${path.basename(yamlFile)}: ${invalidKeys.slice(0, 3).join(', ')}${invalidKeys.length > 3 ? '...' : ''}`,
                     ruleId: this.id,
                     severity: this.severity,
-                    suggestion: 'Use category.property format (e.g., db.host, api.timeout)'
+                    suggestion: 'Use category.property format (e.g., db.host, api.timeout)',
                 });
             }
         }
@@ -109,8 +113,10 @@ export class PropertyNamingRule extends BaseRule {
         // Valid: external-sapi.basepath, ramp.polling.max_retries
         // Invalid: DBHOST, DbHost (no uppercase at start of segment)
         // Now allows camelCase, hyphens in categories, underscores in properties
-        return /^[a-z][a-zA-Z0-9_-]*(\.[a-z][a-zA-Z0-9_-]*)+$/.test(key) ||
-            /^[a-z][a-zA-Z0-9_-]*$/.test(key); // Single word keys OK too
+        return (
+            /^[a-z][a-zA-Z0-9_-]*(\.[a-z][a-zA-Z0-9_-]*)+$/.test(key) ||
+            /^[a-z][a-zA-Z0-9_-]*$/.test(key)
+        ); // Single word keys OK too
     }
 
     private findYamlFiles(dir: string): string[] {
@@ -138,7 +144,7 @@ export class PropertyNamingRule extends BaseRule {
 
 /**
  * YAML-004: No Plaintext Secrets
- * 
+ *
  * Sensitive properties should be encrypted.
  */
 export class PlaintextSecretsRule extends BaseRule {
@@ -171,14 +177,19 @@ export class PlaintextSecretsRule extends BaseRule {
         obj: Record<string, unknown>,
         prefix: string,
         filePath: string,
-        issues: Issue[]
+        issues: Issue[],
     ): void {
         for (const key of Object.keys(obj)) {
             const fullKey = prefix ? `${prefix}.${key}` : key;
             const value = obj[key];
 
             if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                this.checkForPlaintextSecrets(value as Record<string, unknown>, fullKey, filePath, issues);
+                this.checkForPlaintextSecrets(
+                    value as Record<string, unknown>,
+                    fullKey,
+                    filePath,
+                    issues,
+                );
             } else if (typeof value === 'string') {
                 if (YamlParser.isSensitiveKey(fullKey) && !YamlParser.isEncryptedValue(value)) {
                     // Check if it's a placeholder (OK)
@@ -188,7 +199,8 @@ export class PlaintextSecretsRule extends BaseRule {
                             message: `Plaintext secret "${fullKey}" in ${path.basename(filePath)}`,
                             ruleId: this.id,
                             severity: this.severity,
-                            suggestion: 'Encrypt value with ![...] or move to secure properties file'
+                            suggestion:
+                                'Encrypt value with ![...] or move to secure properties file',
                         });
                     }
                 }

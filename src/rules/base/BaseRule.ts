@@ -1,6 +1,11 @@
 import { Rule, Issue, Severity, RuleCategory, ValidationContext, RuleConfig } from '../../types';
-import { XPathHelper, getAttribute, getLineNumber, getColumnNumber, hasAttribute } from '../../core/XPathHelper';
-
+import {
+    XPathHelper,
+    getAttribute,
+    getLineNumber,
+    getColumnNumber,
+    hasAttribute,
+} from '../../core/XPathHelper';
 
 /**
  * Abstract base class for all lint rules
@@ -66,7 +71,7 @@ export abstract class BaseRule implements Rule {
             suggestion?: string;
             severity?: Severity;
             codeSnippet?: string;
-        }
+        },
     ): Issue {
         return {
             line: this.getLineNumber(node),
@@ -88,7 +93,7 @@ export abstract class BaseRule implements Rule {
             suggestion?: string;
             severity?: Severity;
             line?: number;
-        }
+        },
     ): Issue {
         return {
             line: options?.line ?? 1,
@@ -156,7 +161,7 @@ export abstract class BaseRule implements Rule {
      * Check if a pattern should be excluded
      */
     protected isExcluded(value: string, patterns: string[]): boolean {
-        return patterns.some(pattern => {
+        return patterns.some((pattern) => {
             // Simple wildcard matching
             if (pattern.includes('*')) {
                 const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');

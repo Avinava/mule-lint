@@ -3,7 +3,7 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-604: Missing doc:name
- * 
+ *
  * Key components should have doc:name for Anypoint Studio.
  */
 export class MissingDocNameRule extends BaseRule {
@@ -35,13 +35,15 @@ export class MissingDocNameRule extends BaseRule {
                 const docName = this.getDocName(component);
 
                 if (!docName || docName.trim() === '') {
-                    issues.push(this.createIssue(
-                        component,
-                        `${componentName} is missing doc:name attribute`,
-                        {
-                            suggestion: 'Add doc:name="Descriptive Name" for Anypoint Studio'
-                        }
-                    ));
+                    issues.push(
+                        this.createIssue(
+                            component,
+                            `${componentName} is missing doc:name attribute`,
+                            {
+                                suggestion: 'Add doc:name="Descriptive Name" for Anypoint Studio',
+                            },
+                        ),
+                    );
                 }
             }
         }

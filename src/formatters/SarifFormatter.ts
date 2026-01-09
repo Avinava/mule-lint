@@ -122,33 +122,34 @@ function toSarifRule(rule: Rule): SarifRule {
 /**
  * Convert Issue to SARIF result
  */
-function toSarifResult(
-    issue: Issue,
-    relativePath: string
-): SarifResult {
+function toSarifResult(issue: Issue, relativePath: string): SarifResult {
     const result: SarifResult = {
         ruleId: issue.ruleId,
         level: toSarifLevel(issue.severity),
         message: { text: issue.message },
-        locations: [{
-            physicalLocation: {
-                artifactLocation: {
-                    uri: relativePath,
-                    uriBaseId: '%SRCROOT%',
-                },
-                region: {
-                    startLine: issue.line,
-                    startColumn: issue.column,
+        locations: [
+            {
+                physicalLocation: {
+                    artifactLocation: {
+                        uri: relativePath,
+                        uriBaseId: '%SRCROOT%',
+                    },
+                    region: {
+                        startLine: issue.line,
+                        startColumn: issue.column,
+                    },
                 },
             },
-        }],
+        ],
     };
 
     // Add fix suggestion if available
     if (issue.suggestion) {
-        result.fixes = [{
-            description: { text: issue.suggestion },
-        }];
+        result.fixes = [
+            {
+                description: { text: issue.suggestion },
+            },
+        ];
     }
 
     return result;
@@ -162,21 +163,25 @@ export function formatSarif(report: LintReport, rules: Rule[] = ALL_RULES): stri
     const sarifLog: SarifLog = {
         $schema: 'https://json.schemastore.org/sarif-2.1.0.json',
         version: '2.1.0',
-        runs: [{
-            tool: {
-                driver: {
-                    name: 'mule-lint',
-                    version: '1.0.0',
-                    informationUri: 'https://github.com/mule-lint/mule-lint',
-                    rules: rules.map(toSarifRule),
+        runs: [
+            {
+                tool: {
+                    driver: {
+                        name: 'mule-lint',
+                        version: '1.0.0',
+                        informationUri: 'https://github.com/mule-lint/mule-lint',
+                        rules: rules.map(toSarifRule),
+                    },
                 },
+                results: [],
+                invocations: [
+                    {
+                        executionSuccessful: report.summary.parseErrors === 0,
+                        startTimeUtc: report.timestamp,
+                    },
+                ],
             },
-            results: [],
-            invocations: [{
-                executionSuccessful: report.summary.parseErrors === 0,
-                startTimeUtc: report.timestamp,
-            }],
-        }],
+        ],
     };
 
     // Add results from all files
@@ -187,23 +192,23 @@ export function formatSarif(report: LintReport, rules: Rule[] = ALL_RULES): stri
                 ruleId: 'PARSE-ERROR',
                 level: 'error',
                 message: { text: file.parseError ?? 'Failed to parse file' },
-                locations: [{
-                    physicalLocation: {
-                        artifactLocation: {
-                            uri: file.relativePath,
-                            uriBaseId: '%SRCROOT%',
+                locations: [
+                    {
+                        physicalLocation: {
+                            artifactLocation: {
+                                uri: file.relativePath,
+                                uriBaseId: '%SRCROOT%',
+                            },
+                            region: { startLine: 1 },
                         },
-                        region: { startLine: 1 },
                     },
-                }],
+                ],
             });
         }
 
         // Add issues
         for (const issue of file.issues) {
-            sarifLog.runs[0].results.push(
-                toSarifResult(issue, file.relativePath)
-            );
+            sarifLog.runs[0].results.push(toSarifResult(issue, file.relativePath));
         }
     }
 

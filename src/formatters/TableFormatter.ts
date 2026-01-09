@@ -15,7 +15,7 @@ export function formatTable(report: LintReport): string {
     lines.push('');
 
     // Files with issues
-    const filesWithIssues = report.files.filter(f => f.issues.length > 0 || !f.parsed);
+    const filesWithIssues = report.files.filter((f) => f.issues.length > 0 || !f.parsed);
 
     if (filesWithIssues.length === 0) {
         lines.push(chalk.green('✓ No issues found!'));
@@ -30,12 +30,14 @@ export function formatTable(report: LintReport): string {
 
         // Parse errors
         if (!file.parsed) {
-            lines.push(formatIssue({
-                line: 1,
-                message: file.parseError ?? 'Failed to parse file',
-                ruleId: 'PARSE-ERROR',
-                severity: 'error',
-            }));
+            lines.push(
+                formatIssue({
+                    line: 1,
+                    message: file.parseError ?? 'Failed to parse file',
+                    ruleId: 'PARSE-ERROR',
+                    severity: 'error',
+                }),
+            );
         }
 
         // Issues
@@ -88,7 +90,8 @@ function formatSeverity(severity: Severity): string {
 function formatSummaryLine(severity: Severity, count: number): string {
     const label = severity.charAt(0).toUpperCase() + severity.slice(1) + 's:';
     const value = count.toString();
-    const color = severity === 'error' ? chalk.red : severity === 'warning' ? chalk.yellow : chalk.blue;
+    const color =
+        severity === 'error' ? chalk.red : severity === 'warning' ? chalk.yellow : chalk.blue;
 
     return `  ${label.padEnd(10)} ${color(value)}`;
 }

@@ -5,7 +5,7 @@ import * as path from 'path';
 
 /**
  * MULE-010: DWL Standards File
- * 
+ *
  * Project should have standard DataWeave files for common operations
  * like error responses, transformations, etc.
  */
@@ -46,12 +46,15 @@ export class DwlStandardsRule extends BaseRule {
             // Mark as checked to avoid duplicate warnings
             DwlStandardsRule.checkedProjects.add(context.projectRoot);
 
-            issues.push(this.createFileIssue(
-                `Recommended DataWeave standards files not found: ${missingFiles.join(', ')}`,
-                {
-                    suggestion: 'Create standard DWL files for consistent error responses and common functions'
-                }
-            ));
+            issues.push(
+                this.createFileIssue(
+                    `Recommended DataWeave standards files not found: ${missingFiles.join(', ')}`,
+                    {
+                        suggestion:
+                            'Create standard DWL files for consistent error responses and common functions',
+                    },
+                ),
+            );
         }
 
         return issues;
