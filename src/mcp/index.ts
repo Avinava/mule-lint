@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
@@ -221,101 +221,151 @@ export class MuleLintMcpServer {
 
     private setupResources() {
         // Resource: rules
-        this.server.resource('rules', 'mule-lint://rules', async (uri) => {
-            const rulesList = ALL_RULES.map((r) => ({
-                id: r.id,
-                name: r.name,
-                category: r.category,
-                severity: r.severity,
-                description: r.description,
-            }));
+        this.server.registerResource(
+            'rules',
+            'mule-lint://rules',
+            {
+                description:
+                    'A JSON list of all registered rules, their categories, and severity levels.',
+                mimeType: 'application/json',
+            },
+            async (uri) => {
+                const rulesList = ALL_RULES.map((r) => ({
+                    id: r.id,
+                    name: r.name,
+                    category: r.category,
+                    severity: r.severity,
+                    description: r.description,
+                }));
 
-            return {
-                contents: [
-                    {
-                        uri: uri.href,
-                        text: JSON.stringify(rulesList, null, 2),
-                        mimeType: 'application/json',
-                    },
-                ],
-            };
-        });
-
-        // Resource: docs
-        this.server.resource('docs', 'mule-lint://docs/{slug}', async (uri) => {
-            const slug = uri.href.split('/').pop();
-            const docsMap: Record<string, string> = {
-                architecture: 'docs/linter/architecture.md',
-                'best-practices': 'docs/best-practices/mulesoft-best-practices.md',
-                extending: 'docs/linter/extending.md',
-                naming: 'docs/linter/naming-conventions.md',
-                'rules-catalog': 'docs/best-practices/rules-catalog.md',
-            };
-
-            const relativePath = docsMap[slug as string];
-            if (!relativePath) {
                 return {
                     contents: [
                         {
                             uri: uri.href,
-                            text: `Document not found: ${slug}. Available: ${Object.keys(docsMap).join(', ')}`,
-                            mimeType: 'text/plain',
+                            text: JSON.stringify(rulesList, null, 2),
+                            mimeType: 'application/json',
                         },
                     ],
                 };
-            }
+            },
+        );
 
-            try {
-                // Start looking from probable project root (cwd where server is started or package root)
-                // Since we are running as a tool, we might be installed in node_modules or run locally.
-                // Best effort: look relative to CWD if running locally, or handle package structure.
-                // For now, assuming standard repo structure or npm package usage where docs are included.
-                // CAUTION: 'docs' folder might not be in 'dist'. We need to ensure docs are shipped or read from repo.
-
-                // Simple heuristic: try to find docs relative to process.cwd() first (local dev),
-                // then relative to __dirname (installed package).
-                let docPath = path.resolve(process.cwd(), relativePath);
-                if (!fs.existsSync(docPath)) {
-                    // Try resolving from package root if we are in dist/bin
-                    // __dirname is dist/bin or src/mcp.
-                    // Go up 2 levels from dist/bin -> package root
-                    docPath = path.resolve(__dirname, '../../', relativePath);
-                }
-
-                if (fs.existsSync(docPath)) {
-                    const content = fs.readFileSync(docPath, 'utf-8');
+        // Resource: docs
+        this.server.registerResource(
+            'docs',
+            new ResourceTemplate('mule-lint://docs/{slug}', {
+                list: async () => {
                     return {
-                        contents: [
+                        resources: [
                             {
-                                uri: uri.href,
-                                text: content,
+                                uri: 'mule-lint://docs/architecture',
+                                name: 'Architecture',
+                                mimeType: 'text/markdown',
+                            },
+                            {
+                                uri: 'mule-lint://docs/best-practices',
+                                name: 'Best Practices',
+                                mimeType: 'text/markdown',
+                            },
+                            {
+                                uri: 'mule-lint://docs/extending',
+                                name: 'Extending',
+                                mimeType: 'text/markdown',
+                            },
+                            {
+                                uri: 'mule-lint://docs/naming',
+                                name: 'Naming Conventions',
+                                mimeType: 'text/markdown',
+                            },
+                            {
+                                uri: 'mule-lint://docs/rules-catalog',
+                                name: 'Rules Catalog',
                                 mimeType: 'text/markdown',
                             },
                         ],
                     };
-                } else {
+                },
+            }),
+            {
+                description:
+                    'Access internal documentation (e.g., best-practices, architecture, naming).',
+                mimeType: 'text/markdown',
+            },
+            async (uri, variables) => {
+                const slug = variables.slug as string;
+                const docsMap: Record<string, string> = {
+                    architecture: 'docs/linter/architecture.md',
+                    'best-practices': 'docs/best-practices/mulesoft-best-practices.md',
+                    extending: 'docs/linter/extending.md',
+                    naming: 'docs/linter/naming-conventions.md',
+                    'rules-catalog': 'docs/best-practices/rules-catalog.md',
+                };
+
+                const relativePath = docsMap[slug];
+                if (!relativePath) {
                     return {
                         contents: [
                             {
                                 uri: uri.href,
-                                text: `Document file not found at: ${docPath}`,
+                                text: `Document not found: ${slug}. Available: ${Object.keys(docsMap).join(', ')}`,
                                 mimeType: 'text/plain',
                             },
                         ],
                     };
                 }
-            } catch (error) {
-                return {
-                    contents: [
-                        {
-                            uri: uri.href,
-                            text: `Error reading document: ${error}`,
-                            mimeType: 'text/plain',
-                        },
-                    ],
-                };
-            }
-        });
+
+                try {
+                    // Start looking from probable project root (cwd where server is started or package root)
+                    // Since we are running as a tool, we might be installed in node_modules or run locally.
+                    // Best effort: look relative to CWD if running locally, or handle package structure.
+                    // For now, assuming standard repo structure or npm package usage where docs are included.
+                    // CAUTION: 'docs' folder might not be in 'dist'. We need to ensure docs are shipped or read from repo.
+
+                    // Simple heuristic: try to find docs relative to process.cwd() first (local dev),
+                    // then relative to __dirname (installed package).
+                    let docPath = path.resolve(process.cwd(), relativePath);
+                    if (!fs.existsSync(docPath)) {
+                        // Try resolving from package root if we are in dist/bin
+                        // __dirname is dist/bin or src/mcp.
+                        // Go up 2 levels from dist/bin -> package root
+                        docPath = path.resolve(__dirname, '../../', relativePath);
+                    }
+
+                    if (fs.existsSync(docPath)) {
+                        const content = fs.readFileSync(docPath, 'utf-8');
+                        return {
+                            contents: [
+                                {
+                                    uri: uri.href,
+                                    text: content,
+                                    mimeType: 'text/markdown',
+                                },
+                            ],
+                        };
+                    } else {
+                        return {
+                            contents: [
+                                {
+                                    uri: uri.href,
+                                    text: `Document file not found at: ${docPath}`,
+                                    mimeType: 'text/plain',
+                                },
+                            ],
+                        };
+                    }
+                } catch (error) {
+                    return {
+                        contents: [
+                            {
+                                uri: uri.href,
+                                text: `Error reading document: ${error}`,
+                                mimeType: 'text/plain',
+                            },
+                        ],
+                    };
+                }
+            },
+        );
     }
 
     public async start() {
