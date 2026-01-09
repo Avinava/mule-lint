@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.2] - 2026-01-09
+
+### Fixed
+- **MCP Tool Registration**: Fixed deprecation warning for `server.tool` by migrating to `releaseTool`
+- **Documentation**: Added Best Practices and improved Folder Structure docs
+- **Theme Standardization**: Improved consistency across all themes
+- **Flags Documentation**: Verified and updated CLI flags documentation
+
 ## [1.7.2] - 2024-12-16
 
 ### Fixed
