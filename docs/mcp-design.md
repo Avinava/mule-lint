@@ -28,6 +28,7 @@ Resources allow the agent to read context.
 | :--- | :--- |
 | `mule-lint://rules` | A JSON list of all registered rules, their categories, and severity levels. |
 | `mule-lint://config/schema` | The JSON schema for `.mule-lintrc` to help agents author valid configurations. |
+| `mule-lint://docs/{slug}` | Access internal documentation (e.g., `best-practices`, `architecture`, `naming`). |
 
 ### 3. Prompts
 Pre-defined prompts to help users interacting with the agent.
