@@ -356,6 +356,41 @@ const issues = engine.scanContent(xmlContent, 'file.xml');
 
 ---
 
+## AI Agent Integration (MCP)
+
+This tool exposes a **Model Context Protocol (MCP)** server, allowing AI agents (like Claude Desktop, IDE assistants) to directly interact with the linter to discover rules, scan projects, and explain violations.
+
+### Features
+- **Tools**: `run_lint_analysis` (scan project), `get_rule_details` (explain rule), `validate_snippet` (check XML/DWL).
+- **Resources**: `mule-lint://rules` (list all available rules).
+
+### Setup for Claude Desktop
+
+Add the following to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "mule-lint": {
+      "command": "node",
+      "args": ["/path/to/mule-lint/dist/bin/mule-lint-mcp.js"]
+    }
+  }
+}
+```
+
+### Setup for VS Code (using MCP Extension)
+
+If you are using an MCP-compatible extension in VS Code:
+
+1.  Open your MCP settings configuration.
+2.  Add the `mule-lint` server configuration similar to above.
+3.  Reload the window.
+
+The agent will now be able to "see" your MuleSoft project structure and offer linting actions autonomously.
+
+---
+
 ## Extending
 
 ### Adding Custom Rules
