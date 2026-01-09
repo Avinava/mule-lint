@@ -1,6 +1,6 @@
 {
     "name": "@sfdxy/mule-lint",
-    "version": "1.7.2",
+    "version": "1.8.0",
     "description": "Static analysis tool for MuleSoft applications - supports humans, AI agents, and CI/CD pipelines",
     "author": "Avinava",
     "license": "MIT",
@@ -14,7 +14,8 @@
         "cli"
     ],
     "bin": {
-        "mule-lint": "./dist/bin/mule-lint.js"
+        "mule-lint": "./dist/bin/mule-lint.js",
+        "mule-lint-mcp": "./dist/bin/mule-lint-mcp.js"
     },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -37,6 +38,7 @@
         "release": "git tag v$(node -p 'require(\"./package.json\").version') && git push origin v$(node -p 'require(\"./package.json\").version')"
     },
     "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.25.2",
         "@xmldom/xmldom": "^0.8.10",
         "chalk": "^4.1.2",
         "commander": "^11.1.0",
