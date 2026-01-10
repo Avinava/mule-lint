@@ -54,12 +54,13 @@ export class ExternalDwlRule extends BaseRule {
 /**
  * DW-002: DWL File Naming Convention
  *
- * DataWeave files should follow naming convention.
+ * DataWeave files should follow naming conventions for consistency.
+ * Supports configurable conventions: 'kebab-case' (default), 'camelCase', or 'any'.
  */
 export class DwlNamingRule extends BaseRule {
     id = 'DW-002';
     name = 'DWL File Naming';
-    description = 'DataWeave files should follow naming conventions';
+    description = 'DataWeave files should follow consistent naming conventions (kebab-case recommended)';
     severity = 'info' as const;
     category = 'dataweave' as const;
 
@@ -69,18 +70,25 @@ export class DwlNamingRule extends BaseRule {
 
         if (!fs.existsSync(dwlDir)) return issues;
 
+        // Get configurable convention: 'kebab-case' | 'camelCase' | 'any'
+        const convention = this.getOption(context, 'convention', 'kebab-case') as string;
+
+        // Skip validation if convention is 'any'
+        if (convention === 'any') return issues;
+
         const dwlFiles = this.findDwlFiles(dwlDir);
 
         for (const file of dwlFiles) {
             const basename = path.basename(file, '.dwl');
 
-            if (!this.isValidDwlName(basename)) {
+            if (!this.isValidDwlName(basename, convention)) {
+                const suggestedName = this.toConvention(basename, convention);
                 issues.push({
                     line: 1,
-                    message: `DWL file "${basename}.dwl" should use kebab-case naming`,
+                    message: `DWL file "${basename}.dwl" should use ${convention} naming`,
                     ruleId: this.id,
                     severity: this.severity,
-                    suggestion: 'Rename to kebab-case: my-transform.dwl',
+                    suggestion: `Rename to: ${suggestedName}.dwl`,
                 });
             }
         }
@@ -88,8 +96,31 @@ export class DwlNamingRule extends BaseRule {
         return issues;
     }
 
-    private isValidDwlName(name: string): boolean {
+    private isValidDwlName(name: string, convention: string): boolean {
+        if (convention === 'camelCase') {
+            // camelCase: starts lowercase, allows uppercase letters
+            return /^[a-z][a-zA-Z0-9]*$/.test(name);
+        }
+        // kebab-case: lowercase with hyphens
         return /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(name);
+    }
+
+    /**
+     * Convert a filename to the target convention
+     */
+    private toConvention(name: string, convention: string): string {
+        if (convention === 'camelCase') {
+            // Convert kebab-case to camelCase
+            return name
+                .split('-')
+                .map((part, i) => (i === 0 ? part.toLowerCase() : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()))
+                .join('');
+        }
+        // Convert camelCase/PascalCase to kebab-case
+        return name
+            .replace(/([a-z])([A-Z])/g, '$1-$2')
+            .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+            .toLowerCase();
     }
 
     private findDwlFiles(dir: string): string[] {
