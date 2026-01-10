@@ -56,6 +56,12 @@ export interface ProjectMetrics {
     apiEndpoints: Array<{ path: string; method: string }>;
     /** Environment configurations detected */
     environments: string[];
+    /** Security patterns detected (OAuth, TLS, Secure Properties, etc.) */
+    securityPatterns: string[];
+    /** External service calls (outbound HTTP requests) */
+    externalServices: Array<{ name: string; host: string }>;
+    /** Scheduled jobs */
+    schedulers: Array<{ type: 'cron' | 'fixed'; value: string; flow: string }>;
     /** Complexity breakdown by file */
     fileComplexity: Record<string, 'simple' | 'medium' | 'complex'>;
 }

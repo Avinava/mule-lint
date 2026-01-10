@@ -55,6 +55,9 @@ export function formatHtml(report: LintReport): string {
             choiceRouterCount: 0,
             apiEndpoints: [],
             environments: [],
+            securityPatterns: [],
+            externalServices: [],
+            schedulers: [],
             fileComplexity: {},
         },
     };
@@ -461,6 +464,33 @@ export function formatHtml(report: LintReport): string {
                     <div id="environments-inventory" class="mt-2 flex items-center gap-2 flex-wrap" style="display: none;">
                         <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">Environments:</span>
                         <div id="environment-pills" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                    <!-- Security Patterns -->
+                    <div id="security-inventory" class="mt-2 flex items-center gap-2 flex-wrap" style="display: none;">
+                        <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">Security:</span>
+                        <div id="security-pills" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                    <!-- External Services -->
+                    <div id="services-inventory" class="mt-2" style="display: none;">
+                        <div class="flex items-center gap-2 flex-wrap cursor-pointer" onclick="window.toggleServices()">
+                            <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">External Services:</span>
+                            <div id="service-pills" class="flex flex-wrap gap-1.5"></div>
+                            <svg id="services-chevron" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div id="service-details" class="hidden mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <div id="service-list" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+                    </div>
+                    <!-- Schedulers -->
+                    <div id="schedulers-inventory" class="mt-2" style="display: none;">
+                        <div class="flex items-center gap-2 flex-wrap cursor-pointer" onclick="window.toggleSchedulers()">
+                            <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">Schedulers:</span>
+                            <div id="scheduler-pills" class="flex flex-wrap gap-1.5"></div>
+                            <svg id="schedulers-chevron" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div id="scheduler-details" class="hidden mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <div id="scheduler-list" class="flex flex-wrap gap-1.5"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -872,6 +902,71 @@ export function formatHtml(report: LintReport): string {
                             const style = envStyles[env] || envStyles['local'];
                             return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + '"><span class="w-2 h-2 rounded-full ' + style.dot + '"></span><span>' + env + '</span></span>';
                         }).join('');
+                    }
+                    
+                    // Render security patterns
+                    const securityContainer = document.getElementById('security-pills');
+                    if (securityContainer && m.securityPatterns && m.securityPatterns.length > 0) {
+                        document.getElementById('security-inventory').style.display = 'flex';
+                        const securityStyles = {
+                            'TLS': { bg: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400', icon: '🔒' },
+                            'OAuth': { bg: 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400', icon: '🔑' },
+                            'Secure Properties': { bg: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400', icon: '🔐' },
+                            'Basic Auth': { bg: 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-400', icon: '👤' }
+                        };
+                        securityContainer.innerHTML = m.securityPatterns.map(pattern => {
+                            const style = securityStyles[pattern] || { bg: 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300', icon: '🛡️' };
+                            return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + '">' + style.icon + ' ' + pattern + '</span>';
+                        }).join('');
+                    }
+                    
+                    // Render external services
+                    const serviceContainer = document.getElementById('service-pills');
+                    if (serviceContainer && m.externalServices && m.externalServices.length > 0) {
+                        document.getElementById('services-inventory').style.display = 'block';
+                        serviceContainer.innerHTML = '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-bold rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">' + m.externalServices.length + ' services</span>';
+                        
+                        const serviceList = document.getElementById('service-list');
+                        if (serviceList) {
+                            serviceList.innerHTML = m.externalServices.map(svc => 
+                                '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400">🔗 ' + svc.name + ' <span class="opacity-50">(' + svc.host + ')</span></span>'
+                            ).join('');
+                        }
+                        
+                        window.toggleServices = function() {
+                            const details = document.getElementById('service-details');
+                            const chevron = document.getElementById('services-chevron');
+                            details.classList.toggle('hidden');
+                            chevron.classList.toggle('rotate-180');
+                        };
+                    }
+                    
+                    // Render schedulers
+                    const schedulerContainer = document.getElementById('scheduler-pills');
+                    if (schedulerContainer && m.schedulers && m.schedulers.length > 0) {
+                        document.getElementById('schedulers-inventory').style.display = 'block';
+                        const cronCount = m.schedulers.filter(s => s.type === 'cron').length;
+                        const fixedCount = m.schedulers.filter(s => s.type === 'fixed').length;
+                        let summary = '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-bold rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">' + m.schedulers.length + ' jobs</span>';
+                        if (cronCount > 0) summary += '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400">⏰ cron ' + cronCount + '</span>';
+                        if (fixedCount > 0) summary += '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400">🔄 fixed ' + fixedCount + '</span>';
+                        schedulerContainer.innerHTML = summary;
+                        
+                        const schedulerList = document.getElementById('scheduler-list');
+                        if (schedulerList) {
+                            schedulerList.innerHTML = m.schedulers.map(sched => {
+                                const icon = sched.type === 'cron' ? '⏰' : '🔄';
+                                const bg = sched.type === 'cron' ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400' : 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400';
+                                return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + bg + '">' + icon + ' ' + sched.value + ' <span class="opacity-50">(' + sched.flow + ')</span></span>';
+                            }).join('');
+                        }
+                        
+                        window.toggleSchedulers = function() {
+                            const details = document.getElementById('scheduler-details');
+                            const chevron = document.getElementById('schedulers-chevron');
+                            details.classList.toggle('hidden');
+                            chevron.classList.toggle('rotate-180');
+                        };
                     }
                 }
             },
