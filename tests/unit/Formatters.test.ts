@@ -63,21 +63,21 @@ describe('Formatters', () => {
     describe('HtmlFormatter', () => {
         it('should generate valid HTML output', () => {
             const output = formatHtml(mockReport);
-            
+
             expect(output).toContain('<!DOCTYPE html>');
             expect(output).toContain('Mule-Lint');
             expect(output).toContain('file1.xml');
             expect(output).toContain('Test error message');
             expect(output).toContain('TEST-001');
             // New format uses Tabulator and Tailwind
-            expect(output).toContain('issues-table-container');
+            expect(output).toContain('issues-table');
             expect(output).toContain('global-search');
             expect(output).toContain('chart-severity');
         });
 
         it('should include parse error files in the report data', () => {
             const output = formatHtml(mockReport);
-            
+
             // Parse error files are included in the files data
             expect(output).toContain('file3.xml');
             // The report still includes files even with parse errors
@@ -88,11 +88,11 @@ describe('Formatters', () => {
     describe('CsvFormatter', () => {
         it('should generate valid CSV output', () => {
             const output = formatCsv(mockReport);
-            
+
             const lines = output.split('\n');
             expect(lines.length).toBeGreaterThan(1);
             expect(lines[0]).toBe('Severity,Rule,File,Line,Column,Message');
-            
+
             // Check error row
             const errorRow = lines.find(line => line.includes('TEST-001'));
             expect(errorRow).toBeDefined();
@@ -113,7 +113,7 @@ describe('Formatters', () => {
         });
 
         it('should escape correctly', () => {
-             const reportWithCommas: LintReport = {
+            const reportWithCommas: LintReport = {
                 ...mockReport,
                 files: [{
                     filePath: '/test/special.xml',
@@ -126,11 +126,11 @@ describe('Formatters', () => {
                         line: 1
                     }]
                 }]
-             };
-             
-             const output = formatCsv(reportWithCommas);
-             const line = output.split('\n').find(l => l.includes('SPECIAL'));
-             expect(line).toContain('"Message with comma, and quotes ""test"""');
+            };
+
+            const output = formatCsv(reportWithCommas);
+            const line = output.split('\n').find(l => l.includes('SPECIAL'));
+            expect(line).toContain('"Message with comma, and quotes ""test"""');
         });
     });
 });

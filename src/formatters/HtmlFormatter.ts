@@ -108,8 +108,8 @@ export function formatHtml(report: LintReport): string {
         /* ===== Layout ===== */
         .app-layout {
             display: grid;
-            grid-template-columns: 220px 1fr;
-            grid-template-rows: 48px 1fr;
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 56px 1fr;
             height: 100vh;
             overflow: hidden;
         }
@@ -252,105 +252,104 @@ export function formatHtml(report: LintReport): string {
 
     <div class="app-layout">
         <!-- ===== HEADER ===== -->
-        <header class="app-header bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center px-4 gap-4">
-            <!-- Logo (clickable to dashboard) -->
+        <header class="app-header bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm flex items-center px-5 gap-5">
+            <!-- Logo + Brand (clickable to dashboard) -->
             <a href="#" onclick="router.navigate('dashboard'); return false;" class="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
-                <div class="w-7 h-7 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <div class="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 </div>
                 <div>
-                    <div class="text-sm font-bold text-slate-900 dark:text-white">Mule-Lint</div>
-                    <div class="text-2xs text-slate-400 dark:text-slate-500 -mt-0.5">${projectName}</div>
+                    <div class="text-sm font-bold text-slate-900 dark:text-white tracking-tight">Mule-Lint</div>
+                    <div class="text-2xs text-slate-400 dark:text-slate-500 -mt-0.5">Static analysis for MuleSoft</div>
                 </div>
             </a>
 
-            <div class="h-5 w-px bg-slate-200 dark:bg-slate-600"></div>
+            <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+            <!-- PROJECT NAME (Prominent) -->
+            <div class="flex items-center gap-3">
+                <h1 class="text-lg font-semibold text-slate-800 dark:text-white tracking-tight">${projectName}</h1>
+                <span class="text-xs text-slate-400 dark:text-slate-500 font-mono">v${packageJson.version}</span>
+            </div>
+
+            <div class="flex-1"></div>
 
             <!-- Nav Tabs (Tailwind style with underline) -->
             <nav class="flex items-center gap-1 h-full">
                 <button id="nav-dashboard" onclick="router.navigate('dashboard')" 
-                    class="nav-tab active h-full px-3 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                    class="nav-tab active h-full px-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
                     Dashboard
                 </button>
                 <button id="nav-issues" onclick="router.navigate('issues')" 
-                    class="nav-tab h-full px-3 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1.5">
+                    class="nav-tab h-full px-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1.5">
                     Issues
-                    <span class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded text-2xs font-bold">${totalIssues}</span>
+                    <span class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded text-xs font-bold">${totalIssues}</span>
                 </button>
             </nav>
 
-            <div class="flex-1"></div>
+            <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
 
             <!-- Search -->
-            <div class="relative w-48 hidden md:block">
+            <div class="relative w-52 hidden md:block">
                 <input type="text" id="global-search" placeholder="Search issues..." 
-                    class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    class="w-full pl-9 pr-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </div>
-
-            <!-- Stats -->
-            <div class="hidden lg:flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
-                <span><strong class="text-slate-600 dark:text-slate-300">${report.summary.bySeverity.error}</strong> errors</span>
-                <span><strong class="text-slate-600 dark:text-slate-300">${report.summary.bySeverity.warning}</strong> warnings</span>
-                <span><strong class="text-slate-600 dark:text-slate-300">${report.files.length}</strong> files</span>
-            </div>
-
-            <div class="h-5 w-px bg-slate-200 dark:bg-slate-600"></div>
 
             <!-- Actions -->
             <div class="flex items-center gap-1">
-                <a href="https://github.com/Avinava/mule-lint" target="_blank" rel="noopener noreferrer" title="View on GitHub" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                <a href="https://github.com/Avinava/mule-lint" target="_blank" rel="noopener noreferrer" title="View on GitHub" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                 </a>
-                <button id="export-btn" title="Export CSV" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <button id="export-btn" title="Export CSV" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 </button>
-                <button id="theme-toggle" title="Toggle theme" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                    <svg class="w-4 h-4 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                    <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                <button id="theme-toggle" title="Toggle theme" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    <svg class="w-4.5 h-4.5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    <svg class="w-4.5 h-4.5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                 </button>
             </div>
         </header>
 
         <!-- ===== SIDEBAR ===== -->
-        <aside class="app-sidebar bg-white dark:bg-slate-800/50 border-r border-slate-100 dark:border-slate-700 py-3">
+        <aside class="app-sidebar bg-white dark:bg-slate-800/50 border-r border-slate-100 dark:border-slate-700 py-4">
             <!-- Navigation -->
-            <div class="px-3 mb-4">
-                <div class="text-2xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 mb-1.5">Navigation</div>
-                <nav class="space-y-0.5">
+            <div class="px-4 mb-5">
+                <div class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2 mb-2">Navigation</div>
+                <nav class="space-y-1">
                     <a href="#" onclick="router.navigate('dashboard'); return false;" data-view="dashboard" 
-                        class="sidebar-link active flex items-center gap-2 px-2 py-1.5 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
+                        class="sidebar-link active flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
                         Dashboard
                     </a>
                     <a href="#" onclick="router.navigate('issues'); return false;" data-view="issues"
-                        class="sidebar-link flex items-center gap-2 px-2 py-1.5 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
+                        class="sidebar-link flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                         All Issues
-                        <span class="ml-auto text-2xs font-bold text-slate-400 dark:text-slate-500">${totalIssues}</span>
+                        <span class="ml-auto text-xs font-bold text-slate-400 dark:text-slate-500">${totalIssues}</span>
                     </a>
                 </nav>
             </div>
 
             <!-- Severity Filter -->
-            <div class="px-3 mb-4">
-                <div class="text-2xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 mb-1.5">By Severity</div>
-                <nav id="sidebar-severity" class="space-y-0.5"></nav>
+            <div class="px-4 mb-5">
+                <div class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2 mb-2">By Severity</div>
+                <nav id="sidebar-severity" class="space-y-1"></nav>
             </div>
 
             <!-- Reset Button (shown when filters active) -->
-            <div id="sidebar-reset" class="px-3 mb-4 hidden">
+            <div id="sidebar-reset" class="px-4 mb-5 hidden">
                 <button onclick="router.clearAllFilters()" 
-                    class="w-full flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/30 rounded-lg transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    class="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/30 rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     Clear All Filters
                 </button>
             </div>
 
             <!-- Category Filter -->
-            <div class="px-3">
-                <div class="text-2xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 mb-1.5">By Category</div>
-                <nav id="sidebar-categories" class="space-y-0.5 max-h-[300px] overflow-y-auto"></nav>
+            <div class="px-4">
+                <div class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2 mb-2">By Category</div>
+                <nav id="sidebar-categories" class="space-y-1 max-h-[300px] overflow-y-auto"></nav>
             </div>
         </aside>
 
@@ -358,80 +357,80 @@ export function formatHtml(report: LintReport): string {
         <main class="app-main overflow-hidden bg-slate-50 dark:bg-slate-900">
             
             <!-- ===== DASHBOARD VIEW ===== -->
-            <div id="view-dashboard" class="h-full overflow-y-auto p-4">
+            <div id="view-dashboard" class="h-full overflow-y-auto p-6">
                 <!-- Header -->
-                <div class="mb-4">
-                    <h1 class="text-xl font-bold text-slate-900 dark:text-white">Analysis Dashboard</h1>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        Scanned <strong>${report.files.length} files</strong> • Found <strong class="text-rose-600">${report.summary.bySeverity.error} errors</strong>, 
-                        <strong class="text-amber-600">${report.summary.bySeverity.warning} warnings</strong>, and 
-                        <strong class="text-sky-600">${report.summary.bySeverity.info} suggestions</strong>
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Analysis Dashboard</h2>
+                    <p class="text-base text-slate-500 dark:text-slate-400 mt-2">
+                        Scanned <strong class="text-slate-700 dark:text-slate-200">${report.files.length} files</strong> • Found <strong class="text-rose-600 dark:text-rose-400">${report.summary.bySeverity.error} errors</strong>, 
+                        <strong class="text-amber-600 dark:text-amber-400">${report.summary.bySeverity.warning} warnings</strong>, and 
+                        <strong class="text-sky-600 dark:text-sky-400">${report.summary.bySeverity.info} suggestions</strong>
                     </p>
                 </div>
 
                 <!-- Summary Cards -->
-                <div class="grid grid-cols-4 gap-3 mb-4">
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:shadow-lg hover:border-rose-300 dark:hover:border-rose-600 transition-all" onclick="router.toggleSeverity('error')">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wide">Errors</span>
-                            <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 cursor-pointer hover:shadow-lg hover:border-rose-300 dark:hover:border-rose-600 transition-all" onclick="router.toggleSeverity('error')">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Errors</span>
+                            <div class="w-9 h-9 rounded-lg bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-rose-600 dark:text-rose-400">${report.summary.bySeverity.error}</div>
-                        <div class="text-xs text-slate-400 mt-1">Critical issues</div>
+                        <div class="text-sm text-slate-400 dark:text-slate-500 mt-1">Critical issues</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-600 transition-all" onclick="router.toggleSeverity('warning')">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Warnings</span>
-                            <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 cursor-pointer hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-600 transition-all" onclick="router.toggleSeverity('warning')">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Warnings</span>
+                            <div class="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-amber-600 dark:text-amber-400">${report.summary.bySeverity.warning}</div>
-                        <div class="text-xs text-slate-400 mt-1">Best practice violations</div>
+                        <div class="text-sm text-slate-400 dark:text-slate-500 mt-1">Best practice violations</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:shadow-lg hover:border-sky-300 dark:hover:border-sky-600 transition-all" onclick="router.toggleSeverity('info')">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wide">Info</span>
-                            <div class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 cursor-pointer hover:shadow-lg hover:border-sky-300 dark:hover:border-sky-600 transition-all" onclick="router.toggleSeverity('info')">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">Info</span>
+                            <div class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-sky-600 dark:text-sky-400">${report.summary.bySeverity.info}</div>
-                        <div class="text-xs text-slate-400 mt-1">Suggestions</div>
+                        <div class="text-sm text-slate-400 dark:text-slate-500 mt-1">Suggestions</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Files</span>
-                            <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Files</span>
+                            <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
                             </div>
                         </div>
                         <div class="text-3xl font-bold text-slate-700 dark:text-slate-200">${report.files.length}</div>
-                        <div class="text-xs text-slate-400 mt-1">Scanned</div>
+                        <div class="text-sm text-slate-400 dark:text-slate-500 mt-1">Scanned</div>
                     </div>
                 </div>
 
                 <!-- Charts -->
-                <div class="grid grid-cols-3 gap-3 mb-4">
-                    <div class="col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Top Violated Rules</h3>
-                        <div class="h-[160px]">
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Top Violated Rules</h3>
+                        <div class="h-[180px]">
                             <canvas id="chart-rules"></canvas>
                         </div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Severity Distribution</h3>
-                        <div class="h-[160px] flex items-center justify-center">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Severity Distribution</h3>
+                        <div class="h-[180px] flex items-center justify-center">
                             <canvas id="chart-severity"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Issues by Category</h3>
-                    <div class="h-[220px]">
+                <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                    <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Issues by Category</h3>
+                    <div class="h-[240px]">
                         <canvas id="chart-categories"></canvas>
                     </div>
                 </div>
@@ -440,16 +439,16 @@ export function formatHtml(report: LintReport): string {
             <!-- ===== ISSUES VIEW ===== -->
             <div id="view-issues" class="hidden h-full flex flex-col">
                 <!-- Toolbar -->
-                <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-2 flex items-center gap-3 shrink-0">
+                <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-5 py-3 flex items-center gap-4 shrink-0">
                     <span class="text-sm text-slate-500 dark:text-slate-400">
                         Showing <strong id="filtered-count" class="text-slate-700 dark:text-slate-200">${totalIssues}</strong> of ${totalIssues} issues
                     </span>
-                    <button id="clear-filters-btn" onclick="router.clearAllFilters()" class="hidden text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 font-medium">
+                    <button id="clear-filters-btn" onclick="router.clearAllFilters()" class="hidden text-sm text-sky-600 hover:text-sky-700 dark:text-sky-400 font-medium">
                         Clear filters
                     </button>
                     <div class="flex-1"></div>
-                    <button id="download-csv" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <button id="download-csv" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         Export CSV
                     </button>
                 </div>
@@ -640,10 +639,10 @@ export function formatHtml(report: LintReport): string {
                 severityNav.innerHTML = severities.filter(s => s.count > 0).map(s => \`
                     <a href="#" onclick="router.toggleSeverity('\${s.key}'); return false;" 
                         data-filter-severity="\${s.key}"
-                        class="sidebar-link flex items-center gap-2 px-2 py-1.5 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
-                        <span class="w-2 h-2 rounded-full \${s.color}"></span>
+                        class="sidebar-link flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
+                        <span class="w-2.5 h-2.5 rounded-full \${s.color}"></span>
                         \${s.label}
-                        <span class="ml-auto text-2xs font-bold text-slate-400 dark:text-slate-500">\${s.count}</span>
+                        <span class="ml-auto text-xs font-bold text-slate-400 dark:text-slate-500">\${s.count}</span>
                     </a>
                 \`).join('');
                 
@@ -656,9 +655,9 @@ export function formatHtml(report: LintReport): string {
                 catNav.innerHTML = sortedCats.map(([cat, count]) => \`
                     <a href="#" onclick="router.toggleCategory('\${cat}'); return false;"
                         data-filter-category="\${cat}"
-                        class="sidebar-link flex items-center gap-2 px-2 py-1.5 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
+                        class="sidebar-link flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
                         <span class="capitalize truncate">\${cat}</span>
-                        <span class="ml-auto text-2xs font-bold text-slate-400 dark:text-slate-500">\${count}</span>
+                        <span class="ml-auto text-xs font-bold text-slate-400 dark:text-slate-500">\${count}</span>
                     </a>
                 \`).join('');
             },
