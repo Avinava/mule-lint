@@ -52,6 +52,10 @@ export interface ProjectMetrics {
     errorHandlerCount: number;
     /** Total choice routers (conditionals) */
     choiceRouterCount: number;
+    /** API endpoints exposed by the project */
+    apiEndpoints: Array<{ path: string; method: string }>;
+    /** Environment configurations detected */
+    environments: string[];
     /** Complexity breakdown by file */
     fileComplexity: Record<string, 'simple' | 'medium' | 'complex'>;
 }

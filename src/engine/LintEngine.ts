@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import fg from 'fast-glob';
 import { Rule, Issue, RuleConfig, ValidationContext, Severity } from '../types';
 import { LintConfig, DEFAULT_CONFIG } from '../types/Config';
 import { LintReport, LintSummary, FileResult, ProjectMetrics } from '../types/Report';
@@ -77,6 +78,8 @@ export class LintEngine {
             connectorTypes: [],
             errorHandlerCount: 0,
             choiceRouterCount: 0,
+            apiEndpoints: [],
+            environments: [],
             fileComplexity: {},
         };
 
@@ -96,6 +99,26 @@ export class LintEngine {
                     issues: projectIssues,
                     parsed: true,
                 });
+            }
+        }
+
+        // Detect environment configurations from property files
+        const resourcesPath = path.join(projectRoot, 'src/main/resources');
+        if (fs.existsSync(resourcesPath)) {
+            const propertyFiles = fg.sync(['**/*.yaml', '**/*.yml', '**/*.properties'], {
+                cwd: resourcesPath,
+                onlyFiles: true,
+            });
+            for (const file of propertyFiles) {
+                // Extract environment name from filename (e.g., "dev.yaml" -> "dev", "local-secure.yaml" -> "local")
+                const basename = path.basename(file, path.extname(file));
+                const envMatch = basename.match(/^(dev|local|prod|qa|staging|uat|test|sandbox)/i);
+                if (envMatch) {
+                    const env = envMatch[1].toLowerCase();
+                    if (!metricsAggregator.environments.includes(env)) {
+                        metricsAggregator.environments.push(env);
+                    }
+                }
             }
         }
 
@@ -458,6 +481,43 @@ export class LintEngine {
             const choices = xpath.select('//*[local-name()="choice"]', doc);
             const choiceCount = Array.isArray(choices) ? choices.length : 0;
             metrics.choiceRouterCount += choiceCount;
+
+            // Extract API endpoints from flow names (APIkit pattern: "get:\path:config")
+            if (Array.isArray(flows)) {
+                for (const flow of flows) {
+                    const flowName = (flow as Element).getAttribute('name') || '';
+                    // Pattern: method:\path:config-name (e.g., "get:\customers:api-config")
+                    const match = flowName.match(
+                        /^(get|post|put|patch|delete|head|options):\\(.+?)(?::|$)/i,
+                    );
+                    if (match) {
+                        const method = match[1].toUpperCase();
+                        const path = match[2].replace(/\\/g, '/');
+                        // Avoid duplicates
+                        if (
+                            !metrics.apiEndpoints.some(
+                                (ep) => ep.path === path && ep.method === method,
+                            )
+                        ) {
+                            metrics.apiEndpoints.push({ path: '/' + path, method });
+                        }
+                    }
+                }
+            }
+
+            // Also extract HTTP listener paths
+            if (Array.isArray(listeners)) {
+                for (const listener of listeners) {
+                    const path = (listener as Element).getAttribute('path');
+                    if (
+                        path &&
+                        !path.includes('*') &&
+                        !metrics.apiEndpoints.some((ep) => ep.path === path)
+                    ) {
+                        metrics.apiEndpoints.push({ path, method: 'ALL' });
+                    }
+                }
+            }
 
             // Calculate file complexity based on flow count
             const totalFlows = flowCount + subFlowCount;

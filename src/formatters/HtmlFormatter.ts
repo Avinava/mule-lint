@@ -53,6 +53,8 @@ export function formatHtml(report: LintReport): string {
             connectorTypes: [],
             errorHandlerCount: 0,
             choiceRouterCount: 0,
+            apiEndpoints: [],
+            environments: [],
             fileComplexity: {},
         },
     };
@@ -444,6 +446,16 @@ export function formatHtml(report: LintReport): string {
                         <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">Connectors:</span>
                         <div id="connector-pills" class="flex flex-wrap gap-1.5"></div>
                     </div>
+                    <!-- API Endpoints -->
+                    <div id="endpoints-inventory" class="mt-2 flex items-center gap-2 flex-wrap" style="display: none;">
+                        <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">API Endpoints:</span>
+                        <div id="endpoint-pills" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                    <!-- Environments -->
+                    <div id="environments-inventory" class="mt-2 flex items-center gap-2 flex-wrap" style="display: none;">
+                        <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">Environments:</span>
+                        <div id="environment-pills" class="flex flex-wrap gap-1.5"></div>
+                    </div>
                 </div>
 
                 <!-- Summary Cards (compact to match metrics) -->
@@ -784,6 +796,45 @@ export function formatHtml(report: LintReport): string {
                         }).join('');
                     } else if (pillsContainer) {
                         document.getElementById('connector-inventory').style.display = 'none';
+                    }
+                    
+                    // Render API endpoints
+                    const endpointContainer = document.getElementById('endpoint-pills');
+                    if (endpointContainer && m.apiEndpoints && m.apiEndpoints.length > 0) {
+                        document.getElementById('endpoints-inventory').style.display = 'flex';
+                        const methodColors = {
+                            'GET': 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+                            'POST': 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-400',
+                            'PUT': 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
+                            'PATCH': 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400',
+                            'DELETE': 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400',
+                            'ALL': 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+                        };
+                        endpointContainer.innerHTML = m.apiEndpoints.map(ep => {
+                            const colorClass = methodColors[ep.method] || methodColors['ALL'];
+                            return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + colorClass + '"><span class="font-bold">' + ep.method + '</span><span class="opacity-75">' + ep.path + '</span></span>';
+                        }).join('');
+                    }
+                    
+                    // Render environments
+                    const envContainer = document.getElementById('environment-pills');
+                    if (envContainer && m.environments && m.environments.length > 0) {
+                        document.getElementById('environments-inventory').style.display = 'flex';
+                        const envColors = {
+                            'dev': 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400',
+                            'local': 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300',
+                            'prod': 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400',
+                            'qa': 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400',
+                            'staging': 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
+                            'uat': 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400',
+                            'test': 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400',
+                            'sandbox': 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400'
+                        };
+                        envContainer.innerHTML = m.environments.map(env => {
+                            const colorClass = envColors[env] || envColors['local'];
+                            const icon = env === 'prod' ? '🔴' : (env === 'dev' ? '🟢' : '🔵');
+                            return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + colorClass + '"><span>' + icon + '</span><span>' + env + '</span></span>';
+                        }).join('');
                     }
                 }
             },
