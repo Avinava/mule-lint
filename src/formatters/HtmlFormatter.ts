@@ -253,8 +253,8 @@ export function formatHtml(report: LintReport): string {
     <div class="app-layout">
         <!-- ===== HEADER ===== -->
         <header class="app-header bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center px-4 gap-4">
-            <!-- Logo -->
-            <div class="flex items-center gap-2.5 shrink-0">
+            <!-- Logo (clickable to dashboard) -->
+            <a href="#" onclick="router.navigate('dashboard'); return false;" class="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
                 <div class="w-7 h-7 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 </div>
@@ -262,7 +262,7 @@ export function formatHtml(report: LintReport): string {
                     <div class="text-sm font-bold text-slate-900 dark:text-white">Mule-Lint</div>
                     <div class="text-2xs text-slate-400 dark:text-slate-500 -mt-0.5">${projectName}</div>
                 </div>
-            </div>
+            </a>
 
             <div class="h-5 w-px bg-slate-200 dark:bg-slate-600"></div>
 
@@ -299,6 +299,9 @@ export function formatHtml(report: LintReport): string {
 
             <!-- Actions -->
             <div class="flex items-center gap-1">
+                <a href="https://github.com/Avinava/mule-lint" target="_blank" rel="noopener noreferrer" title="View on GitHub" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                </a>
                 <button id="export-btn" title="Export CSV" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 </button>
@@ -368,7 +371,7 @@ export function formatHtml(report: LintReport): string {
 
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-4 gap-3 mb-4">
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:shadow-lg hover:border-rose-300 dark:hover:border-rose-600 transition-all" onclick="router.filterBySeverity('error')">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:shadow-lg hover:border-rose-300 dark:hover:border-rose-600 transition-all" onclick="router.toggleSeverity('error')">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wide">Errors</span>
                             <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center">
@@ -378,7 +381,7 @@ export function formatHtml(report: LintReport): string {
                         <div class="text-3xl font-bold text-rose-600 dark:text-rose-400">${report.summary.bySeverity.error}</div>
                         <div class="text-xs text-slate-400 mt-1">Critical issues</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-600 transition-all" onclick="router.filterBySeverity('warning')">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-600 transition-all" onclick="router.toggleSeverity('warning')">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Warnings</span>
                             <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
@@ -388,7 +391,7 @@ export function formatHtml(report: LintReport): string {
                         <div class="text-3xl font-bold text-amber-600 dark:text-amber-400">${report.summary.bySeverity.warning}</div>
                         <div class="text-xs text-slate-400 mt-1">Best practice violations</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:shadow-lg hover:border-sky-300 dark:hover:border-sky-600 transition-all" onclick="router.filterBySeverity('info')">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:shadow-lg hover:border-sky-300 dark:hover:border-sky-600 transition-all" onclick="router.toggleSeverity('info')">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wide">Info</span>
                             <div class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-500/20 flex items-center justify-center">
@@ -458,12 +461,19 @@ export function formatHtml(report: LintReport): string {
     </div>
 
     <script>
-        // ===== STATE =====
+        // ===== STATE (Single Source of Truth) =====
         const reportRaw = document.getElementById('report-data').textContent;
         const report = JSON.parse(reportRaw);
         const allIssues = report.files.flatMap(f => f.issues.map(i => ({ ...i, fileName: f.relativePath })));
         const totalIssues = allIssues.length;
         let tableInstance = null;
+        
+        // Filter state - THIS is the source of truth, not Tabulator
+        const filterState = {
+            severities: [],  // e.g., ['error', 'warning']
+            categories: [],  // e.g., ['security', 'naming']
+            searchTerm: ''
+        };
 
         // ===== ROUTER =====
         const router = {
@@ -481,9 +491,11 @@ export function formatHtml(report: LintReport): string {
                     tab.classList.toggle('active', tab.id === 'nav-' + view);
                 });
                 
-                // Update sidebar nav links
+                // Update sidebar nav links (Dashboard/All Issues)
                 document.querySelectorAll('.sidebar-link[data-view]').forEach(link => {
-                    link.classList.toggle('active', link.dataset.view === view);
+                    const shouldBeActive = link.dataset.view === view && 
+                        (view !== 'issues' || !this.hasActiveFilters());
+                    link.classList.toggle('active', shouldBeActive);
                 });
                 
                 if (view === 'issues' && tableInstance) {
@@ -491,106 +503,118 @@ export function formatHtml(report: LintReport): string {
                 }
             },
             
-            filterBySeverity(severity) {
+            hasActiveFilters() {
+                return filterState.severities.length > 0 || filterState.categories.length > 0;
+            },
+            
+            // Toggle severity filter (add/remove from state)
+            toggleSeverity(severity) {
+                const idx = filterState.severities.indexOf(severity);
+                if (idx >= 0) {
+                    filterState.severities.splice(idx, 1);
+                } else {
+                    filterState.severities.push(severity);
+                }
                 this.navigate('issues');
-                if (tableInstance) {
-                    // Get current severity filter values
-                    const currentFilters = tableInstance.getHeaderFilters();
-                    const severityFilter = currentFilters.find(f => f.field === 'severity');
-                    let currentValues = [];
-                    if (severityFilter && Array.isArray(severityFilter.value)) {
-                        currentValues = [...severityFilter.value];
-                    }
-                    
-                    // Toggle: add if not present, remove if present
-                    const idx = currentValues.indexOf(severity);
-                    if (idx >= 0) {
-                        currentValues.splice(idx, 1);
-                    } else {
-                        currentValues.push(severity);
-                    }
-                    
-                    // Apply filter (empty array = no filter)
-                    if (currentValues.length === 0) {
-                        tableInstance.setHeaderFilterValue('severity', '');
-                    } else {
-                        tableInstance.setHeaderFilterValue('severity', currentValues);
-                    }
-                }
+                this.applyFilters();
+                this.updateSidebar();
             },
             
-            filterByCategory(category) {
+            // Toggle category filter (add/remove from state)
+            toggleCategory(category) {
+                const idx = filterState.categories.indexOf(category);
+                if (idx >= 0) {
+                    filterState.categories.splice(idx, 1);
+                } else {
+                    filterState.categories.push(category);
+                }
                 this.navigate('issues');
-                if (tableInstance) {
-                    // Get current category filter values
-                    const currentFilters = tableInstance.getHeaderFilters();
-                    const categoryFilter = currentFilters.find(f => f.field === 'category');
-                    let currentValues = [];
-                    if (categoryFilter && Array.isArray(categoryFilter.value)) {
-                        currentValues = [...categoryFilter.value];
-                    }
-                    
-                    // Toggle: add if not present, remove if present
-                    const idx = currentValues.indexOf(category);
-                    if (idx >= 0) {
-                        currentValues.splice(idx, 1);
-                    } else {
-                        currentValues.push(category);
-                    }
-                    
-                    // Apply filter (empty array = no filter)
-                    if (currentValues.length === 0) {
-                        tableInstance.setHeaderFilterValue('category', '');
-                    } else {
-                        tableInstance.setHeaderFilterValue('category', currentValues);
-                    }
-                }
+                this.applyFilters();
+                this.updateSidebar();
             },
             
-            clearAllFilters() {
-                if (tableInstance) {
-                    tableInstance.clearHeaderFilter();
-                    tableInstance.clearFilter();
-                }
-                document.getElementById('global-search').value = '';
-            },
-            
-            syncSidebarWithFilters() {
+            // Apply filter state to Tabulator
+            applyFilters() {
                 if (!tableInstance) return;
                 
-                const filters = tableInstance.getHeaderFilters();
-                const activeSeverities = [];
-                const activeCategories = [];
-                
-                filters.forEach(f => {
-                    if (f.field === 'severity' && Array.isArray(f.value)) {
-                        activeSeverities.push(...f.value);
+                // Build filter function from state
+                tableInstance.setFilter((data) => {
+                    // Severity filter
+                    if (filterState.severities.length > 0 && !filterState.severities.includes(data.severity)) {
+                        return false;
                     }
-                    if (f.field === 'category' && Array.isArray(f.value)) {
-                        activeCategories.push(...f.value);
+                    // Category filter
+                    if (filterState.categories.length > 0 && !filterState.categories.includes(data.category)) {
+                        return false;
                     }
+                    // Search term filter
+                    if (filterState.searchTerm) {
+                        const term = filterState.searchTerm.toLowerCase();
+                        return data.message.toLowerCase().includes(term) ||
+                               data.fileName.toLowerCase().includes(term) ||
+                               data.ruleName.toLowerCase().includes(term) ||
+                               data.ruleId.toLowerCase().includes(term) ||
+                               data.category.toLowerCase().includes(term);
+                    }
+                    return true;
                 });
                 
+                // Update count
+                const visibleRows = tableInstance.getDataCount('active');
+                document.getElementById('filtered-count').textContent = visibleRows;
+            },
+            
+            // Update sidebar to reflect current filter state
+            updateSidebar() {
                 // Update severity highlights
                 document.querySelectorAll('[data-filter-severity]').forEach(el => {
-                    el.classList.toggle('active', activeSeverities.includes(el.dataset.filterSeverity));
+                    const isActive = filterState.severities.includes(el.dataset.filterSeverity);
+                    el.classList.toggle('active', isActive);
                 });
                 
                 // Update category highlights
                 document.querySelectorAll('[data-filter-category]').forEach(el => {
-                    el.classList.toggle('active', activeCategories.includes(el.dataset.filterCategory));
+                    const isActive = filterState.categories.includes(el.dataset.filterCategory);
+                    el.classList.toggle('active', isActive);
                 });
                 
-                // Show/hide reset button and update "All Issues" link
-                const hasFilters = activeSeverities.length > 0 || activeCategories.length > 0;
+                // Show/hide reset button
+                const hasFilters = this.hasActiveFilters();
                 document.getElementById('sidebar-reset').classList.toggle('hidden', !hasFilters);
                 document.getElementById('clear-filters-btn').classList.toggle('hidden', !hasFilters);
                 
-                // Toggle "All Issues" - active only when on issues view AND no filters
+                // Update "All Issues" link - active only when no filters
                 const allIssuesLink = document.querySelector('.sidebar-link[data-view="issues"]');
                 if (allIssuesLink && this.currentView === 'issues') {
                     allIssuesLink.classList.toggle('active', !hasFilters);
                 }
+            },
+            
+            // Clear all filters
+            clearAllFilters() {
+                filterState.severities = [];
+                filterState.categories = [];
+                filterState.searchTerm = '';
+                document.getElementById('global-search').value = '';
+                
+                if (tableInstance) {
+                    tableInstance.clearFilter();
+                    document.getElementById('filtered-count').textContent = totalIssues;
+                }
+                this.updateSidebar();
+                
+                // Re-activate "All Issues" link
+                const allIssuesLink = document.querySelector('.sidebar-link[data-view="issues"]');
+                if (allIssuesLink && this.currentView === 'issues') {
+                    allIssuesLink.classList.add('active');
+                }
+            },
+            
+            // Set search term
+            setSearchTerm(term) {
+                filterState.searchTerm = term;
+                this.navigate('issues');
+                this.applyFilters();
             }
         };
 
@@ -614,7 +638,7 @@ export function formatHtml(report: LintReport): string {
                     { key: 'info', label: 'Info', count: report.summary.bySeverity.info, color: 'bg-sky-500' }
                 ];
                 severityNav.innerHTML = severities.filter(s => s.count > 0).map(s => \`
-                    <a href="#" onclick="router.filterBySeverity('\${s.key}'); return false;" 
+                    <a href="#" onclick="router.toggleSeverity('\${s.key}'); return false;" 
                         data-filter-severity="\${s.key}"
                         class="sidebar-link flex items-center gap-2 px-2 py-1.5 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
                         <span class="w-2 h-2 rounded-full \${s.color}"></span>
@@ -630,7 +654,7 @@ export function formatHtml(report: LintReport): string {
                 const sortedCats = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
                 
                 catNav.innerHTML = sortedCats.map(([cat, count]) => \`
-                    <a href="#" onclick="router.filterByCategory('\${cat}'); return false;"
+                    <a href="#" onclick="router.toggleCategory('\${cat}'); return false;"
                         data-filter-category="\${cat}"
                         class="sidebar-link flex items-center gap-2 px-2 py-1.5 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
                         <span class="capitalize truncate">\${cat}</span>
@@ -728,7 +752,7 @@ export function formatHtml(report: LintReport): string {
                         onClick: (e, elements) => {
                             if (elements.length > 0) {
                                 const idx = elements[0].index;
-                                router.filterByCategory(sortedCats[idx][0]);
+                                router.toggleCategory(sortedCats[idx][0]);
                             }
                         }
                     }
@@ -814,29 +838,12 @@ export function formatHtml(report: LintReport): string {
                         }
                     ],
                     
-                    initialSort: [{ column: 'severity', dir: 'asc' }],
-                    
-                    dataFiltered: (filters, rows) => {
-                        document.getElementById('filtered-count').textContent = rows.length;
-                        router.syncSidebarWithFilters();
-                    }
+                    initialSort: [{ column: 'severity', dir: 'asc' }]
                 });
                 
                 // Global search
                 document.getElementById('global-search').addEventListener('input', (e) => {
-                    const term = e.target.value.toLowerCase();
-                    router.navigate('issues');
-                    if (!term) {
-                        tableInstance.clearFilter();
-                        return;
-                    }
-                    tableInstance.setFilter((data) => (
-                        data.message.toLowerCase().includes(term) ||
-                        data.fileName.toLowerCase().includes(term) ||
-                        data.ruleName.toLowerCase().includes(term) ||
-                        data.ruleId.toLowerCase().includes(term) ||
-                        data.category.toLowerCase().includes(term)
-                    ));
+                    router.setSearchTerm(e.target.value);
                 });
             },
             
