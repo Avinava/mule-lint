@@ -205,4 +205,48 @@ describe('Performance Rules', () => {
             expect(rule.category).toBe('performance');
         });
     });
+
+    // =================================================================
+    // PERF-002: Connection Pooling
+    // =================================================================
+    describe('ConnectionPoolingRule (PERF-002)', () => {
+        const { ConnectionPoolingRule } = require('../../src/rules/performance/ConnectionPoolingRule');
+        const rule = new ConnectionPoolingRule();
+
+        it('should pass for HTTP config with pooling', () => {
+            const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:http="http://www.mulesoft.org/schema/mule/http">
+                    <http:request-config name="HTTP_Config" maxConnections="20" connectionIdleTimeout="30000"/>
+                </mule>
+            `;
+            const result = parseXml(xml);
+            expect(result.success).toBe(true);
+
+            const issues = rule.validate(result.document!, createContext());
+            expect(issues).toHaveLength(0);
+        });
+
+        it('should fail for HTTP config without pooling', () => {
+            const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:http="http://www.mulesoft.org/schema/mule/http">
+                    <http:request-config name="HTTP_Config"/>
+                </mule>
+            `;
+            const result = parseXml(xml);
+            expect(result.success).toBe(true);
+
+            const issues = rule.validate(result.document!, createContext());
+            expect(issues).toHaveLength(1);
+            expect(issues[0].ruleId).toBe('PERF-002');
+            expect(issues[0].message).toContain('pooling');
+        });
+
+        it('should have correct rule properties', () => {
+            expect(rule.id).toBe('PERF-002');
+            expect(rule.severity).toBe('warning');
+            expect(rule.category).toBe('performance');
+        });
+    });
 });
