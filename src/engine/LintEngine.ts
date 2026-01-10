@@ -73,6 +73,20 @@ export class LintEngine {
             fileResults.push(result);
         }
 
+        // Run Project Rules (only once per scan, if not standalone)
+        if (!isStandalone) {
+            const projectIssues = this.runProjectRules(projectRoot);
+            if (projectIssues.length > 0) {
+                // Add a virtual file result for project-level issues
+                fileResults.push({
+                    filePath: path.join(projectRoot, 'mule-artifact.json'), // Virtual target
+                    relativePath: 'Project Structure',
+                    issues: projectIssues,
+                    parsed: true,
+                });
+            }
+        }
+
         // Build report
         const durationMs = Date.now() - startTime;
         const summary = this.buildSummary(fileResults);
@@ -289,6 +303,42 @@ export class LintEngine {
             bySeverity,
             byRule,
         };
+    }
+
+    /**
+     * Run project-level rules that don't depend on specific files
+     */
+    private runProjectRules(projectRoot: string): Issue[] {
+        const issues: Issue[] = [];
+        const projectRules = this.getEnabledRules().filter((r) => (r as any).isProjectRule);
+
+        for (const rule of projectRules) {
+            try {
+                // Cast to any to access ProjectRule methods safely
+                // In a real generic implementation we'd check instance types better
+                if (typeof (rule as any).reset === 'function') {
+                    (rule as any).reset();
+                }
+
+                // Create a basic context for project validation
+                const context: ValidationContext = {
+                    filePath: path.join(projectRoot, 'pom.xml'), // Pseudo-file
+                    relativePath: 'Project Root',
+                    projectRoot,
+                    config: this.getRuleConfig(rule.id),
+                };
+
+                // Pass empty document since project rules don't use it
+                // Using 'as any' because we know ProjectRule ignores the doc
+                const ruleIssues = rule.validate({} as any, context);
+                issues.push(...ruleIssues);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                console.error(`Error in project rule ${rule.id}: ${message}`);
+            }
+        }
+
+        return issues;
     }
 
     /**

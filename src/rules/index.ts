@@ -77,6 +77,23 @@ import {
     MUnitCoverageRule,
 } from './experimental/ExperimentalRules';
 
+// Import all rules - Operations & Resilience
+import {
+    ReconnectionStrategyRule,
+    AutoDiscoveryRule,
+    HttpPortPlaceholderRule,
+    EncryptionKeyInLogsRule,
+    ExcessiveLoggersRule,
+    CommentedCodeRule,
+    CronExternalizedRule,
+    ApiKitValidationRule,
+    UnusedFlowRule,
+    DisplayNameRule,
+} from './operations/OperationsRules';
+
+// Import all rules - Governance
+import { PomValidationRule, GitHygieneRule } from './governance/GovernanceRules';
+
 import { Rule } from '../types';
 
 // Export individual rules - Error Handling
@@ -122,7 +139,7 @@ export { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 
 /**
  * All available rules - instantiated and ready to use
- * Total: 48 rules (including 7 new 2025-2026 best practices rules)
+ * Total: 56 rules (including operations, resilience, and hygiene rules)
  */
 export const ALL_RULES: Rule[] = [
     // Error Handling Rules (MULE-001, 003, 005, 007, 009)
@@ -202,6 +219,28 @@ export const ALL_RULES: Rule[] = [
     new FlowRefDepthRule(),
     new ConnectorConfigNamingRule(),
     new MUnitCoverageRule(),
+
+    // Operations & Resilience Rules (RES-001, OPS-001, OPS-002, OPS-003)
+    new ReconnectionStrategyRule(),
+    new AutoDiscoveryRule(),
+    new HttpPortPlaceholderRule(),
+    new CronExternalizedRule(),
+
+    // Security Enhancement (SEC-006)
+    new EncryptionKeyInLogsRule(),
+
+    // Code Hygiene Rules (HYG-001, HYG-002, HYG-003)
+    new ExcessiveLoggersRule(),
+    new CommentedCodeRule(),
+    new UnusedFlowRule(),
+
+    // Additional Standards (API-005, DOC-001)
+    new ApiKitValidationRule(),
+    new DisplayNameRule(),
+
+    // Governance Rules (PROJ-001, PROJ-002)
+    new PomValidationRule(),
+    new GitHygieneRule(),
 ];
 
 /**

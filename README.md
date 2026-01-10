@@ -217,7 +217,28 @@ mule-lint src/main/mule -f sarif -o results.sarif
 | ERR-001 | Try Scope | Info | Error Handling | Complex operations should use Try scope |
 | PERF-002 | Connection Pooling | Warning | Performance | DB/HTTP should configure connection pools |
 
-**Total: 49 rules** across 13 categories.
+### Operations & Resilience Rules
+
+| ID | Name | Severity | Category | Description |
+|----|------|----------|----------|-------------|
+| RES-001 | Reconnection Strategy | Warning | Performance | Connectors should have reconnection strategies |
+| OPS-001 | Auto-Discovery | Info | Standards | APIs should have auto-discovery for API Manager |
+| OPS-002 | HTTP Port Placeholder | Warning | Standards | HTTP ports should use property placeholders |
+| OPS-003 | Externalized Cron | Warning | Standards | Cron expressions should use placeholders |
+| SEC-006 | Encryption Key in Logs | Error | Security | Detect sensitive data in log messages |
+| HYG-001 | Excessive Loggers | Warning | Logging | Flows should not have too many loggers |
+| HYG-002 | Commented Code | Info | Standards | Detect commented-out code blocks |
+| HYG-003 | Unused Flow | Warning | Standards | Detect flows/sub-flows never referenced |
+| API-005 | APIKit Validation | Info | Standards | APIs should use APIKit for interfaces |
+| DOC-001 | Display Name | Info | Documentation | Key components should have meaningful names |
+
+### Project Governance Rules
+| ID | Name | Severity | Category | Description |
+|----|------|----------|----------|-------------|
+| PROJ-001 | POM Validation | Error | Structure | Validates pom.xml existence and plugins |
+| PROJ-002 | Git Hygiene | Warning | Structure | Validates .gitignore existence and entries |
+
+**Total: 61 rules** across 14 categories.
 
 See [Rules Catalog](docs/best-practices/rules-catalog.md) for detailed documentation.
 
