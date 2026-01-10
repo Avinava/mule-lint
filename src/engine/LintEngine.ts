@@ -74,6 +74,9 @@ export class LintEngine {
             dwTransformCount: 0,
             connectorConfigCount: 0,
             httpListenerCount: 0,
+            connectorTypes: [],
+            errorHandlerCount: 0,
+            choiceRouterCount: 0,
             fileComplexity: {},
         };
 
@@ -397,15 +400,64 @@ export class LintEngine {
                   : 0;
             metrics.dwTransformCount += dwCount;
 
-            // Count connector configs (elements ending in -config)
-            const configs = xpath.select('//*[contains(local-name(), "-config")]', doc);
+            // Count connector configs (elements ending in -config or named config/connection)
+            const configs = xpath.select(
+                '//*[contains(local-name(), "-config") or local-name()="config" or contains(local-name(), "-connection")]',
+                doc,
+            );
             const configCount = Array.isArray(configs) ? configs.length : 0;
             metrics.connectorConfigCount += configCount;
+
+            // Extract connector types from config elements
+            if (Array.isArray(configs)) {
+                for (const config of configs) {
+                    const nodeName = (config as Element).nodeName || '';
+                    // Extract prefix before colon (e.g., "http" from "http:request-config")
+                    const prefix = nodeName.split(':')[0];
+                    if (prefix && !metrics.connectorTypes.includes(prefix)) {
+                        metrics.connectorTypes.push(prefix);
+                    }
+                }
+            }
+
+            // Also extract connectors from namespace declarations (more reliable)
+            const root = doc.documentElement;
+            if (root && root.attributes) {
+                // MuleSoft connector namespaces follow pattern: http://www.mulesoft.org/schema/mule/<connector>
+                const muleNsPattern = /^http:\/\/www\.mulesoft\.org\/schema\/mule\/(.+)$/;
+                for (let i = 0; i < root.attributes.length; i++) {
+                    const attr = root.attributes[i];
+                    if (attr.name.startsWith('xmlns:')) {
+                        const match = muleNsPattern.exec(attr.value);
+                        if (match) {
+                            const connector = match[1];
+                            // Skip internal/core namespaces
+                            const skipList = ['core', 'documentation', 'ee/core', 'doc'];
+                            if (
+                                !skipList.includes(connector) &&
+                                !metrics.connectorTypes.includes(connector)
+                            ) {
+                                metrics.connectorTypes.push(connector);
+                            }
+                        }
+                    }
+                }
+            }
 
             // Count HTTP listeners (services)
             const listeners = xpath.select('//*[local-name()="listener"]', doc);
             const listenerCount = Array.isArray(listeners) ? listeners.length : 0;
             metrics.httpListenerCount += listenerCount;
+
+            // Count error handlers (try scopes)
+            const trys = xpath.select('//*[local-name()="try"]', doc);
+            const tryCount = Array.isArray(trys) ? trys.length : 0;
+            metrics.errorHandlerCount += tryCount;
+
+            // Count choice routers (conditionals)
+            const choices = xpath.select('//*[local-name()="choice"]', doc);
+            const choiceCount = Array.isArray(choices) ? choices.length : 0;
+            metrics.choiceRouterCount += choiceCount;
 
             // Calculate file complexity based on flow count
             const totalFlows = flowCount + subFlowCount;
