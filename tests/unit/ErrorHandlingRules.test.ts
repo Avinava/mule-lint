@@ -284,4 +284,39 @@ describe('Error Handling Rules', () => {
             expect(rule.category).toBe('error-handling');
         });
     });
+
+    // =================================================================
+    // ERR-001: Try Scope Best Practice
+    // =================================================================
+    describe('TryScopeRule (ERR-001)', () => {
+        const { TryScopeRule } = require('../../src/rules/error-handling/TryScopeRule');
+        const rule = new TryScopeRule();
+
+        it('should pass for flow with Try scope', () => {
+            const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+                      xmlns:db="http://www.mulesoft.org/schema/mule/db">
+                    <flow name="test-flow">
+                        <try>
+                            <http:request config-ref="HTTP"/>
+                            <db:select config-ref="DB"/>
+                        </try>
+                    </flow>
+                </mule>
+            `;
+            const result = parseXml(xml);
+            expect(result.success).toBe(true);
+
+            const issues = rule.validate(result.document!, createContext());
+            expect(issues).toHaveLength(0);
+        });
+
+        it('should have correct rule properties', () => {
+            expect(rule.id).toBe('ERR-001');
+            expect(rule.severity).toBe('info');
+            expect(rule.category).toBe('error-handling');
+        });
+    });
 });
+
