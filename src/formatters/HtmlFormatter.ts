@@ -50,6 +50,9 @@ export function formatHtml(report: LintReport): string {
             dwTransformCount: 0,
             connectorConfigCount: 0,
             httpListenerCount: 0,
+            connectorTypes: [],
+            errorHandlerCount: 0,
+            choiceRouterCount: 0,
             fileComplexity: {},
         },
     };
@@ -315,8 +318,8 @@ export function formatHtml(report: LintReport): string {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 </button>
                 <button id="theme-toggle" title="Toggle theme" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                    <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                    <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                    <svg id="theme-toggle-dark-icon" class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                 </button>
             </div>
         </header>
@@ -435,6 +438,11 @@ export function formatHtml(report: LintReport): string {
                             <div id="metric-connectors" class="text-xl font-bold text-indigo-600 dark:text-indigo-400">-</div>
                             <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Configurations</div>
                         </div>
+                    </div>
+                    <!-- Connector Inventory (inline with metrics) -->
+                    <div id="connector-inventory" class="mt-3 flex items-center gap-2 flex-wrap">
+                        <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">Integrations:</span>
+                        <div id="connector-pills" class="flex flex-wrap gap-1.5"></div>
                     </div>
                 </div>
 
@@ -716,6 +724,16 @@ export function formatHtml(report: LintReport): string {
                     document.getElementById('metric-services').textContent = m.httpListenerCount || 0;
                     document.getElementById('metric-dw').textContent = m.dwTransformCount;
                     document.getElementById('metric-connectors').textContent = m.connectorConfigCount;
+                    
+                    // Render connector type pills
+                    const pillsContainer = document.getElementById('connector-pills');
+                    if (pillsContainer && m.connectorTypes && m.connectorTypes.length > 0) {
+                        pillsContainer.innerHTML = m.connectorTypes.map(type => 
+                            '<span class="px-2 py-0.5 text-2xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">' + type + '</span>'
+                        ).join('');
+                    } else if (pillsContainer) {
+                        document.getElementById('connector-inventory').style.display = 'none';
+                    }
                 }
             },
             

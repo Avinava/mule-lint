@@ -46,6 +46,12 @@ export interface ProjectMetrics {
     connectorConfigCount: number;
     /** Total number of HTTP listeners (services) */
     httpListenerCount: number;
+    /** List of connector types found (e.g., http, db, salesforce) */
+    connectorTypes: string[];
+    /** Total error handlers (try scopes) */
+    errorHandlerCount: number;
+    /** Total choice routers (conditionals) */
+    choiceRouterCount: number;
     /** Complexity breakdown by file */
     fileComplexity: Record<string, 'simple' | 'medium' | 'complex'>;
 }
