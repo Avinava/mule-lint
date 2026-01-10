@@ -194,6 +194,7 @@ mule-lint src/main/mule -f sarif -o results.sarif
 | API-001 | Experience Layer | Info | API-Led | Experience API patterns |
 | API-002 | Process Layer | Info | API-Led | Process layer orchestration |
 | API-003 | System Layer | Info | API-Led | System layer connections |
+| API-004 | Single SAPI | Warning | API-Led | Single system per SAPI |
 
 ### Experimental Rules
 
@@ -216,7 +217,7 @@ mule-lint src/main/mule -f sarif -o results.sarif
 | ERR-001 | Try Scope | Info | Error Handling | Complex operations should use Try scope |
 | PERF-002 | Connection Pooling | Warning | Performance | DB/HTTP should configure connection pools |
 
-**Total: 48 rules** across 13 categories.
+**Total: 49 rules** across 13 categories.
 
 See [Rules Catalog](docs/best-practices/rules-catalog.md) for detailed documentation.
 
