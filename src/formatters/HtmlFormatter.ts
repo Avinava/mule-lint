@@ -725,12 +725,63 @@ export function formatHtml(report: LintReport): string {
                     document.getElementById('metric-dw').textContent = m.dwTransformCount;
                     document.getElementById('metric-connectors').textContent = m.connectorConfigCount;
                     
-                    // Render connector type pills
+                    // MuleSoft Exchange icon base URL
+                    const exchangeBase = 'https://www.mulesoft.com/exchange/organizations/68ef9520-24e9-4cf2-b2f5-620025690913/assets/';
+                    
+                    // Connector metadata with display names, real logos from MuleSoft Exchange, and doc links
+                    const connectorMeta = {
+                        salesforce: { name: 'Salesforce', icon: exchangeBase + 'com.mulesoft.connectors/mule-salesforce-connector/icon/svg/', doc: 'salesforce-connector' },
+                        netsuite: { name: 'NetSuite', icon: exchangeBase + 'com.mulesoft.connectors/mule-netsuite-connector/icon/svg/', doc: 'netsuite-connector' },
+                        workday: { name: 'Workday', icon: exchangeBase + 'com.mulesoft.connectors/mule-workday-connector/icon/svg/', doc: 'workday-connector' },
+                        http: { name: 'HTTP', icon: exchangeBase + 'org.mule.connectors/mule-http-connector/icon/svg/', doc: 'http-connector' },
+                        db: { name: 'Database', icon: exchangeBase + 'org.mule.connectors/mule-db-connector/icon/svg/', doc: 'db-connector' },
+                        database: { name: 'Database', icon: exchangeBase + 'org.mule.connectors/mule-db-connector/icon/svg/', doc: 'db-connector' },
+                        sap: { name: 'SAP', icon: exchangeBase + 'com.mulesoft.connectors/mule-sap-connector/icon/svg/', doc: 'sap-connector' },
+                        kafka: { name: 'Kafka', icon: exchangeBase + 'com.mulesoft.connectors/mule-kafka-connector/icon/svg/', doc: 'kafka-connector' },
+                        jms: { name: 'JMS', icon: exchangeBase + 'org.mule.connectors/mule-jms-connector/icon/svg/', doc: 'jms-connector' },
+                        amqp: { name: 'AMQP', icon: exchangeBase + 'com.mulesoft.connectors/mule-amqp-connector/icon/svg/', doc: 'amqp-connector' },
+                        sftp: { name: 'SFTP', icon: exchangeBase + 'org.mule.connectors/mule-sftp-connector/icon/svg/', doc: 'sftp-connector' },
+                        ftp: { name: 'FTP', icon: exchangeBase + 'org.mule.connectors/mule-ftp-connector/icon/svg/', doc: 'ftp-connector' },
+                        file: { name: 'File', icon: exchangeBase + 'org.mule.connectors/mule-file-connector/icon/svg/', doc: 'file-connector' },
+                        email: { name: 'Email', icon: exchangeBase + 'org.mule.connectors/mule-email-connector/icon/svg/', doc: 'email-connector' },
+                        vm: { name: 'VM', icon: exchangeBase + 'org.mule.connectors/mule-vm-connector/icon/svg/', doc: 'vm-connector' },
+                        os: { name: 'ObjectStore', icon: exchangeBase + 'org.mule.connectors/mule-objectstore-connector/icon/svg/', doc: 'object-store-connector' },
+                        mongodb: { name: 'MongoDB', icon: exchangeBase + 'com.mulesoft.connectors/mule-mongodb-connector/icon/svg/', doc: 'mongodb-connector' },
+                        redis: { name: 'Redis', icon: exchangeBase + 'com.mulesoft.connectors/mule-redis-connector/icon/svg/', doc: 'redis-connector' },
+                        slack: { name: 'Slack', icon: exchangeBase + 'com.mulesoft.connectors/mule-slack-connector/icon/svg/', doc: 'slack-connector' },
+                        box: { name: 'Box', icon: exchangeBase + 'com.mulesoft.connectors/mule-box-connector/icon/svg/', doc: 'box-connector' },
+                        's3': { name: 'Amazon S3', icon: exchangeBase + 'com.mulesoft.connectors/mule-amazon-s3-connector/icon/svg/', doc: 'amazon-s3-connector' },
+                        'amazon-s3': { name: 'Amazon S3', icon: exchangeBase + 'com.mulesoft.connectors/mule-amazon-s3-connector/icon/svg/', doc: 'amazon-s3-connector' },
+                        sqs: { name: 'Amazon SQS', icon: exchangeBase + 'com.mulesoft.connectors/mule-amazon-sqs-connector/icon/svg/', doc: 'amazon-sqs-connector' },
+                        dynamodb: { name: 'DynamoDB', icon: exchangeBase + 'com.mulesoft.connectors/mule-amazon-dynamodb-connector/icon/svg/', doc: 'amazon-dynamodb-connector' },
+                        servicenow: { name: 'ServiceNow', icon: exchangeBase + 'com.mulesoft.connectors/mule-servicenow-connector/icon/svg/', doc: 'servicenow-connector' },
+                        sockets: { name: 'Sockets', icon: exchangeBase + 'org.mule.connectors/mule-sockets-connector/icon/svg/', doc: 'sockets-connector' },
+                        snowflake: { name: 'Snowflake', icon: exchangeBase + 'com.mulesoft.connectors/mule-snowflake-connector/icon/svg/', doc: 'snowflake-connector' },
+                        stripe: { name: 'Stripe', icon: exchangeBase + 'com.mulesoft.connectors/mule-stripe-connector/icon/svg/', doc: 'stripe-connector' },
+                        'anypoint-mq': { name: 'Anypoint MQ', icon: exchangeBase + 'com.mulesoft.connectors/anypoint-mq-connector/icon/svg/', doc: 'anypoint-mq-connector' },
+                        // Core/internal connectors without Exchange logos
+                        mule: { name: 'Mule Core', icon: null, doc: null },
+                        apikit: { name: 'APIkit', icon: null, doc: 'apikit' },
+                        'mule-apikit': { name: 'APIkit', icon: null, doc: 'apikit' },
+                        java: { name: 'Java', icon: null, doc: 'java-module' },
+                        'java-logger': { name: 'Logger', icon: null, doc: null },
+                        schedulers: { name: 'Scheduler', icon: null, doc: null },
+                        'secure-properties': { name: 'Secure Props', icon: null, doc: 'mule-runtime/mule-4.4/secure-app-props' }
+                    };
+                    
+                    // Render connector type pills with logos and links
                     const pillsContainer = document.getElementById('connector-pills');
                     if (pillsContainer && m.connectorTypes && m.connectorTypes.length > 0) {
-                        pillsContainer.innerHTML = m.connectorTypes.map(type => 
-                            '<span class="px-2 py-0.5 text-2xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">' + type + '</span>'
-                        ).join('');
+                        pillsContainer.innerHTML = m.connectorTypes.map(type => {
+                            const meta = connectorMeta[type.toLowerCase()] || { name: type, icon: null, doc: null };
+                            const docUrl = meta.doc ? 'https://docs.mulesoft.com/' + meta.doc + '/latest/' : null;
+                            const pillClass = 'inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors';
+                            const iconHtml = meta.icon ? '<img src="' + meta.icon + '" alt="" class="w-3.5 h-3.5 rounded-sm" onerror="this.style.display=\\'none\\'">' : '<span class="w-3.5 h-3.5 rounded-sm bg-slate-300 dark:bg-slate-600 flex items-center justify-center text-2xs">⚙</span>';
+                            if (docUrl) {
+                                return '<a href="' + docUrl + '" target="_blank" rel="noopener" class="' + pillClass + '" title="View ' + meta.name + ' docs">' + iconHtml + '<span>' + meta.name + '</span></a>';
+                            }
+                            return '<span class="' + pillClass + '" title="' + meta.name + '">' + iconHtml + '<span>' + meta.name + '</span></span>';
+                        }).join('');
                     } else if (pillsContainer) {
                         document.getElementById('connector-inventory').style.display = 'none';
                     }
