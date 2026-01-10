@@ -447,9 +447,15 @@ export function formatHtml(report: LintReport): string {
                         <div id="connector-pills" class="flex flex-wrap gap-1.5"></div>
                     </div>
                     <!-- API Endpoints -->
-                    <div id="endpoints-inventory" class="mt-2 flex items-center gap-2 flex-wrap" style="display: none;">
-                        <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">API Endpoints:</span>
-                        <div id="endpoint-pills" class="flex flex-wrap gap-1.5"></div>
+                    <div id="endpoints-inventory" class="mt-2" style="display: none;">
+                        <div class="flex items-center gap-2 flex-wrap cursor-pointer" onclick="window.toggleEndpoints()">
+                            <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">API Endpoints:</span>
+                            <div id="endpoint-pills" class="flex flex-wrap gap-1.5"></div>
+                            <svg id="endpoints-chevron" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div id="endpoint-details" class="hidden mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto">
+                            <div id="endpoint-list" class="flex flex-wrap gap-1.5"></div>
+                        </div>
                     </div>
                     <!-- Environments -->
                     <div id="environments-inventory" class="mt-2 flex items-center gap-2 flex-wrap" style="display: none;">
@@ -798,22 +804,54 @@ export function formatHtml(report: LintReport): string {
                         document.getElementById('connector-inventory').style.display = 'none';
                     }
                     
-                    // Render API endpoints
+                    // Render API endpoints - grouped summary
                     const endpointContainer = document.getElementById('endpoint-pills');
                     if (endpointContainer && m.apiEndpoints && m.apiEndpoints.length > 0) {
                         document.getElementById('endpoints-inventory').style.display = 'flex';
-                        const methodColors = {
-                            'GET': 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-                            'POST': 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-400',
-                            'PUT': 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
-                            'PATCH': 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400',
-                            'DELETE': 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400',
-                            'ALL': 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+                        
+                        // Group endpoints by method
+                        const byMethod = {};
+                        m.apiEndpoints.forEach(ep => {
+                            byMethod[ep.method] = (byMethod[ep.method] || 0) + 1;
+                        });
+                        
+                        const methodStyles = {
+                            'GET': { bg: 'bg-emerald-100 dark:bg-emerald-500/20', text: 'text-emerald-700 dark:text-emerald-400', dot: 'bg-emerald-500' },
+                            'POST': { bg: 'bg-sky-100 dark:bg-sky-500/20', text: 'text-sky-700 dark:text-sky-400', dot: 'bg-sky-500' },
+                            'PUT': { bg: 'bg-amber-100 dark:bg-amber-500/20', text: 'text-amber-700 dark:text-amber-400', dot: 'bg-amber-500' },
+                            'PATCH': { bg: 'bg-orange-100 dark:bg-orange-500/20', text: 'text-orange-700 dark:text-orange-400', dot: 'bg-orange-500' },
+                            'DELETE': { bg: 'bg-rose-100 dark:bg-rose-500/20', text: 'text-rose-700 dark:text-rose-400', dot: 'bg-rose-500' },
+                            'ALL': { bg: 'bg-slate-100 dark:bg-slate-600', text: 'text-slate-600 dark:text-slate-300', dot: 'bg-slate-400' }
                         };
-                        endpointContainer.innerHTML = m.apiEndpoints.map(ep => {
-                            const colorClass = methodColors[ep.method] || methodColors['ALL'];
-                            return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + colorClass + '"><span class="font-bold">' + ep.method + '</span><span class="opacity-75">' + ep.path + '</span></span>';
-                        }).join('');
+                        
+                        // Show total count + summary by method
+                        const totalBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-bold rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">' + m.apiEndpoints.length + ' endpoints</span>';
+                        
+                        const methodBadges = Object.entries(byMethod)
+                            .sort((a, b) => b[1] - a[1]) // Sort by count desc
+                            .map(([method, count]) => {
+                                const style = methodStyles[method] || methodStyles['ALL'];
+                                return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + ' ' + style.text + '"><span class="w-2 h-2 rounded-full ' + style.dot + '"></span>' + method + ' <span class="font-bold">' + count + '</span></span>';
+                            }).join('');
+                        
+                        endpointContainer.innerHTML = totalBadge + methodBadges;
+                        
+                        // Populate detail list
+                        const endpointList = document.getElementById('endpoint-list');
+                        if (endpointList) {
+                            endpointList.innerHTML = m.apiEndpoints.map(ep => {
+                                const style = methodStyles[ep.method] || methodStyles['ALL'];
+                                return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + ' ' + style.text + '"><span class="font-bold">' + ep.method + '</span><span class="opacity-75">' + ep.path + '</span></span>';
+                            }).join('');
+                        }
+                        
+                        // Toggle function
+                        window.toggleEndpoints = function() {
+                            const details = document.getElementById('endpoint-details');
+                            const chevron = document.getElementById('endpoints-chevron');
+                            details.classList.toggle('hidden');
+                            chevron.classList.toggle('rotate-180');
+                        };
                     }
                     
                     // Render environments
