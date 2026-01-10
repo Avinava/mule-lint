@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.12.0] - 2026-01-10
+
+### Added
+- **ProjectRule Base Class**: New abstract base class for project-level rules with run-once semantics
+- **156 Unit Tests**: Comprehensive test coverage (up from 43 tests - 3.6x increase)
+  - Error Handling: MULE-003, -005, -007, -009, ERR-001
+  - HTTP: MULE-401, -402, -403
+  - Security: MULE-004, -201, -202, SEC-002
+  - Logging: MULE-006, -301, -303, LOG-004
+  - DataWeave: DW-001, -002, -003
+  - Naming: MULE-101, -102
+  - Standards: MULE-008
+  - Performance: MULE-501, -502, -503, PERF-002
+  - API-Led: API-001, -002, -003
+  - Documentation: MULE-601, -604
+  - Complexity: MULE-801
+  - Structure: MULE-804
+  - Experimental: EXP-001, -002
+
+### Improved
+- **DW-002**: Configurable naming convention (kebab-case/camelCase/any)
+- **MULE-401**: Demoted to `info` severity, added `excludeConfigs` option
+
+---
+
 ## [1.10.0] - 2026-01-10
 
 ### Documentation
