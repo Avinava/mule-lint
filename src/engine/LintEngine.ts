@@ -80,6 +80,9 @@ export class LintEngine {
             choiceRouterCount: 0,
             apiEndpoints: [],
             environments: [],
+            securityPatterns: [],
+            externalServices: [],
+            schedulers: [],
             fileComplexity: {},
         };
 
@@ -515,6 +518,96 @@ export class LintEngine {
                         !metrics.apiEndpoints.some((ep) => ep.path === path)
                     ) {
                         metrics.apiEndpoints.push({ path, method: 'ALL' });
+                    }
+                }
+            }
+
+            // Extract security patterns from namespaces (root already declared above)
+            if (root && root.attributes) {
+                for (let i = 0; i < root.attributes.length; i++) {
+                    const attr = root.attributes[i];
+                    if (attr.name.startsWith('xmlns:')) {
+                        const ns = attr.value.toLowerCase();
+                        if (ns.includes('tls') && !metrics.securityPatterns.includes('TLS')) {
+                            metrics.securityPatterns.push('TLS');
+                        }
+                        if (ns.includes('oauth') && !metrics.securityPatterns.includes('OAuth')) {
+                            metrics.securityPatterns.push('OAuth');
+                        }
+                    }
+                }
+            }
+            // Check for secure-properties config
+            const secureProps = xpath.select(
+                '//*[contains(local-name(), "secure-properties")]',
+                doc,
+            );
+            if (
+                Array.isArray(secureProps) &&
+                secureProps.length > 0 &&
+                !metrics.securityPatterns.includes('Secure Properties')
+            ) {
+                metrics.securityPatterns.push('Secure Properties');
+            }
+            // Check for basic-auth
+            const basicAuth = xpath.select(
+                '//*[contains(local-name(), "basic-authentication")]',
+                doc,
+            );
+            if (
+                Array.isArray(basicAuth) &&
+                basicAuth.length > 0 &&
+                !metrics.securityPatterns.includes('Basic Auth')
+            ) {
+                metrics.securityPatterns.push('Basic Auth');
+            }
+
+            // Extract external services (HTTP request configs)
+            const requestConfigs = xpath.select('//*[local-name()="request-config"]', doc);
+            if (Array.isArray(requestConfigs)) {
+                for (const config of requestConfigs) {
+                    const name = (config as Element).getAttribute('name') || 'unknown';
+                    const host = (config as Element).getAttribute('host') || '';
+                    const basePath = (config as Element).getAttribute('basePath') || '';
+                    const hostValue = host || basePath || 'external';
+                    if (!metrics.externalServices.some((s) => s.name === name)) {
+                        metrics.externalServices.push({ name, host: hostValue });
+                    }
+                }
+            }
+
+            // Extract schedulers (cron and fixed frequency)
+            const schedulerTriggers = xpath.select(
+                '//*[local-name()="scheduling-strategy"]/*',
+                doc,
+            );
+            if (Array.isArray(schedulerTriggers)) {
+                for (const trigger of schedulerTriggers) {
+                    const triggerName = (trigger as Element).localName || '';
+                    if (triggerName === 'cron') {
+                        const expression = (trigger as Element).getAttribute('expression') || '';
+                        const parent = (trigger as Element).parentNode?.parentNode;
+                        const flowName = parent
+                            ? (parent as Element).getAttribute('name') || 'unknown'
+                            : 'unknown';
+                        metrics.schedulers.push({
+                            type: 'cron',
+                            value: expression,
+                            flow: flowName,
+                        });
+                    } else if (triggerName === 'fixed-frequency') {
+                        const freq = (trigger as Element).getAttribute('frequency') || '';
+                        const unit =
+                            (trigger as Element).getAttribute('timeUnit') || 'MILLISECONDS';
+                        const parent = (trigger as Element).parentNode?.parentNode;
+                        const flowName = parent
+                            ? (parent as Element).getAttribute('name') || 'unknown'
+                            : 'unknown';
+                        metrics.schedulers.push({
+                            type: 'fixed',
+                            value: freq + ' ' + unit,
+                            flow: flowName,
+                        });
                     }
                 }
             }
