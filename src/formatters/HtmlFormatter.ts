@@ -820,20 +820,19 @@ export function formatHtml(report: LintReport): string {
                     const envContainer = document.getElementById('environment-pills');
                     if (envContainer && m.environments && m.environments.length > 0) {
                         document.getElementById('environments-inventory').style.display = 'flex';
-                        const envColors = {
-                            'dev': 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400',
-                            'local': 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300',
-                            'prod': 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400',
-                            'qa': 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400',
-                            'staging': 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
-                            'uat': 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400',
-                            'test': 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400',
-                            'sandbox': 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400'
+                        const envStyles = {
+                            'dev': { bg: 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400', dot: 'bg-emerald-500' },
+                            'local': { bg: 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300', dot: 'bg-slate-400' },
+                            'prod': { bg: 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400', dot: 'bg-rose-500' },
+                            'qa': { bg: 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400', dot: 'bg-violet-500' },
+                            'staging': { bg: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400', dot: 'bg-amber-500' },
+                            'uat': { bg: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400', dot: 'bg-indigo-500' },
+                            'test': { bg: 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400', dot: 'bg-teal-500' },
+                            'sandbox': { bg: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400', dot: 'bg-orange-500' }
                         };
                         envContainer.innerHTML = m.environments.map(env => {
-                            const colorClass = envColors[env] || envColors['local'];
-                            const icon = env === 'prod' ? '🔴' : (env === 'dev' ? '🟢' : '🔵');
-                            return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + colorClass + '"><span>' + icon + '</span><span>' + env + '</span></span>';
+                            const style = envStyles[env] || envStyles['local'];
+                            return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + '"><span class="w-2 h-2 rounded-full ' + style.dot + '"></span><span>' + env + '</span></span>';
                         }).join('');
                     }
                 }
