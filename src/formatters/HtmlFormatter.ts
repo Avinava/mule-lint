@@ -44,11 +44,21 @@ export function formatHtml(report: LintReport): string {
             severity: r.severity,
             description: r.description,
         })),
+        metrics: report.metrics || {
+            flowCount: 0,
+            subFlowCount: 0,
+            dwTransformCount: 0,
+            connectorConfigCount: 0,
+            httpListenerCount: 0,
+            fileComplexity: {},
+        },
     };
 
     const jsonPayload = JSON.stringify(clientData).replace(/</g, '\\u003c');
     const totalIssues =
-        report.summary.bySeverity.error + report.summary.bySeverity.warning + report.summary.bySeverity.info;
+        report.summary.bySeverity.error +
+        report.summary.bySeverity.warning +
+        report.summary.bySeverity.info;
 
     // 4. Build HTML
     return `<!DOCTYPE html>
@@ -259,7 +269,7 @@ export function formatHtml(report: LintReport): string {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 </div>
                 <div>
-                    <div class="text-sm font-bold text-slate-900 dark:text-white tracking-tight">Mule-Lint</div>
+                    <div class="text-sm font-bold text-slate-900 dark:text-white tracking-tight">mule-lint</div>
                     <div class="text-2xs text-slate-400 dark:text-slate-500 -mt-0.5">Static analysis for MuleSoft</div>
                 </div>
             </a>
@@ -360,12 +370,72 @@ export function formatHtml(report: LintReport): string {
             <div id="view-dashboard" class="h-full overflow-y-auto p-6">
                 <!-- Header -->
                 <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Analysis Dashboard</h2>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">mule-lint dashboard</h2>
                     <p class="text-base text-slate-500 dark:text-slate-400 mt-2">
                         Scanned <strong class="text-slate-700 dark:text-slate-200">${report.files.length} files</strong> • Found <strong class="text-rose-600 dark:text-rose-400">${report.summary.bySeverity.error} errors</strong>, 
                         <strong class="text-amber-600 dark:text-amber-400">${report.summary.bySeverity.warning} warnings</strong>, and 
                         <strong class="text-sky-600 dark:text-sky-400">${report.summary.bySeverity.info} suggestions</strong>
                     </p>
+                </div>
+
+                <!-- Project Metrics (moved to top) -->
+                <div class="mb-6">
+                    <div class="mb-3">
+                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Project Metrics</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Architecture overview: flows, components, and configurations</p>
+                    </div>
+                    <div class="grid grid-cols-5 gap-3">
+                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-2xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider">Flows</span>
+                                <div class="w-6 h-6 rounded bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                </div>
+                            </div>
+                            <div id="metric-flows" class="text-xl font-bold text-violet-600 dark:text-violet-400">-</div>
+                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Entry points</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-2xs font-semibold text-teal-600 dark:text-teal-400 uppercase tracking-wider">Sub-Flows</span>
+                                <div class="w-6 h-6 rounded bg-teal-100 dark:bg-teal-500/20 flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                                </div>
+                            </div>
+                            <div id="metric-subflows" class="text-xl font-bold text-teal-600 dark:text-teal-400">-</div>
+                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Reusable logic</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-2xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">Services</span>
+                                <div class="w-6 h-6 rounded bg-cyan-100 dark:bg-cyan-500/20 flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                                </div>
+                            </div>
+                            <div id="metric-services" class="text-xl font-bold text-cyan-600 dark:text-cyan-400">-</div>
+                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">HTTP endpoints</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-2xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wider">DataWeave</span>
+                                <div class="w-6 h-6 rounded bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                                </div>
+                            </div>
+                            <div id="metric-dw" class="text-xl font-bold text-orange-600 dark:text-orange-400">-</div>
+                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Transforms</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-2xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Connectors</span>
+                                <div class="w-6 h-6 rounded bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+                                </div>
+                            </div>
+                            <div id="metric-connectors" class="text-xl font-bold text-indigo-600 dark:text-indigo-400">-</div>
+                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Configurations</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Summary Cards -->
@@ -631,10 +701,22 @@ export function formatHtml(report: LintReport): string {
             init() {
                 this.renderSidebar();
                 this.renderCharts();
+                this.renderMetrics();
                 this.initTable();
                 this.initTheme();
                 this.initKeyboardShortcuts();
                 this.initExport();
+            },
+            
+            renderMetrics() {
+                if (report.metrics) {
+                    const m = report.metrics;
+                    document.getElementById('metric-flows').textContent = m.flowCount;
+                    document.getElementById('metric-subflows').textContent = m.subFlowCount;
+                    document.getElementById('metric-services').textContent = m.httpListenerCount || 0;
+                    document.getElementById('metric-dw').textContent = m.dwTransformCount;
+                    document.getElementById('metric-connectors').textContent = m.connectorConfigCount;
+                }
             },
             
             renderSidebar() {

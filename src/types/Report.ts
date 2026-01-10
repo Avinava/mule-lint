@@ -33,6 +33,24 @@ export interface LintSummary {
 }
 
 /**
+ * Project metrics collected during scan
+ */
+export interface ProjectMetrics {
+    /** Total number of flows */
+    flowCount: number;
+    /** Total number of sub-flows */
+    subFlowCount: number;
+    /** Total number of DataWeave transforms */
+    dwTransformCount: number;
+    /** Total number of connector configurations */
+    connectorConfigCount: number;
+    /** Total number of HTTP listeners (services) */
+    httpListenerCount: number;
+    /** Complexity breakdown by file */
+    fileComplexity: Record<string, 'simple' | 'medium' | 'complex'>;
+}
+
+/**
  * Complete report for a lint run
  */
 export interface LintReport {
@@ -46,4 +64,6 @@ export interface LintReport {
     files: FileResult[];
     /** Summary statistics */
     summary: LintSummary;
+    /** Project metrics (optional for backward compatibility) */
+    metrics?: ProjectMetrics;
 }

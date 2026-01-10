@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Rule, Issue, RuleConfig, ValidationContext, Severity } from '../types';
 import { LintConfig, DEFAULT_CONFIG } from '../types/Config';
-import { LintReport, LintSummary, FileResult } from '../types/Report';
+import { LintReport, LintSummary, FileResult, ProjectMetrics } from '../types/Report';
 import { parseXml } from '../core/XmlParser';
 import { scanDirectory, readFileContent, ScannedFile } from '../core/FileScanner';
 
@@ -66,10 +66,19 @@ export class LintEngine {
 
         this.log(`Found ${files.length} files to scan`);
 
-        // Process each file
+        // Process each file and collect metrics
         const fileResults: FileResult[] = [];
+        const metricsAggregator: ProjectMetrics = {
+            flowCount: 0,
+            subFlowCount: 0,
+            dwTransformCount: 0,
+            connectorConfigCount: 0,
+            httpListenerCount: 0,
+            fileComplexity: {},
+        };
+
         for (const file of files) {
-            const result = this.processFile(file, projectRoot, isStandalone);
+            const result = this.processFile(file, projectRoot, isStandalone, metricsAggregator);
             fileResults.push(result);
         }
 
@@ -102,6 +111,7 @@ export class LintEngine {
             durationMs,
             files: fileResults,
             summary,
+            metrics: metricsAggregator,
         };
     }
 
@@ -163,6 +173,7 @@ export class LintEngine {
         file: ScannedFile,
         projectRoot: string,
         isStandalone: boolean = false,
+        metricsAggregator?: ProjectMetrics,
     ): FileResult {
         this.log(`  Processing: ${file.relativePath}`);
 
@@ -186,6 +197,11 @@ export class LintEngine {
                 projectRoot,
                 isStandalone,
             );
+
+            // Collect metrics from parsed document
+            if (metricsAggregator) {
+                this.collectFileMetrics(parseResult.document, file.relativePath, metricsAggregator);
+            }
 
             return {
                 filePath: file.absolutePath,
@@ -347,6 +363,61 @@ export class LintEngine {
     private log(message: string): void {
         if (this.verbose) {
             console.log(message);
+        }
+    }
+
+    /**
+     * Collect metrics from a parsed XML document
+     */
+    private collectFileMetrics(doc: Document, relativePath: string, metrics: ProjectMetrics): void {
+        try {
+            const xpath = require('xpath');
+
+            // Count flows
+            const flows = xpath.select('//*[local-name()="flow"]', doc);
+            const flowCount = Array.isArray(flows) ? flows.length : 0;
+            metrics.flowCount += flowCount;
+
+            // Count sub-flows
+            const subFlows = xpath.select('//*[local-name()="sub-flow"]', doc);
+            const subFlowCount = Array.isArray(subFlows) ? subFlows.length : 0;
+            metrics.subFlowCount += subFlowCount;
+
+            // Count DataWeave transforms (ee:transform)
+            const dwTransforms = xpath.select(
+                '//*[local-name()="transform" and (namespace-uri()="http://www.mulesoft.org/schema/mule/ee/core" or contains(local-name(..), "ee:"))]',
+                doc,
+            );
+            // Fallback: also check for ee:transform in any namespace
+            const dwTransforms2 = xpath.select('//*[contains(name(), ":transform")]', doc);
+            const dwCount = Array.isArray(dwTransforms)
+                ? dwTransforms.length
+                : Array.isArray(dwTransforms2)
+                  ? dwTransforms2.length
+                  : 0;
+            metrics.dwTransformCount += dwCount;
+
+            // Count connector configs (elements ending in -config)
+            const configs = xpath.select('//*[contains(local-name(), "-config")]', doc);
+            const configCount = Array.isArray(configs) ? configs.length : 0;
+            metrics.connectorConfigCount += configCount;
+
+            // Count HTTP listeners (services)
+            const listeners = xpath.select('//*[local-name()="listener"]', doc);
+            const listenerCount = Array.isArray(listeners) ? listeners.length : 0;
+            metrics.httpListenerCount += listenerCount;
+
+            // Calculate file complexity based on flow count
+            const totalFlows = flowCount + subFlowCount;
+            let complexity: 'simple' | 'medium' | 'complex' = 'simple';
+            if (totalFlows >= 10) {
+                complexity = 'complex';
+            } else if (totalFlows >= 5) {
+                complexity = 'medium';
+            }
+            metrics.fileComplexity[relativePath] = complexity;
+        } catch {
+            // Silently skip metrics collection on error
         }
     }
 }
