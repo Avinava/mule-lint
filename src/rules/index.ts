@@ -68,6 +68,7 @@ import { Java17DWErrorHandlingRule } from './dataweave/Java17DWErrorHandlingRule
 
 // Import all rules - API-Led
 import { ExperienceLayerRule, ProcessLayerRule, SystemLayerRule } from './api-led/ApiLedRules';
+import { SingleSystemSapiRule } from './api-led/SingleSystemSapiRule';
 
 // Import all rules - Experimental
 import {
@@ -191,11 +192,11 @@ export const ALL_RULES: Rule[] = [
     new DwlModulesRule(),
     new Java17DWErrorHandlingRule(),
 
-    // API-Led Rules (API-001, 002, 003)
-
+    // API-Led Rules (API-001, 002, 003, 004)
     new ExperienceLayerRule(),
     new ProcessLayerRule(),
     new SystemLayerRule(),
+    new SingleSystemSapiRule(),
 
     // Experimental Rules (EXP-001, 002, 003)
     new FlowRefDepthRule(),
