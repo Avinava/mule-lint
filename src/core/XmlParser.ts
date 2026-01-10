@@ -37,6 +37,8 @@ export function parseXml(content: string, filePath?: string): ParseResult {
     const warnings: ParserError[] = [];
 
     const parser = new DOMParser({
+        // Enable line/column tracking for parsed nodes (use {} for xmldom 0.8.x)
+        locator: {},
         errorHandler: {
             warning: (msg: string) => {
                 warnings.push({ message: msg });
