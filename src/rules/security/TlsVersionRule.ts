@@ -29,9 +29,7 @@ export class TlsVersionRule extends BaseRule {
             if (enabledProtocols) {
                 const protocols = enabledProtocols.split(',').map((p) => p.trim());
                 const deprecated = protocols.filter((p) =>
-                    this.deprecatedProtocols.some(
-                        (dp) => p.toUpperCase() === dp.toUpperCase(),
-                    ),
+                    this.deprecatedProtocols.some((dp) => p.toUpperCase() === dp.toUpperCase()),
                 );
 
                 if (deprecated.length > 0) {
@@ -59,20 +57,11 @@ export class TlsVersionRule extends BaseRule {
             const element = protocol as Element;
             const value = element.textContent?.trim() || '';
 
-            if (
-                this.deprecatedProtocols.some(
-                    (dp) => value.toUpperCase() === dp.toUpperCase(),
-                )
-            ) {
+            if (this.deprecatedProtocols.some((dp) => value.toUpperCase() === dp.toUpperCase())) {
                 issues.push(
-                    this.createIssue(
-                        protocol,
-                        `Deprecated TLS protocol configured: ${value}`,
-                        {
-                            suggestion:
-                                'Remove deprecated protocol. Use TLSv1.2 or TLSv1.3 only',
-                        },
-                    ),
+                    this.createIssue(protocol, `Deprecated TLS protocol configured: ${value}`, {
+                        suggestion: 'Remove deprecated protocol. Use TLSv1.2 or TLSv1.3 only',
+                    }),
                 );
             }
         }

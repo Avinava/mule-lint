@@ -30,10 +30,7 @@ export class InputValidationRule extends BaseRule {
             const flowName = flowElement.getAttribute('name') || '';
 
             // Check if flow has HTTP listener with body-accepting methods
-            const listeners = this.select(
-                './/*[local-name()="listener"]',
-                flow,
-            );
+            const listeners = this.select('.//*[local-name()="listener"]', flow);
 
             if (listeners.length === 0) continue;
 
@@ -46,10 +43,11 @@ export class InputValidationRule extends BaseRule {
             if (!acceptsBody) continue;
 
             // Check for validation in the flow
-            const hasValidation = this.select(
-                './/*[local-name()="validate-schema" or local-name()="json-schema-validator" or local-name()="schema-validator" or contains(local-name(), "validation")]',
-                flow,
-            ).length > 0;
+            const hasValidation =
+                this.select(
+                    './/*[local-name()="validate-schema" or local-name()="json-schema-validator" or local-name()="schema-validator" or contains(local-name(), "validation")]',
+                    flow,
+                ).length > 0;
 
             // Check for DataWeave validation patterns
             const transforms = this.select('.//*[local-name()="transform"]', flow);

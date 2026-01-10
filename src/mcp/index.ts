@@ -21,7 +21,7 @@ export class MuleLintMcpServer {
     constructor() {
         this.server = new McpServer({
             name: 'mule-lint',
-            version: '1.9.0',
+            version: '1.11.0',
         });
 
         // Initialize engine with default config
@@ -40,13 +40,14 @@ export class MuleLintMcpServer {
 
         this.setupTools();
         this.setupResources();
+        this.setupPrompts();
     }
 
     private setupTools() {
         // Tool: run_lint_analysis
         this.server.tool(
             'run_lint_analysis',
-            'Runs the scanning engine on a specified directory. Returns a JSON summary of errors, warnings, and code references.',
+            'USE THIS TOOL FIRST to analyze a MuleSoft project. It scans the codebase for best practice violations, security issues (secure:: properties), and potential runtime errors. Returns a comprehensive report needed to identify what needs fixing.',
             {
                 projectPath: z
                     .string()
@@ -106,7 +107,7 @@ export class MuleLintMcpServer {
         // Tool: get_rule_details
         this.server.tool(
             'get_rule_details',
-            'Returns the full documentation and rationale for a specific rule.',
+            'Retrieve detailed documentation for a specific linting rule ID (e.g., MULE-001). Use this to understand WHY a rule failed and HOW to fix it properly according to best practices.',
             {
                 ruleId: z
                     .string()
@@ -150,7 +151,7 @@ export class MuleLintMcpServer {
         // Tool: validate_snippet
         this.server.tool(
             'validate_snippet',
-            'Quickly validates a small chunk of code without a full project structure.',
+            'Validates a small XML or DataWeave code snippet in isolation. Use this to check syntax and basic rules on generated code BEFORE suggesting it to the user.',
             {
                 code: z.string().describe('The code snippet to validate'),
                 type: z.enum(['xml', 'dwl']).describe('The type of code (xml or dwl)'),
@@ -226,7 +227,7 @@ export class MuleLintMcpServer {
             'mule-lint://rules',
             {
                 description:
-                    'A JSON list of all registered rules, their categories, and severity levels.',
+                    'A comprehensive catalog of all available linting rules. Read this to discover what rules are enforceable, their severity levels, and categories (e.g., Security, Performance, DataWeave).',
                 mimeType: 'application/json',
             },
             async (uri) => {
@@ -298,7 +299,7 @@ export class MuleLintMcpServer {
             }),
             {
                 description:
-                    'Access internal documentation (e.g., best-practices, architecture, naming).',
+                    'Access the official MuleSoft development best practices and internal documentation. Read these documents to ensure your generated code aligns with our architectural standards, naming conventions, and project structure.',
                 mimeType: 'text/markdown',
             },
             async (uri, variables) => {
@@ -376,6 +377,84 @@ export class MuleLintMcpServer {
                         ],
                     };
                 }
+            },
+        );
+    }
+
+    private setupPrompts() {
+        // Prompt: analyze-project
+        this.server.registerPrompt(
+            'analyze-project',
+            {
+                description:
+                    'Analyze the current project for MuleSoft best practice violations and linting issues.',
+                argsSchema: {
+                    path: z.string().describe('The absolute path to the project to analyze'),
+                },
+            },
+            async ({ path }) => {
+                return {
+                    messages: [
+                        {
+                            role: 'user',
+                            content: {
+                                type: 'text',
+                                text: `Please analyze the MuleSoft project at ${path}. Run the linting engine and summarize the key issues, focusing on severity:error and severity:warning. Group the findings by category (e.g., Security, Naming, Efficiency).`,
+                            },
+                        },
+                    ],
+                };
+            },
+        );
+
+        // Prompt: explain-rule
+        this.server.registerPrompt(
+            'explain-rule',
+            {
+                description:
+                    'Explain a specific linting rule and provide examples of good vs bad code.',
+                argsSchema: {
+                    ruleId: z.string().describe('The ID of the rule to explain (e.g., MULE-001)'),
+                },
+            },
+            async ({ ruleId }) => {
+                return {
+                    messages: [
+                        {
+                            role: 'user',
+                            content: {
+                                type: 'text',
+                                text: `Can you explain the MuleSoft linting rule ${ruleId}? I need to understand the rationale behind it, potential side effects of ignoring it, and see code examples of both compliant and non-compliant usage.`,
+                            },
+                        },
+                    ],
+                };
+            },
+        );
+
+        // Prompt: fix-issue
+        this.server.registerPrompt(
+            'fix-issue',
+            {
+                description: 'Suggest a fix for a specific linting issue in a file.',
+                argsSchema: {
+                    issue: z.string().describe('The error message or rule description'),
+                    file: z.string().describe('The file path where the issue occurred'),
+                    code: z.string().describe('The specific code snippet causing the issue'),
+                },
+            },
+            async ({ issue, file, code }) => {
+                return {
+                    messages: [
+                        {
+                            role: 'user',
+                            content: {
+                                type: 'text',
+                                text: `I have a linting issue in file ${file}: "${issue}".\nThe problematic code is:\n\`\`\`xml\n${code}\n\`\`\`\nPlease analyze why this is an issue and provide a corrected version of the code that satisfies the rule.`,
+                            },
+                        },
+                    ],
+                };
             },
         );
     }

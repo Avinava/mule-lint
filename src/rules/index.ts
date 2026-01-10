@@ -129,7 +129,7 @@ export const ALL_RULES: Rule[] = [
     new HttpStatusRule(),
     new CorrelationIdRule(),
     new GenericErrorRule(),
-    new TryScopeRule(),  // ERR-001: Try Scope Best Practice
+    new TryScopeRule(), // ERR-001: Try Scope Best Practice
 
     // Naming Rules (MULE-002, 101, 102)
     new FlowNamingRule(),
@@ -140,16 +140,16 @@ export const ALL_RULES: Rule[] = [
     new HardcodedHttpRule(),
     new HardcodedCredentialsRule(),
     new InsecureTlsRule(),
-    new TlsVersionRule(),       // SEC-002: TLS Version Check
-    new RateLimitingRule(),     // SEC-003: Rate Limiting
-    new InputValidationRule(),  // SEC-004: Input Validation
+    new TlsVersionRule(), // SEC-002: TLS Version Check
+    new RateLimitingRule(), // SEC-003: Rate Limiting
+    new InputValidationRule(), // SEC-004: Input Validation
 
     // Logging Rules (MULE-006, 301, 303)
     new LoggerCategoryRule(),
     new LoggerPayloadRule(),
     new LoggerInUntilSuccessfulRule(),
-    new StructuredLoggingRule(),     // LOG-001: Structured Logging
-    new SensitiveDataLoggingRule(),  // LOG-004: Sensitive Data in Logs
+    new StructuredLoggingRule(), // LOG-001: Structured Logging
+    new SensitiveDataLoggingRule(), // LOG-004: Sensitive Data in Logs
 
     // Standards Rules (MULE-008, 010, 701)
     new ChoiceAntiPatternRule(),
@@ -169,7 +169,7 @@ export const ALL_RULES: Rule[] = [
     new ScatterGatherRoutesRule(),
     new AsyncErrorHandlerRule(),
     new LargeChoiceBlockRule(),
-    new ConnectionPoolingRule(),  // PERF-002: Connection Pooling
+    new ConnectionPoolingRule(), // PERF-002: Connection Pooling
 
     // Complexity Rules (MULE-801)
     new FlowComplexityRule(),

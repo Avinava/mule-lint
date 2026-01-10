@@ -18,10 +18,7 @@ export class StructuredLoggingRule extends BaseRule {
         const issues: Issue[] = [];
 
         // Check if this is global.xml or a config file
-        if (
-            !context.relativePath.includes('global') &&
-            !context.relativePath.includes('config')
-        ) {
+        if (!context.relativePath.includes('global') && !context.relativePath.includes('config')) {
             return issues;
         }
 
@@ -57,7 +54,7 @@ export class StructuredLoggingRule extends BaseRule {
  *
  * Detects logging of sensitive data patterns (passwords, SSN, credit cards)
  * which is a security and compliance violation.
- * 
+ *
  * This rule looks for patterns where sensitive VARIABLE VALUES are being logged,
  * not just contextual words like "token expired" or "password reset".
  */
@@ -116,4 +113,3 @@ export class SensitiveDataLoggingRule extends BaseRule {
         return issues;
     }
 }
-
