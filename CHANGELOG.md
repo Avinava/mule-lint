@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.0] - 2026-01-10
+
+### Documentation
+- Updated README.md with correct VS Code MCP configuration instructions
+
 ## [1.9.0] - 2026-01-10
 
 ### Added

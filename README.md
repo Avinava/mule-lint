@@ -389,13 +389,19 @@ Add the following to your `claude_desktop_config.json`:
 }
 ```
 
-### Setup for VS Code (using MCP Extension)
+### Setup for VS Code
 
-If you are using an MCP-compatible extension in VS Code:
+Create a `.vscode/mcp.json` file in your project root:
 
-1.  Open your MCP settings configuration.
-2.  Add the `mule-lint` server configuration similar to above.
-3.  Reload the window.
+```json
+{
+    "mule-lint": {
+      "command": "npx",
+      "args": ["-y", "@sfdxy/mule-lint", "mule-lint-mcp"]
+    }
+  }
+}
+```
 
 The agent will now be able to "see" your MuleSoft project structure and offer linting actions autonomously.
 
