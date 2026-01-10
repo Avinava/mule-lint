@@ -1,5 +1,6 @@
-// Export base rule
+// Export base rules
 export * from './base/BaseRule';
+export * from './base/ProjectRule';
 
 // Import all rules - Error Handling
 import { GlobalErrorHandlerRule } from './error-handling/GlobalErrorHandlerRule';
