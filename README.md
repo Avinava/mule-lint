@@ -19,9 +19,10 @@
 
 **Mule-Lint** is a TypeScript-based linting tool designed to enforce best practices and standards for MuleSoft applications. It provides:
 
-- ✅ **10+ Built-in Rules** covering error handling, naming conventions, security, and logging
+- ✅ **48+ Built-in Rules** covering error handling, security, naming, logging, performance, and more
 - ✅ **Multiple Output Formats** - Table, JSON, SARIF, HTML, CSV <!-- id: 4 -->
 - ✅ **CI/CD Ready** - Exit codes and machine-readable output
+- ✅ **156+ Unit Tests** - Comprehensive test coverage for reliability
 - ✅ **TypeScript** - Fully typed for VS Code extension integration
 - ✅ **Extensible** - Add custom rules for your organization
 
