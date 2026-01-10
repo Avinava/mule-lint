@@ -177,4 +177,48 @@ describe('Security Rules', () => {
             expect(rule.category).toBe('security');
         });
     });
+
+    // =================================================================
+    // MULE-201: Hardcoded Credentials
+    // =================================================================
+    describe('HardcodedCredentialsRule (MULE-201)', () => {
+        const { HardcodedCredentialsRule } = require('../../src/rules/security/HardcodedCredentialsRule');
+        const rule = new HardcodedCredentialsRule();
+
+        it('should pass for secure property placeholders', () => {
+            const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:http="http://www.mulesoft.org/schema/mule/http">
+                    <http:request-config name="Config" password="\${secure::db.password}"/>
+                </mule>
+            `;
+            const result = parseXml(xml);
+            expect(result.success).toBe(true);
+
+            const issues = rule.validate(result.document!, createContext());
+            expect(issues).toHaveLength(0);
+        });
+
+        it('should fail for hardcoded passwords', () => {
+            const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:db="http://www.mulesoft.org/schema/mule/db">
+                    <db:config name="Config" password="secretPassword123"/>
+                </mule>
+            `;
+            const result = parseXml(xml);
+            expect(result.success).toBe(true);
+
+            const issues = rule.validate(result.document!, createContext());
+            expect(issues).toHaveLength(1);
+            expect(issues[0].ruleId).toBe('MULE-201');
+            expect(issues[0].message).toContain('Hardcoded');
+        });
+
+        it('should have correct rule properties', () => {
+            expect(rule.id).toBe('MULE-201');
+            expect(rule.severity).toBe('error');
+            expect(rule.category).toBe('security');
+        });
+    });
 });
