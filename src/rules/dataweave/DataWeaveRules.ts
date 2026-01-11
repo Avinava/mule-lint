@@ -60,7 +60,8 @@ export class ExternalDwlRule extends BaseRule {
 export class DwlNamingRule extends BaseRule {
     id = 'DW-002';
     name = 'DWL File Naming';
-    description = 'DataWeave files should follow consistent naming conventions (kebab-case recommended)';
+    description =
+        'DataWeave files should follow consistent naming conventions (kebab-case recommended)';
     severity = 'info' as const;
     category = 'dataweave' as const;
 
@@ -113,7 +114,11 @@ export class DwlNamingRule extends BaseRule {
             // Convert kebab-case to camelCase
             return name
                 .split('-')
-                .map((part, i) => (i === 0 ? part.toLowerCase() : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()))
+                .map((part, i) =>
+                    i === 0
+                        ? part.toLowerCase()
+                        : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
+                )
                 .join('');
         }
         // Convert camelCase/PascalCase to kebab-case

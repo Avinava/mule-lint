@@ -60,7 +60,7 @@ export abstract class ProjectRule extends BaseRule {
      */
     protected createProjectIssue(
         message: string,
-        options?: { suggestion?: string; severity?: Severity }
+        options?: { suggestion?: string; severity?: Severity },
     ): Issue {
         return {
             line: 0,

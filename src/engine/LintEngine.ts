@@ -6,6 +6,7 @@ import { LintConfig, DEFAULT_CONFIG } from '../types/Config';
 import { LintReport, LintSummary, FileResult, ProjectMetrics } from '../types/Report';
 import { parseXml } from '../core/XmlParser';
 import { scanDirectory, readFileContent, ScannedFile } from '../core/FileScanner';
+import { ComplexityCalculator } from '../core/ComplexityCalculator';
 
 /**
  * Engine options
@@ -84,6 +85,7 @@ export class LintEngine {
             externalServices: [],
             schedulers: [],
             fileComplexity: {},
+            flowComplexityData: [],
         };
 
         for (const file of files) {
@@ -407,6 +409,29 @@ export class LintEngine {
             const flowCount = Array.isArray(flows) ? flows.length : 0;
             metrics.flowCount += flowCount;
 
+            // Collect per-flow complexity
+            if (Array.isArray(flows)) {
+                for (const flow of flows) {
+                    const flowName = (flow as Element).getAttribute('name') || 'unnamed';
+                    try {
+                        const result = ComplexityCalculator.calculateFlowComplexity(flow);
+                        const breakdown: Record<string, number> = {};
+                        for (const detail of result.details) {
+                            breakdown[detail.type] = detail.count;
+                        }
+                        metrics.flowComplexityData.push({
+                            flowName,
+                            file: relativePath,
+                            complexity: result.complexity,
+                            rating: result.rating,
+                            breakdown,
+                        });
+                    } catch {
+                        // Skip complexity calculation on error
+                    }
+                }
+            }
+
             // Count sub-flows
             const subFlows = xpath.select('//*[local-name()="sub-flow"]', doc);
             const subFlowCount = Array.isArray(subFlows) ? subFlows.length : 0;
@@ -422,8 +447,8 @@ export class LintEngine {
             const dwCount = Array.isArray(dwTransforms)
                 ? dwTransforms.length
                 : Array.isArray(dwTransforms2)
-                  ? dwTransforms2.length
-                  : 0;
+                    ? dwTransforms2.length
+                    : 0;
             metrics.dwTransformCount += dwCount;
 
             // Count connector configs (elements ending in -config or named config/connection)
