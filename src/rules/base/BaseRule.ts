@@ -1,4 +1,4 @@
-import { Rule, Issue, Severity, RuleCategory, ValidationContext, RuleConfig } from '../../types';
+import { Rule, Issue, Severity, RuleCategory, ValidationContext, RuleConfig, IssueType } from '../../types';
 import {
     XPathHelper,
     getAttribute,
@@ -18,6 +18,8 @@ export abstract class BaseRule implements Rule {
     abstract severity: Severity;
     abstract category: RuleCategory;
 
+    /** Issue type for quality metrics - defaults to 'code-smell' */
+    issueType: IssueType = 'code-smell';
     docsUrl?: string;
 
     protected xpath: XPathHelper;
