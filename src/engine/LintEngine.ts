@@ -7,6 +7,7 @@ import { LintReport, LintSummary, FileResult, ProjectMetrics } from '../types/Re
 import { parseXml } from '../core/XmlParser';
 import { scanDirectory, readFileContent, ScannedFile } from '../core/FileScanner';
 import { ComplexityCalculator } from '../core/ComplexityCalculator';
+import { MetricsAggregator } from '../core/MetricsAggregator';
 
 /**
  * Engine options
@@ -136,13 +137,22 @@ export class LintEngine {
             `Found ${summary.bySeverity.error} errors, ${summary.bySeverity.warning} warnings`,
         );
 
-        return {
+        // Build initial report with base metrics
+        const baseReport: LintReport = {
             projectRoot,
             timestamp: new Date().toISOString(),
             durationMs,
             files: fileResults,
             summary,
             metrics: metricsAggregator,
+        };
+
+        // Aggregate enhanced metrics (A-E ratings, debt calculation)
+        const enhancedMetrics = MetricsAggregator.aggregateMetrics(baseReport);
+
+        return {
+            ...baseReport,
+            metrics: enhancedMetrics ?? metricsAggregator,
         };
     }
 
@@ -447,8 +457,8 @@ export class LintEngine {
             const dwCount = Array.isArray(dwTransforms)
                 ? dwTransforms.length
                 : Array.isArray(dwTransforms2)
-                  ? dwTransforms2.length
-                  : 0;
+                    ? dwTransforms2.length
+                    : 0;
             metrics.dwTransformCount += dwCount;
 
             // Count connector configs (elements ending in -config or named config/connection)
