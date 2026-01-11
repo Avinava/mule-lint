@@ -1,6 +1,6 @@
 /**
  * HTML Report Module Index
- * Re-exports all theme, styles, components, sections, and scripts
+ * Re-exports all theme, styles, components, sections, scripts, and views
  */
 
 // Theme
@@ -24,6 +24,11 @@ export { renderLintSummarySection, LintSummaryProps } from './sections/LintSumma
 export { renderHeader, HeaderProps } from './sections/Header';
 export { renderSidebar, SidebarProps } from './sections/Sidebar';
 
-// Scripts (configuration exports)
-export { connectorMeta, methodStyles, exchangeBaseUrl } from './scripts/renderer';
+// Scripts
+export { connectorMeta, methodStyles, exchangeBaseUrl, generateRendererScript } from './scripts/renderer';
 export { routerScript } from './scripts/router';
+export { initScript } from './scripts/init';
+
+// Views
+export { renderDashboardView, DashboardViewProps } from './views/Dashboard';
+export { renderIssuesView, IssuesViewProps } from './views/IssuesView';
