@@ -136,6 +136,7 @@ classDiagram
         +name: string
         +severity: Severity
         +category: RuleCategory
+        +issueType: IssueType
         +validate(doc, context): Issue[]
         #select(xpath, doc): Node[]
         #getAttribute(node, name): string
@@ -155,6 +156,11 @@ classDiagram
     BaseRule <|-- FlowNamingRule
     BaseRule <|-- YamlRuleBase
 ```
+
+**Issue Types for Quality Metrics:**
+- `code-smell` (default) - Maintainability issues
+- `bug` - Reliability issues (error-handling rules)
+- `vulnerability` - Security issues (security rules)
 
 ## Design Patterns
 
@@ -200,7 +206,7 @@ XPathHelper.getInstance(); // Same instance always
 src/
 ├── index.ts              # Package entry point
 ├── types/                # TypeScript interfaces
-│   ├── Rule.ts          # Rule, Issue, Severity
+│   ├── Rule.ts          # Rule, Issue, Severity, IssueType
 │   ├── Report.ts        # LintReport, FileResult
 │   └── Config.ts        # LintConfig, CliOptions
 ├── core/                 # Core utilities
@@ -208,23 +214,29 @@ src/
 │   ├── XmlParser.ts     # DOM parsing
 │   ├── YamlParser.ts    # YAML parsing
 │   ├── FileScanner.ts   # File discovery
-│   └── ComplexityCalculator.ts
+│   ├── ComplexityCalculator.ts
+│   └── MetricsAggregator.ts  # Quality rating calculations
+├── quality/              # Quality scoring system
+│   ├── index.ts         # Module exports
+│   ├── types.ts         # Rating types and interfaces
+│   ├── thresholds.ts    # A-E rating boundaries
+│   └── calculator.ts    # Rating calculation functions
 ├── engine/               # Orchestration
 │   └── LintEngine.ts    # Main engine
 ├── rules/                # All rules (56 total)
 │   ├── index.ts         # Rule registry
 │   ├── base/            # BaseRule class
-│   ├── api-led/         # API-001, 002, 003
+│   ├── api-led/         # API-001, 002, 003, 004
 │   ├── complexity/      # MULE-801
-│   ├── dataweave/       # DW-001, 002, 003
+│   ├── dataweave/       # DW-001, 002, 003, 004
 │   ├── documentation/   # MULE-601, 604
-│   ├── error-handling/  # MULE-001, 003, 005, 007, 009
+│   ├── error-handling/  # MULE-001, 003, 005, 007, 009 (issueType: bug)
 │   ├── experimental/    # EXP-001, 002, 003
 │   ├── http/            # MULE-401, 402, 403
 │   ├── logging/         # MULE-006, 301, 303
 │   ├── naming/          # MULE-002, 101, 102
 │   ├── performance/     # MULE-501, 502, 503
-│   ├── security/        # MULE-004, 201, 202
+│   ├── security/        # MULE-004, 201, 202 (issueType: vulnerability)
 │   ├── standards/       # MULE-008, 010, 701
 │   ├── structure/       # MULE-802, 803, 804
 │   └── yaml/            # YAML-001, 003, 004
@@ -232,7 +244,14 @@ src/
     ├── TableFormatter.ts
     ├── JsonFormatter.ts
     ├── SarifFormatter.ts
-    └── HtmlFormatter.ts
+    ├── CsvFormatter.ts
+    ├── HtmlFormatter.ts  # Orchestrates HTML report
+    └── html/             # Modular HTML components
+        ├── components/   # RatingBadge, Modal, etc.
+        ├── sections/     # Header, Sidebar, QualityRatings
+        ├── views/        # Dashboard, IssuesView
+        ├── scripts/      # Client-side JS (renderer, router)
+        └── styles/       # CSS modules and badges
 ```
 
 ## Rule Categories

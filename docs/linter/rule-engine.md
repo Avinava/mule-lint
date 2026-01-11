@@ -36,6 +36,9 @@ export type RuleCategory =
     | 'performance'
     | 'documentation';
 
+// Issue type for quality metrics classification
+export type IssueType = 'code-smell' | 'bug' | 'vulnerability';
+
 export interface Issue {
     line: number;
     column?: number;
@@ -68,6 +71,12 @@ export interface Rule {
     
     // Category for grouping in reports
     category: RuleCategory;
+    
+    // Issue type for quality metrics (defaults to 'code-smell')
+    // - 'bug': Reliability issues (error-handling rules)
+    // - 'vulnerability': Security issues (security rules)
+    // - 'code-smell': Maintainability issues (default)
+    issueType: IssueType;
     
     // Optional: documentation URL
     docsUrl?: string;
