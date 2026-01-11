@@ -116,6 +116,55 @@ export const modalContent: Record<string, ModalContent> = {
                 <span class="badge" style="background: var(--rating-e);">E</span><span>> 5 vulns - Critical security issues</span>
             </div>
         `
+    },
+    'project-metrics': {
+        title: 'Project Metrics Explained',
+        body: `
+            <h4>What is analyzed</h4>
+            <p>Mule-Lint scans your project structure to identify MuleSoft application components.</p>
+            <h4 style="margin-top: 16px;">Metrics Definitions</h4>
+            <ul>
+                <li><strong>Flows:</strong> Main entry points (HTTP listeners, schedulers) that handle requests</li>
+                <li><strong>Sub-flows:</strong> Reusable flow fragments for modularity</li>
+                <li><strong>Connectors:</strong> External system integrations (HTTP, Database, Salesforce, etc.)</li>
+                <li><strong>Endpoints:</strong> API routes exposed by the application</li>
+                <li><strong>Schedulers:</strong> Cron or fixed-frequency job triggers</li>
+                <li><strong>Services:</strong> External HTTP request configurations</li>
+            </ul>
+            <h4 style="margin-top: 16px;">Why it matters</h4>
+            <p>These metrics help estimate project size, complexity, and integration footprint for capacity planning and maintenance.</p>
+        `
+    },
+    'severity': {
+        title: 'Issue Severity Levels',
+        body: `
+            <h4>Understanding Severity</h4>
+            <p>Issues are classified by their impact on your application.</p>
+            <h4 style="margin-top: 16px;">Severity Levels</h4>
+            <div class="rating-scale">
+                <span class="badge" style="background: #ef4444;">E</span><span><strong>Error:</strong> Critical issues that may cause failures or security vulnerabilities</span>
+                <span class="badge" style="background: #f59e0b;">W</span><span><strong>Warning:</strong> Best practice violations that affect maintainability</span>
+                <span class="badge" style="background: #3b82f6;">I</span><span><strong>Info:</strong> Suggestions and recommendations for improvement</span>
+            </div>
+            <h4 style="margin-top: 16px;">Priority</h4>
+            <p>Fix errors first, then address warnings. Info-level issues can be handled during refactoring.</p>
+        `
+    },
+    'categories': {
+        title: 'Rule Categories',
+        body: `
+            <h4>How rules are organized</h4>
+            <p>Rules are grouped by the aspect of your application they validate.</p>
+            <h4 style="margin-top: 16px;">Categories</h4>
+            <ul>
+                <li><strong>Configuration:</strong> pom.xml, mule-artifact.json settings</li>
+                <li><strong>Error Handling:</strong> Try/catch, error handlers, exception strategies</li>
+                <li><strong>Naming:</strong> Flow, file, and property naming conventions</li>
+                <li><strong>Best Practices:</strong> DataWeave, hardcoded values, patterns</li>
+                <li><strong>Security:</strong> Credentials, TLS, sensitive data handling</li>
+                <li><strong>Logging:</strong> Logger placement and format</li>
+            </ul>
+        `
     }
 };
 
