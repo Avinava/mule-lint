@@ -140,26 +140,27 @@ export const componentStyles = `
 .modal-body .rating-scale {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     margin-top: 12px;
     background: var(--bg-secondary);
-    padding: 12px;
+    padding: 10px 12px;
     border-radius: var(--radius-md);
+    font-size: 0.75rem;
 }
 .rating-scale .rating-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 .rating-scale .badge {
-    min-width: 24px;
-    height: 24px;
+    min-width: 18px;
+    height: 18px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-sm);
-    font-weight: 700;
-    font-size: 0.75rem;
+    font-weight: 600;
+    font-size: 0.65rem;
     color: white;
     flex-shrink: 0;
 }
