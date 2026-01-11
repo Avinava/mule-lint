@@ -125,8 +125,118 @@ npx @sfdxy/mule-lint ./src/main/mule --fail-on-warning
 | `-c, --config <file>` | Path to configuration file |
 | `-q, --quiet` | Show only errors (suppress warnings and info) |
 | `-e, --experimental` | **Enable experimental rules (opt-in)** |
+| `-g, --quality-gate <name>` | Apply quality gate: `default`, `strict`, or `config` |
 | `--fail-on-warning` | Exit with error code if warnings found |
 | `-v, --verbose` | Show verbose output |
+
+---
+
+## Quality Gates
+
+Quality gates provide pass/fail thresholds for your CI/CD pipelines. When a gate fails, the tool exits with code 1.
+
+### Built-in Gates
+
+| Gate | Description |
+|------|-------------|
+| `default` | Fails if errors > 0, warnings > 10, complexity > 20, or security hotspots > 0 |
+| `strict` | Fails if any errors, warnings > 0, or complexity > 10 |
+
+### Usage
+
+```bash
+# Apply default quality gate
+npx @sfdxy/mule-lint ./src/main/mule -g default
+
+# Apply strict quality gate  
+npx @sfdxy/mule-lint ./src/main/mule -g strict
+
+# Use custom gate from config
+npx @sfdxy/mule-lint ./src/main/mule -g config -c .mulelintrc.json
+```
+
+### Custom Gate Configuration
+
+Add to your `.mulelintrc.json`:
+
+```json
+{
+  "qualityGate": {
+    "name": "Custom Gate",
+    "conditions": [
+      { "metric": "errors", "operator": ">", "threshold": 0, "status": "fail" },
+      { "metric": "warnings", "operator": ">", "threshold": 5, "status": "warn" },
+      { "metric": "complexity_max", "operator": ">", "threshold": 15, "status": "fail" }
+    ]
+  }
+}
+```
+
+### Quality Ratings (A-E)
+
+The HTML report displays quality ratings for four key dimensions. These follow industry-standard methodologies adapted for MuleSoft:
+
+#### Complexity Rating
+
+**What it measures:** Average cyclomatic complexity across all flows.
+
+**Calculation:**
+- Count decision points per flow: `choice/when`, `foreach`, `try`, `scatter-gather`, `async`, `until-successful`, `error-handlers`
+- Base complexity = 1 + (total decision points)
+- **Rating = Average of all flow complexities**
+
+| Rating | Threshold | Interpretation |
+|--------|-----------|----------------|
+| **A** | Avg ≤ 5 | Simple, easy to test |
+| **B** | Avg ≤ 10 | Moderate complexity |
+| **C** | Avg ≤ 15 | Complex, consider splitting |
+| **D** | Avg ≤ 20 | High complexity, refactor recommended |
+| **E** | Avg > 20 | Very complex, critical refactoring needed |
+
+#### Maintainability Rating
+
+**What it measures:** Technical debt as a percentage of estimated development time.
+
+**Calculation:**
+- Debt minutes = (code smells × 5min) + (bugs × 15min) + (vulnerabilities × 30min)
+- Development estimate = (flows × 10min) + (subflows × 5min), minimum 60min
+- **Debt Ratio = (Debt minutes / Development estimate) × 100%**
+
+| Rating | Debt Ratio | Interpretation |
+|--------|-----------|----------------|
+| **A** | ≤ 5% | Excellent maintainability |
+| **B** | ≤ 10% | Good maintainability |
+| **C** | ≤ 20% | Moderate technical debt |
+| **D** | ≤ 50% | High debt, plan remediation |
+| **E** | > 50% | Critical debt, immediate action needed |
+
+#### Reliability Rating
+
+**What it measures:** Number of bug-type issues detected.
+
+**Bug-type rules include:** Missing error handlers (MULE-003), missing project files (PROJ-001)
+
+| Rating | Bug Count | Interpretation |
+|--------|-----------|----------------|
+| **A** | 0 bugs | No reliability issues |
+| **B** | 1-2 bugs | Minor reliability concerns |
+| **C** | 3-5 bugs | Moderate reliability risk |
+| **D** | 6-10 bugs | High reliability risk |
+| **E** | > 10 bugs | Critical reliability issues |
+
+#### Security Rating
+
+**What it measures:** Vulnerability and security hotspot count.
+
+**Vulnerability rules include:** Hardcoded credentials (MULE-201), insecure TLS (MULE-202), plaintext secrets (YAML-004), hardcoded URLs (MULE-004)
+
+| Rating | Vulnerabilities | Interpretation |
+|--------|-----------------|----------------|
+| **A** | 0 vulns | Secure configuration |
+| **B** | 1 vuln | Minor security finding |
+| **C** | 2-3 vulns | Security review needed |
+| **D** | 4-5 vulns | Security remediation required |
+| **E** | > 5 vulns | Critical security issues |
 
 ### Examples
 
