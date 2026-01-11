@@ -65,4 +65,3 @@ export class HttpUserAgentRule extends BaseRule {
         return false;
     }
 }
-

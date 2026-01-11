@@ -59,6 +59,7 @@ export function formatHtml(report: LintReport): string {
             externalServices: [],
             schedulers: [],
             fileComplexity: {},
+            flowComplexityData: [],
         },
     };
 
@@ -567,6 +568,17 @@ export function formatHtml(report: LintReport): string {
                     </div>
                     <div class="h-[240px]">
                         <canvas id="chart-categories"></canvas>
+                    </div>
+                </div>
+
+                <!-- Flow Complexity Chart -->
+                <div id="complexity-chart-container" class="mt-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5" style="display: none;">
+                    <div class="mb-4">
+                        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200">Flow Complexity</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Cyclomatic complexity scores for flows (higher = more complex)</p>
+                    </div>
+                    <div class="h-[300px]">
+                        <canvas id="chart-complexity"></canvas>
                     </div>
                 </div>
             </div>
@@ -1099,6 +1111,66 @@ export function formatHtml(report: LintReport): string {
                         }
                     }
                 });
+
+                // Flow Complexity Chart
+                const complexityData = report.metrics?.flowComplexityData || [];
+                if (complexityData.length > 0) {
+                    document.getElementById('complexity-chart-container').style.display = 'block';
+                    
+                    // Sort by complexity (highest first) and take top 10
+                    const sortedComplexity = [...complexityData]
+                        .sort((a, b) => b.complexity - a.complexity)
+                        .slice(0, 10);
+                    
+                    // Color based on rating
+                    const ratingColors = {
+                        'low': '#10b981',      // green
+                        'moderate': '#f59e0b', // amber
+                        'high': '#ef4444'      // red
+                    };
+                    
+                    new Chart(document.getElementById('chart-complexity'), {
+                        type: 'bar',
+                        data: {
+                            labels: sortedComplexity.map(f => {
+                                const name = f.flowName;
+                                return name.length > 40 ? name.substring(0, 37) + '...' : name;
+                            }),
+                            datasets: [{
+                                data: sortedComplexity.map(f => f.complexity),
+                                backgroundColor: sortedComplexity.map(f => ratingColors[f.rating] || '#6b7280'),
+                                borderRadius: 4,
+                                barThickness: 18,
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const flow = sortedComplexity[context.dataIndex];
+                                            const breakdown = Object.entries(flow.breakdown || {})
+                                                .map(([k, v]) => k + ': ' + v)
+                                                .join(', ');
+                                            return ['Complexity: ' + flow.complexity + ' (' + flow.rating + ')', breakdown || 'Base complexity only'];
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: { 
+                                    beginAtZero: true, 
+                                    grid: { color: gridColor },
+                                    title: { display: true, text: 'Cyclomatic Complexity', font: { size: 10 } }
+                                },
+                                y: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
             },
             
             initTable() {

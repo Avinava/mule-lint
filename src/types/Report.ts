@@ -33,6 +33,22 @@ export interface LintSummary {
 }
 
 /**
+ * Flow complexity information
+ */
+export interface FlowComplexityInfo {
+    /** Flow name */
+    flowName: string;
+    /** File where flow is defined */
+    file: string;
+    /** Cyclomatic complexity score */
+    complexity: number;
+    /** Complexity rating */
+    rating: 'low' | 'moderate' | 'high';
+    /** Breakdown by decision type */
+    breakdown: Record<string, number>;
+}
+
+/**
  * Project metrics collected during scan
  */
 export interface ProjectMetrics {
@@ -64,6 +80,8 @@ export interface ProjectMetrics {
     schedulers: Array<{ type: 'cron' | 'fixed'; value: string; flow: string }>;
     /** Complexity breakdown by file */
     fileComplexity: Record<string, 'simple' | 'medium' | 'complex'>;
+    /** Per-flow complexity data */
+    flowComplexityData: FlowComplexityInfo[];
 }
 
 /**
