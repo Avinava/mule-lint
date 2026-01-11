@@ -591,7 +591,10 @@ export function formatHtml(report: LintReport): string {
                 <!-- Project Metrics (moved to top) -->
                 <div class="mb-6">
                     <div class="mb-3">
-                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Project Metrics</h3>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Project Metrics</h3>
+                            <button class="info-btn" onclick="modal.open('project-metrics')">?</button>
+                        </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Architecture overview: flows, components, and configurations</p>
                     </div>
                     <div class="grid grid-cols-5 gap-3">
@@ -701,7 +704,10 @@ export function formatHtml(report: LintReport): string {
                 <!-- Lint Summary (moved below Quality Ratings) -->
                 <div class="mb-6">
                     <div class="mb-3">
-                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Lint Summary</h3>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Lint Summary</h3>
+                            <button class="info-btn" onclick="modal.open('severity')">?</button>
+                        </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Issue breakdown by severity. Click to filter issues.</p>
                     </div>
                     <div class="grid grid-cols-4 gap-3">
@@ -752,7 +758,10 @@ export function formatHtml(report: LintReport): string {
                 <div class="grid grid-cols-3 gap-4 mb-6">
                     <div class="col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
                         <div class="mb-4">
-                            <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200">Top Violated Rules</h3>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200">Top Violated Rules</h3>
+                                <button class="info-btn" onclick="modal.open('categories')">?</button>
+                            </div>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Most frequent rule violations across the project</p>
                         </div>
                         <div class="h-[180px]">

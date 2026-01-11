@@ -7,7 +7,10 @@ export function renderLintSummarySection(): string {
     return `
     <div class="mb-6">
         <div class="mb-3">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Lint Summary</h3>
+            <div class="flex items-center gap-2">
+                <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Lint Summary</h3>
+                <button class="info-btn" onclick="modal.open('severity')">?</button>
+            </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Issue breakdown by severity. Click to filter issues.</p>
         </div>
         <div class="grid grid-cols-4 gap-3">
