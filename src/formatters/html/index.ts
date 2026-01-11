@@ -1,6 +1,6 @@
 /**
  * HTML Report Module Index
- * Re-exports all theme, styles, components, and sections
+ * Re-exports all theme, styles, components, sections, and scripts
  */
 
 // Theme
@@ -20,3 +20,8 @@ export { renderRatingCard, ratingCards } from './components/RatingBadge';
 // Sections
 export { renderQualityRatingsSection, qualityRatingsRendererScript } from './sections/QualityRatings';
 export { renderLintSummarySection } from './sections/LintSummary';
+export { renderHeader, HeaderProps } from './sections/Header';
+
+// Scripts (configuration exports)
+export { connectorMeta, methodStyles, exchangeBaseUrl } from './scripts/renderer';
+export { routerScript } from './scripts/router';
