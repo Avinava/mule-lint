@@ -65,18 +65,30 @@ export class MuleLintMcpServer {
                             report.summary.bySeverity.info,
                         errors: report.summary.bySeverity.error,
                         warnings: report.summary.bySeverity.warning,
+                        // Include quality metrics if available
+                        qualityMetrics: report.metrics ? {
+                            complexity: report.metrics.complexity,
+                            maintainability: report.metrics.maintainability,
+                            reliability: report.metrics.reliability,
+                            security: report.metrics.security,
+                        } : undefined,
                         issues: report.files
                             .map((r) => ({
                                 file: r.relativePath,
-                                issues: r.issues.map((i) => ({
-                                    ruleId: i.ruleId,
-                                    message: i.message,
-                                    line: i.line,
-                                    column: i.column,
-                                    severity: i.severity,
-                                    suggestion: i.suggestion,
-                                    codeSnippet: i.codeSnippet,
-                                })),
+                                issues: r.issues.map((i) => {
+                                    // Get issueType from rule metadata
+                                    const rule = getRuleById(i.ruleId);
+                                    return {
+                                        ruleId: i.ruleId,
+                                        message: i.message,
+                                        line: i.line,
+                                        column: i.column,
+                                        severity: i.severity,
+                                        issueType: rule?.issueType || 'code-smell',
+                                        suggestion: i.suggestion,
+                                        codeSnippet: i.codeSnippet,
+                                    };
+                                }),
                             }))
                             .filter((r) => r.issues.length > 0),
                     };
@@ -138,6 +150,7 @@ export class MuleLintMcpServer {
                                     description: rule.description,
                                     category: rule.category,
                                     severity: rule.severity,
+                                    issueType: rule.issueType || 'code-smell',
                                 },
                                 null,
                                 2,
@@ -236,6 +249,7 @@ export class MuleLintMcpServer {
                     name: r.name,
                     category: r.category,
                     severity: r.severity,
+                    issueType: r.issueType || 'code-smell',
                     description: r.description,
                 }));
 

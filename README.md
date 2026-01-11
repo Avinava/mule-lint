@@ -214,7 +214,13 @@ The HTML report displays quality ratings for four key dimensions. These follow i
 
 **What it measures:** Number of bug-type issues detected.
 
-**Bug-type rules include:** Missing error handlers (MULE-003), missing project files (PROJ-001)
+**Bug-type rules:** All `error-handling` category rules are classified as bugs, including:
+- Missing error handlers (MULE-003)
+- Missing correlation ID (MULE-007)
+- Generic error handling (MULE-009)
+- HTTP status in error handlers (MULE-005)
+- Global error handler (MULE-001)
+- Try scope usage (ERR-001)
 
 | Rating | Bug Count | Interpretation |
 |--------|-----------|----------------|
@@ -228,7 +234,14 @@ The HTML report displays quality ratings for four key dimensions. These follow i
 
 **What it measures:** Vulnerability and security hotspot count.
 
-**Vulnerability rules include:** Hardcoded credentials (MULE-201), insecure TLS (MULE-202), plaintext secrets (YAML-004), hardcoded URLs (MULE-004)
+**Vulnerability rules:** All `security` category rules are classified as vulnerabilities, including:
+- Hardcoded credentials (MULE-201)
+- Insecure TLS (MULE-202)
+- Plaintext secrets (YAML-004)
+- Hardcoded URLs (MULE-004)
+- TLS version check (SEC-002)
+- Rate limiting (SEC-003)
+- Input validation (SEC-004)
 
 | Rating | Vulnerabilities | Interpretation |
 |--------|-----------------|----------------|
@@ -528,10 +541,9 @@ Create a `.vscode/mcp.json` file in your project root:
 
 ```json
 {
-    "mule-lint": {
-      "command": "npx",
-      "args": ["-y", "@sfdxy/mule-lint", "mule-lint-mcp"]
-    }
+  "mule-lint": {
+    "command": "npx",
+    "args": ["-y", "@sfdxy/mule-lint", "mule-lint-mcp"]
   }
 }
 ```
