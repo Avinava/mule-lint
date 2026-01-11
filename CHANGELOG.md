@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.16.0] - 2026-01-11
+
+### Added
+- **Centralized Quality Scoring System** (`src/quality/` module)
+  - `types.ts` - Core interfaces for rating grades and thresholds
+  - `thresholds.ts` - Single source of truth for A-E rating boundaries
+  - `calculator.ts` - Centralized rating calculation functions
+- **Issue Type Classification** (`issueType` field on all rules)
+  - `vulnerability` - All security rules
+  - `bug` - All error-handling rules
+  - `code-smell` - Default for all other rules
+- **MCP Server Enhancements**
+  - `run_lint_analysis` now returns quality metrics (complexity, maintainability, reliability, security)
+  - All issues include `issueType` field in responses
+  - Rules list includes `issueType` for each rule
+
+### Improved
+- **HTML Report**
+  - Aligned badge font sizes (Severity and Type columns now consistent)
+  - Fixed rating card navigation (Complexity/Maintainability → all issues)
+  - `MetricsAggregator` now uses rule `issueType` instead of hardcoded patterns
+
+### Documentation
+- Updated `docs/linter/architecture.md` with issueType and quality module
+- Updated `docs/linter/rule-engine.md` with IssueType interface
+- Updated README with accurate reliability/security rating docs
+- Fixed VS Code MCP JSON syntax error in README
+
+---
+
+
 ## [1.12.0] - 2026-01-10
 
 ### Added
