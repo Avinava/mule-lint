@@ -31,7 +31,7 @@
 ```mermaid
 flowchart TB
     subgraph CLI["CLI Layer"]
-        A[mule-lint command]
+        A[npx @sfdxy/mule-lint command]
     end
     
     subgraph Engine["LintEngine"]
@@ -98,22 +98,22 @@ npm install --save-dev @sfdxy/mule-lint
 
 ```bash
 # Scan a directory
-mule-lint ./src/main/mule
+npx @sfdxy/mule-lint ./src/main/mule
 
 # Scan a single file
-mule-lint ./src/main/mule/implementation.xml
+npx @sfdxy/mule-lint ./src/main/mule/implementation.xml
 
 # Output as JSON
-mule-lint ./src/main/mule -f json
+npx @sfdxy/mule-lint ./src/main/mule -f json
 
 # Output as SARIF (for AI agents/VS Code)
-mule-lint ./src/main/mule -f sarif > report.sarif
+npx @sfdxy/mule-lint ./src/main/mule -f sarif > report.sarif
 
 # Write to file
-mule-lint ./src/main/mule -o report.txt
+npx @sfdxy/mule-lint ./src/main/mule -o report.txt
 
 # Fail on warnings (for CI/CD)
-mule-lint ./src/main/mule --fail-on-warning
+npx @sfdxy/mule-lint ./src/main/mule --fail-on-warning
 ```
 
 ### CLI Options
@@ -132,13 +132,13 @@ mule-lint ./src/main/mule --fail-on-warning
 
 ```bash
 # Basic scan
-mule-lint .
+npx @sfdxy/mule-lint .
 
 # Scan with experimental rules
-mule-lint . --experimental
+npx @sfdxy/mule-lint . --experimental
 
 # Output SARIF for VS Code
-mule-lint src/main/mule -f sarif -o results.sarif
+npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 ```
 
 ---
@@ -293,7 +293,7 @@ Machine-readable for scripting:
   "runs": [{
     "tool": {
       "driver": {
-        "name": "mule-lint",
+        "name": "@sfdxy/mule-lint",
         "version": "1.0.0"
       }
     },
@@ -317,7 +317,7 @@ Built with **Tailwind CSS**, **Chart.js**, and **Tabulator**.
 ![HTML Report Dashboard](docs/linter/images/html-report-dashboard.png)
 
 ```bash
-mule-lint src/main/mule -f html -o report.html
+npx @sfdxy/mule-lint src/main/mule -f html -o report.html
 ```
 
 ### CSV (Spreadsheet)

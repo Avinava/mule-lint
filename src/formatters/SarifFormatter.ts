@@ -1,6 +1,7 @@
 import { LintReport } from '../types/Report';
 import { Issue, Severity, Rule } from '../types/Rule';
 import { ALL_RULES } from '../rules';
+import packageJson from '../../package.json';
 
 /**
  * SARIF 2.1.0 Schema Types
@@ -167,9 +168,9 @@ export function formatSarif(report: LintReport, rules: Rule[] = ALL_RULES): stri
             {
                 tool: {
                     driver: {
-                        name: 'mule-lint',
-                        version: '1.0.0',
-                        informationUri: 'https://github.com/mule-lint/mule-lint',
+                        name: '@sfdxy/mule-lint',
+                        version: packageJson.version,
+                        informationUri: 'https://github.com/Avinava/mule-lint',
                         rules: rules.map(toSarifRule),
                     },
                 },
