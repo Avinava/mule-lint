@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 
 /**
@@ -13,6 +13,7 @@ export class GenericErrorRule extends BaseRule {
     description = 'Avoid catching type="ANY" - be specific about error types';
     severity = 'warning' as const;
     category = 'error-handling' as const;
+    issueType: IssueType = 'bug';
 
     // Generic types to flag
     private readonly GENERIC_TYPES = ['ANY', 'MULE:ANY'];

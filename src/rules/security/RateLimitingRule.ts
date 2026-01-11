@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 
 /**
@@ -13,6 +13,7 @@ export class RateLimitingRule extends BaseRule {
     description = 'APIs should have rate limiting or throttling configured';
     severity = 'warning' as const;
     category = 'security' as const;
+    issueType: IssueType = 'vulnerability';
 
     validate(doc: Document, context: ValidationContext): Issue[] {
         const issues: Issue[] = [];

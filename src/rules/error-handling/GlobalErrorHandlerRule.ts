@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 import { fileExists } from '../../core/FileScanner';
 import * as path from 'path';
@@ -16,6 +16,7 @@ export class GlobalErrorHandlerRule extends BaseRule {
         'Project should have a global error handler configuration for consistent error handling';
     severity = 'warning' as const;
     category = 'error-handling' as const;
+    issueType: IssueType = 'bug';
 
     validate(doc: Document, context: ValidationContext): Issue[] {
         const issues: Issue[] = [];

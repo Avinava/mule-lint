@@ -8,11 +8,12 @@ import { THRESHOLDS } from './thresholds';
 
 /**
  * Calculate rating grade from a numeric value
+ * Uses <= semantics for inclusive boundaries (e.g., 5% debt = A rating)
  */
 export function calculateGrade(dimension: QualityDimension, value: number): RatingGrade {
     const thresholds = THRESHOLDS[dimension];
     for (const t of thresholds) {
-        if (value < t.maxValue) {
+        if (value <= t.maxValue) {
             return t.grade;
         }
     }
@@ -25,7 +26,7 @@ export function calculateGrade(dimension: QualityDimension, value: number): Rati
 export function getThresholdForValue(dimension: QualityDimension, value: number) {
     const thresholds = THRESHOLDS[dimension];
     for (const t of thresholds) {
-        if (value < t.maxValue) {
+        if (value <= t.maxValue) {
             return t;
         }
     }
@@ -130,7 +131,7 @@ export function formatTechDebt(minutes: number): string {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     if (hours < 8) {
-        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+        return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
     }
     const days = Math.floor(hours / 8);
     const remainingHours = hours % 8;

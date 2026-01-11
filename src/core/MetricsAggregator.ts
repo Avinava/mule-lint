@@ -1,35 +1,51 @@
 import { LintReport, ProjectMetrics } from '../types/Report';
-import { Issue, Severity } from '../types/Rule';
+import {
+    calculateGrade,
+    calculateDebtMinutes,
+    estimateDevelopmentMinutes,
+    calculateDebtRatio,
+    formatTechDebt,
+    RatingGrade,
+} from '../quality';
+import { ALL_RULES } from '../rules';
+import { IssueType } from '../types';
 
 /**
  * Rating type for metrics (SonarQube-style A-E)
+ * @deprecated Use RatingGrade from quality module instead
  */
-export type MetricRating = 'A' | 'B' | 'C' | 'D' | 'E';
+export type MetricRating = RatingGrade;
 
 /**
- * Calculates A-E ratings based on metric values
+ * Build a lookup map of rule ID -> issueType
+ * This is built once and cached for performance
+ */
+const ruleIssueTypeMap: Map<string, IssueType> = new Map();
+for (const rule of ALL_RULES) {
+    ruleIssueTypeMap.set(rule.id, rule.issueType || 'code-smell');
+}
+
+/**
+ * Get issue type for a rule ID
+ * Falls back to 'code-smell' if rule not found
+ */
+function getIssueTypeForRule(ruleId: string): IssueType {
+    return ruleIssueTypeMap.get(ruleId) || 'code-smell';
+}
+
+/**
+ * Aggregates and calculates quality metrics for lint reports
  *
- * These thresholds are inspired by SonarQube but adapted for MuleSoft:
- * - Complexity is measured per flow
- * - Technical debt is measured in minutes
- * - Ratings consider Mule-specific best practices
+ * Uses centralized quality scoring from src/quality/ for consistent
+ * rating calculations across the codebase.
  */
 export class MetricsAggregator {
     /**
      * Calculate complexity rating based on average flow complexity
-     * 
-     * A: Average complexity ≤ 5
-     * B: Average complexity ≤ 10
-     * C: Average complexity ≤ 15
-     * D: Average complexity ≤ 20
-     * E: Average complexity > 20
+     * Delegates to centralized calculator
      */
     static getComplexityRating(avgComplexity: number): MetricRating {
-        if (avgComplexity <= 5) return 'A';
-        if (avgComplexity <= 10) return 'B';
-        if (avgComplexity <= 15) return 'C';
-        if (avgComplexity <= 20) return 'D';
-        return 'E';
+        return calculateGrade('complexity', avgComplexity);
     }
 
     /**
@@ -49,69 +65,34 @@ export class MetricsAggregator {
 
     /**
      * Calculate maintainability rating based on technical debt ratio
-     * Debt ratio = (debt in minutes) / (total development minutes estimate)
-     *
-     * A: Ratio ≤ 5%
-     * B: Ratio ≤ 10%
-     * C: Ratio ≤ 20%
-     * D: Ratio ≤ 50%
-     * E: Ratio > 50%
+     * Delegates to centralized calculator
      */
     static getMaintainabilityRating(debtRatioPercent: number): MetricRating {
-        if (debtRatioPercent <= 5) return 'A';
-        if (debtRatioPercent <= 10) return 'B';
-        if (debtRatioPercent <= 20) return 'C';
-        if (debtRatioPercent <= 50) return 'D';
-        return 'E';
+        return calculateGrade('maintainability', debtRatioPercent);
     }
 
     /**
      * Calculate reliability rating based on bug count
-     *
-     * A: 0 bugs
-     * B: 1-2 bugs
-     * C: 3-5 bugs
-     * D: 6-10 bugs
-     * E: > 10 bugs
+     * Delegates to centralized calculator
      */
     static getReliabilityRating(bugCount: number): MetricRating {
-        if (bugCount === 0) return 'A';
-        if (bugCount <= 2) return 'B';
-        if (bugCount <= 5) return 'C';
-        if (bugCount <= 10) return 'D';
-        return 'E';
+        return calculateGrade('reliability', bugCount);
     }
 
     /**
      * Calculate security rating based on vulnerability count
-     *
-     * A: 0 vulnerabilities
-     * B: 1 vulnerability
-     * C: 2-3 vulnerabilities
-     * D: 4-5 vulnerabilities
-     * E: > 5 vulnerabilities
+     * Delegates to centralized calculator
      */
     static getSecurityRating(vulnerabilityCount: number): MetricRating {
-        if (vulnerabilityCount === 0) return 'A';
-        if (vulnerabilityCount === 1) return 'B';
-        if (vulnerabilityCount <= 3) return 'C';
-        if (vulnerabilityCount <= 5) return 'D';
-        return 'E';
+        return calculateGrade('security', vulnerabilityCount);
     }
 
     /**
      * Format time duration from minutes
+     * Delegates to centralized formatter
      */
     static formatDuration(minutes: number): string {
-        if (minutes < 60) {
-            return `${minutes}min`;
-        }
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        if (mins === 0) {
-            return `${hours}h`;
-        }
-        return `${hours}h ${mins}min`;
+        return formatTechDebt(minutes);
     }
 
     /**
@@ -129,20 +110,23 @@ export class MetricsAggregator {
         const avgComplexity = flowData.length > 0 ? totalComplexity / flowData.length : 0;
         const highestFlow = flowData.reduce(
             (max, f) => (f.complexity > (max?.complexity || 0) ? f : max),
-            flowData[0]
+            flowData[0],
         );
 
-        // Classify issues by type for ratings
+        // Classify issues by type using rule metadata
         const { bugs, vulnerabilities, codeSmells, hotspots } = this.classifyIssues(report);
 
-        // Calculate technical debt (simplified: 5 min per code smell, 15 min per bug, 30 min per vulnerability)
-        const debtMinutes = codeSmells * 5 + bugs * 15 + vulnerabilities * 30;
+        // Calculate technical debt using centralized calculator
+        const debtMinutes = calculateDebtMinutes(codeSmells, bugs, vulnerabilities);
 
-        // Estimate development time (1 min per line of "code" in flows - rough estimate)
-        const estimatedDevMinutes = Math.max(metrics.flowCount * 10 + metrics.subFlowCount * 5, 60);
-        const debtRatio = (debtMinutes / estimatedDevMinutes) * 100;
+        // Estimate development time using centralized calculator
+        const estimatedDevMinutes = estimateDevelopmentMinutes(
+            metrics.flowCount,
+            metrics.subFlowCount,
+        );
+        const debtRatio = calculateDebtRatio(debtMinutes, estimatedDevMinutes);
 
-        // Build enhanced metrics
+        // Build enhanced metrics with centralized ratings
         return {
             ...metrics,
             complexity: {
@@ -173,7 +157,7 @@ export class MetricsAggregator {
 
     /**
      * Classify issues into bugs, vulnerabilities, code smells, and hotspots
-     * Based on rule categories and severity
+     * Uses the issueType metadata from rule definitions for accurate classification
      */
     private static classifyIssues(report: LintReport): {
         bugs: number;
@@ -186,30 +170,21 @@ export class MetricsAggregator {
         let codeSmells = 0;
         let hotspots = 0;
 
-        // Rule ID patterns for classification
-        const bugPatterns = ['MULE-001', 'MULE-003', 'PROJ-001'];
-        const vulnPatterns = ['MULE-004', 'MULE-201', 'MULE-202', 'SEC-', 'YAML-004'];
-        const hotspotPatterns = ['SEC-003', 'SEC-004', 'RES-'];
-
         for (const file of report.files) {
             for (const issue of file.issues) {
-                const ruleId = issue.ruleId;
+                const issueType = getIssueTypeForRule(issue.ruleId);
 
-                // Check for vulnerabilities first (highest severity)
-                if (vulnPatterns.some(p => ruleId.startsWith(p))) {
-                    vulnerabilities++;
-                }
-                // Check for hotspots
-                else if (hotspotPatterns.some(p => ruleId.startsWith(p))) {
-                    hotspots++;
-                }
-                // Check for bugs
-                else if (bugPatterns.some(p => ruleId.startsWith(p))) {
-                    bugs++;
-                }
-                // Everything else is a code smell
-                else {
-                    codeSmells++;
+                switch (issueType) {
+                    case 'bug':
+                        bugs++;
+                        break;
+                    case 'vulnerability':
+                        vulnerabilities++;
+                        break;
+                    case 'code-smell':
+                    default:
+                        codeSmells++;
+                        break;
                 }
             }
         }

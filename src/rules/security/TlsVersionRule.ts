@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 
 /**
@@ -13,6 +13,7 @@ export class TlsVersionRule extends BaseRule {
     description = 'Detect use of deprecated TLS versions (< 1.2)';
     severity = 'error' as const;
     category = 'security' as const;
+    issueType: IssueType = 'vulnerability';
 
     private readonly deprecatedProtocols = ['TLSv1', 'TLSv1.0', 'TLSv1.1', 'SSLv3', 'SSLv2'];
 

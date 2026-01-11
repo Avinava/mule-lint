@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 
 /**
@@ -12,6 +12,7 @@ export class InsecureTlsRule extends BaseRule {
     description = 'TLS configurations should not disable certificate verification';
     severity = 'error' as const;
     category = 'security' as const;
+    issueType: IssueType = 'vulnerability';
 
     validate(doc: Document, _context: ValidationContext): Issue[] {
         const issues: Issue[] = [];
