@@ -206,4 +206,95 @@ describe('Complexity Rules', () => {
             expect(complexityResult.details).toHaveLength(0);
         });
     });
+
+    // =================================================================
+    // Cognitive Complexity Tests
+    // =================================================================
+    describe('Cognitive Complexity', () => {
+        const getFlowNode = (flowContent: string): Node => {
+            const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+                    <flow name="test-flow">
+                        ${flowContent}
+                    </flow>
+                </mule>
+            `;
+            const result = parseXml(xml);
+            const xpath = require('xpath');
+            const select = xpath.useNamespaces({
+                mule: 'http://www.mulesoft.org/schema/mule/core',
+            });
+            return select('//mule:flow', result.document!)[0] as Node;
+        };
+
+        it('should calculate cognitive complexity for simple flow', () => {
+            const flow = getFlowNode(`<logger/>`);
+            const result = ComplexityCalculator.calculateCognitiveComplexity(flow);
+            expect(result.cognitiveComplexity).toBe(0); // No nesting structures
+            expect(result.rating).toBe('low');
+        });
+
+        it('should add 1 for each top-level control structure', () => {
+            const flow = getFlowNode(`
+                <choice><when expression="#[a]"><logger/></when><otherwise><logger/></otherwise></choice>
+                <foreach><logger/></foreach>
+            `);
+            const result = ComplexityCalculator.calculateCognitiveComplexity(flow);
+            // 1 for choice + 1 for foreach = 2
+            expect(result.cognitiveComplexity).toBe(2);
+        });
+
+        it('should add nesting increment for nested structures', () => {
+            const flow = getFlowNode(`
+                <choice>
+                    <when expression="#[a]">
+                        <foreach>
+                            <logger/>
+                        </foreach>
+                    </when>
+                    <otherwise><logger/></otherwise>
+                </choice>
+            `);
+            const result = ComplexityCalculator.calculateCognitiveComplexity(flow);
+            // choice at depth 0 = 1 + 0 = 1
+            // foreach at depth 1 (inside choice) = 1 + 1 = 2
+            // Total = 3
+            expect(result.cognitiveComplexity).toBe(3);
+        });
+
+        it('should handle deeply nested structures', () => {
+            const flow = getFlowNode(`
+                <try>
+                    <choice>
+                        <when expression="#[a]">
+                            <foreach>
+                                <async><logger/></async>
+                            </foreach>
+                        </when>
+                        <otherwise><logger/></otherwise>
+                    </choice>
+                    <error-handler>
+                        <on-error-continue><logger/></on-error-continue>
+                    </error-handler>
+                </try>
+            `);
+            const result = ComplexityCalculator.calculateCognitiveComplexity(flow);
+            // try at depth 0 = 1
+            // choice at depth 1 = 2
+            // foreach at depth 2 = 3
+            // async at depth 3 = 4
+            // on-error-continue at depth 1 = 2
+            // Total = 12
+            expect(result.cognitiveComplexity).toBe(12);
+            expect(result.rating).toBe('moderate');
+        });
+
+        it('should return correct cognitive rating thresholds', () => {
+            expect(ComplexityCalculator.getCognitiveRating(0)).toBe('low');
+            expect(ComplexityCalculator.getCognitiveRating(8)).toBe('low');
+            expect(ComplexityCalculator.getCognitiveRating(9)).toBe('moderate');
+            expect(ComplexityCalculator.getCognitiveRating(15)).toBe('moderate');
+            expect(ComplexityCalculator.getCognitiveRating(16)).toBe('high');
+        });
+    });
 });

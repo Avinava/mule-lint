@@ -171,6 +171,116 @@ export class ComplexityCalculator {
     }
 
     /**
+     * Calculate cognitive complexity for a flow element
+     *
+     * Cognitive complexity differs from cyclomatic complexity by:
+     * - Adding 1 for each nesting level of control structures
+     * - Focus on how hard code is to understand, not test paths
+     *
+     * Formula: For each control structure, add (1 + nesting depth)
+     */
+    static calculateCognitiveComplexity(flowNode: Node): CognitiveComplexityResult {
+        let cognitiveComplexity = 0;
+        const details: CognitiveDetail[] = [];
+
+        // Nesting elements that increase complexity based on depth
+        const nestingElements = [
+            'choice',
+            'foreach',
+            'parallel-foreach',
+            'scatter-gather',
+            'try',
+            'async',
+            'until-successful',
+            'first-successful',
+            'round-robin',
+        ];
+
+        for (const elementType of nestingElements) {
+            const nodes = this.selectNodes(`.//mule:${elementType}`, flowNode);
+            for (const node of nodes) {
+                const depth = this.calculateNestingDepth(node, flowNode, nestingElements);
+                const contribution = 1 + depth; // Base 1 + nesting increment
+                cognitiveComplexity += contribution;
+                details.push({
+                    element: elementType,
+                    nestingDepth: depth,
+                    contribution,
+                });
+            }
+        }
+
+        // When clauses inside choice add complexity but don't increase nesting
+        const whenClauses = this.selectNodes('.//mule:when', flowNode);
+        if (whenClauses.length > 0) {
+            // Each when after the first adds 1
+            const contribution = whenClauses.length > 1 ? whenClauses.length - 1 : 0;
+            cognitiveComplexity += contribution;
+            if (contribution > 0) {
+                details.push({
+                    element: 'additional-when-clauses',
+                    nestingDepth: 0,
+                    contribution,
+                });
+            }
+        }
+
+        // Error handlers add complexity with nesting
+        const errorHandlers = this.selectNodes(
+            './/mule:on-error-continue | .//mule:on-error-propagate',
+            flowNode,
+        );
+        for (const node of errorHandlers) {
+            const depth = this.calculateNestingDepth(node, flowNode, nestingElements);
+            const contribution = 1 + depth;
+            cognitiveComplexity += contribution;
+            details.push({
+                element: 'error-handler',
+                nestingDepth: depth,
+                contribution,
+            });
+        }
+
+        return {
+            cognitiveComplexity,
+            details,
+            rating: this.getCognitiveRating(cognitiveComplexity),
+        };
+    }
+
+    /**
+     * Calculate nesting depth of a node relative to flow root
+     */
+    private static calculateNestingDepth(
+        node: Node,
+        flowRoot: Node,
+        nestingElements: string[],
+    ): number {
+        let depth = 0;
+        let current = node.parentNode;
+
+        while (current && current !== flowRoot) {
+            const localName = (current as Element).localName || '';
+            if (nestingElements.includes(localName)) {
+                depth++;
+            }
+            current = current.parentNode;
+        }
+
+        return depth;
+    }
+
+    /**
+     * Get cognitive complexity rating
+     * Thresholds are lower than cyclomatic because cognitive is harder
+     */
+    static getCognitiveRating(complexity: number): ComplexityRating {
+        if (complexity <= 8) return 'low';
+        if (complexity <= 15) return 'moderate';
+        return 'high';
+    }
+
+    /**
      * Get the line number for a node
      */
     static getNodeLine(node: Node): number {
@@ -191,3 +301,15 @@ export interface ComplexityDetail {
 }
 
 export type ComplexityRating = 'low' | 'moderate' | 'high';
+
+export interface CognitiveComplexityResult {
+    cognitiveComplexity: number;
+    details: CognitiveDetail[];
+    rating: ComplexityRating;
+}
+
+export interface CognitiveDetail {
+    element: string;
+    nestingDepth: number;
+    contribution: number;
+}
