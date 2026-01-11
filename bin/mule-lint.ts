@@ -6,7 +6,13 @@ import * as path from 'path';
 import { LintEngine } from '../src/engine/LintEngine';
 import { ALL_RULES } from '../src/rules';
 import { format, getExitCode } from '../src/formatters';
-import { FormatterType } from '../src/types/Config';
+import { FormatterType, LintConfig } from '../src/types/Config';
+import {
+    evaluateQualityGate,
+    formatQualityGateResult,
+    getQualityGateExitCode,
+} from '../src/core/QualityGateEvaluator';
+import { DEFAULT_QUALITY_GATE, STRICT_QUALITY_GATE, QualityGate } from '../src/types/QualityGate';
 
 const program = new Command();
 
@@ -15,12 +21,13 @@ program
     .description('Static analysis tool for MuleSoft applications')
     .version('1.0.0')
     .argument('<path>', 'Path to scan (directory or file)')
-    .option('-f, --format <type>', 'Output format: table, json, sarif', 'table')
+    .option('-f, --format <type>', 'Output format: table, json, sarif, html, csv', 'table')
     .option('-o, --output <file>', 'Write output to file instead of stdout')
     .option('-c, --config <file>', 'Path to configuration file')
     .option('-q, --quiet', 'Show only errors (suppress warnings and info)')
     .option('--fail-on-warning', 'Exit with error code if warnings found')
     .option('-e, --experimental', 'Enable experimental rules (opt-in)')
+    .option('-g, --quality-gate <name>', 'Apply quality gate: default, strict, or from config')
     .option('-v, --verbose', 'Show verbose output')
     .action(async (targetPath: string, options) => {
         try {
@@ -39,6 +46,7 @@ interface CliOptions {
     quiet?: boolean;
     failOnWarning?: boolean;
     experimental?: boolean;
+    qualityGate?: string;
     verbose?: boolean;
 }
 
@@ -51,7 +59,7 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
     }
 
     // Load configuration if specified
-    let config = {};
+    let config: Partial<LintConfig> = {};
     if (options.config) {
         const configPath = path.resolve(options.config);
         if (!fs.existsSync(configPath)) {
@@ -106,10 +114,48 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
         console.log(output);
     }
 
-    // Exit code
-    const exitCode = getExitCode(report, options.failOnWarning);
+    // Determine exit code
+    let exitCode: number;
+
+    // Quality Gate evaluation
+    if (options.qualityGate) {
+        const gate = resolveQualityGate(options.qualityGate, config);
+        const gateResult = evaluateQualityGate(report, gate);
+
+        // Print quality gate result
+        console.log(formatQualityGateResult(gateResult));
+
+        // Exit code based on quality gate
+        exitCode = getQualityGateExitCode(gateResult.status, options.failOnWarning);
+    } else {
+        // Legacy exit code based on issue count
+        exitCode = getExitCode(report, options.failOnWarning);
+    }
+
     process.exit(exitCode);
+}
+
+/**
+ * Resolves the quality gate to use based on CLI option and config
+ */
+function resolveQualityGate(gateName: string, config: Partial<LintConfig>): QualityGate {
+    // Check for built-in gates
+    switch (gateName.toLowerCase()) {
+        case 'default':
+            return DEFAULT_QUALITY_GATE;
+        case 'strict':
+            return STRICT_QUALITY_GATE;
+        case 'config':
+            // Use gate from config file
+            if (config.qualityGate) {
+                return config.qualityGate;
+            }
+            throw new Error('Quality gate "config" specified but no qualityGate found in config file');
+        default:
+            throw new Error(`Unknown quality gate: ${gateName}. Use 'default', 'strict', or 'config'`);
+    }
 }
 
 // Run the CLI
 program.parse();
+

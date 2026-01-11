@@ -1,4 +1,5 @@
 import { RuleConfig } from './Rule';
+import { QualityGate } from './QualityGate';
 
 /**
  * Formatter type for output
@@ -32,6 +33,9 @@ export interface LintConfig {
 
     /** Maximum number of issues before stopping */
     maxIssues?: number;
+
+    /** Quality gate configuration */
+    qualityGate?: QualityGate;
 }
 
 /**
