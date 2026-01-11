@@ -539,6 +539,48 @@ export function formatHtml(report: LintReport): string {
                     </div>
                 </div>
 
+                <!-- Quality Ratings (A-E) -->
+                <div id="quality-ratings" class="mb-6" style="display: none;">
+                    <div class="mb-3">
+                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Quality Ratings</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Overall code quality assessment (A=best, E=worst)</p>
+                    </div>
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-2xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Complexity</span>
+                                <div id="rating-complexity" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold">-</div>
+                            </div>
+                            <div id="complexity-avg" class="text-sm text-slate-500 dark:text-slate-400">-</div>
+                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Avg flow complexity</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-2xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Maintainability</span>
+                                <div id="rating-maintainability" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold">-</div>
+                            </div>
+                            <div id="tech-debt" class="text-sm text-slate-500 dark:text-slate-400">-</div>
+                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Technical debt</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-2xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Reliability</span>
+                                <div id="rating-reliability" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold">-</div>
+                            </div>
+                            <div id="bug-count" class="text-sm text-slate-500 dark:text-slate-400">-</div>
+                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Bug issues found</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-2xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Security</span>
+                                <div id="rating-security" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold">-</div>
+                            </div>
+                            <div id="vuln-count" class="text-sm text-slate-500 dark:text-slate-400">-</div>
+                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Vulnerabilities</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Charts -->
                 <div class="grid grid-cols-3 gap-4 mb-6">
                     <div class="col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
@@ -979,6 +1021,66 @@ export function formatHtml(report: LintReport): string {
                             details.classList.toggle('hidden');
                             chevron.classList.toggle('rotate-180');
                         };
+                    }
+                    
+                    // Render Quality Ratings (A-E)
+                    this.renderQualityRatings(m);
+                }
+            },
+            
+            renderQualityRatings(m) {
+                // Color scheme for ratings
+                const ratingColors = {
+                    'A': 'bg-emerald-500 text-white',
+                    'B': 'bg-lime-500 text-white',
+                    'C': 'bg-amber-500 text-white',
+                    'D': 'bg-orange-500 text-white',
+                    'E': 'bg-rose-500 text-white',
+                    '-': 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+                };
+                
+                // Check if we have enhanced metrics
+                const hasRatings = m.complexity || m.maintainability || m.reliability || m.security;
+                
+                if (hasRatings) {
+                    document.getElementById('quality-ratings').style.display = 'block';
+                    
+                    // Complexity Rating
+                    if (m.complexity) {
+                        const rating = m.complexity.rating || '-';
+                        const ratingEl = document.getElementById('rating-complexity');
+                        ratingEl.textContent = rating;
+                        ratingEl.className = 'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold ' + (ratingColors[rating] || ratingColors['-']);
+                        document.getElementById('complexity-avg').textContent = 'Avg: ' + (m.complexity.average || 0);
+                    }
+                    
+                    // Maintainability Rating
+                    if (m.maintainability) {
+                        const rating = m.maintainability.rating || '-';
+                        const ratingEl = document.getElementById('rating-maintainability');
+                        ratingEl.textContent = rating;
+                        ratingEl.className = 'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold ' + (ratingColors[rating] || ratingColors['-']);
+                        document.getElementById('tech-debt').textContent = m.maintainability.technicalDebt || '0min';
+                    }
+                    
+                    // Reliability Rating
+                    if (m.reliability) {
+                        const rating = m.reliability.rating || '-';
+                        const ratingEl = document.getElementById('rating-reliability');
+                        ratingEl.textContent = rating;
+                        ratingEl.className = 'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold ' + (ratingColors[rating] || ratingColors['-']);
+                        document.getElementById('bug-count').textContent = (m.reliability.bugs || 0) + ' bugs';
+                    }
+                    
+                    // Security Rating
+                    if (m.security) {
+                        const rating = m.security.rating || '-';
+                        const ratingEl = document.getElementById('rating-security');
+                        ratingEl.textContent = rating;
+                        ratingEl.className = 'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold ' + (ratingColors[rating] || ratingColors['-']);
+                        const vulns = (m.security.vulnerabilities || 0);
+                        const hotspots = (m.security.hotspots || 0);
+                        document.getElementById('vuln-count').textContent = vulns + ' vulns, ' + hotspots + ' hotspots';
                     }
                 }
             },
