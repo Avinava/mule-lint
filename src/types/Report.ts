@@ -82,6 +82,68 @@ export interface ProjectMetrics {
     fileComplexity: Record<string, 'simple' | 'medium' | 'complex'>;
     /** Per-flow complexity data */
     flowComplexityData: FlowComplexityInfo[];
+
+    // === Enhanced Metrics for Quality Gates ===
+
+    /** Aggregated complexity metrics */
+    complexity?: {
+        /** Total complexity across all flows */
+        total: number;
+        /** Average complexity per flow */
+        average: number;
+        /** Highest complexity flow */
+        highest?: { flow: string; value: number };
+        /** Overall rating based on complexity */
+        rating: 'A' | 'B' | 'C' | 'D' | 'E';
+    };
+
+    /** Maintainability metrics */
+    maintainability?: {
+        /** Technical debt in minutes */
+        technicalDebtMinutes: number;
+        /** Formatted debt (e.g., "2h 30m") */
+        technicalDebt: string;
+        /** Debt ratio as percentage */
+        debtRatio: number;
+        /** A-E rating */
+        rating: 'A' | 'B' | 'C' | 'D' | 'E';
+    };
+
+    /** Reliability metrics (bugs) */
+    reliability?: {
+        /** Number of bugs found */
+        bugs: number;
+        /** A-E rating */
+        rating: 'A' | 'B' | 'C' | 'D' | 'E';
+    };
+
+    /** Security metrics */
+    security?: {
+        /** Number of vulnerabilities */
+        vulnerabilities: number;
+        /** Number of security hotspots */
+        hotspots: number;
+        /** A-E rating */
+        rating: 'A' | 'B' | 'C' | 'D' | 'E';
+    };
+
+    /** Coverage metrics (from MUnit reports) */
+    coverage?: {
+        /** Number of MUnit tests */
+        munitTests: number;
+        /** Flows covered by tests */
+        coveredFlows: number;
+        /** Coverage percentage */
+        percentage: number;
+    };
+
+    /** Duplication metrics */
+    duplications?: {
+        /** Percentage of duplicated code */
+        percentage: number;
+        /** Number of duplicate blocks */
+        blocks: number;
+    };
 }
 
 /**
