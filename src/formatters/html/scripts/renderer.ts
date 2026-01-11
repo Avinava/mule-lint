@@ -508,6 +508,24 @@ export function generateRendererScript(config: {
                             formatter: (cell) => \`<span class="capitalize text-slate-600 dark:text-slate-300">\${cell.getValue()}</span>\`
                         },
                         {
+                            title: 'Type',
+                            field: 'issueType',
+                            width: 110,
+                            headerFilter: 'list',
+                            headerFilterParams: { valuesLookup: true, multiselect: true, clearable: true },
+                            headerFilterFunc: 'in',
+                            formatter: (cell) => {
+                                const val = cell.getValue() || 'code-smell';
+                                const typeStyles = {
+                                    'code-smell': { bg: 'bg-orange-100 dark:bg-orange-500/20', text: 'text-orange-700 dark:text-orange-400', label: 'Code Smell' },
+                                    'bug': { bg: 'bg-rose-100 dark:bg-rose-500/20', text: 'text-rose-700 dark:text-rose-400', label: 'Bug' },
+                                    'vulnerability': { bg: 'bg-purple-100 dark:bg-purple-500/20', text: 'text-purple-700 dark:text-purple-400', label: 'Vulnerability' }
+                                };
+                                const style = typeStyles[val] || typeStyles['code-smell'];
+                                return \`<span class="inline-flex px-2 py-0.5 text-2xs font-medium rounded-md \${style.bg} \${style.text}">\${style.label}</span>\`;
+                            }
+                        },
+                        {
                             title: 'File',
                             field: 'fileName',
                             minWidth: 180,

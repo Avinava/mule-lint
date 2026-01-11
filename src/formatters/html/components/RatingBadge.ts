@@ -13,12 +13,21 @@ export interface RatingBadgeProps {
 }
 
 export function renderRatingCard(props: RatingBadgeProps): string {
+    // Map rating type to category filter for issues navigation
+    const categoryMap: Record<string, string> = {
+        complexity: 'code-quality',
+        maintainability: 'code-quality',
+        reliability: 'documentation', // Bug-type issues
+        security: 'security'
+    };
+    const category = categoryMap[props.type] || '';
+
     return `
-    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-${props.color}-300 dark:hover:border-${props.color}-600 transition-all" onclick="modal.open('${props.type}')">
+    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-${props.color}-300 dark:hover:border-${props.color}-600 transition-all" onclick="router.toggleCategory('${category}')">
         <div class="flex items-center justify-between mb-1">
             <div class="flex items-center gap-1">
                 <span class="text-2xs font-semibold text-${props.color}-600 dark:text-${props.color}-400 uppercase tracking-wider">${props.label}</span>
-                <span class="info-btn" title="Click for details">?</span>
+                <span class="info-btn" title="Click for details" onclick="event.stopPropagation(); modal.open('${props.type}')">?</span>
             </div>
             <div id="${props.id}" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400">-</div>
         </div>
@@ -27,6 +36,7 @@ export function renderRatingCard(props: RatingBadgeProps): string {
     </div>
     `;
 }
+
 
 export const ratingCards = {
     complexity: {

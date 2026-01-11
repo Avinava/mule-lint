@@ -22,6 +22,15 @@ export type RuleCategory =
     | 'experimental';
 
 /**
+ * Issue type classification for quality metrics
+ * - code-smell: Maintainability issues (naming, style, complexity)
+ * - bug: Reliability issues (missing error handlers, runtime failures)
+ * - vulnerability: Security issues (hardcoded secrets, insecure configs)
+ */
+export type IssueType = 'code-smell' | 'bug' | 'vulnerability';
+
+
+/**
  * Represents a single lint issue found during validation
  */
 export interface Issue {
@@ -81,6 +90,8 @@ export interface Rule {
     severity: Severity;
     /** Category for grouping in reports */
     category: RuleCategory;
+    /** Issue type for quality metrics (defaults to 'code-smell') */
+    issueType?: IssueType;
     /** Optional URL to documentation */
     docsUrl?: string;
     /**

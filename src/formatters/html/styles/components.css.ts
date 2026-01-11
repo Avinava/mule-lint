@@ -138,24 +138,30 @@ export const componentStyles = `
     margin: 8px 0;
 }
 .modal-body .rating-scale {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 4px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     margin-top: 12px;
     background: var(--bg-secondary);
     padding: 12px;
     border-radius: var(--radius-md);
 }
-.rating-scale .badge {
-    width: 24px;
-    height: 24px;
+.rating-scale .rating-row {
     display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.rating-scale .badge {
+    min-width: 24px;
+    height: 24px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-sm);
     font-weight: 700;
     font-size: 0.75rem;
     color: white;
+    flex-shrink: 0;
 }
 
 /* ===== Info Button ===== */

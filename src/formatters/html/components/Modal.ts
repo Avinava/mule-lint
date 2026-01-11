@@ -38,11 +38,11 @@ export const modalContent: Record<string, ModalContent> = {
             </ul>
             <h4 style="margin-top: 16px;">Rating Thresholds</h4>
             <div class="rating-scale">
-                <span class="badge" style="background: var(--rating-a);">A</span><span>0-5 - Simple, clean code</span>
-                <span class="badge" style="background: var(--rating-b);">B</span><span>6-10 - Moderate complexity</span>
-                <span class="badge" style="background: var(--rating-c);">C</span><span>11-20 - Complex, needs review</span>
-                <span class="badge" style="background: var(--rating-d);">D</span><span>21-30 - Very complex, refactor needed</span>
-                <span class="badge" style="background: var(--rating-e);">E</span><span>> 30 - Unmaintainable</span>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-a);">A</span><span>0-5 - Simple, clean code</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-b);">B</span><span>6-10 - Moderate complexity</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-c);">C</span><span>11-20 - Complex, needs review</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-d);">D</span><span>21-30 - Very complex, refactor needed</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-e);">E</span><span>> 30 - Unmaintainable</span></div>
             </div>
         `
     },
@@ -62,11 +62,11 @@ export const modalContent: Record<string, ModalContent> = {
             <p style="margin-top: 8px;"><strong>Debt Ratio:</strong> (Debt minutes / Development estimate) × 100%</p>
             <h4 style="margin-top: 16px;">Rating Thresholds</h4>
             <div class="rating-scale">
-                <span class="badge" style="background: var(--rating-a);">A</span><span>≤ 5% - Excellent maintainability</span>
-                <span class="badge" style="background: var(--rating-b);">B</span><span>≤ 10% - Good maintainability</span>
-                <span class="badge" style="background: var(--rating-c);">C</span><span>≤ 20% - Moderate debt</span>
-                <span class="badge" style="background: var(--rating-d);">D</span><span>≤ 50% - High debt, plan remediation</span>
-                <span class="badge" style="background: var(--rating-e);">E</span><span>> 50% - Critical, immediate action</span>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-a);">A</span><span>≤ 5% - Excellent maintainability</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-b);">B</span><span>≤ 10% - Good maintainability</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-c);">C</span><span>≤ 20% - Moderate debt</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-d);">D</span><span>≤ 50% - High debt, plan remediation</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-e);">E</span><span>> 50% - Critical, immediate action</span></div>
             </div>
         `
     },
@@ -82,11 +82,11 @@ export const modalContent: Record<string, ModalContent> = {
             </ul>
             <h4 style="margin-top: 16px;">Rating Thresholds</h4>
             <div class="rating-scale">
-                <span class="badge" style="background: var(--rating-a);">A</span><span>0 bugs - No reliability issues</span>
-                <span class="badge" style="background: var(--rating-b);">B</span><span>1-2 bugs - Minor concerns</span>
-                <span class="badge" style="background: var(--rating-c);">C</span><span>3-5 bugs - Moderate risk</span>
-                <span class="badge" style="background: var(--rating-d);">D</span><span>6-10 bugs - High risk</span>
-                <span class="badge" style="background: var(--rating-e);">E</span><span>> 10 bugs - Critical issues</span>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-a);">A</span><span>0 bugs - No reliability issues</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-b);">B</span><span>1-2 bugs - Minor concerns</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-c);">C</span><span>3-5 bugs - Moderate risk</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-d);">D</span><span>6-10 bugs - High risk</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-e);">E</span><span>> 10 bugs - Critical issues</span></div>
             </div>
         `
     },
@@ -104,11 +104,11 @@ export const modalContent: Record<string, ModalContent> = {
             </ul>
             <h4 style="margin-top: 16px;">Rating Thresholds</h4>
             <div class="rating-scale">
-                <span class="badge" style="background: var(--rating-a);">A</span><span>0 vulns - Secure configuration</span>
-                <span class="badge" style="background: var(--rating-b);">B</span><span>1 vuln - Minor finding</span>
-                <span class="badge" style="background: var(--rating-c);">C</span><span>2-3 vulns - Review needed</span>
-                <span class="badge" style="background: var(--rating-d);">D</span><span>4-5 vulns - Remediation required</span>
-                <span class="badge" style="background: var(--rating-e);">E</span><span>> 5 vulns - Critical security issues</span>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-a);">A</span><span>0 vulns - Secure configuration</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-b);">B</span><span>1 vuln - Minor finding</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-c);">C</span><span>2-3 vulns - Review needed</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-d);">D</span><span>4-5 vulns - Remediation required</span></div>
+                <div class="rating-row"><span class="badge" style="background: var(--rating-e);">E</span><span>> 5 vulns - Critical security issues</span></div>
             </div>
         `
     },

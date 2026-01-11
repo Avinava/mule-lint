@@ -51,6 +51,7 @@ function enrichFiles(report: LintReport) {
                 category: ruleDef?.category || 'General',
                 ruleDescription: ruleDef?.description || 'No description available',
                 ruleName: ruleDef?.name || issue.ruleId,
+                issueType: ruleDef?.issueType || 'code-smell',
                 file: file.relativePath,
             };
         }),
@@ -80,6 +81,7 @@ function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof en
             category: r.category,
             severity: r.severity,
             description: r.description,
+            issueType: r.issueType || 'code-smell',
         })),
         metrics: report.metrics || {
             flowCount: 0,
