@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 
 /**
@@ -13,6 +13,7 @@ export class MissingErrorHandlerRule extends BaseRule {
     description = 'Flows should have an error handler for proper error management';
     severity = 'error' as const;
     category = 'error-handling' as const;
+    issueType: IssueType = 'bug';
 
     validate(doc: Document, context: ValidationContext): Issue[] {
         const issues: Issue[] = [];

@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 import { getTextContent } from '../../core/XPathHelper';
 
@@ -14,6 +14,7 @@ export class CorrelationIdRule extends BaseRule {
     description = 'Error handlers should reference correlationId for distributed tracing';
     severity = 'warning' as const;
     category = 'error-handling' as const;
+    issueType: IssueType = 'bug';
 
     // Patterns that indicate correlation ID is being used
     private readonly CORRELATION_PATTERNS = [

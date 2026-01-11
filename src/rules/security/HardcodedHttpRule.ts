@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 
 /**
@@ -13,6 +13,7 @@ export class HardcodedHttpRule extends BaseRule {
     description = 'HTTP/HTTPS URLs should use property placeholders instead of hardcoded values';
     severity = 'error' as const;
     category = 'security' as const;
+    issueType: IssueType = 'vulnerability';
 
     // URL patterns to detect
     private readonly URL_PATTERN = /^https?:\/\//i;

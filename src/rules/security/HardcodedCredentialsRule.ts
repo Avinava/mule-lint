@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 
 /**
@@ -12,6 +12,7 @@ export class HardcodedCredentialsRule extends BaseRule {
     description = 'Passwords and secrets should use secure property placeholders ${secure::}';
     severity = 'error' as const;
     category = 'security' as const;
+    issueType: IssueType = 'vulnerability';
 
     private readonly SENSITIVE_ATTRS = [
         'password',

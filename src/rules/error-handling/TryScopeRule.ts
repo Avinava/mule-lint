@@ -1,4 +1,4 @@
-import { ValidationContext, Issue } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 
 /**
@@ -13,6 +13,7 @@ export class TryScopeRule extends BaseRule {
     description = 'Complex operations should use Try scope for error isolation';
     severity = 'info' as const;
     category = 'error-handling' as const;
+    issueType: IssueType = 'bug';
 
     validate(doc: Document, _context: ValidationContext): Issue[] {
         const issues: Issue[] = [];
