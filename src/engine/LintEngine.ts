@@ -447,8 +447,8 @@ export class LintEngine {
             const dwCount = Array.isArray(dwTransforms)
                 ? dwTransforms.length
                 : Array.isArray(dwTransforms2)
-                    ? dwTransforms2.length
-                    : 0;
+                  ? dwTransforms2.length
+                  : 0;
             metrics.dwTransformCount += dwCount;
 
             // Count connector configs (elements ending in -config or named config/connection)
