@@ -9,7 +9,10 @@ export function renderQualityRatingsSection(): string {
     return `
     <div id="quality-ratings" class="mb-6" style="display: none;">
         <div class="mb-3">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Quality Ratings</h3>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                Quality Ratings 
+                <span class="ml-2 px-1.5 py-0.5 text-2xs font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/20 rounded uppercase tracking-wide">Beta</span>
+            </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Overall code quality assessment (A=best, E=worst). Click ? for calculation details.</p>
         </div>
         <div class="grid grid-cols-4 gap-3">
