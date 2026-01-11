@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { ValidationContext, Issue, Severity } from '../../types';
+import { ValidationContext, Issue, Severity, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 import { YamlParser } from '../../core/YamlParser';
 
@@ -153,6 +153,7 @@ export class PlaintextSecretsRule extends BaseRule {
     description = 'Sensitive properties should be encrypted with ![...]';
     severity = 'error' as const;
     category = 'security' as const;
+    issueType: IssueType = 'vulnerability';
 
     validate(_doc: Document, context: ValidationContext): Issue[] {
         const issues: Issue[] = [];

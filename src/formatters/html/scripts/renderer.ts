@@ -483,7 +483,7 @@ export function generateRendererScript(config: {
                                     warning: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
                                     info: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-400'
                                 };
-                                return \`<span class="inline-flex px-2 py-0.5 text-xs font-semibold uppercase rounded-md \${styles[val]}">\${val}</span>\`;
+                                return \`<span class="inline-flex px-2 py-0.5 text-2xs font-medium uppercase rounded-md \${styles[val]}">\${val}</span>\`;
                             }
                         },
                         {
