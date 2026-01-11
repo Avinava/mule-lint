@@ -17,7 +17,7 @@ flowchart TB
         E --> D
     end
     
-    subgraph Rules["Rules (40 Total)"]
+    subgraph Rules["Rules (56 Total)"]
         D --> R1[Error Handling<br/>MULE-001,003,005,007,009]
         D --> R2[Naming<br/>MULE-002,101,102]
         D --> R3[Security<br/>MULE-004,201,202]
@@ -211,7 +211,7 @@ src/
 │   └── ComplexityCalculator.ts
 ├── engine/               # Orchestration
 │   └── LintEngine.ts    # Main engine
-├── rules/                # All rules (40 total)
+├── rules/                # All rules (56 total)
 │   ├── index.ts         # Rule registry
 │   ├── base/            # BaseRule class
 │   ├── api-led/         # API-001, 002, 003

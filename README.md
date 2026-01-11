@@ -19,7 +19,7 @@
 
 **Mule-Lint** is a TypeScript-based linting tool designed to enforce best practices and standards for MuleSoft applications. It provides:
 
-- ✅ **48+ Built-in Rules** covering error handling, security, naming, logging, performance, and more
+- ✅ **56 Built-in Rules** covering error handling, security, naming, logging, performance, and more
 - ✅ **Multiple Output Formats** - Table, JSON, SARIF, HTML, CSV <!-- id: 4 -->
 - ✅ **CI/CD Ready** - Exit codes and machine-readable output
 - ✅ **156+ Unit Tests** - Comprehensive test coverage for reliability
@@ -238,7 +238,7 @@ mule-lint src/main/mule -f sarif -o results.sarif
 | PROJ-001 | POM Validation | Error | Structure | Validates pom.xml existence and plugins |
 | PROJ-002 | Git Hygiene | Warning | Structure | Validates .gitignore existence and entries |
 
-**Total: 61 rules** across 14 categories.
+**Total: 56 rules** across 14 categories.
 
 See [Rules Catalog](docs/best-practices/rules-catalog.md) for detailed documentation.
 

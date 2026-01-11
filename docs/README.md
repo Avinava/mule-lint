@@ -11,7 +11,7 @@ Comprehensive guidelines for building maintainable, secure, and performant Mule 
 | Document | Description |
 |----------|-------------|
 | [Best Practices Guide](best-practices/mulesoft-best-practices.md) | Complete MuleSoft development best practices |
-| [Rules Catalog](best-practices/rules-catalog.md) | All 40 linter rules with examples |
+| [Rules Catalog](best-practices/rules-catalog.md) | All 56 linter rules with examples |
 
 ---
 
@@ -75,12 +75,16 @@ mule-lint ./src/main/mule --fail-on-warning
 | Family | Prefix | Count | Description |
 |--------|--------|-------|-------------|
 | Core MuleSoft | MULE-XXX | 29 | Core Mule 4 XML validation |
+| Security | SEC-XXX | 5 | Security best practices (TLS, rate limiting, etc.) |
+| Logging | LOG-XXX | 2 | Structured logging and sensitive data |
+| Operations | OPS-XXX, RES-XXX, HYG-XXX | 7 | Reconnection, auto-discovery, hygiene |
 | YAML Properties | YAML-XXX | 3 | YAML configuration validation |
-| DataWeave | DW-XXX | 3 | DataWeave file validation |
-| API-Led | API-XXX | 3 | API-Led connectivity patterns |
+| DataWeave | DW-XXX | 4 | DataWeave file validation |
+| API-Led | API-XXX | 5 | API-Led connectivity patterns |
+| Governance | PROJ-XXX | 2 | POM and Git hygiene |
 | Experimental | EXP-XXX | 3 | Beta rules for evaluation |
 
-**Total: 40 rules**
+**Total: 56 rules**
 
 ---
 

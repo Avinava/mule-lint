@@ -36,13 +36,24 @@ mule-lint/
 │   ├── types/          # TypeScript interfaces
 │   ├── core/           # XPath, XML parsing, file scanning
 │   ├── engine/         # LintEngine orchestration
-│   ├── rules/          # All lint rules
+│   ├── rules/          # All lint rules (56 total)
 │   │   ├── base/       # BaseRule abstract class
+│   │   ├── api-led/
+│   │   ├── complexity/
+│   │   ├── dataweave/
+│   │   ├── documentation/
 │   │   ├── error-handling/
-│   │   ├── naming/
-│   │   ├── security/
+│   │   ├── experimental/
+│   │   ├── governance/
+│   │   ├── http/
 │   │   ├── logging/
-│   │   └── standards/
+│   │   ├── naming/
+│   │   ├── operations/
+│   │   ├── performance/
+│   │   ├── security/
+│   │   ├── standards/
+│   │   ├── structure/
+│   │   └── yaml/
 │   └── formatters/     # Output formatters
 ├── bin/                # CLI entry point
 ├── tests/

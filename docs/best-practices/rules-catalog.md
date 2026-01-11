@@ -1,8 +1,8 @@
 # Rules Catalog
 
 > **Version:** 2.0.0  
-> **Total Rules:** 40 implemented across 5 rule families  
-> **Last Updated:** December 2025
+> **Total Rules:** 56 implemented across 9 rule families  
+> **Last Updated:** January 2026
 
 ---
 
@@ -31,9 +31,13 @@
 | Family | Prefix | Count | Description |
 |--------|--------|-------|-------------|
 | Core MuleSoft | MULE-XXX | 29 | Core Mule 4 XML validation |
+| Security | SEC-XXX | 5 | Security best practices (TLS, rate limiting, etc.) |
+| Logging | LOG-XXX | 2 | Structured logging and sensitive data |
+| Operations | OPS-XXX, RES-XXX, HYG-XXX | 7 | Reconnection, auto-discovery, code hygiene |
 | YAML Properties | YAML-XXX | 3 | YAML configuration validation |
-| DataWeave | DW-XXX | 3 | DataWeave file validation |
-| API-Led | API-XXX | 3 | API-Led connectivity patterns |
+| DataWeave | DW-XXX | 4 | DataWeave file validation |
+| API-Led | API-XXX | 5 | API-Led connectivity patterns |
+| Governance | PROJ-XXX | 2 | POM and Git hygiene |
 | Experimental | EXP-XXX | 3 | Beta rules for evaluation |
 
 ### MULE Category ID Ranges

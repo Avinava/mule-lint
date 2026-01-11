@@ -13,6 +13,15 @@ mule-lint uses multiple rule prefixes to organize rules by domain:
 | Prefix | Format | Domain | Example |
 |--------|--------|--------|---------|
 | `MULE` | `MULE-NNN` | Core MuleSoft XML validation | `MULE-001` |
+| `SEC` | `SEC-NNN` | Security best practices | `SEC-002` |
+| `LOG` | `LOG-NNN` | Structured logging | `LOG-001` |
+| `ERR` | `ERR-NNN` | Error handling best practices | `ERR-001` |
+| `PERF` | `PERF-NNN` | Performance optimization | `PERF-002` |
+| `OPS` | `OPS-NNN` | Operations/deployment | `OPS-001` |
+| `RES` | `RES-NNN` | Resilience patterns | `RES-001` |
+| `HYG` | `HYG-NNN` | Code hygiene | `HYG-001` |
+| `DOC` | `DOC-NNN` | Documentation requirements | `DOC-001` |
+| `PROJ` | `PROJ-NNN` | Project governance | `PROJ-001` |
 | `YAML` | `YAML-NNN` | YAML properties validation | `YAML-001` |
 | `DW` | `DW-NNN` | DataWeave file validation | `DW-001` |
 | `API` | `API-NNN` | API-Led patterns | `API-001` |
