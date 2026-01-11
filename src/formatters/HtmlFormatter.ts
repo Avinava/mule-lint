@@ -2,6 +2,20 @@ import { LintReport } from '../types/Report';
 import { ALL_RULES } from '../rules';
 import packageJson from '../../package.json';
 
+// HTML Components - Modular System
+import {
+    themeVariables,
+    baseStyles,
+    componentStyles,
+    tabulatorStyles,
+    modalHtml,
+    modalScript,
+    sidePanelHtml,
+    sidePanelScript,
+    renderQualityRatingsSection,
+    renderLintSummarySection
+} from './html';
+
 /**
  * Format lint report as a premium HTML Single Page Application
  * Design inspired by: Stripe Docs + Tailwind CSS Docs
@@ -113,6 +127,41 @@ export function formatHtml(report: LintReport): string {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        /* ===== Theme Variables ===== */
+        :root {
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-error: #ef4444;
+            --color-info: #3b82f6;
+            --rating-a: #10b981;
+            --rating-b: #84cc16;
+            --rating-c: #f59e0b;
+            --rating-d: #f97316;
+            --rating-e: #ef4444;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --transition-fast: 150ms;
+            --transition-normal: 200ms;
+        }
+        .dark {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --border-color: #475569;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
         /* ===== Base ===== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -262,6 +311,158 @@ export function formatHtml(report: LintReport): string {
             .app-layout { display: block; height: auto; }
             .app-sidebar, .app-header { display: none; }
             .app-main { overflow: visible; }
+        }
+
+        /* ===== Modal ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 520px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        .dark .modal-content {
+            background: #1e293b;
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .dark .modal-header {
+            border-color: #334155;
+        }
+        .modal-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .dark .modal-title {
+            color: #f1f5f9;
+        }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: #64748b;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+        }
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        .dark .modal-close:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        .modal-body h4 {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+        .dark .modal-body h4 {
+            color: #94a3b8;
+        }
+        .modal-body p, .modal-body li {
+            font-size: 0.8125rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        .dark .modal-body p, .dark .modal-body li {
+            color: #94a3b8;
+        }
+        .modal-body ul {
+            list-style: disc;
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        .modal-body .rating-scale {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px 12px;
+            margin-top: 12px;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .dark .modal-body .rating-scale {
+            background: #0f172a;
+        }
+        .rating-scale .badge {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        /* Info Icon */
+        .info-btn {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+            font-size: 0.65rem;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+        .info-btn:hover {
+            background: #0ea5e9;
+            color: white;
+        }
+        .dark .info-btn {
+            background: #334155;
+            color: #94a3b8;
+        }
+        .dark .info-btn:hover {
+            background: #38bdf8;
+            color: #0f172a;
         }
     </style>
 </head>
@@ -1425,8 +1626,149 @@ export function formatHtml(report: LintReport): string {
             }
         };
 
+        // ===== MODAL SYSTEM =====
+        const modal = {
+            overlay: null,
+            content: {
+                complexity: {
+                    title: 'Complexity Rating',
+                    body: \`
+                        <h4>What is measured</h4>
+                        <p>Average cyclomatic complexity across all flows. Higher complexity = harder to test and maintain.</p>
+                        <h4 style="margin-top: 16px;">How it's calculated</h4>
+                        <p>Count decision points per flow:</p>
+                        <ul>
+                            <li>choice/when clauses</li>
+                            <li>foreach loops</li>
+                            <li>try/catch blocks</li>
+                            <li>scatter-gather routes</li>
+                            <li>async operations</li>
+                            <li>error handlers</li>
+                        </ul>
+                        <p style="margin-top: 8px;"><strong>Formula:</strong> Base complexity (1) + total decision points</p>
+                        <h4 style="margin-top: 16px;">Rating Thresholds</h4>
+                        <div class="rating-scale">
+                            <span class="badge" style="background: var(--rating-a); color: white;">A</span><span>≤ 5 - Simple, easy to test</span>
+                            <span class="badge" style="background: var(--rating-b); color: white;">B</span><span>≤ 10 - Moderate complexity</span>
+                            <span class="badge" style="background: var(--rating-c); color: white;">C</span><span>≤ 15 - Complex, consider splitting</span>
+                            <span class="badge" style="background: var(--rating-d); color: white;">D</span><span>≤ 20 - High, refactor recommended</span>
+                            <span class="badge" style="background: var(--rating-e); color: white;">E</span><span>> 20 - Critical, immediate action</span>
+                        </div>
+                    \`
+                },
+                maintainability: {
+                    title: 'Maintainability Rating',
+                    body: \`
+                        <h4>What is measured</h4>
+                        <p>Technical debt as a percentage of estimated development time.</p>
+                        <h4 style="margin-top: 16px;">How it's calculated</h4>
+                        <p><strong>Debt minutes:</strong></p>
+                        <ul>
+                            <li>Code smells × 5 minutes</li>
+                            <li>Bug issues × 15 minutes</li>
+                            <li>Vulnerabilities × 30 minutes</li>
+                        </ul>
+                        <p style="margin-top: 8px;"><strong>Development estimate:</strong> (flows × 10min) + (subflows × 5min), min 60min</p>
+                        <p style="margin-top: 8px;"><strong>Debt Ratio:</strong> (Debt minutes / Development estimate) × 100%</p>
+                        <h4 style="margin-top: 16px;">Rating Thresholds</h4>
+                        <div class="rating-scale">
+                            <span class="badge" style="background: var(--rating-a); color: white;">A</span><span>≤ 5% - Excellent maintainability</span>
+                            <span class="badge" style="background: var(--rating-b); color: white;">B</span><span>≤ 10% - Good maintainability</span>
+                            <span class="badge" style="background: var(--rating-c); color: white;">C</span><span>≤ 20% - Moderate debt</span>
+                            <span class="badge" style="background: var(--rating-d); color: white;">D</span><span>≤ 50% - High debt, plan remediation</span>
+                            <span class="badge" style="background: var(--rating-e); color: white;">E</span><span>> 50% - Critical, immediate action</span>
+                        </div>
+                    \`
+                },
+                reliability: {
+                    title: 'Reliability Rating',
+                    body: \`
+                        <h4>What is measured</h4>
+                        <p>Number of bug-type issues that may cause runtime failures.</p>
+                        <h4 style="margin-top: 16px;">Bug-type rules include</h4>
+                        <ul>
+                            <li><strong>MULE-003:</strong> Missing error handler on flows</li>
+                            <li><strong>PROJ-001:</strong> Missing pom.xml file</li>
+                        </ul>
+                        <h4 style="margin-top: 16px;">Rating Thresholds</h4>
+                        <div class="rating-scale">
+                            <span class="badge" style="background: var(--rating-a); color: white;">A</span><span>0 bugs - No reliability issues</span>
+                            <span class="badge" style="background: var(--rating-b); color: white;">B</span><span>1-2 bugs - Minor concerns</span>
+                            <span class="badge" style="background: var(--rating-c); color: white;">C</span><span>3-5 bugs - Moderate risk</span>
+                            <span class="badge" style="background: var(--rating-d); color: white;">D</span><span>6-10 bugs - High risk</span>
+                            <span class="badge" style="background: var(--rating-e); color: white;">E</span><span>> 10 bugs - Critical issues</span>
+                        </div>
+                    \`
+                },
+                security: {
+                    title: 'Security Rating',
+                    body: \`
+                        <h4>What is measured</h4>
+                        <p>Vulnerability count from security-related rule violations.</p>
+                        <h4 style="margin-top: 16px;">Vulnerability rules include</h4>
+                        <ul>
+                            <li><strong>MULE-201:</strong> Hardcoded credentials</li>
+                            <li><strong>MULE-202:</strong> Insecure TLS configuration</li>
+                            <li><strong>YAML-004:</strong> Plaintext secrets in config</li>
+                            <li><strong>MULE-004:</strong> Hardcoded URLs</li>
+                        </ul>
+                        <h4 style="margin-top: 16px;">Rating Thresholds</h4>
+                        <div class="rating-scale">
+                            <span class="badge" style="background: var(--rating-a); color: white;">A</span><span>0 vulns - Secure configuration</span>
+                            <span class="badge" style="background: var(--rating-b); color: white;">B</span><span>1 vuln - Minor finding</span>
+                            <span class="badge" style="background: var(--rating-c); color: white;">C</span><span>2-3 vulns - Review needed</span>
+                            <span class="badge" style="background: var(--rating-d); color: white;">D</span><span>4-5 vulns - Remediation required</span>
+                            <span class="badge" style="background: var(--rating-e); color: white;">E</span><span>> 5 vulns - Critical security issues</span>
+                        </div>
+                    \`
+                }
+            },
+            init() {
+                // Create modal overlay
+                this.overlay = document.createElement('div');
+                this.overlay.className = 'modal-overlay';
+                this.overlay.innerHTML = \`
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title"></h3>
+                            <button class="modal-close" onclick="modal.close()">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div class="modal-body"></div>
+                    </div>
+                \`;
+                document.body.appendChild(this.overlay);
+                
+                // Close on backdrop click
+                this.overlay.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.close();
+                });
+                
+                // Close on Escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.close();
+                    }
+                });
+            },
+            open(type) {
+                const data = this.content[type];
+                if (!data) return;
+                this.overlay.querySelector('.modal-title').textContent = data.title;
+                this.overlay.querySelector('.modal-body').innerHTML = data.body;
+                this.overlay.classList.add('active');
+            },
+            close() {
+                this.overlay.classList.remove('active');
+            }
+        };
+
         // ===== INIT =====
-        document.addEventListener('DOMContentLoaded', () => renderer.init());
+        document.addEventListener('DOMContentLoaded', () => {
+            modal.init();
+            renderer.init();
+        });
     </script>
 </body>
 </html>`;
