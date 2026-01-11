@@ -696,47 +696,7 @@ export function formatHtml(report: LintReport): string {
                     </div>
                 </div>
 
-                <!-- Quality Ratings (A-E) - Shown first -->
-                <div id="quality-ratings" class="mb-6" style="display: none;">
-                    <div class="mb-3">
-                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Quality Ratings</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Overall code quality assessment (A=best, E=worst). Hover for calculation details.</p>
-                    </div>
-                    <div class="grid grid-cols-4 gap-3">
-                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-help" title="Complexity: Average cyclomatic complexity across flows. Counts choice/when, foreach, try, scatter-gather, async, error-handlers. A(≤5) B(≤10) C(≤15) D(≤20) E(>20)">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-2xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Complexity</span>
-                                <div id="rating-complexity" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold">-</div>
-                            </div>
-                            <div id="complexity-avg" class="text-sm text-slate-500 dark:text-slate-400">-</div>
-                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Avg flow complexity</div>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-help" title="Maintainability: Technical debt ratio. Debt = (code smells×5min) + (bugs×15min) + (vulns×30min). Ratio = debt / (flows×10min + subflows×5min). A(≤5%) B(≤10%) C(≤20%) D(≤50%) E(>50%)">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-2xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Maintainability</span>
-                                <div id="rating-maintainability" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold">-</div>
-                            </div>
-                            <div id="tech-debt" class="text-sm text-slate-500 dark:text-slate-400">-</div>
-                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Technical debt</div>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-help" title="Reliability: Bug-type issues count. Includes: missing error handlers (MULE-003), missing pom.xml (PROJ-001). A(0) B(1-2) C(3-5) D(6-10) E(>10)">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-2xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Reliability</span>
-                                <div id="rating-reliability" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold">-</div>
-                            </div>
-                            <div id="bug-count" class="text-sm text-slate-500 dark:text-slate-400">-</div>
-                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Bug issues found</div>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-help" title="Security: Vulnerability count. Includes: hardcoded credentials (MULE-201), insecure TLS (MULE-202), plaintext secrets (YAML-004), hardcoded URLs (MULE-004). A(0) B(1) C(2-3) D(4-5) E(>5)">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-2xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Security</span>
-                                <div id="rating-security" class="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold">-</div>
-                            </div>
-                            <div id="vuln-count" class="text-sm text-slate-500 dark:text-slate-400">-</div>
-                            <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Vulnerabilities</div>
-                        </div>
-                    </div>
-                </div>
+                ${renderQualityRatingsSection()}
 
                 <!-- Lint Summary (moved below Quality Ratings) -->
                 <div class="mb-6">
