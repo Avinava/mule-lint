@@ -18,7 +18,7 @@ mule-lint/
 │   ├── engine/              # Lint engine
 │   │   ├── LintEngine.ts    # Main orchestrator
 │   │   └── types.ts         # Engine-specific types
-│   ├── rules/               # Rule implementations (40 rules)
+│   ├── rules/               # Rule implementations (56 rules)
 │   │   ├── index.ts         # Rule registry/exports
 │   │   ├── base/            # Base classes for rules
 │   │   │   └── BaseRule.ts  # Abstract rule with utilities
@@ -146,21 +146,23 @@ mule-lint/
 
 **Purpose:** All validation rules, organized by category.
 
-**Rule Families (40 total):**
+**Rule Families (56 total):**
 
 | Family | Directory | Rules |
 |--------|-----------|-------|
-| API-Led | `api-led/` | API-001, 002, 003 |
+| API-Led | `api-led/` | API-001, 002, 003, 004, 005 |
 | Complexity | `complexity/` | MULE-801 |
-| DataWeave | `dataweave/` | DW-001, 002, 003 |
+| DataWeave | `dataweave/` | DW-001, 002, 003, 004 |
 | Documentation | `documentation/` | MULE-601, 604 |
-| Error Handling | `error-handling/` | MULE-001, 003, 005, 007, 009 |
+| Error Handling | `error-handling/` | MULE-001, 003, 005, 007, 009, ERR-001 |
 | Experimental | `experimental/` | EXP-001, 002, 003 |
+| Governance | `governance/` | PROJ-001, 002 |
 | HTTP | `http/` | MULE-401, 402, 403 |
-| Logging | `logging/` | MULE-006, 301, 303 |
+| Logging | `logging/` | MULE-006, 301, 303, LOG-001, 004 |
 | Naming | `naming/` | MULE-002, 101, 102 |
-| Performance | `performance/` | MULE-501, 502, 503 |
-| Security | `security/` | MULE-004, 201, 202 |
+| Operations | `operations/` | RES-001, OPS-001, 002, 003, HYG-001, 002, 003, DOC-001, API-005 |
+| Performance | `performance/` | MULE-501, 502, 503, PERF-002 |
+| Security | `security/` | MULE-004, 201, 202, SEC-002, 003, 004, 006 |
 | Standards | `standards/` | MULE-008, 010, 701 |
 | Structure | `structure/` | MULE-802, 803, 804 |
 | YAML | `yaml/` | YAML-001, 003, 004 |
