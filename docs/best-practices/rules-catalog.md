@@ -459,6 +459,20 @@
 
 **Description:** Flow cyclomatic complexity should not exceed threshold.
 
+**Decision Points Tracked:**
+| Element | Description |
+|---------|-------------|
+| `<choice>/<when>` | Each when clause adds 1 |
+| `<until-successful>` | Retry logic |
+| `<foreach>` | Iteration |
+| `<parallel-foreach>` | Parallel iteration |
+| `<scatter-gather>` | Parallel execution |
+| `<async>` | Parallel execution path |
+| `<try>` | Exception handling |
+| `<first-successful>` | Fallback routing |
+| `<round-robin>` | Load balancing |
+| `<on-error-*>` | Error handlers |
+
 **Configuration:**
 ```json
 {
