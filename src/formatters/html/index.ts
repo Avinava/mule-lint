@@ -16,11 +16,13 @@ export { modalHtml, modalScript, modalContent } from './components/Modal';
 export { sidePanelHtml, sidePanelScript } from './components/SidePanel';
 export { renderMetricCard } from './components/MetricCard';
 export { renderRatingCard, ratingCards } from './components/RatingBadge';
+export { icons } from './components/Icons';
 
 // Sections
 export { renderQualityRatingsSection, qualityRatingsRendererScript } from './sections/QualityRatings';
-export { renderLintSummarySection } from './sections/LintSummary';
+export { renderLintSummarySection, LintSummaryProps } from './sections/LintSummary';
 export { renderHeader, HeaderProps } from './sections/Header';
+export { renderSidebar, SidebarProps } from './sections/Sidebar';
 
 // Scripts (configuration exports)
 export { connectorMeta, methodStyles, exchangeBaseUrl } from './scripts/renderer';

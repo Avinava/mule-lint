@@ -26,33 +26,28 @@ export interface ModalContent {
 
 export const modalContent: Record<string, ModalContent> = {
     complexity: {
-        title: 'Complexity Rating',
+        title: 'Cognitive Complexity (Beta)',
         body: `
             <h4>What is measured</h4>
-            <p>Average cyclomatic complexity across all flows. Higher complexity = harder to test and maintain.</p>
-            <h4 style="margin-top: 16px;">How it's calculated</h4>
-            <p>Count decision points per flow:</p>
+            <p>Complexity assesses how difficult code is to understand.</p>
+            <h4 style="margin-top: 16px;">It increments/penalizes for</h4>
             <ul>
-                <li>choice/when clauses</li>
-                <li>foreach loops</li>
-                <li>try/catch blocks</li>
-                <li>scatter-gather routes</li>
-                <li>async operations</li>
-                <li>error handlers</li>
+                <li><strong>Nesting:</strong> Deeper logic is harder to follow (e.g. Try-Catch inside For-Each)</li>
+                <li><strong>Branching:</strong> Choice routers, If/Else blocks</li>
+                <li><strong>Complex DataWeave:</strong> Inline scripts > 10 lines</li>
             </ul>
-            <p style="margin-top: 8px;"><strong>Formula:</strong> Base complexity (1) + total decision points</p>
             <h4 style="margin-top: 16px;">Rating Thresholds</h4>
             <div class="rating-scale">
-                <span class="badge" style="background: var(--rating-a);">A</span><span>≤ 5 - Simple, easy to test</span>
-                <span class="badge" style="background: var(--rating-b);">B</span><span>≤ 10 - Moderate complexity</span>
-                <span class="badge" style="background: var(--rating-c);">C</span><span>≤ 15 - Complex, consider splitting</span>
-                <span class="badge" style="background: var(--rating-d);">D</span><span>≤ 20 - High, refactor recommended</span>
-                <span class="badge" style="background: var(--rating-e);">E</span><span>> 20 - Critical, immediate action</span>
+                <span class="badge" style="background: var(--rating-a);">A</span><span>0-5 - Simple, clean code</span>
+                <span class="badge" style="background: var(--rating-b);">B</span><span>6-10 - Moderate complexity</span>
+                <span class="badge" style="background: var(--rating-c);">C</span><span>11-20 - Complex, needs review</span>
+                <span class="badge" style="background: var(--rating-d);">D</span><span>21-30 - Very complex, refactor needed</span>
+                <span class="badge" style="background: var(--rating-e);">E</span><span>> 30 - Unmaintainable</span>
             </div>
         `
     },
     maintainability: {
-        title: 'Maintainability Rating',
+        title: 'Maintainability Rating (Beta)',
         body: `
             <h4>What is measured</h4>
             <p>Technical debt as a percentage of estimated development time.</p>
@@ -76,7 +71,7 @@ export const modalContent: Record<string, ModalContent> = {
         `
     },
     reliability: {
-        title: 'Reliability Rating',
+        title: 'Reliability Rating (Beta)',
         body: `
             <h4>What is measured</h4>
             <p>Number of bug-type issues that may cause runtime failures.</p>
@@ -96,7 +91,7 @@ export const modalContent: Record<string, ModalContent> = {
         `
     },
     security: {
-        title: 'Security Rating',
+        title: 'Security Rating (Beta)',
         body: `
             <h4>What is measured</h4>
             <p>Vulnerability count from security-related rule violations.</p>

@@ -4,5 +4,5 @@
  */
 
 export { renderQualityRatingsSection, qualityRatingsRendererScript } from './QualityRatings';
-export { renderLintSummarySection } from './LintSummary';
+export { renderLintSummarySection, LintSummaryProps } from './LintSummary';
 export { renderHeader, HeaderProps } from './Header';
