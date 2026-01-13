@@ -529,7 +529,7 @@ Add the following to your `claude_desktop_config.json`:
   "mcpServers": {
     "mule-lint": {
       "command": "npx",
-      "args": ["-y", "@sfdxy/mule-lint", "mule-lint-mcp"]
+      "args": ["-y", "--package=@sfdxy/mule-lint", "mule-lint-mcp"]
     }
   }
 }
@@ -543,7 +543,7 @@ Create a `.vscode/mcp.json` file in your project root:
 {
   "mule-lint": {
     "command": "npx",
-    "args": ["-y", "@sfdxy/mule-lint", "mule-lint-mcp"]
+    "args": ["-y", "--package=@sfdxy/mule-lint", "mule-lint-mcp"]
   }
 }
 ```
