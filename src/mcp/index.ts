@@ -24,11 +24,11 @@ export class MuleLintMcpServer {
             version: '1.16.0',
         });
 
-        // Initialize engine with default config
-        const defaultConfig: LintConfig = {
+        // Initialize engine with partial config - let LintEngine apply DEFAULT_CONFIG for include/exclude
+        const defaultConfig: Partial<LintConfig> = {
             rules: {},
-            include: [],
-            exclude: [],
+            // Do NOT set include/exclude to empty arrays - that overrides the defaults
+            // LintEngine will use DEFAULT_CONFIG: include: ['src/main/mule/**/*.xml']
             defaultFormatter: 'json',
             failOnWarning: false,
         };
