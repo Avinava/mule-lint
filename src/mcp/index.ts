@@ -21,7 +21,7 @@ export class MuleLintMcpServer {
     constructor() {
         this.server = new McpServer({
             name: 'mule-lint',
-            version: '1.16.0',
+            version: '1.16.1',
         });
 
         // Initialize engine with partial config - let LintEngine apply DEFAULT_CONFIG for include/exclude
