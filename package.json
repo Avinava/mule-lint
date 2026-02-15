@@ -45,7 +45,8 @@
         "commander": "^11.1.0",
         "fast-glob": "^3.3.2",
         "js-yaml": "^4.1.1",
-        "xpath": "^0.0.34"
+        "xpath": "^0.0.34",
+        "zod": "^3.25.0"
     },
     "devDependencies": {
         "@types/jest": "^29.5.11",

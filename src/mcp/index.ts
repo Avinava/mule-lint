@@ -47,7 +47,8 @@ export class MuleLintMcpServer {
 
     private setupTools(): void {
         // Tool: run_lint_analysis
-        this.server.tool(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
+        (this.server as any).tool(
             'run_lint_analysis',
             'USE THIS TOOL FIRST to analyze a MuleSoft project. It scans the codebase for best practice violations, security issues (secure:: properties), and potential runtime errors. Returns a comprehensive report needed to identify what needs fixing.',
             {
@@ -55,7 +56,7 @@ export class MuleLintMcpServer {
                     .string()
                     .describe('Absolute path to the MuleSoft project directory to scan'),
             },
-            async ({ projectPath }) => {
+            async ({ projectPath }: { projectPath: string }) => {
                 try {
                     const report = await this.engine.scan(projectPath);
 
@@ -119,7 +120,8 @@ export class MuleLintMcpServer {
         );
 
         // Tool: get_rule_details
-        this.server.tool(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
+        (this.server as any).tool(
             'get_rule_details',
             'Retrieve detailed documentation for a specific linting rule ID (e.g., MULE-001). Use this to understand WHY a rule failed and HOW to fix it properly according to best practices.',
             {
@@ -127,7 +129,7 @@ export class MuleLintMcpServer {
                     .string()
                     .describe('The ID of the rule to retrieve (e.g., "MULE-001", "DW-004")'),
             },
-            ({ ruleId }) => {
+            ({ ruleId }: { ruleId: string }) => {
                 const rule = getRuleById(ruleId);
                 if (!rule) {
                     return {
@@ -164,14 +166,15 @@ export class MuleLintMcpServer {
         );
 
         // Tool: validate_snippet
-        this.server.tool(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
+        (this.server as any).tool(
             'validate_snippet',
             'Validates a small XML or DataWeave code snippet in isolation. Use this to check syntax and basic rules on generated code BEFORE suggesting it to the user.',
             {
                 code: z.string().describe('The code snippet to validate'),
                 type: z.enum(['xml', 'dwl']).describe('The type of code (xml or dwl)'),
             },
-            ({ code, type }) => {
+            ({ code, type }: { code: string; type: 'xml' | 'dwl' }) => {
                 try {
                     // Create minimal context
                     const context: ValidationContext = {
@@ -397,7 +400,8 @@ export class MuleLintMcpServer {
 
     private setupPrompts(): void {
         // Prompt: analyze-project
-        this.server.registerPrompt(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
+        (this.server as any).registerPrompt(
             'analyze-project',
             {
                 description:
@@ -406,7 +410,7 @@ export class MuleLintMcpServer {
                     path: z.string().describe('The absolute path to the project to analyze'),
                 },
             },
-            ({ path }) => {
+            ({ path }: { path: string }) => {
                 return {
                     messages: [
                         {
@@ -422,7 +426,8 @@ export class MuleLintMcpServer {
         );
 
         // Prompt: explain-rule
-        this.server.registerPrompt(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
+        (this.server as any).registerPrompt(
             'explain-rule',
             {
                 description:
@@ -431,7 +436,7 @@ export class MuleLintMcpServer {
                     ruleId: z.string().describe('The ID of the rule to explain (e.g., MULE-001)'),
                 },
             },
-            ({ ruleId }) => {
+            ({ ruleId }: { ruleId: string }) => {
                 return {
                     messages: [
                         {
@@ -447,7 +452,8 @@ export class MuleLintMcpServer {
         );
 
         // Prompt: fix-issue
-        this.server.registerPrompt(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
+        (this.server as any).registerPrompt(
             'fix-issue',
             {
                 description: 'Suggest a fix for a specific linting issue in a file.',
@@ -457,7 +463,7 @@ export class MuleLintMcpServer {
                     code: z.string().describe('The specific code snippet causing the issue'),
                 },
             },
-            ({ issue, file, code }) => {
+            ({ issue, file, code }: { issue: string; file: string; code: string }) => {
                 return {
                     messages: [
                         {

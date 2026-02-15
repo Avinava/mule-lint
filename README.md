@@ -518,7 +518,8 @@ This tool exposes a **Model Context Protocol (MCP)** server, allowing AI agents 
 
 ### Features
 - **Tools**: `run_lint_analysis` (scan project), `get_rule_details` (explain rule), `validate_snippet` (check XML/DWL).
-- **Resources**: `mule-lint://rules` (list all available rules).
+- **Resources**: `mule-lint://rules` (list all available rules), `mule-lint://docs/{slug}` (best practices documentation).
+- **Prompts**: `analyze-project`, `explain-rule`, `fix-issue`.
 
 ### Setup for Claude Desktop
 
@@ -529,21 +530,23 @@ Add the following to your `claude_desktop_config.json`:
   "mcpServers": {
     "mule-lint": {
       "command": "npx",
-      "args": ["-y", "--package=@sfdxy/mule-lint", "mule-lint-mcp"]
+      "args": ["-y", "@sfdxy/mule-lint", "mcp"]
     }
   }
 }
 ```
 
-### Setup for VS Code
+### Setup for VS Code / Gemini Code Assist
 
 Create a `.vscode/mcp.json` file in your project root:
 
 ```json
 {
-  "mule-lint": {
-    "command": "npx",
-    "args": ["-y", "--package=@sfdxy/mule-lint", "mule-lint-mcp"]
+  "servers": {
+    "mule-lint": {
+      "command": "npx",
+      "args": ["-y", "@sfdxy/mule-lint", "mcp"]
+    }
   }
 }
 ```

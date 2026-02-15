@@ -20,7 +20,7 @@ program
     .name('mule-lint')
     .description('Static analysis tool for MuleSoft applications')
     .version('1.0.0')
-    .argument('<path>', 'Path to scan (directory or file)')
+    .argument('[path]', 'Path to scan (directory or file)')
     .option('-f, --format <type>', 'Output format: table, json, sarif, html, csv', 'table')
     .option('-o, --output <file>', 'Write output to file instead of stdout')
     .option('-c, --config <file>', 'Path to configuration file')
@@ -29,7 +29,11 @@ program
     .option('-e, --experimental', 'Enable experimental rules (opt-in)')
     .option('-g, --quality-gate <name>', 'Apply quality gate: default, strict, or from config')
     .option('-v, --verbose', 'Show verbose output')
-    .action(async (targetPath: string, options) => {
+    .action(async (targetPath: string | undefined, options) => {
+        if (!targetPath) {
+            program.help();
+            return;
+        }
         try {
             await runLint(targetPath, options);
         } catch (error) {
@@ -37,6 +41,16 @@ program
             console.error(`Error: ${message}`);
             process.exit(2);
         }
+    });
+
+// MCP subcommand — starts the Model Context Protocol server over stdio
+program
+    .command('mcp')
+    .description('Start the MCP (Model Context Protocol) server over stdio for AI agent integration')
+    .action(async () => {
+        const { MuleLintMcpServer } = await import('../src/mcp');
+        const server = new MuleLintMcpServer();
+        await server.start();
     });
 
 interface CliOptions {
