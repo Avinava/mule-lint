@@ -367,15 +367,17 @@ export class LintEngine {
      */
     private runProjectRules(projectRoot: string): Issue[] {
         const issues: Issue[] = [];
-        const projectRules = this.getEnabledRules().filter((r) => (r as any).isProjectRule);
+        // Dynamically import to avoid circular dependency at module level
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { ProjectRule } = require('../rules/base/ProjectRule') as { ProjectRule: typeof import('../rules/base/ProjectRule').ProjectRule };
+
+        const projectRules = this.getEnabledRules().filter(
+            (r): r is InstanceType<typeof ProjectRule> => r instanceof ProjectRule,
+        );
 
         for (const rule of projectRules) {
             try {
-                // Cast to any to access ProjectRule methods safely
-                // In a real generic implementation we'd check instance types better
-                if (typeof (rule as any).reset === 'function') {
-                    (rule as any).reset();
-                }
+                rule.reset();
 
                 // Create a basic context for project validation
                 const context: ValidationContext = {
@@ -386,8 +388,7 @@ export class LintEngine {
                 };
 
                 // Pass empty document since project rules don't use it
-                // Using 'as any' because we know ProjectRule ignores the doc
-                const ruleIssues = rule.validate({} as any, context);
+                const ruleIssues = rule.validate({} as Document, context);
                 issues.push(...ruleIssues);
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
