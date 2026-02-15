@@ -25,7 +25,7 @@ export class ConnectionPoolingRule extends BaseRule {
 
         for (const config of httpConfigs) {
             const element = config as Element;
-            const name = element.getAttribute('name') || 'unnamed';
+            const name = element.getAttribute('name') ?? 'unnamed';
 
             // Check for connection pooling attributes
             const hasPooling =
@@ -55,7 +55,7 @@ export class ConnectionPoolingRule extends BaseRule {
 
         for (const config of dbConfigs) {
             const element = config as Element;
-            const name = element.getAttribute('name') || 'unnamed';
+            const name = element.getAttribute('name') ?? 'unnamed';
 
             // Check for pooling profile
             const hasPooling =

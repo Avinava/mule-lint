@@ -94,7 +94,7 @@ export class AutoDiscoveryRule extends BaseRule {
     severity = 'info' as const;
     category = 'standards' as const;
 
-    validate(doc: Document, context: ValidationContext): Issue[] {
+    validate(doc: Document, _context: ValidationContext): Issue[] {
         const issues: Issue[] = [];
 
         // Check if this is an API (has APIKit router or HTTP listener)
@@ -434,16 +434,6 @@ export class ApiKitValidationRule extends BaseRule {
             }
         }
 
-        // Check for APIKit console disabled in non-dev environments
-        const apiKitConfigs = this.select('//*[local-name()="config" and @name]', doc);
-        for (const config of apiKitConfigs) {
-            const name = this.getNameAttribute(config) ?? '';
-            if (name.toLowerCase().includes('api')) {
-                const consoleDisabled = this.getAttribute(config, 'disableValidations');
-                // Note: This is informational - teams may want console enabled in dev
-            }
-        }
-
         return issues;
     }
 }
@@ -460,7 +450,7 @@ export class UnusedFlowRule extends BaseRule {
     severity = 'warning' as const;
     category = 'standards' as const;
 
-    validate(doc: Document, context: ValidationContext): Issue[] {
+    validate(doc: Document, _context: ValidationContext): Issue[] {
         const issues: Issue[] = [];
 
         // Get all flow names in this document
@@ -502,7 +492,7 @@ export class UnusedFlowRule extends BaseRule {
         // Check private flows (not triggered by HTTP/scheduler)
         for (const flow of flows) {
             const name = this.getNameAttribute(flow);
-            if (!name) continue;
+            if (!name) { continue; }
 
             // Skip if it has an external trigger
             const hasHttpListener = this.exists('.//*[local-name()="listener"]', flow);

@@ -69,13 +69,13 @@ export class DwlNamingRule extends BaseRule {
         const issues: Issue[] = [];
         const dwlDir = path.join(context.projectRoot, 'src/main/resources/dwl');
 
-        if (!fs.existsSync(dwlDir)) return issues;
+        if (!fs.existsSync(dwlDir)) {return issues;}
 
         // Get configurable convention: 'kebab-case' | 'camelCase' | 'any'
         const convention = this.getOption(context, 'convention', 'kebab-case') as string;
 
         // Skip validation if convention is 'any'
-        if (convention === 'any') return issues;
+        if (convention === 'any') {return issues;}
 
         const dwlFiles = this.findDwlFiles(dwlDir);
 
@@ -163,7 +163,7 @@ export class DwlModulesRule extends BaseRule {
         const issues: Issue[] = [];
         const dwlDir = path.join(context.projectRoot, 'src/main/resources/dwl');
 
-        if (!fs.existsSync(dwlDir)) return issues;
+        if (!fs.existsSync(dwlDir)) {return issues;}
 
         const hasCommonModule = this.hasFile(dwlDir, 'common');
         const hasUtilsModule = this.hasFile(dwlDir, 'utils');

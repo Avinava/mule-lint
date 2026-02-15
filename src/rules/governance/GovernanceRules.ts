@@ -1,5 +1,6 @@
 import { Issue, ValidationContext } from '../../types';
 import { ProjectRule } from '../base/ProjectRule';
+import { getErrorMessage } from '../../core/errors';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -56,7 +57,7 @@ export class PomValidationRule extends ProjectRule {
             }
         } catch (error) {
             issues.push(
-                this.createProjectIssue(`Error reading pom.xml: ${error}`, {
+                this.createProjectIssue(`Error reading pom.xml: ${getErrorMessage(error)}`, {
                     severity: 'warning',
                 }),
             );
@@ -121,7 +122,7 @@ export class GitHygieneRule extends ProjectRule {
             }
         } catch (error) {
             issues.push(
-                this.createProjectIssue(`Error reading .gitignore: ${error}`, {
+                this.createProjectIssue(`Error reading .gitignore: ${getErrorMessage(error)}`, {
                     severity: 'warning',
                 }),
             );

@@ -22,7 +22,7 @@ export class VariableNamingRule extends BaseRule {
 
         for (const setVar of setVariables) {
             const varName = this.getAttribute(setVar, 'variableName');
-            if (!varName) continue;
+            if (!varName) { continue; }
 
             if (!this.CAMEL_CASE_PATTERN.test(varName)) {
                 issues.push(
@@ -38,7 +38,9 @@ export class VariableNamingRule extends BaseRule {
 
     private toCamelCase(name: string): string {
         return name
-            .replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ''))
-            .replace(/^[A-Z]/, (c) => c.toLowerCase());
+            .replace(/[-_\s]+(.)?/g, (_match: string, c: string | undefined) =>
+                c ? c.toUpperCase() : '',
+            )
+            .replace(/^[A-Z]/, (c: string) => c.toLowerCase());
     }
 }

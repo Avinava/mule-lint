@@ -1,5 +1,6 @@
 import { ValidationContext, Issue } from '../../types';
 import { BaseRule } from '../base/BaseRule';
+import * as fs from 'fs';
 
 /**
  * EXP-001: Flow Reference Depth
@@ -100,17 +101,14 @@ export class MUnitCoverageRule extends BaseRule {
         const flows = this.select('//mule:flow', doc);
         const munitDir = `${context.projectRoot}/src/test/munit`;
 
-        // Check if MUnit directory exists (basic check)
-        const fs = require('fs');
         if (!fs.existsSync(munitDir)) {
             if (flows.length > 0) {
-                issues.push({
-                    line: 1,
-                    message: `Project has ${flows.length} flows but no MUnit tests`,
-                    ruleId: this.id,
-                    severity: this.severity,
-                    suggestion: 'Create src/test/munit/ directory with test files',
-                });
+                issues.push(
+                    this.createFileIssue(
+                        `Project has ${flows.length} flows but no MUnit tests`,
+                        { suggestion: 'Create src/test/munit/ directory with test files' },
+                    ),
+                );
             }
         }
 
