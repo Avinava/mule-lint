@@ -28,12 +28,12 @@ export class InputValidationRule extends BaseRule {
 
         for (const flow of flows) {
             const flowElement = flow as Element;
-            const flowName = flowElement.getAttribute('name') || '';
+            const flowName = flowElement.getAttribute('name') ?? '';
 
             // Check if flow has HTTP listener with body-accepting methods
             const listeners = this.select('.//*[local-name()="listener"]', flow);
 
-            if (listeners.length === 0) continue;
+            if (listeners.length === 0) { continue; }
 
             // Check for POST, PUT, PATCH patterns in flow name (APIKit generated)
             const acceptsBody =
@@ -41,7 +41,7 @@ export class InputValidationRule extends BaseRule {
                 flowName.includes('put:') ||
                 flowName.includes('patch:');
 
-            if (!acceptsBody) continue;
+            if (!acceptsBody) { continue; }
 
             // Check for validation in the flow
             const hasValidation =

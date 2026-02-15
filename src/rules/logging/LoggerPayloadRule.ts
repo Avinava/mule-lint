@@ -42,8 +42,8 @@ export class LoggerPayloadRule extends BaseRule {
     private hasDirectPayloadReference(message: string): boolean {
         // Match #[payload] but not #[payload.something]
         return (
-            /\#\[payload\s*\]/.test(message) ||
-            /\#\[\s*payload\s*\]/.test(message) ||
+            /#\[payload\s*\]/.test(message) ||
+            /#\[\s*payload\s*\]/.test(message) ||
             message === '#[payload]'
         );
     }

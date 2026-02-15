@@ -21,7 +21,7 @@ export class HttpContentTypeRule extends BaseRule {
 
         for (const request of httpRequests) {
             const nodeName = request.nodeName;
-            if (!nodeName.includes('http:') && !nodeName.includes(':request')) continue;
+            if (!nodeName.includes('http:') && !nodeName.includes(':request')) {continue;}
 
             const method = this.getAttribute(request, 'method')?.toUpperCase();
 

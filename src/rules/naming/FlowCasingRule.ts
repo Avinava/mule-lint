@@ -25,7 +25,7 @@ export class FlowCasingRule extends BaseRule {
 
         for (const flow of flows) {
             const name = this.getNameAttribute(flow);
-            if (!name) continue;
+            if (!name) {continue;}
 
             // Skip APIKit auto-generated flows (e.g., "get:\\healthCheck:tns-billing-papi-config")
             if (this.APIKIT_PATTERN.test(name)) {

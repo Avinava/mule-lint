@@ -41,17 +41,36 @@ import {
 /**
  * Enrich files with rule metadata
  */
-function enrichFiles(report: LintReport) {
+function enrichFiles(report: LintReport): Array<{
+    issues: Array<{
+        category: string;
+        ruleDescription: string;
+        ruleName: string;
+        issueType: string;
+        file: string;
+        line: number;
+        message: string;
+        ruleId: string;
+        severity: string;
+        suggestion?: string;
+        codeSnippet?: string;
+        column?: number;
+    }>;
+    filePath: string;
+    relativePath: string;
+    parsed: boolean;
+    parseError?: string;
+}> {
     return report.files.map((file) => ({
         ...file,
         issues: file.issues.map((issue) => {
             const ruleDef = ALL_RULES.find((r) => r.id === issue.ruleId);
             return {
                 ...issue,
-                category: ruleDef?.category || 'General',
-                ruleDescription: ruleDef?.description || 'No description available',
-                ruleName: ruleDef?.name || issue.ruleId,
-                issueType: ruleDef?.issueType || 'code-smell',
+                category: ruleDef?.category ?? 'General',
+                ruleDescription: ruleDef?.description ?? 'No description available',
+                ruleName: ruleDef?.name ?? issue.ruleId,
+                issueType: ruleDef?.issueType ?? 'code-smell',
                 file: file.relativePath,
             };
         }),
@@ -61,8 +80,9 @@ function enrichFiles(report: LintReport) {
 /**
  * Build client-side data payload
  */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof enrichFiles>) {
-    const projectName = report.projectRoot.split('/').filter(Boolean).pop() || 'MuleSoft Project';
+    const projectName = report.projectRoot.split('/').filter(Boolean).pop() ?? 'MuleSoft Project';
 
     return {
         metadata: {
@@ -71,7 +91,7 @@ function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof en
             timestamp: report.timestamp,
             version: packageJson.version,
             filesScanned: report.files.length,
-            duration: report.durationMs || 0,
+            duration: report.durationMs ?? 0,
         },
         summary: report.summary,
         files: enrichedFiles,
@@ -81,9 +101,9 @@ function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof en
             category: r.category,
             severity: r.severity,
             description: r.description,
-            issueType: r.issueType || 'code-smell',
+            issueType: r.issueType ?? 'code-smell',
         })),
-        metrics: report.metrics || {
+        metrics: report.metrics ?? {
             flowCount: 0,
             subFlowCount: 0,
             dwTransformCount: 0,

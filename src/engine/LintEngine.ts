@@ -6,8 +6,9 @@ import { LintConfig, DEFAULT_CONFIG } from '../types/Config';
 import { LintReport, LintSummary, FileResult, ProjectMetrics } from '../types/Report';
 import { parseXml } from '../core/XmlParser';
 import { scanDirectory, readFileContent, ScannedFile } from '../core/FileScanner';
-import { ComplexityCalculator } from '../core/ComplexityCalculator';
 import { MetricsAggregator } from '../core/MetricsAggregator';
+import { collectFileMetrics as collectMetrics } from '../core/MetricsCollector';
+import { getErrorMessage } from '../core/errors';
 
 /**
  * Engine options
@@ -251,7 +252,7 @@ export class LintEngine {
                 parsed: true,
             };
         } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
+            const message = getErrorMessage(error);
             return {
                 filePath: file.absolutePath,
                 relativePath: file.relativePath,
@@ -300,7 +301,7 @@ export class LintEngine {
 
                 issues.push(...ruleIssues);
             } catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
+                const message = getErrorMessage(error);
                 console.error(`Error in rule ${rule.id}: ${message}`);
                 // Don't fail the whole scan for a single rule error
             }
@@ -367,15 +368,17 @@ export class LintEngine {
      */
     private runProjectRules(projectRoot: string): Issue[] {
         const issues: Issue[] = [];
-        const projectRules = this.getEnabledRules().filter((r) => (r as any).isProjectRule);
+        // Dynamically import to avoid circular dependency at module level
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { ProjectRule } = require('../rules/base/ProjectRule') as { ProjectRule: typeof import('../rules/base/ProjectRule').ProjectRule };
+
+        const projectRules = this.getEnabledRules().filter(
+            (r): r is InstanceType<typeof ProjectRule> => r instanceof ProjectRule,
+        );
 
         for (const rule of projectRules) {
             try {
-                // Cast to any to access ProjectRule methods safely
-                // In a real generic implementation we'd check instance types better
-                if (typeof (rule as any).reset === 'function') {
-                    (rule as any).reset();
-                }
+                rule.reset();
 
                 // Create a basic context for project validation
                 const context: ValidationContext = {
@@ -386,11 +389,10 @@ export class LintEngine {
                 };
 
                 // Pass empty document since project rules don't use it
-                // Using 'as any' because we know ProjectRule ignores the doc
-                const ruleIssues = rule.validate({} as any, context);
+                const ruleIssues = rule.validate({} as Document, context);
                 issues.push(...ruleIssues);
             } catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
+                const message = getErrorMessage(error);
                 console.error(`Error in project rule ${rule.id}: ${message}`);
             }
         }
@@ -403,6 +405,7 @@ export class LintEngine {
      */
     private log(message: string): void {
         if (this.verbose) {
+            // eslint-disable-next-line no-console -- intentional verbose debug output
             console.log(message);
         }
     }
@@ -411,253 +414,6 @@ export class LintEngine {
      * Collect metrics from a parsed XML document
      */
     private collectFileMetrics(doc: Document, relativePath: string, metrics: ProjectMetrics): void {
-        try {
-            const xpath = require('xpath');
-
-            // Count flows
-            const flows = xpath.select('//*[local-name()="flow"]', doc);
-            const flowCount = Array.isArray(flows) ? flows.length : 0;
-            metrics.flowCount += flowCount;
-
-            // Collect per-flow complexity
-            if (Array.isArray(flows)) {
-                for (const flow of flows) {
-                    const flowName = (flow as Element).getAttribute('name') || 'unnamed';
-                    try {
-                        const result = ComplexityCalculator.calculateFlowComplexity(flow);
-                        const breakdown: Record<string, number> = {};
-                        for (const detail of result.details) {
-                            breakdown[detail.type] = detail.count;
-                        }
-                        metrics.flowComplexityData.push({
-                            flowName,
-                            file: relativePath,
-                            complexity: result.complexity,
-                            rating: result.rating,
-                            breakdown,
-                        });
-                    } catch {
-                        // Skip complexity calculation on error
-                    }
-                }
-            }
-
-            // Count sub-flows
-            const subFlows = xpath.select('//*[local-name()="sub-flow"]', doc);
-            const subFlowCount = Array.isArray(subFlows) ? subFlows.length : 0;
-            metrics.subFlowCount += subFlowCount;
-
-            // Count DataWeave transforms (ee:transform)
-            const dwTransforms = xpath.select(
-                '//*[local-name()="transform" and (namespace-uri()="http://www.mulesoft.org/schema/mule/ee/core" or contains(local-name(..), "ee:"))]',
-                doc,
-            );
-            // Fallback: also check for ee:transform in any namespace
-            const dwTransforms2 = xpath.select('//*[contains(name(), ":transform")]', doc);
-            const dwCount = Array.isArray(dwTransforms)
-                ? dwTransforms.length
-                : Array.isArray(dwTransforms2)
-                    ? dwTransforms2.length
-                    : 0;
-            metrics.dwTransformCount += dwCount;
-
-            // Count connector configs (elements ending in -config or named config/connection)
-            const configs = xpath.select(
-                '//*[contains(local-name(), "-config") or local-name()="config" or contains(local-name(), "-connection")]',
-                doc,
-            );
-            const configCount = Array.isArray(configs) ? configs.length : 0;
-            metrics.connectorConfigCount += configCount;
-
-            // Extract connector types from config elements
-            if (Array.isArray(configs)) {
-                for (const config of configs) {
-                    const nodeName = (config as Element).nodeName || '';
-                    // Extract prefix before colon (e.g., "http" from "http:request-config")
-                    const prefix = nodeName.split(':')[0];
-                    if (prefix && !metrics.connectorTypes.includes(prefix)) {
-                        metrics.connectorTypes.push(prefix);
-                    }
-                }
-            }
-
-            // Also extract connectors from namespace declarations (more reliable)
-            const root = doc.documentElement;
-            if (root && root.attributes) {
-                // MuleSoft connector namespaces follow pattern: http://www.mulesoft.org/schema/mule/<connector>
-                const muleNsPattern = /^http:\/\/www\.mulesoft\.org\/schema\/mule\/(.+)$/;
-                for (let i = 0; i < root.attributes.length; i++) {
-                    const attr = root.attributes[i];
-                    if (attr.name.startsWith('xmlns:')) {
-                        const match = muleNsPattern.exec(attr.value);
-                        if (match) {
-                            const connector = match[1];
-                            // Skip internal/core namespaces
-                            const skipList = ['core', 'documentation', 'ee/core', 'doc'];
-                            if (
-                                !skipList.includes(connector) &&
-                                !metrics.connectorTypes.includes(connector)
-                            ) {
-                                metrics.connectorTypes.push(connector);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Count HTTP listeners (services)
-            const listeners = xpath.select('//*[local-name()="listener"]', doc);
-            const listenerCount = Array.isArray(listeners) ? listeners.length : 0;
-            metrics.httpListenerCount += listenerCount;
-
-            // Count error handlers (try scopes)
-            const trys = xpath.select('//*[local-name()="try"]', doc);
-            const tryCount = Array.isArray(trys) ? trys.length : 0;
-            metrics.errorHandlerCount += tryCount;
-
-            // Count choice routers (conditionals)
-            const choices = xpath.select('//*[local-name()="choice"]', doc);
-            const choiceCount = Array.isArray(choices) ? choices.length : 0;
-            metrics.choiceRouterCount += choiceCount;
-
-            // Extract API endpoints from flow names (APIkit pattern: "get:\path:config")
-            if (Array.isArray(flows)) {
-                for (const flow of flows) {
-                    const flowName = (flow as Element).getAttribute('name') || '';
-                    // Pattern: method:\path:config-name (e.g., "get:\customers:api-config")
-                    const match = flowName.match(
-                        /^(get|post|put|patch|delete|head|options):\\(.+?)(?::|$)/i,
-                    );
-                    if (match) {
-                        const method = match[1].toUpperCase();
-                        const path = match[2].replace(/\\/g, '/');
-                        // Avoid duplicates
-                        if (
-                            !metrics.apiEndpoints.some(
-                                (ep) => ep.path === path && ep.method === method,
-                            )
-                        ) {
-                            metrics.apiEndpoints.push({ path: '/' + path, method });
-                        }
-                    }
-                }
-            }
-
-            // Also extract HTTP listener paths
-            if (Array.isArray(listeners)) {
-                for (const listener of listeners) {
-                    const path = (listener as Element).getAttribute('path');
-                    if (
-                        path &&
-                        !path.includes('*') &&
-                        !metrics.apiEndpoints.some((ep) => ep.path === path)
-                    ) {
-                        metrics.apiEndpoints.push({ path, method: 'ALL' });
-                    }
-                }
-            }
-
-            // Extract security patterns from namespaces (root already declared above)
-            if (root && root.attributes) {
-                for (let i = 0; i < root.attributes.length; i++) {
-                    const attr = root.attributes[i];
-                    if (attr.name.startsWith('xmlns:')) {
-                        const ns = attr.value.toLowerCase();
-                        if (ns.includes('tls') && !metrics.securityPatterns.includes('TLS')) {
-                            metrics.securityPatterns.push('TLS');
-                        }
-                        if (ns.includes('oauth') && !metrics.securityPatterns.includes('OAuth')) {
-                            metrics.securityPatterns.push('OAuth');
-                        }
-                    }
-                }
-            }
-            // Check for secure-properties config
-            const secureProps = xpath.select(
-                '//*[contains(local-name(), "secure-properties")]',
-                doc,
-            );
-            if (
-                Array.isArray(secureProps) &&
-                secureProps.length > 0 &&
-                !metrics.securityPatterns.includes('Secure Properties')
-            ) {
-                metrics.securityPatterns.push('Secure Properties');
-            }
-            // Check for basic-auth
-            const basicAuth = xpath.select(
-                '//*[contains(local-name(), "basic-authentication")]',
-                doc,
-            );
-            if (
-                Array.isArray(basicAuth) &&
-                basicAuth.length > 0 &&
-                !metrics.securityPatterns.includes('Basic Auth')
-            ) {
-                metrics.securityPatterns.push('Basic Auth');
-            }
-
-            // Extract external services (HTTP request configs)
-            const requestConfigs = xpath.select('//*[local-name()="request-config"]', doc);
-            if (Array.isArray(requestConfigs)) {
-                for (const config of requestConfigs) {
-                    const name = (config as Element).getAttribute('name') || 'unknown';
-                    const host = (config as Element).getAttribute('host') || '';
-                    const basePath = (config as Element).getAttribute('basePath') || '';
-                    const hostValue = host || basePath || 'external';
-                    if (!metrics.externalServices.some((s) => s.name === name)) {
-                        metrics.externalServices.push({ name, host: hostValue });
-                    }
-                }
-            }
-
-            // Extract schedulers (cron and fixed frequency)
-            const schedulerTriggers = xpath.select(
-                '//*[local-name()="scheduling-strategy"]/*',
-                doc,
-            );
-            if (Array.isArray(schedulerTriggers)) {
-                for (const trigger of schedulerTriggers) {
-                    const triggerName = (trigger as Element).localName || '';
-                    if (triggerName === 'cron') {
-                        const expression = (trigger as Element).getAttribute('expression') || '';
-                        const parent = (trigger as Element).parentNode?.parentNode;
-                        const flowName = parent
-                            ? (parent as Element).getAttribute('name') || 'unknown'
-                            : 'unknown';
-                        metrics.schedulers.push({
-                            type: 'cron',
-                            value: expression,
-                            flow: flowName,
-                        });
-                    } else if (triggerName === 'fixed-frequency') {
-                        const freq = (trigger as Element).getAttribute('frequency') || '';
-                        const unit =
-                            (trigger as Element).getAttribute('timeUnit') || 'MILLISECONDS';
-                        const parent = (trigger as Element).parentNode?.parentNode;
-                        const flowName = parent
-                            ? (parent as Element).getAttribute('name') || 'unknown'
-                            : 'unknown';
-                        metrics.schedulers.push({
-                            type: 'fixed',
-                            value: freq + ' ' + unit,
-                            flow: flowName,
-                        });
-                    }
-                }
-            }
-
-            // Calculate file complexity based on flow count
-            const totalFlows = flowCount + subFlowCount;
-            let complexity: 'simple' | 'medium' | 'complex' = 'simple';
-            if (totalFlows >= 10) {
-                complexity = 'complex';
-            } else if (totalFlows >= 5) {
-                complexity = 'medium';
-            }
-            metrics.fileComplexity[relativePath] = complexity;
-        } catch {
-            // Silently skip metrics collection on error
-        }
+        collectMetrics(doc, relativePath, metrics);
     }
 }

@@ -23,7 +23,7 @@ export class TryScopeRule extends BaseRule {
 
         for (const flow of flows) {
             const flowElement = flow as Element;
-            const flowName = flowElement.getAttribute('name') || 'unnamed';
+            const flowName = flowElement.getAttribute('name') ?? 'unnamed';
 
             // Count risky operations (DB, HTTP, external calls)
             const dbOperations = this.select(

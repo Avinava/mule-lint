@@ -85,7 +85,7 @@ export class SensitiveDataLoggingRule extends BaseRule {
 
         for (const logger of loggers) {
             const element = logger as Element;
-            const message = element.getAttribute('message') || '';
+            const message = element.getAttribute('message') ?? '';
 
             // Only check if it contains DataWeave expressions
             if (!message.includes('#[') && !message.includes('${')) {

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { ValidationContext, Issue, Severity, IssueType } from '../../types';
+import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 import { YamlParser } from '../../core/YamlParser';
 
@@ -34,7 +34,7 @@ export class EnvironmentFilesRule extends BaseRule {
             'dev',
             'qa',
             'prod',
-        ]) as string[];
+        ]);
         const existingFiles = new Set<string>();
 
         for (const dir of searchDirs) {
@@ -89,7 +89,7 @@ export class PropertyNamingRule extends BaseRule {
 
         for (const yamlFile of yamlFiles) {
             const content = YamlParser.parseFile(yamlFile);
-            if (!content) continue;
+            if (!content) { continue; }
 
             const keys = YamlParser.getAllKeys(content);
             const invalidKeys = keys.filter((key) => !this.isValidPropertyName(key));
@@ -122,7 +122,7 @@ export class PropertyNamingRule extends BaseRule {
     private findYamlFiles(dir: string): string[] {
         const files: string[] = [];
 
-        if (!fs.existsSync(dir)) return files;
+        if (!fs.existsSync(dir)) { return files; }
 
         try {
             const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -163,10 +163,10 @@ export class PlaintextSecretsRule extends BaseRule {
 
         for (const yamlFile of yamlFiles) {
             // Skip secure property files (they should be encrypted)
-            if (yamlFile.includes('-secure.')) continue;
+            if (yamlFile.includes('-secure.')) { continue; }
 
             const content = YamlParser.parseFile(yamlFile);
-            if (!content) continue;
+            if (!content) { continue; }
 
             this.checkForPlaintextSecrets(content, '', yamlFile, issues);
         }
@@ -212,7 +212,7 @@ export class PlaintextSecretsRule extends BaseRule {
     private findYamlFiles(dir: string): string[] {
         const files: string[] = [];
 
-        if (!fs.existsSync(dir)) return files;
+        if (!fs.existsSync(dir)) { return files; }
 
         try {
             const entries = fs.readdirSync(dir, { withFileTypes: true });

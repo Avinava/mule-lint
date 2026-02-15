@@ -74,7 +74,7 @@ export const MULE_NAMESPACES: Record<string, string> = {
  * Helper class for namespace-aware XPath queries on Mule XML documents
  */
 export class XPathHelper {
-    private static instance: XPathHelper;
+    private static instance: XPathHelper | undefined;
     private readonly select: xpath.XPathSelect;
 
     private constructor(customNamespaces?: Record<string, string>) {
@@ -96,7 +96,7 @@ export class XPathHelper {
      * Reset the singleton instance (useful for testing)
      */
     public static reset(): void {
-        XPathHelper.instance = undefined as unknown as XPathHelper;
+        XPathHelper.instance = undefined;
     }
 
     /**
@@ -172,6 +172,7 @@ export function getAttribute(node: Node, attrName: string): string | null {
     const element = node as Element;
     if (element.getAttribute) {
         const value = element.getAttribute(attrName);
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: xmldom returns "" for missing attributes
         return value || null;
     }
     return null;
