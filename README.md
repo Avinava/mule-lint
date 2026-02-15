@@ -314,6 +314,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | DW-001 | External DWL | Warning | DataWeave | Externalize complex transforms |
 | DW-002 | DWL Naming | Info | DataWeave | kebab-case for .dwl files |
 | DW-003 | DWL Modules | Info | DataWeave | Use common modules |
+| DW-004 | Java 17 DW Errors | Error | DataWeave | Java 17 compatible error handling |
 | API-001 | Experience Layer | Info | API-Led | Experience API patterns |
 | API-002 | Process Layer | Info | API-Led | Process layer orchestration |
 | API-003 | System Layer | Info | API-Led | System layer connections |
@@ -328,6 +329,8 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | EXP-003 | MUnit Coverage | Info | Experimental | Check for MUnit tests |
 | YAML-001 | Env Files | Warning | Standards | Environment YAML files |
 | YAML-003 | Property Naming | Info | Standards | Property key format |
+| YAML-004 | Plaintext Secrets | Error | Security | Encrypt sensitive YAML properties |
+
 ### 2025-2026 Best Practices Rules (NEW)
 
 | ID | Name | Severity | Category | Description |
