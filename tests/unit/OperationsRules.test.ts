@@ -1,15 +1,13 @@
 import { DOMParser } from '@xmldom/xmldom';
-import {
-    ReconnectionStrategyRule,
-    AutoDiscoveryRule,
-    HttpPortPlaceholderRule,
-    EncryptionKeyInLogsRule,
-    ExcessiveLoggersRule,
-    CronExternalizedRule,
-    ApiKitValidationRule,
-    UnusedFlowRule,
-    DisplayNameRule,
-} from '../../src/rules/operations/OperationsRules';
+import { ReconnectionStrategyRule } from '../../src/rules/performance/ReconnectionStrategyRule';
+import { AutoDiscoveryRule } from '../../src/rules/standards/AutoDiscoveryRule';
+import { HttpPortPlaceholderRule } from '../../src/rules/standards/HttpPortPlaceholderRule';
+import { EncryptionKeyInLogsRule } from '../../src/rules/security/EncryptionKeyInLogsRule';
+import { ExcessiveLoggersRule } from '../../src/rules/logging/ExcessiveLoggersRule';
+import { CronExternalizedRule } from '../../src/rules/standards/CronExternalizedRule';
+import { ApiKitValidationRule } from '../../src/rules/standards/ApiKitValidationRule';
+import { UnusedFlowRule } from '../../src/rules/operations/UnusedFlowRule';
+import { DisplayNameRule } from '../../src/rules/documentation/DisplayNameRule';
 
 const parser = new DOMParser();
 
