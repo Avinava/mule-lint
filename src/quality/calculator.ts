@@ -3,7 +3,7 @@
  * Centralized calculation logic for all quality dimensions
  */
 
-import { RatingGrade, QualityDimension, RatingResult, QualityMetrics, QualityRatings } from './types';
+import { RatingGrade, RatingThreshold, QualityDimension, RatingResult, QualityMetrics, QualityRatings } from './types';
 import { THRESHOLDS } from './thresholds';
 
 /**
@@ -23,7 +23,7 @@ export function calculateGrade(dimension: QualityDimension, value: number): Rati
 /**
  * Get the threshold definition for a calculated grade
  */
-export function getThresholdForValue(dimension: QualityDimension, value: number) {
+export function getThresholdForValue(dimension: QualityDimension, value: number): RatingThreshold {
     const thresholds = THRESHOLDS[dimension];
     for (const t of thresholds) {
         if (value <= t.maxValue) {
@@ -117,7 +117,7 @@ export function estimateDevelopmentMinutes(flowCount: number, subFlowCount: numb
  * Calculate debt ratio as percentage
  */
 export function calculateDebtRatio(debtMinutes: number, devMinutes: number): number {
-    if (devMinutes === 0) return 0;
+    if (devMinutes === 0) { return 0; }
     return (debtMinutes / devMinutes) * 100;
 }
 

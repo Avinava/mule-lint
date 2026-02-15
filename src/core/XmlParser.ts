@@ -40,13 +40,13 @@ export function parseXml(content: string, filePath?: string): ParseResult {
         // Enable line/column tracking for parsed nodes (use {} for xmldom 0.8.x)
         locator: {},
         errorHandler: {
-            warning: (msg: string) => {
+            warning: (msg: string): void => {
                 warnings.push({ message: msg });
             },
-            error: (msg: string) => {
+            error: (msg: string): void => {
                 errors.push(parseErrorLocation(msg));
             },
-            fatalError: (msg: string) => {
+            fatalError: (msg: string): void => {
                 errors.push(parseErrorLocation(msg));
             },
         },

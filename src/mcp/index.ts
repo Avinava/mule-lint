@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { LintEngine } from '../engine/LintEngine';
 import { LintConfig, ValidationContext } from '../types';
 import { ALL_RULES, getRuleById } from '../rules';
-import { parseXml } from '../core/XmlParser';
 import * as path from 'path';
 import * as fs from 'fs';
 import { DOMParser } from '@xmldom/xmldom';
@@ -43,7 +42,7 @@ export class MuleLintMcpServer {
         this.setupPrompts();
     }
 
-    private setupTools() {
+    private setupTools(): void {
         // Tool: run_lint_analysis
         this.server.tool(
             'run_lint_analysis',
@@ -84,7 +83,7 @@ export class MuleLintMcpServer {
                                         line: i.line,
                                         column: i.column,
                                         severity: i.severity,
-                                        issueType: rule?.issueType || 'code-smell',
+                                        issueType: rule?.issueType ?? 'code-smell',
                                         suggestion: i.suggestion,
                                         codeSnippet: i.codeSnippet,
                                     };
@@ -125,7 +124,7 @@ export class MuleLintMcpServer {
                     .string()
                     .describe('The ID of the rule to retrieve (e.g., "MULE-001", "DW-004")'),
             },
-            async ({ ruleId }) => {
+            ({ ruleId }) => {
                 const rule = getRuleById(ruleId);
                 if (!rule) {
                     return {
@@ -150,7 +149,7 @@ export class MuleLintMcpServer {
                                     description: rule.description,
                                     category: rule.category,
                                     severity: rule.severity,
-                                    issueType: rule.issueType || 'code-smell',
+                                    issueType: rule.issueType ?? 'code-smell',
                                 },
                                 null,
                                 2,
@@ -169,7 +168,7 @@ export class MuleLintMcpServer {
                 code: z.string().describe('The code snippet to validate'),
                 type: z.enum(['xml', 'dwl']).describe('The type of code (xml or dwl)'),
             },
-            async ({ code, type }) => {
+            ({ code, type }) => {
                 try {
                     // Create minimal context
                     const context: ValidationContext = {
@@ -181,7 +180,7 @@ export class MuleLintMcpServer {
 
                     // Filter relevant rules
                     const applicableRules = ALL_RULES.filter((r) => {
-                        if (type === 'dwl') return r.category === 'dataweave';
+                        if (type === 'dwl') { return r.category === 'dataweave'; }
                         return r.category !== 'dataweave'; // Approximate, XML rules
                     });
 
@@ -197,7 +196,7 @@ export class MuleLintMcpServer {
                         }
 
                         for (const rule of applicableRules) {
-                            if (rule.validate) issues.push(...rule.validate(doc, context));
+                            if (rule.validate) { issues.push(...rule.validate(doc, context)); }
                         }
                     } else if (type === 'dwl') {
                         return {
@@ -223,7 +222,7 @@ export class MuleLintMcpServer {
                         content: [
                             {
                                 type: 'text',
-                                text: `Validation failed: ${error}`,
+                                text: `Validation failed: ${error instanceof Error ? error.message : String(error)}`,
                             },
                         ],
                         isError: true,
@@ -233,7 +232,7 @@ export class MuleLintMcpServer {
         );
     }
 
-    private setupResources() {
+    private setupResources(): void {
         // Resource: rules
         this.server.registerResource(
             'rules',
@@ -243,13 +242,13 @@ export class MuleLintMcpServer {
                     'A comprehensive catalog of all available linting rules. Read this to discover what rules are enforceable, their severity levels, and categories (e.g., Security, Performance, DataWeave).',
                 mimeType: 'application/json',
             },
-            async (uri) => {
+            (uri) => {
                 const rulesList = ALL_RULES.map((r) => ({
                     id: r.id,
                     name: r.name,
                     category: r.category,
                     severity: r.severity,
-                    issueType: r.issueType || 'code-smell',
+                    issueType: r.issueType ?? 'code-smell',
                     description: r.description,
                 }));
 
@@ -269,7 +268,8 @@ export class MuleLintMcpServer {
         this.server.registerResource(
             'docs',
             new ResourceTemplate('mule-lint://docs/{slug}', {
-                list: async () => {
+                // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+                list: () => {
                     return {
                         resources: [
                             {
@@ -316,7 +316,7 @@ export class MuleLintMcpServer {
                     'Access the official MuleSoft development best practices and internal documentation. Read these documents to ensure your generated code aligns with our architectural standards, naming conventions, and project structure.',
                 mimeType: 'text/markdown',
             },
-            async (uri, variables) => {
+            (uri, variables) => {
                 const slug = variables.slug as string;
                 const docsMap: Record<string, string> = {
                     architecture: 'docs/linter/architecture.md',
@@ -385,7 +385,7 @@ export class MuleLintMcpServer {
                         contents: [
                             {
                                 uri: uri.href,
-                                text: `Error reading document: ${error}`,
+                                text: `Error reading document: ${error instanceof Error ? error.message : String(error)}`,
                                 mimeType: 'text/plain',
                             },
                         ],
@@ -395,7 +395,7 @@ export class MuleLintMcpServer {
         );
     }
 
-    private setupPrompts() {
+    private setupPrompts(): void {
         // Prompt: analyze-project
         this.server.registerPrompt(
             'analyze-project',
@@ -406,7 +406,7 @@ export class MuleLintMcpServer {
                     path: z.string().describe('The absolute path to the project to analyze'),
                 },
             },
-            async ({ path }) => {
+            ({ path }) => {
                 return {
                     messages: [
                         {
@@ -431,7 +431,7 @@ export class MuleLintMcpServer {
                     ruleId: z.string().describe('The ID of the rule to explain (e.g., MULE-001)'),
                 },
             },
-            async ({ ruleId }) => {
+            ({ ruleId }) => {
                 return {
                     messages: [
                         {
@@ -457,7 +457,7 @@ export class MuleLintMcpServer {
                     code: z.string().describe('The specific code snippet causing the issue'),
                 },
             },
-            async ({ issue, file, code }) => {
+            ({ issue, file, code }) => {
                 return {
                     messages: [
                         {
@@ -473,7 +473,7 @@ export class MuleLintMcpServer {
         );
     }
 
-    public async start() {
+    public async start(): Promise<void> {
         const transport = new StdioServerTransport();
         await this.server.connect(transport);
         console.error('Mule Lint MCP Server running on stdio');

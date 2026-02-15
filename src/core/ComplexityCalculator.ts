@@ -1,3 +1,4 @@
+import * as xpath from 'xpath';
 import { getLineNumber } from './XPathHelper';
 
 /**
@@ -149,22 +150,21 @@ export class ComplexityCalculator {
      * Get complexity rating
      */
     static getRating(complexity: number): ComplexityRating {
-        if (complexity <= 10) return 'low';
-        if (complexity <= 20) return 'moderate';
+        if (complexity <= 10) { return 'low'; }
+        if (complexity <= 20) { return 'moderate'; }
         return 'high';
     }
 
     /**
      * Helper to select nodes using XPath with Mule namespace
      */
-    private static selectNodes(xpath: string, contextNode: Node): Node[] {
-        const select = require('xpath').useNamespaces({
+    private static selectNodes(xpathExpr: string, contextNode: Node): Node[] {
+        const select = xpath.useNamespaces({
             mule: 'http://www.mulesoft.org/schema/mule/core',
         });
 
         try {
-            const doc = contextNode.ownerDocument || contextNode;
-            return select(xpath, contextNode) as Node[];
+            return select(xpathExpr, contextNode) as Node[];
         } catch {
             return [];
         }
@@ -275,8 +275,8 @@ export class ComplexityCalculator {
      * Thresholds are lower than cyclomatic because cognitive is harder
      */
     static getCognitiveRating(complexity: number): ComplexityRating {
-        if (complexity <= 8) return 'low';
-        if (complexity <= 15) return 'moderate';
+        if (complexity <= 8) { return 'low'; }
+        if (complexity <= 15) { return 'moderate'; }
         return 'high';
     }
 

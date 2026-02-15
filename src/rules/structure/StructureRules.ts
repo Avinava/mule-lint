@@ -75,7 +75,7 @@ export class GlobalConfigRule extends BaseRule {
         const issues: Issue[] = [];
         const muleDir = path.join(context.projectRoot, 'src/main/mule');
 
-        if (!fs.existsSync(muleDir)) return issues;
+        if (!fs.existsSync(muleDir)) { return issues; }
 
         const hasGlobalConfig = this.findGlobalConfig(muleDir);
 
@@ -116,14 +116,14 @@ export class MonolithicXmlRule extends BaseRule {
 
     validate(doc: Document, context: ValidationContext): Issue[] {
         const issues: Issue[] = [];
-        const maxLines = this.getOption(context, 'maxLines', 500);
+        const maxFlows = this.getOption(context, 'maxFlows', 10);
 
         // Count flows and sub-flows as proxy for complexity
         const flows = this.select('//mule:flow', doc);
         const subFlows = this.select('//mule:sub-flow', doc);
         const totalFlows = flows.length + subFlows.length;
 
-        if (totalFlows > 10) {
+        if (totalFlows > maxFlows) {
             issues.push({
                 line: 1,
                 message: `File has ${totalFlows} flows/sub-flows - consider splitting`,

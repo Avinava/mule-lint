@@ -7,7 +7,7 @@ import {
     QualityMetric,
     DEFAULT_QUALITY_GATE,
 } from '../types/QualityGate';
-import { LintReport, LintSummary } from '../types/Report';
+import { LintReport } from '../types/Report';
 
 /**
  * Extracts metric values from a lint report
@@ -139,8 +139,6 @@ export function getQualityGateExitCode(status: QualityGateStatus, failOnWarning:
 export function formatQualityGateResult(result: QualityGateResult): string {
     const lines: string[] = [];
     const icon = result.status === 'passed' ? '✓' : result.status === 'warning' ? '⚠' : '✗';
-    const statusColor =
-        result.status === 'passed' ? 'green' : result.status === 'warning' ? 'yellow' : 'red';
 
     lines.push(`\nQuality Gate: ${result.gate.name}`);
     lines.push(`Status: ${icon} ${result.status.toUpperCase()}`);

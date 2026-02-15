@@ -22,7 +22,7 @@ export type MetricRating = RatingGrade;
  */
 const ruleIssueTypeMap: Map<string, IssueType> = new Map();
 for (const rule of ALL_RULES) {
-    ruleIssueTypeMap.set(rule.id, rule.issueType || 'code-smell');
+    ruleIssueTypeMap.set(rule.id, rule.issueType ?? 'code-smell');
 }
 
 /**
@@ -30,7 +30,7 @@ for (const rule of ALL_RULES) {
  * Falls back to 'code-smell' if rule not found
  */
 function getIssueTypeForRule(ruleId: string): IssueType {
-    return ruleIssueTypeMap.get(ruleId) || 'code-smell';
+    return ruleIssueTypeMap.get(ruleId) ?? 'code-smell';
 }
 
 /**
@@ -56,10 +56,10 @@ export class MetricsAggregator {
      * - Complex (C+): ≥ 15 flows
      */
     static getFileComplexityRating(flowCount: number): MetricRating {
-        if (flowCount <= 7) return 'A';
-        if (flowCount <= 14) return 'B';
-        if (flowCount <= 21) return 'C';
-        if (flowCount <= 30) return 'D';
+        if (flowCount <= 7) { return 'A'; }
+        if (flowCount <= 14) { return 'B'; }
+        if (flowCount <= 21) { return 'C'; }
+        if (flowCount <= 30) { return 'D'; }
         return 'E';
     }
 
@@ -100,7 +100,7 @@ export class MetricsAggregator {
      * Computes complexity, maintainability, reliability, and security ratings
      */
     static aggregateMetrics(report: LintReport): ProjectMetrics | undefined {
-        if (!report.metrics) return undefined;
+        if (!report.metrics) { return undefined; }
 
         const metrics = report.metrics;
 
@@ -168,7 +168,7 @@ export class MetricsAggregator {
         let bugs = 0;
         let vulnerabilities = 0;
         let codeSmells = 0;
-        let hotspots = 0;
+        const hotspots = 0;
 
         for (const file of report.files) {
             for (const issue of file.issues) {

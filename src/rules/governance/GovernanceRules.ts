@@ -56,7 +56,7 @@ export class PomValidationRule extends ProjectRule {
             }
         } catch (error) {
             issues.push(
-                this.createProjectIssue(`Error reading pom.xml: ${error}`, {
+                this.createProjectIssue(`Error reading pom.xml: ${error instanceof Error ? error.message : String(error)}`, {
                     severity: 'warning',
                 }),
             );
@@ -121,7 +121,7 @@ export class GitHygieneRule extends ProjectRule {
             }
         } catch (error) {
             issues.push(
-                this.createProjectIssue(`Error reading .gitignore: ${error}`, {
+                this.createProjectIssue(`Error reading .gitignore: ${error instanceof Error ? error.message : String(error)}`, {
                     severity: 'warning',
                 }),
             );

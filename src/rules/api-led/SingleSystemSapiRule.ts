@@ -100,12 +100,12 @@ export class SingleSystemSapiRule extends ProjectRule {
             try {
                 const content = fs.readFileSync(xmlFile, 'utf-8');
                 const result = parseXml(content);
-                if (!result.success || !result.document) continue;
+                if (!result.success || !result.document) { continue; }
 
                 // Extract connector namespaces from the root element
                 const systems = this.detectExternalSystems(content, result.document);
                 for (const system of systems) {
-                    const files = detectedSystems.get(system) || [];
+                    const files = detectedSystems.get(system) ?? [];
                     files.push(path.relative(projectRoot, xmlFile));
                     detectedSystems.set(system, files);
                 }
@@ -174,10 +174,9 @@ export class SingleSystemSapiRule extends ProjectRule {
 
         while ((match = namespacePattern.exec(content)) !== null) {
             const prefix = match[1];
-            const schemaPath = match[2];
 
             // Skip ignored connectors
-            if (IGNORED_CONNECTORS.has(prefix)) continue;
+            if (IGNORED_CONNECTORS.has(prefix)) { continue; }
 
             // Check if this is a known external system
             if (EXTERNAL_SYSTEM_CONNECTORS[prefix]) {
@@ -201,7 +200,7 @@ export class SingleSystemSapiRule extends ProjectRule {
         while ((match = httpConfigPattern.exec(content)) !== null) {
             const configName = match[1].toLowerCase();
             // Skip internal/listener configs
-            if (configName.includes('listener')) continue;
+            if (configName.includes('listener')) { continue; }
 
             // Check for known external service patterns
             for (const [key, systemName] of Object.entries(EXTERNAL_SYSTEM_CONNECTORS)) {

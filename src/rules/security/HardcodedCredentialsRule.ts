@@ -31,7 +31,7 @@ export class HardcodedCredentialsRule extends BaseRule {
         const allElements = doc.getElementsByTagName('*');
 
         for (let i = 0; i < allElements.length; i++) {
-            const element = allElements[i] as Element;
+            const element = allElements[i];
             const attrs = element.attributes;
 
             for (let j = 0; j < attrs.length; j++) {
@@ -63,14 +63,14 @@ export class HardcodedCredentialsRule extends BaseRule {
 
     private isHardcoded(value: string): boolean {
         // Empty values are not hardcoded
-        if (!value || value.trim() === '') return false;
+        if (!value || value.trim() === '') {return false;}
 
         // Ignore boolean/numeric flags (e.g. useToken="true", timeout="1000")
-        if (value === 'true' || value === 'false' || !isNaN(Number(value))) return false;
+        if (value === 'true' || value === 'false' || !isNaN(Number(value))) {return false;}
 
         // Check for any property placeholder - value defined elsewhere
         // Allows ${...}, ${secure::...}, ${p(...)}, #[...], etc.
-        if (value.includes('${') || value.startsWith('#[')) return false;
+        if (value.includes('${') || value.startsWith('#[')) {return false;}
 
         // Any other value is considered "hardcoded" in this context
         return true;

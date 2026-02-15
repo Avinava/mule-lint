@@ -61,7 +61,7 @@ export class YamlParser {
      * Check if a value appears to be an encrypted secure property
      */
     static isEncryptedValue(value: unknown): boolean {
-        if (typeof value !== 'string') return false;
+        if (typeof value !== 'string') {return false;}
         // MuleSoft encrypted values use ![...] format
         return /^!\[.*\]$/.test(value);
     }
