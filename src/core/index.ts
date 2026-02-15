@@ -4,3 +4,4 @@ export * from './XmlParser';
 export * from './FileScanner';
 export * from './QualityGateEvaluator';
 export * from './MetricsAggregator';
+export * from './errors';
