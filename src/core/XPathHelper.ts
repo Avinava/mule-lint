@@ -74,7 +74,7 @@ export const MULE_NAMESPACES: Record<string, string> = {
  * Helper class for namespace-aware XPath queries on Mule XML documents
  */
 export class XPathHelper {
-    private static instance: XPathHelper;
+    private static instance: XPathHelper | undefined;
     private readonly select: xpath.XPathSelect;
 
     private constructor(customNamespaces?: Record<string, string>) {
@@ -96,7 +96,7 @@ export class XPathHelper {
      * Reset the singleton instance (useful for testing)
      */
     public static reset(): void {
-        XPathHelper.instance = undefined as unknown as XPathHelper;
+        XPathHelper.instance = undefined;
     }
 
     /**
