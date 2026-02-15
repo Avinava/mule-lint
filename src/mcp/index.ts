@@ -8,7 +8,7 @@ import { LintConfig, ValidationContext } from '../types';
 import { ALL_RULES, getRuleById } from '../rules';
 import * as path from 'path';
 import * as fs from 'fs';
-import { DOMParser } from '@xmldom/xmldom';
+import { parseXml } from '../core/XmlParser';
 
 /**
  * Mule Lint MCP Server
@@ -190,16 +190,13 @@ export class MuleLintMcpServer {
                     const issues = [];
 
                     if (type === 'xml') {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(code, 'text/xml');
-                        // Simple check for parse errors
-                        const parseErrors = doc.getElementsByTagName('parsererror');
-                        if (parseErrors.length > 0) {
-                            throw new Error('XML Parse Error');
+                        const result = parseXml(code, 'snippet.xml');
+                        if (!result.success || !result.document) {
+                            throw new Error(result.error ?? 'XML Parse Error');
                         }
 
                         for (const rule of applicableRules) {
-                            if (rule.validate) { issues.push(...rule.validate(doc, context)); }
+                            if (rule.validate) { issues.push(...rule.validate(result.document, context)); }
                         }
                     } else if (type === 'dwl') {
                         return {
