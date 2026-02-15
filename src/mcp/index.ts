@@ -2,6 +2,7 @@ import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mc
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
+import { getErrorMessage } from '../core/errors';
 import { LintEngine } from '../engine/LintEngine';
 import { LintConfig, ValidationContext } from '../types';
 import { ALL_RULES, getRuleById } from '../rules';
@@ -18,9 +19,11 @@ export class MuleLintMcpServer {
     private engine: LintEngine;
 
     constructor() {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const packageJson = require('../../package.json') as { version: string };
         this.server = new McpServer({
             name: 'mule-lint',
-            version: '1.16.1',
+            version: packageJson.version,
         });
 
         // Initialize engine with partial config - let LintEngine apply DEFAULT_CONFIG for include/exclude
@@ -101,7 +104,7 @@ export class MuleLintMcpServer {
                         ],
                     };
                 } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    const errorMessage = getErrorMessage(error);
                     return {
                         content: [
                             {
@@ -222,7 +225,7 @@ export class MuleLintMcpServer {
                         content: [
                             {
                                 type: 'text',
-                                text: `Validation failed: ${error instanceof Error ? error.message : String(error)}`,
+                                text: `Validation failed: ${getErrorMessage(error)}`,
                             },
                         ],
                         isError: true,
@@ -385,7 +388,7 @@ export class MuleLintMcpServer {
                         contents: [
                             {
                                 uri: uri.href,
-                                text: `Error reading document: ${error instanceof Error ? error.message : String(error)}`,
+                                text: `Error reading document: ${getErrorMessage(error)}`,
                                 mimeType: 'text/plain',
                             },
                         ],

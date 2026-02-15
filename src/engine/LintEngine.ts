@@ -8,6 +8,7 @@ import { parseXml } from '../core/XmlParser';
 import { scanDirectory, readFileContent, ScannedFile } from '../core/FileScanner';
 import { ComplexityCalculator } from '../core/ComplexityCalculator';
 import { MetricsAggregator } from '../core/MetricsAggregator';
+import { getErrorMessage } from '../core/errors';
 
 /**
  * Engine options
@@ -251,7 +252,7 @@ export class LintEngine {
                 parsed: true,
             };
         } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
+            const message = getErrorMessage(error);
             return {
                 filePath: file.absolutePath,
                 relativePath: file.relativePath,
@@ -300,7 +301,7 @@ export class LintEngine {
 
                 issues.push(...ruleIssues);
             } catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
+                const message = getErrorMessage(error);
                 console.error(`Error in rule ${rule.id}: ${message}`);
                 // Don't fail the whole scan for a single rule error
             }
@@ -391,7 +392,7 @@ export class LintEngine {
                 const ruleIssues = rule.validate({} as Document, context);
                 issues.push(...ruleIssues);
             } catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
+                const message = getErrorMessage(error);
                 console.error(`Error in project rule ${rule.id}: ${message}`);
             }
         }
