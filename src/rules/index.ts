@@ -22,17 +22,23 @@ import { InsecureTlsRule } from './security/InsecureTlsRule';
 import { TlsVersionRule } from './security/TlsVersionRule';
 import { RateLimitingRule } from './security/RateLimitingRule';
 import { InputValidationRule } from './security/InputValidationRule';
+import { EncryptionKeyInLogsRule } from './security/EncryptionKeyInLogsRule';
 
 // Import all rules - Logging
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
 import { LoggerPayloadRule } from './logging/LoggerPayloadRule';
 import { LoggerInUntilSuccessfulRule } from './logging/LoggerInUntilSuccessfulRule';
 import { StructuredLoggingRule, SensitiveDataLoggingRule } from './logging/NewLoggingRules';
+import { ExcessiveLoggersRule } from './logging/ExcessiveLoggersRule';
 
 // Import all rules - Standards
 import { ChoiceAntiPatternRule } from './standards/ChoiceAntiPatternRule';
 import { DwlStandardsRule } from './standards/DwlStandardsRule';
 import { DeprecatedComponentRule } from './standards/DeprecatedComponentRule';
+import { AutoDiscoveryRule } from './standards/AutoDiscoveryRule';
+import { HttpPortPlaceholderRule } from './standards/HttpPortPlaceholderRule';
+import { CronExternalizedRule } from './standards/CronExternalizedRule';
+import { ApiKitValidationRule } from './standards/ApiKitValidationRule';
 
 // Import all rules - HTTP
 import { HttpUserAgentRule } from './http/HttpUserAgentRule';
@@ -42,12 +48,14 @@ import { HttpTimeoutRule } from './http/HttpTimeoutRule';
 // Import all rules - Documentation
 import { FlowDescriptionRule } from './documentation/FlowDescriptionRule';
 import { MissingDocNameRule } from './documentation/MissingDocNameRule';
+import { DisplayNameRule } from './documentation/DisplayNameRule';
 
 // Import all rules - Performance
 import { ScatterGatherRoutesRule } from './performance/ScatterGatherRoutesRule';
 import { AsyncErrorHandlerRule } from './performance/AsyncErrorHandlerRule';
 import { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 import { ConnectionPoolingRule } from './performance/ConnectionPoolingRule';
+import { ReconnectionStrategyRule } from './performance/ReconnectionStrategyRule';
 
 // Import all rules - Complexity
 import { FlowComplexityRule } from './complexity/FlowComplexityRule';
@@ -77,19 +85,9 @@ import {
     MUnitCoverageRule,
 } from './experimental/ExperimentalRules';
 
-// Import all rules - Operations & Resilience
-import {
-    ReconnectionStrategyRule,
-    AutoDiscoveryRule,
-    HttpPortPlaceholderRule,
-    EncryptionKeyInLogsRule,
-    ExcessiveLoggersRule,
-    CommentedCodeRule,
-    CronExternalizedRule,
-    ApiKitValidationRule,
-    UnusedFlowRule,
-    DisplayNameRule,
-} from './operations/OperationsRules';
+// Import all rules - Operations & Hygiene
+import { CommentedCodeRule } from './operations/CommentedCodeRule';
+import { UnusedFlowRule } from './operations/UnusedFlowRule';
 
 // Import all rules - Governance
 import { PomValidationRule, GitHygieneRule } from './governance/GovernanceRules';
