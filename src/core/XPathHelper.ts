@@ -172,6 +172,7 @@ export function getAttribute(node: Node, attrName: string): string | null {
     const element = node as Element;
     if (element.getAttribute) {
         const value = element.getAttribute(attrName);
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: xmldom returns "" for missing attributes
         return value || null;
     }
     return null;

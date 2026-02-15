@@ -1,4 +1,4 @@
-import { Issue, RuleCategory, Severity, ValidationContext } from '../../types';
+import { Severity, ValidationContext, Issue } from '../../types';
 import { BaseRule } from './BaseRule';
 
 /**

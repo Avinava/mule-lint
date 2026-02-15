@@ -19,7 +19,7 @@ export function formatCsv(report: LintReport): string {
                     file.relativePath,
                     '1',
                     '1',
-                    file.parseError || 'Failed to parse file',
+                    file.parseError ?? 'Failed to parse file',
                 ]),
             );
             continue;
@@ -32,7 +32,7 @@ export function formatCsv(report: LintReport): string {
                     issue.ruleId,
                     file.relativePath,
                     issue.line.toString(),
-                    (issue.column || 0).toString(),
+                    (issue.column ?? 0).toString(),
                     issue.message,
                 ]),
             );

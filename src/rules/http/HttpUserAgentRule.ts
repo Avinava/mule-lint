@@ -27,11 +27,11 @@ export class HttpUserAgentRule extends BaseRule {
         for (const request of httpRequests) {
             // Check if it's an HTTP namespace element
             const nodeName = request.nodeName;
-            if (!nodeName.includes('http:') && !nodeName.includes(':request')) continue;
+            if (!nodeName.includes('http:') && !nodeName.includes(':request')) {continue;}
 
             // Check for excluded configs
             const configRef = this.getAttribute(request, 'config-ref') ?? '';
-            if (this.isExcluded(configRef, excludeConfigPatterns)) continue;
+            if (this.isExcluded(configRef, excludeConfigPatterns)) {continue;}
 
             // Check for User-Agent header
             const hasUserAgent = this.hasUserAgentHeader(request);
