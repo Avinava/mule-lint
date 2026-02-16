@@ -53,6 +53,28 @@ program
         await server.start();
     });
 
+// Format subcommand — format Mule XML files using Prettier
+program
+    .command('format')
+    .description('Format Mule XML files using Prettier with Anypoint Studio-compatible defaults')
+    .argument('<path>', 'Path to a Mule XML file or project directory')
+    .option('--check', 'Check if files are formatted without writing (exit 1 if unformatted)')
+    .option('--tab-width <n>', 'Spaces per indent level (default: 4)', parseInt)
+    .option('--print-width <n>', 'Max line width before wrapping (default: 140)', parseInt)
+    .option(
+        '--xml-quote-attributes <style>',
+        'Attribute quote style: preserve, single, double (default: preserve)',
+    )
+    .action(async (targetPath: string, opts) => {
+        try {
+            await runFormat(targetPath, opts);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error(`Error: ${message}`);
+            process.exit(2);
+        }
+    });
+
 interface CliOptions {
     format: string;
     output?: string;
@@ -167,6 +189,73 @@ function resolveQualityGate(gateName: string, config: Partial<LintConfig>): Qual
             throw new Error('Quality gate "config" specified but no qualityGate found in config file');
         default:
             throw new Error(`Unknown quality gate: ${gateName}. Use 'default', 'strict', or 'config'`);
+    }
+}
+
+// ─── Format command ─────────────────────────────────────────────────────────
+
+interface FormatCliOptions {
+    check?: boolean;
+    tabWidth?: number;
+    printWidth?: number;
+    xmlQuoteAttributes?: 'preserve' | 'single' | 'double';
+}
+
+async function runFormat(targetPath: string, options: FormatCliOptions): Promise<void> {
+    const absolutePath = path.resolve(targetPath);
+
+    if (!fs.existsSync(absolutePath)) {
+        throw new Error(`Path does not exist: ${absolutePath}`);
+    }
+
+    // Lazy import to keep startup fast for the lint path
+    const { formatFile, formatProject } = await import('../src/formatter/MuleXmlFormatter');
+
+    const formatOptions = {
+        check: options.check,
+        tabWidth: options.tabWidth,
+        printWidth: options.printWidth,
+        xmlQuoteAttributes: options.xmlQuoteAttributes,
+    };
+
+    const stat = fs.statSync(absolutePath);
+    let results: Awaited<ReturnType<typeof formatFile>>[];
+
+    if (stat.isDirectory()) {
+        results = await formatProject(absolutePath, formatOptions);
+    } else {
+        results = [await formatFile(absolutePath, formatOptions)];
+    }
+
+    if (results.length === 0) {
+        console.log('No Mule XML files found.');
+        return;
+    }
+
+    // Print results
+    let changedCount = 0;
+    let errorCount = 0;
+
+    for (const result of results) {
+        const relativePath = path.relative(process.cwd(), result.filePath);
+        if (result.error) {
+            console.error(`  ✗ ${relativePath}: ${result.error}`);
+            errorCount++;
+        } else if (result.changed) {
+            console.log(options.check ? `  ✗ ${relativePath} (needs formatting)` : `  ✓ ${relativePath}`);
+            changedCount++;
+        }
+    }
+
+    const unchangedCount = results.length - changedCount - errorCount;
+    console.log(`\n${results.length} file(s) scanned: ${changedCount} ${options.check ? 'need formatting' : 'formatted'}, ${unchangedCount} unchanged, ${errorCount} error(s)`);
+
+    // In check mode, exit 1 if any files are unformatted
+    if (options.check && changedCount > 0) {
+        process.exit(1);
+    }
+    if (errorCount > 0) {
+        process.exit(2);
     }
 }
 
