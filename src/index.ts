@@ -17,3 +17,6 @@ export * from './formatters';
 
 // Quality scoring
 export * from './quality';
+
+// XML Formatter
+export * from './formatter';
