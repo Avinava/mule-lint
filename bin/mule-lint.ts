@@ -14,12 +14,14 @@ import {
 } from '../src/core/QualityGateEvaluator';
 import { DEFAULT_QUALITY_GATE, STRICT_QUALITY_GATE, QualityGate } from '../src/types/QualityGate';
 
+const packageJson = require('../package.json') as { version: string };
+
 const program = new Command();
 
 program
     .name('mule-lint')
     .description('Static analysis tool for MuleSoft applications')
-    .version('1.0.0')
+    .version(packageJson.version)
     .argument('[path]', 'Path to scan (directory or file)')
     .option('-f, --format <type>', 'Output format: table, json, sarif, html, csv', 'table')
     .option('-o, --output <file>', 'Write output to file instead of stdout')

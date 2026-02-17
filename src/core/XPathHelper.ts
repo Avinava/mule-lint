@@ -71,23 +71,31 @@ export const MULE_NAMESPACES: Record<string, string> = {
 };
 
 /**
+ * Extended Node interface with properties added by @xmldom/xmldom
+ */
+export interface XmlDomNode extends Node {
+    lineNumber?: number;
+    columnNumber?: number;
+    localName?: string;
+}
+
+/**
  * Helper class for namespace-aware XPath queries on Mule XML documents
  */
 export class XPathHelper {
     private static instance: XPathHelper | undefined;
     private readonly select: xpath.XPathSelect;
 
-    private constructor(customNamespaces?: Record<string, string>) {
-        const namespaces = { ...MULE_NAMESPACES, ...customNamespaces };
-        this.select = xpath.useNamespaces(namespaces);
+    private constructor() {
+        this.select = xpath.useNamespaces(MULE_NAMESPACES);
     }
 
     /**
      * Get singleton instance
      */
-    public static getInstance(customNamespaces?: Record<string, string>): XPathHelper {
+    public static getInstance(): XPathHelper {
         if (!XPathHelper.instance) {
-            XPathHelper.instance = new XPathHelper(customNamespaces);
+            XPathHelper.instance = new XPathHelper();
         }
         return XPathHelper.instance;
     }
@@ -182,16 +190,14 @@ export function getAttribute(node: Node, attrName: string): string | null {
  * Get line number from a parsed node (xmldom stores this)
  */
 export function getLineNumber(node: Node): number {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
-    return (node as any).lineNumber ?? 1;
+    return (node as XmlDomNode).lineNumber ?? 1;
 }
 
 /**
  * Get column number from a parsed node
  */
 export function getColumnNumber(node: Node): number | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
-    return (node as any).columnNumber;
+    return (node as XmlDomNode).columnNumber;
 }
 
 /**
@@ -206,8 +212,7 @@ export function hasAttribute(node: Node, attrName: string): boolean {
  * Get the local name of a node (without namespace prefix)
  */
 export function getLocalName(node: Node): string {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
-    return (node as any).localName ?? node.nodeName;
+    return (node as XmlDomNode).localName ?? node.nodeName;
 }
 
 /**
