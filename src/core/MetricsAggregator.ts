@@ -168,7 +168,7 @@ export class MetricsAggregator {
         let bugs = 0;
         let vulnerabilities = 0;
         let codeSmells = 0;
-        const hotspots = 0;
+        let hotspots = 0;
 
         for (const file of report.files) {
             for (const issue of file.issues) {

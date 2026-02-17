@@ -14,7 +14,7 @@ export class PomValidationRule extends ProjectRule {
     name = 'POM Validation';
     description = 'Validates pom.xml existence and content';
     severity = 'error' as const;
-    category = 'structure' as const;
+    category = 'governance' as const;
 
     validateProject(context: ValidationContext): Issue[] {
         const issues: Issue[] = [];
@@ -82,7 +82,7 @@ export class GitHygieneRule extends ProjectRule {
     name = 'Git Hygiene';
     description = 'Validates .gitignore existence and content';
     severity = 'warning' as const;
-    category = 'structure' as const;
+    category = 'governance' as const;
 
     validateProject(context: ValidationContext): Issue[] {
         const issues: Issue[] = [];

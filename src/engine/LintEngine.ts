@@ -9,6 +9,7 @@ import { scanDirectory, readFileContent, ScannedFile } from '../core/FileScanner
 import { MetricsAggregator } from '../core/MetricsAggregator';
 import { collectFileMetrics as collectMetrics } from '../core/MetricsCollector';
 import { getErrorMessage } from '../core/errors';
+import { ProjectRule } from '../rules/base/ProjectRule';
 
 /**
  * Engine options
@@ -368,9 +369,6 @@ export class LintEngine {
      */
     private runProjectRules(projectRoot: string): Issue[] {
         const issues: Issue[] = [];
-        // Dynamically import to avoid circular dependency at module level
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { ProjectRule } = require('../rules/base/ProjectRule') as { ProjectRule: typeof import('../rules/base/ProjectRule').ProjectRule };
 
         const projectRules = this.getEnabledRules().filter(
             (r): r is InstanceType<typeof ProjectRule> => r instanceof ProjectRule,
