@@ -134,13 +134,13 @@ mule-lint/
 
 **Purpose:** Low-level utilities that don't depend on business logic.
 
-| File | Responsibility |
-|------|----------------|
-| `XmlParser.ts` | Parse XML string to DOM, handle errors gracefully |
-| `XPathHelper.ts` | Namespace-aware XPath queries |
-| `YamlParser.ts` | Parse YAML files, detect sensitive keys |
-| `FileScanner.ts` | Discover `.xml` and `.yaml` files using glob patterns |
-| `ComplexityCalculator.ts` | Calculate cyclomatic complexity of flows |
+| File                      | Responsibility                                        |
+| ------------------------- | ----------------------------------------------------- |
+| `XmlParser.ts`            | Parse XML string to DOM, handle errors gracefully     |
+| `XPathHelper.ts`          | Namespace-aware XPath queries                         |
+| `YamlParser.ts`           | Parse YAML files, detect sensitive keys               |
+| `FileScanner.ts`          | Discover `.xml` and `.yaml` files using glob patterns |
+| `ComplexityCalculator.ts` | Calculate cyclomatic complexity of flows              |
 
 ### `/src/rules`
 
@@ -148,24 +148,24 @@ mule-lint/
 
 **Rule Families (56 total):**
 
-| Family | Directory | Rules |
-|--------|-----------|-------|
-| API-Led | `api-led/` | API-001, 002, 003, 004, 005 |
-| Complexity | `complexity/` | MULE-801 |
-| DataWeave | `dataweave/` | DW-001, 002, 003, 004 |
-| Documentation | `documentation/` | MULE-601, 604 |
-| Error Handling | `error-handling/` | MULE-001, 003, 005, 007, 009, ERR-001 |
-| Experimental | `experimental/` | EXP-001, 002, 003 |
-| Governance | `governance/` | PROJ-001, 002 |
-| HTTP | `http/` | MULE-401, 402, 403 |
-| Logging | `logging/` | MULE-006, 301, 303, LOG-001, 004 |
-| Naming | `naming/` | MULE-002, 101, 102 |
-| Operations | `operations/` | RES-001, OPS-001, 002, 003, HYG-001, 002, 003, DOC-001, API-005 |
-| Performance | `performance/` | MULE-501, 502, 503, PERF-002 |
-| Security | `security/` | MULE-004, 201, 202, SEC-002, 003, 004, 006 |
-| Standards | `standards/` | MULE-008, 010, 701 |
-| Structure | `structure/` | MULE-802, 803, 804 |
-| YAML | `yaml/` | YAML-001, 003, 004 |
+| Family         | Directory         | Rules                                                           |
+| -------------- | ----------------- | --------------------------------------------------------------- |
+| API-Led        | `api-led/`        | API-001, 002, 003, 004, 005                                     |
+| Complexity     | `complexity/`     | MULE-801                                                        |
+| DataWeave      | `dataweave/`      | DW-001, 002, 003, 004                                           |
+| Documentation  | `documentation/`  | MULE-601, 604                                                   |
+| Error Handling | `error-handling/` | MULE-001, 003, 005, 007, 009, ERR-001                           |
+| Experimental   | `experimental/`   | EXP-001, 002, 003                                               |
+| Governance     | `governance/`     | PROJ-001, 002                                                   |
+| HTTP           | `http/`           | MULE-401, 402, 403                                              |
+| Logging        | `logging/`        | MULE-006, 301, 303, LOG-001, 004                                |
+| Naming         | `naming/`         | MULE-002, 101, 102                                              |
+| Operations     | `operations/`     | RES-001, OPS-001, 002, 003, HYG-001, 002, 003, DOC-001, API-005 |
+| Performance    | `performance/`    | MULE-501, 502, 503, PERF-002                                    |
+| Security       | `security/`       | MULE-004, 201, 202, SEC-002, 003, 004, 006                      |
+| Standards      | `standards/`      | MULE-008, 010, 701                                              |
+| Structure      | `structure/`      | MULE-802, 803, 804                                              |
+| YAML           | `yaml/`           | YAML-001, 003, 004                                              |
 
 **Convention:** Each rule file exports one or more classes implementing `Rule`.
 
@@ -173,12 +173,12 @@ mule-lint/
 
 **Purpose:** Transform `LintReport` to various output formats.
 
-| Formatter | Use Case |
-|-----------|----------|
-| `TableFormatter.ts` | Human-readable CLI output |
-| `JsonFormatter.ts` | Script/automation consumption |
+| Formatter           | Use Case                      |
+| ------------------- | ----------------------------- |
+| `TableFormatter.ts` | Human-readable CLI output     |
+| `JsonFormatter.ts`  | Script/automation consumption |
 | `SarifFormatter.ts` | AI agents and IDE integration |
-| `HtmlFormatter.ts` | Standalone HTML reports |
+| `HtmlFormatter.ts`  | Standalone HTML reports       |
 
 ### `/src/config`
 
@@ -189,6 +189,7 @@ mule-lint/
 **Purpose:** Sample XML files for testing rules.
 
 **Naming Convention:**
+
 - Prefix with rule ID: `MULE-001-global-error-handler.xml`
 - Or use descriptive names: `flow-with-missing-category.xml`
 
@@ -224,14 +225,14 @@ import { XPathHelper } from '@core/XPathHelper';
 
 ## File Naming
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Rule class | PascalCase + `Rule` suffix | `FlowNamingRule.ts` |
-| Multi-rule file | Feature + `Rules` suffix | `YamlRules.ts` |
-| Utility class | PascalCase | `XPathHelper.ts` |
-| Type definition | PascalCase | `Issue.ts` |
-| Test file | Match source + `.test.ts` | `FlowNamingRule.test.ts` |
-| Config | lowercase with dots | `jest.config.js` |
+| Type            | Convention                 | Example                  |
+| --------------- | -------------------------- | ------------------------ |
+| Rule class      | PascalCase + `Rule` suffix | `FlowNamingRule.ts`      |
+| Multi-rule file | Feature + `Rules` suffix   | `YamlRules.ts`           |
+| Utility class   | PascalCase                 | `XPathHelper.ts`         |
+| Type definition | PascalCase                 | `Issue.ts`               |
+| Test file       | Match source + `.test.ts`  | `FlowNamingRule.test.ts` |
+| Config          | lowercase with dots        | `jest.config.js`         |
 
 ---
 

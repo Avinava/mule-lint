@@ -9,11 +9,11 @@ import { renderQualityRatingsSection } from '../sections/QualityRatings';
 import { renderLintSummarySection, LintSummaryProps } from '../sections/LintSummary';
 
 export interface DashboardViewProps extends LintSummaryProps {
-    // LintSummaryProps includes: errors, warnings, info, filesScanned
+  // LintSummaryProps includes: errors, warnings, info, filesScanned
 }
 
 export function renderDashboardView(props: DashboardViewProps): string {
-    return `
+  return `
             <!-- ===== DASHBOARD VIEW ===== -->
             <div id="view-dashboard" class="h-full overflow-y-auto p-6">
                 <!-- Header -->
@@ -37,45 +37,45 @@ export function renderDashboardView(props: DashboardViewProps): string {
                     </div>
                     <div class="grid grid-cols-5 gap-3">
                         ${renderMetricCard({
-        id: 'metric-flows',
-        label: 'Flows',
-        value: '-',
-        sublabel: 'Entry points',
-        color: 'violet',
-        icon: icons.flow
-    })}
+                          id: 'metric-flows',
+                          label: 'Flows',
+                          value: '-',
+                          sublabel: 'Entry points',
+                          color: 'violet',
+                          icon: icons.flow,
+                        })}
                         ${renderMetricCard({
-        id: 'metric-subflows',
-        label: 'Sub-Flows',
-        value: '-',
-        sublabel: 'Reusable logic',
-        color: 'teal',
-        icon: icons.subflow
-    })}
+                          id: 'metric-subflows',
+                          label: 'Sub-Flows',
+                          value: '-',
+                          sublabel: 'Reusable logic',
+                          color: 'teal',
+                          icon: icons.subflow,
+                        })}
                         ${renderMetricCard({
-        id: 'metric-services',
-        label: 'Services',
-        value: '-',
-        sublabel: 'HTTP endpoints',
-        color: 'cyan',
-        icon: icons.service
-    })}
+                          id: 'metric-services',
+                          label: 'Services',
+                          value: '-',
+                          sublabel: 'HTTP endpoints',
+                          color: 'cyan',
+                          icon: icons.service,
+                        })}
                         ${renderMetricCard({
-        id: 'metric-dw',
-        label: 'DataWeave',
-        value: '-',
-        sublabel: 'Transforms',
-        color: 'orange',
-        icon: icons.dataweave
-    })}
+                          id: 'metric-dw',
+                          label: 'DataWeave',
+                          value: '-',
+                          sublabel: 'Transforms',
+                          color: 'orange',
+                          icon: icons.dataweave,
+                        })}
                         ${renderMetricCard({
-        id: 'metric-connectors',
-        label: 'Connectors',
-        value: '-',
-        sublabel: 'Configurations',
-        color: 'indigo',
-        icon: icons.connector
-    })}
+                          id: 'metric-connectors',
+                          label: 'Connectors',
+                          value: '-',
+                          sublabel: 'Configurations',
+                          color: 'indigo',
+                          icon: icons.connector,
+                        })}
                     </div>
                     <!-- Connector Inventory -->
                     <div id="connector-inventory" class="mt-3 flex items-center gap-2 flex-wrap">

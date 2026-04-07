@@ -1,7 +1,7 @@
 /**
  * Router Script
  * Navigation and filter management for the report
- * 
+ *
  * NOTE: The actual router implementation is inline in HtmlFormatter.ts
  * since it requires access to DOM and tableInstance. This file exports
  * the router script template string for documentation purposes.

@@ -1,7 +1,7 @@
 /**
  * HTML Formatter
  * Generates a premium HTML Single Page Application report
- * 
+ *
  * This file is the orchestrator that composes modular components from ./html/
  * Design inspired by: Stripe Docs + Tailwind CSS Docs
  */
@@ -12,145 +12,145 @@ import packageJson from '../../package.json';
 
 // Import all modular components from html/
 import {
-    // Theme & Styles
-    themeVariables,
-    baseStyles,
-    componentStyles,
-    tabulatorStyles,
-    // Components
-    modalHtml,
-    modalScript,
-    sidePanelHtml,
-    sidePanelScript,
-    // Sections
-    renderHeader,
-    renderSidebar,
-    // Views
-    renderDashboardView,
-    renderIssuesView,
-    // Scripts
-    routerScript,
-    generateRendererScript,
-    initScript,
-    qualityRatingsRendererScript,
-    connectorMeta,
-    methodStyles,
-    exchangeBaseUrl,
+  // Theme & Styles
+  themeVariables,
+  baseStyles,
+  componentStyles,
+  tabulatorStyles,
+  // Components
+  modalHtml,
+  modalScript,
+  sidePanelHtml,
+  sidePanelScript,
+  // Sections
+  renderHeader,
+  renderSidebar,
+  // Views
+  renderDashboardView,
+  renderIssuesView,
+  // Scripts
+  routerScript,
+  generateRendererScript,
+  initScript,
+  qualityRatingsRendererScript,
+  connectorMeta,
+  methodStyles,
+  exchangeBaseUrl,
 } from './html';
 
 /**
  * Enrich files with rule metadata
  */
 function enrichFiles(report: LintReport): Array<{
-    issues: Array<{
-        category: string;
-        ruleDescription: string;
-        ruleName: string;
-        issueType: string;
-        file: string;
-        line: number;
-        message: string;
-        ruleId: string;
-        severity: string;
-        suggestion?: string;
-        codeSnippet?: string;
-        column?: number;
-    }>;
-    filePath: string;
-    relativePath: string;
-    parsed: boolean;
-    parseError?: string;
+  issues: Array<{
+    category: string;
+    ruleDescription: string;
+    ruleName: string;
+    issueType: string;
+    file: string;
+    line: number;
+    message: string;
+    ruleId: string;
+    severity: string;
+    suggestion?: string;
+    codeSnippet?: string;
+    column?: number;
+  }>;
+  filePath: string;
+  relativePath: string;
+  parsed: boolean;
+  parseError?: string;
 }> {
-    return report.files.map((file) => ({
-        ...file,
-        issues: file.issues.map((issue) => {
-            const ruleDef = ALL_RULES.find((r) => r.id === issue.ruleId);
-            return {
-                ...issue,
-                category: ruleDef?.category ?? 'General',
-                ruleDescription: ruleDef?.description ?? 'No description available',
-                ruleName: ruleDef?.name ?? issue.ruleId,
-                issueType: ruleDef?.issueType ?? 'code-smell',
-                file: file.relativePath,
-            };
-        }),
-    }));
+  return report.files.map((file) => ({
+    ...file,
+    issues: file.issues.map((issue) => {
+      const ruleDef = ALL_RULES.find((r) => r.id === issue.ruleId);
+      return {
+        ...issue,
+        category: ruleDef?.category ?? 'General',
+        ruleDescription: ruleDef?.description ?? 'No description available',
+        ruleName: ruleDef?.name ?? issue.ruleId,
+        issueType: ruleDef?.issueType ?? 'code-smell',
+        file: file.relativePath,
+      };
+    }),
+  }));
 }
 
 /**
  * Build client-side data payload
  */
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+ 
 function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof enrichFiles>) {
-    const projectName = report.projectRoot.split('/').filter(Boolean).pop() ?? 'MuleSoft Project';
+  const projectName = report.projectRoot.split('/').filter(Boolean).pop() ?? 'MuleSoft Project';
 
-    return {
-        metadata: {
-            projectName,
-            projectRoot: report.projectRoot,
-            timestamp: report.timestamp,
-            version: packageJson.version,
-            filesScanned: report.files.length,
-            duration: report.durationMs ?? 0,
-        },
-        summary: report.summary,
-        files: enrichedFiles,
-        rules: ALL_RULES.map((r) => ({
-            id: r.id,
-            name: r.name,
-            category: r.category,
-            severity: r.severity,
-            description: r.description,
-            issueType: r.issueType ?? 'code-smell',
-        })),
-        metrics: report.metrics ?? {
-            flowCount: 0,
-            subFlowCount: 0,
-            dwTransformCount: 0,
-            connectorConfigCount: 0,
-            httpListenerCount: 0,
-            connectorTypes: [],
-            errorHandlerCount: 0,
-            choiceRouterCount: 0,
-            apiEndpoints: [],
-            environments: [],
-            securityPatterns: [],
-            externalServices: [],
-            schedulers: [],
-            fileComplexity: {},
-            flowComplexityData: [],
-        },
-    };
+  return {
+    metadata: {
+      projectName,
+      projectRoot: report.projectRoot,
+      timestamp: report.timestamp,
+      version: packageJson.version,
+      filesScanned: report.files.length,
+      duration: report.durationMs ?? 0,
+    },
+    summary: report.summary,
+    files: enrichedFiles,
+    rules: ALL_RULES.map((r) => ({
+      id: r.id,
+      name: r.name,
+      category: r.category,
+      severity: r.severity,
+      description: r.description,
+      issueType: r.issueType ?? 'code-smell',
+    })),
+    metrics: report.metrics ?? {
+      flowCount: 0,
+      subFlowCount: 0,
+      dwTransformCount: 0,
+      connectorConfigCount: 0,
+      httpListenerCount: 0,
+      connectorTypes: [],
+      errorHandlerCount: 0,
+      choiceRouterCount: 0,
+      apiEndpoints: [],
+      environments: [],
+      securityPatterns: [],
+      externalServices: [],
+      schedulers: [],
+      fileComplexity: {},
+      flowComplexityData: [],
+    },
+  };
 }
 
 /**
  * Format lint report as a premium HTML Single Page Application
  */
 export function formatHtml(report: LintReport): string {
-    // 1. Enrich Data
-    const enrichedFiles = enrichFiles(report);
+  // 1. Enrich Data
+  const enrichedFiles = enrichFiles(report);
 
-    // 2. Build client data payload
-    const clientData = buildClientData(report, enrichedFiles);
-    const jsonPayload = JSON.stringify(clientData).replace(/</g, '\\u003c');
+  // 2. Build client data payload
+  const clientData = buildClientData(report, enrichedFiles);
+  const jsonPayload = JSON.stringify(clientData).replace(/</g, '\\u003c');
 
-    // 3. Calculate summary values
-    const projectName = clientData.metadata.projectName;
-    const totalIssues =
-        report.summary.bySeverity.error +
-        report.summary.bySeverity.warning +
-        report.summary.bySeverity.info;
+  // 3. Calculate summary values
+  const projectName = clientData.metadata.projectName;
+  const totalIssues =
+    report.summary.bySeverity.error +
+    report.summary.bySeverity.warning +
+    report.summary.bySeverity.info;
 
-    // 4. Generate renderer script with configuration
-    const rendererScript = generateRendererScript({
-        exchangeBaseUrl,
-        connectorMeta,
-        methodStyles,
-        qualityRatingsRendererScript,
-    });
+  // 4. Generate renderer script with configuration
+  const rendererScript = generateRendererScript({
+    exchangeBaseUrl,
+    connectorMeta,
+    methodStyles,
+    qualityRatingsRendererScript,
+  });
 
-    // 5. Build HTML document
-    return `<!DOCTYPE html>
+  // 5. Build HTML document
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -213,11 +213,11 @@ export function formatHtml(report: LintReport): string {
         <!-- ===== MAIN CONTENT ===== -->
         <main class="app-main overflow-hidden bg-slate-50 dark:bg-slate-900">
             ${renderDashboardView({
-        filesScanned: report.files.length,
-        errors: report.summary.bySeverity.error,
-        warnings: report.summary.bySeverity.warning,
-        info: report.summary.bySeverity.info,
-    })}
+              filesScanned: report.files.length,
+              errors: report.summary.bySeverity.error,
+              warnings: report.summary.bySeverity.warning,
+              info: report.summary.bySeverity.info,
+            })}
 
             ${renderIssuesView({ totalIssues })}
         </main>

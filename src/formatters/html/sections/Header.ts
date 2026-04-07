@@ -4,13 +4,13 @@
  */
 
 export interface HeaderProps {
-    projectName: string;
-    version: string;
-    totalIssues: number;
+  projectName: string;
+  version: string;
+  totalIssues: number;
 }
 
 export function renderHeader(props: HeaderProps): string {
-    return `
+  return `
         <!-- ===== HEADER ===== -->
         <header class="app-header bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm flex items-center px-5 gap-5">
             <!-- Logo + Brand (clickable to dashboard) -->

@@ -9,9 +9,9 @@ export { tabulatorStyles } from './tabulator.css';
 
 // Badge/Pill style definitions
 export {
-    severityBadgeStyles,
-    issueTypeBadgeStyles,
-    methodBadgeStyles,
-    categoryBadgeColors,
-    countBadgeStyle,
+  severityBadgeStyles,
+  issueTypeBadgeStyles,
+  methodBadgeStyles,
+  categoryBadgeColors,
+  countBadgeStyle,
 } from './badges';

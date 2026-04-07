@@ -30,37 +30,35 @@ import { BaseRule } from '../base/BaseRule';
 
 /**
  * MULE-XXX: Rule Name
- * 
+ *
  * Description of what this rule checks.
  */
 export class MyNewRule extends BaseRule {
-    id = 'MULE-XXX';
-    name = 'My New Rule';
-    description = 'What this rule enforces';
-    severity = 'warning' as const;  // 'error' | 'warning' | 'info'
-    category = 'logging' as const;
+  id = 'MULE-XXX';
+  name = 'My New Rule';
+  description = 'What this rule enforces';
+  severity = 'warning' as const; // 'error' | 'warning' | 'info'
+  category = 'logging' as const;
 
-    validate(doc: Document, context: ValidationContext): Issue[] {
-        const issues: Issue[] = [];
-        
-        // XPath query to find elements
-        const elements = this.select('//mule:logger', doc);
-        
-        for (const element of elements) {
-            // Check your condition
-            if (!this.hasAttribute(element, 'category')) {
-                issues.push(this.createIssue(
-                    element,
-                    `Logger is missing category attribute`,
-                    { 
-                        suggestion: 'Add a category attribute for log filtering'
-                    }
-                ));
-            }
-        }
-        
-        return issues;
+  validate(doc: Document, context: ValidationContext): Issue[] {
+    const issues: Issue[] = [];
+
+    // XPath query to find elements
+    const elements = this.select('//mule:logger', doc);
+
+    for (const element of elements) {
+      // Check your condition
+      if (!this.hasAttribute(element, 'category')) {
+        issues.push(
+          this.createIssue(element, `Logger is missing category attribute`, {
+            suggestion: 'Add a category attribute for log filtering',
+          }),
+        );
+      }
     }
+
+    return issues;
+  }
 }
 ```
 
@@ -77,8 +75,8 @@ export { MyNewRule } from './logging/MyNewRule';
 
 // Add to ALL_RULES array
 export const ALL_RULES: Rule[] = [
-    // ... existing rules
-    new MyNewRule(),
+  // ... existing rules
+  new MyNewRule(),
 ];
 ```
 
@@ -92,41 +90,41 @@ import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
 
 describe('MyNewRule', () => {
-    const rule = new MyNewRule();
-    
-    const createContext = (): ValidationContext => ({
-        filePath: 'test.xml',
-        relativePath: 'test.xml',
-        projectRoot: '/project',
-        config: { enabled: true },
-    });
+  const rule = new MyNewRule();
 
-    it('should pass for valid case', () => {
-        const xml = `
+  const createContext = (): ValidationContext => ({
+    filePath: 'test.xml',
+    relativePath: 'test.xml',
+    projectRoot: '/project',
+    config: { enabled: true },
+  });
+
+  it('should pass for valid case', () => {
+    const xml = `
             <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                 <flow name="test-flow">
                     <logger message="test" category="com.myorg"/>
                 </flow>
             </mule>
         `;
-        const result = parseXml(xml);
-        const issues = rule.validate(result.document!, createContext());
-        expect(issues).toHaveLength(0);
-    });
+    const result = parseXml(xml);
+    const issues = rule.validate(result.document!, createContext());
+    expect(issues).toHaveLength(0);
+  });
 
-    it('should fail for invalid case', () => {
-        const xml = `
+  it('should fail for invalid case', () => {
+    const xml = `
             <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                 <flow name="test-flow">
                     <logger message="test"/>
                 </flow>
             </mule>
         `;
-        const result = parseXml(xml);
-        const issues = rule.validate(result.document!, createContext());
-        expect(issues).toHaveLength(1);
-        expect(issues[0].ruleId).toBe('MULE-XXX');
-    });
+    const result = parseXml(xml);
+    const issues = rule.validate(result.document!, createContext());
+    expect(issues).toHaveLength(1);
+    expect(issues[0].ruleId).toBe('MULE-XXX');
+  });
 });
 ```
 
@@ -144,6 +142,7 @@ Add the rule to `docs/rules-catalog.md`:
 
 **Example (Bad)**:
 \`\`\`xml
+
 <!-- Missing category -->
 <logger message="test"/>
 \`\`\`
@@ -181,27 +180,27 @@ node dist/bin/mule-lint.js tests/fixtures/invalid/bad-naming.xml
 
 Common XPath patterns for Mule XML:
 
-| Pattern | Description |
-|---------|-------------|
-| `//mule:flow` | All flows |
-| `//mule:sub-flow` | All sub-flows |
-| `//mule:logger` | All loggers |
-| `//mule:error-handler` | All error handlers |
-| `//mule:http:request` | All HTTP requests |
-| `//mule:flow[@name]` | Flows with name attribute |
-| `//mule:logger[not(@category)]` | Loggers without category |
+| Pattern                         | Description               |
+| ------------------------------- | ------------------------- |
+| `//mule:flow`                   | All flows                 |
+| `//mule:sub-flow`               | All sub-flows             |
+| `//mule:logger`                 | All loggers               |
+| `//mule:error-handler`          | All error handlers        |
+| `//mule:http:request`           | All HTTP requests         |
+| `//mule:flow[@name]`            | Flows with name attribute |
+| `//mule:logger[not(@category)]` | Loggers without category  |
 
 ## BaseRule Utility Methods
 
-| Method | Description |
-|--------|-------------|
-| `this.select(xpath, doc)` | Execute XPath, return nodes |
-| `this.selectFirst(xpath, doc)` | Get first matching node |
-| `this.exists(xpath, doc)` | Check if any nodes match |
-| `this.count(xpath, doc)` | Count matching nodes |
-| `this.getAttribute(node, name)` | Get attribute value |
-| `this.hasAttribute(node, name)` | Check if attribute exists |
-| `this.getNameAttribute(node)` | Get `name` attribute |
-| `this.getDocName(node)` | Get `doc:name` attribute |
+| Method                                     | Description                   |
+| ------------------------------------------ | ----------------------------- |
+| `this.select(xpath, doc)`                  | Execute XPath, return nodes   |
+| `this.selectFirst(xpath, doc)`             | Get first matching node       |
+| `this.exists(xpath, doc)`                  | Check if any nodes match      |
+| `this.count(xpath, doc)`                   | Count matching nodes          |
+| `this.getAttribute(node, name)`            | Get attribute value           |
+| `this.hasAttribute(node, name)`            | Check if attribute exists     |
+| `this.getNameAttribute(node)`              | Get `name` attribute          |
+| `this.getDocName(node)`                    | Get `doc:name` attribute      |
 | `this.createIssue(node, message, options)` | Create issue with line number |
-| `this.getOption(context, key, default)` | Get config option |
+| `this.getOption(context, key, default)`    | Get config option             |

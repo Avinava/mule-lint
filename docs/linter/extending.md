@@ -35,42 +35,45 @@ import { Document, Node } from '@xmldom/xmldom';
 import { BaseRule, Issue, ValidationContext, Severity, RuleCategory } from '@types';
 
 export class ApiNamingRule extends BaseRule {
-    // Required properties
-    id = 'MULE-103';
-    name = 'API Naming Convention';
-    description = 'API implementation flows should follow the pattern: {api-name}-{version}-{operation}';
-    severity: Severity = 'warning';
-    category: RuleCategory = 'naming';
-    
-    // Optional: Link to documentation
-    docsUrl = 'https://your-wiki/mule-standards#api-naming';
-    
-    validate(doc: Document, context: ValidationContext): Issue[] {
-        const issues: Issue[] = [];
-        
-        // Your XPath query
-        const flows = this.select('//mule:flow', doc);
-        
-        // Pattern for API flows
-        const apiPattern = /^[\w-]+-v\d+-(?:get|post|put|delete|patch)-[\w-]+$/;
-        
-        for (const flow of flows) {
-            const name = this.getAttribute(flow, 'name');
-            
-            // Only check flows that look like API implementations
-            if (name && name.includes('-api') && !apiPattern.test(name)) {
-                issues.push(this.createIssue(
-                    flow,
-                    `API flow "${name}" doesn't follow naming convention: {api-name}-v{N}-{method}-{resource}`,
-                    {
-                        suggestion: 'Example: orders-api-v1-get-order-by-id'
-                    }
-                ));
-            }
-        }
-        
-        return issues;
+  // Required properties
+  id = 'MULE-103';
+  name = 'API Naming Convention';
+  description =
+    'API implementation flows should follow the pattern: {api-name}-{version}-{operation}';
+  severity: Severity = 'warning';
+  category: RuleCategory = 'naming';
+
+  // Optional: Link to documentation
+  docsUrl = 'https://your-wiki/mule-standards#api-naming';
+
+  validate(doc: Document, context: ValidationContext): Issue[] {
+    const issues: Issue[] = [];
+
+    // Your XPath query
+    const flows = this.select('//mule:flow', doc);
+
+    // Pattern for API flows
+    const apiPattern = /^[\w-]+-v\d+-(?:get|post|put|delete|patch)-[\w-]+$/;
+
+    for (const flow of flows) {
+      const name = this.getAttribute(flow, 'name');
+
+      // Only check flows that look like API implementations
+      if (name && name.includes('-api') && !apiPattern.test(name)) {
+        issues.push(
+          this.createIssue(
+            flow,
+            `API flow "${name}" doesn't follow naming convention: {api-name}-v{N}-{method}-{resource}`,
+            {
+              suggestion: 'Example: orders-api-v1-get-order-by-id',
+            },
+          ),
+        );
+      }
     }
+
+    return issues;
+  }
 }
 ```
 
@@ -82,8 +85,8 @@ Add to `src/rules/index.ts`:
 import { ApiNamingRule } from './naming/ApiNamingRule';
 
 export const RULES: Rule[] = [
-    // ... existing rules
-    new ApiNamingRule(),
+  // ... existing rules
+  new ApiNamingRule(),
 ];
 ```
 
@@ -97,51 +100,51 @@ import { parseXml } from '../../../src/core/XmlParser';
 import { createMockContext } from '../../helpers';
 
 describe('ApiNamingRule', () => {
-    const rule = new ApiNamingRule();
-    const context = createMockContext('api.xml');
-    
-    it('should pass for correctly named API flow', () => {
-        const xml = `
+  const rule = new ApiNamingRule();
+  const context = createMockContext('api.xml');
+
+  it('should pass for correctly named API flow', () => {
+    const xml = `
             <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                 <flow name="orders-api-v1-get-order-by-id">
                     <logger message="test"/>
                 </flow>
             </mule>
         `;
-        const doc = parseXml(xml);
-        const issues = rule.validate(doc, context);
-        
-        expect(issues).toHaveLength(0);
-    });
-    
-    it('should fail for incorrectly named API flow', () => {
-        const xml = `
+    const doc = parseXml(xml);
+    const issues = rule.validate(doc, context);
+
+    expect(issues).toHaveLength(0);
+  });
+
+  it('should fail for incorrectly named API flow', () => {
+    const xml = `
             <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                 <flow name="orders-api-getOrders">
                     <logger message="test"/>
                 </flow>
             </mule>
         `;
-        const doc = parseXml(xml);
-        const issues = rule.validate(doc, context);
-        
-        expect(issues).toHaveLength(1);
-        expect(issues[0].ruleId).toBe('MULE-103');
-    });
-    
-    it('should ignore non-API flows', () => {
-        const xml = `
+    const doc = parseXml(xml);
+    const issues = rule.validate(doc, context);
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0].ruleId).toBe('MULE-103');
+  });
+
+  it('should ignore non-API flows', () => {
+    const xml = `
             <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                 <flow name="utility-flow">
                     <logger message="test"/>
                 </flow>
             </mule>
         `;
-        const doc = parseXml(xml);
-        const issues = rule.validate(doc, context);
-        
-        expect(issues).toHaveLength(0);
-    });
+    const doc = parseXml(xml);
+    const issues = rule.validate(doc, context);
+
+    expect(issues).toHaveLength(0);
+  });
 });
 ```
 
@@ -153,20 +156,24 @@ Create `docs/rules/MULE-103.md`:
 # MULE-103: API Naming Convention
 
 ## Overview
-| Property | Value |
-|----------|-------|
-| **ID** | MULE-103 |
-| **Severity** | Warning |
-| **Category** | Naming |
-| **Fixable** | No |
+
+| Property     | Value    |
+| ------------ | -------- |
+| **ID**       | MULE-103 |
+| **Severity** | Warning  |
+| **Category** | Naming   |
+| **Fixable**  | No       |
 
 ## Description
+
 API implementation flows should follow a consistent naming pattern that includes the API name, version, HTTP method, and resource.
 
 ## Pattern
 ```
+
 {api-name}-v{version}-{method}-{resource}
-```
+
+````
 
 ## Examples
 
@@ -175,9 +182,10 @@ API implementation flows should follow a consistent naming pattern that includes
 <flow name="orders-api-getOrders">
 <flow name="OrdersGetFlow">
 <flow name="get-orders">
-```
+````
 
 ### ✅ Good
+
 ```xml
 <flow name="orders-api-v1-get-orders">
 <flow name="orders-api-v1-post-order">
@@ -185,6 +193,7 @@ API implementation flows should follow a consistent naming pattern that includes
 ```
 
 ## Configuration
+
 ```json
 {
   "MULE-103": {
@@ -197,8 +206,10 @@ API implementation flows should follow a consistent naming pattern that includes
 ```
 
 ## Related Rules
+
 - MULE-002: Flow Naming Convention
 - MULE-101: Flow Name Casing
+
 ```
 
 ---
@@ -210,15 +221,17 @@ For organization-specific rules, create a separate npm package:
 ### Package Structure
 
 ```
+
 mule-lint-rules-acme/
 ├── src/
-│   ├── rules/
-│   │   ├── AcmeLoggingRule.ts
-│   │   └── AcmeSecurityRule.ts
-│   └── index.ts
+│ ├── rules/
+│ │ ├── AcmeLoggingRule.ts
+│ │ └── AcmeSecurityRule.ts
+│ └── index.ts
 ├── package.json
 └── tsconfig.json
-```
+
+````
 
 ### package.json
 
@@ -233,7 +246,7 @@ mule-lint-rules-acme/
   },
   "keywords": ["mule-lint", "mule-lint-rules"]
 }
-```
+````
 
 ### Export Rules
 
@@ -243,10 +256,7 @@ import { Rule } from 'mule-lint';
 import { AcmeLoggingRule } from './rules/AcmeLoggingRule';
 import { AcmeSecurityRule } from './rules/AcmeSecurityRule';
 
-export const rules: Rule[] = [
-    new AcmeLoggingRule(),
-    new AcmeSecurityRule(),
-];
+export const rules: Rule[] = [new AcmeLoggingRule(), new AcmeSecurityRule()];
 
 // Named exports for individual rules
 export { AcmeLoggingRule, AcmeSecurityRule };
@@ -291,16 +301,16 @@ import { BaseRule, Issue, ValidationContext } from 'mule-lint';
 import { Document } from '@xmldom/xmldom';
 
 export class ProjectSpecificRule extends BaseRule {
-    id = 'PROJECT-001';
-    name = 'Project Specific Check';
-    description = 'Custom check for this project';
-    severity = 'warning' as const;
-    category = 'standards' as const;
-    
-    validate(doc: Document, context: ValidationContext): Issue[] {
-        // Your custom logic
-        return [];
-    }
+  id = 'PROJECT-001';
+  name = 'Project Specific Check';
+  description = 'Custom check for this project';
+  severity = 'warning' as const;
+  category = 'standards' as const;
+
+  validate(doc: Document, context: ValidationContext): Issue[] {
+    // Your custom logic
+    return [];
+  }
 }
 ```
 
@@ -322,18 +332,20 @@ const nodes = this.select('//http:request[@url]', doc);
 
 ```typescript
 // ❌ Vague
-message: 'Naming violation detected'
+message: 'Naming violation detected';
 
 // ✅ Specific and actionable
-message: `Flow "${name}" should end with "-flow". Rename to "${name}-flow"`
+message: `Flow "${name}" should end with "-flow". Rename to "${name}-flow"`;
 ```
 
 ### 3. Include Suggestions
 
 ```typescript
-issues.push(this.createIssue(node, message, {
-    suggestion: 'Add category attribute: category="com.acme.integration"'
-}));
+issues.push(
+  this.createIssue(node, message, {
+    suggestion: 'Add category attribute: category="com.acme.integration"',
+  }),
+);
 ```
 
 ### 4. Support Configuration
@@ -342,7 +354,7 @@ issues.push(this.createIssue(node, message, {
 validate(doc: Document, context: ValidationContext): Issue[] {
     // Read from rule config
     const suffix = context.config.options?.flowSuffix ?? '-flow';
-    
+
     // Use in validation
     if (!name.endsWith(suffix)) {
         // ...
@@ -355,16 +367,16 @@ validate(doc: Document, context: ValidationContext): Issue[] {
 ```typescript
 validate(doc: Document, context: ValidationContext): Issue[] {
     const flows = this.select('//mule:flow', doc);
-    
+
     for (const flow of flows) {
         const name = this.getAttribute(flow, 'name');
-        
+
         // Guard against missing attributes
         if (!name) continue;
-        
+
         // Skip excluded patterns
         if (this.isExcluded(name, context)) continue;
-        
+
         // Actual validation
         // ...
     }
@@ -381,32 +393,29 @@ When building a VS Code extension, import rules directly:
 import { LintEngine, RULES, Rule, Issue } from 'mule-lint';
 
 class MuleLintDiagnosticProvider {
-    private engine: LintEngine;
-    
-    constructor() {
-        this.engine = new LintEngine({
-            rules: RULES,
-            // Or filter rules
-            // rules: RULES.filter(r => r.severity === 'error')
-        });
-    }
-    
-    async provideDiagnostics(document: vscode.TextDocument): Promise<vscode.Diagnostic[]> {
-        const issues = await this.engine.scanContent(
-            document.getText(),
-            document.uri.fsPath
-        );
-        
-        return issues.map(issue => this.toDiagnostic(issue));
-    }
-    
-    private toDiagnostic(issue: Issue): vscode.Diagnostic {
-        return new vscode.Diagnostic(
-            new vscode.Range(issue.line - 1, 0, issue.line - 1, 100),
-            `[${issue.ruleId}] ${issue.message}`,
-            this.toSeverity(issue.severity)
-        );
-    }
+  private engine: LintEngine;
+
+  constructor() {
+    this.engine = new LintEngine({
+      rules: RULES,
+      // Or filter rules
+      // rules: RULES.filter(r => r.severity === 'error')
+    });
+  }
+
+  async provideDiagnostics(document: vscode.TextDocument): Promise<vscode.Diagnostic[]> {
+    const issues = await this.engine.scanContent(document.getText(), document.uri.fsPath);
+
+    return issues.map((issue) => this.toDiagnostic(issue));
+  }
+
+  private toDiagnostic(issue: Issue): vscode.Diagnostic {
+    return new vscode.Diagnostic(
+      new vscode.Range(issue.line - 1, 0, issue.line - 1, 100),
+      `[${issue.ruleId}] ${issue.message}`,
+      this.toSeverity(issue.severity),
+    );
+  }
 }
 ```
 

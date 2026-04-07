@@ -8,10 +8,10 @@ Welcome to the Mule-Lint documentation. This documentation is organized into two
 
 Comprehensive guidelines for building maintainable, secure, and performant Mule applications. These guidelines cover more than just what the linter validates - they represent industry best practices for MuleSoft development.
 
-| Document | Description |
-|----------|-------------|
+| Document                                                          | Description                                  |
+| ----------------------------------------------------------------- | -------------------------------------------- |
 | [Best Practices Guide](best-practices/mulesoft-best-practices.md) | Complete MuleSoft development best practices |
-| [Rules Catalog](best-practices/rules-catalog.md) | All 56 linter rules with examples |
+| [Rules Catalog](best-practices/rules-catalog.md)                  | All 56 linter rules with examples            |
 
 ---
 
@@ -19,13 +19,13 @@ Comprehensive guidelines for building maintainable, secure, and performant Mule 
 
 For contributors and those extending mule-lint.
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](linter/architecture.md) | System design, patterns, and data flow |
-| [Rule Engine](linter/rule-engine.md) | Rule engine internals and interfaces |
-| [Extending](linter/extending.md) | How to create custom rules |
-| [Folder Structure](linter/folder-structure.md) | Project organization |
-| [Naming Conventions](linter/naming-conventions.md) | Code style and naming standards |
+| Document                                           | Description                            |
+| -------------------------------------------------- | -------------------------------------- |
+| [Architecture](linter/architecture.md)             | System design, patterns, and data flow |
+| [Rule Engine](linter/rule-engine.md)               | Rule engine internals and interfaces   |
+| [Extending](linter/extending.md)                   | How to create custom rules             |
+| [Folder Structure](linter/folder-structure.md)     | Project organization                   |
+| [Naming Conventions](linter/naming-conventions.md) | Code style and naming standards        |
 
 ---
 
@@ -61,28 +61,28 @@ mule-lint ./src/main/mule --fail-on-warning
 
 ### Exit Codes
 
-| Code | Meaning |
-|------|---------|
-| 0 | Success (no errors) |
-| 1 | Errors found |
-| 2 | CLI/Configuration error |
-| 3 | Parse errors (malformed XML) |
+| Code | Meaning                      |
+| ---- | ---------------------------- |
+| 0    | Success (no errors)          |
+| 1    | Errors found                 |
+| 2    | CLI/Configuration error      |
+| 3    | Parse errors (malformed XML) |
 
 ---
 
 ## Rule Families
 
-| Family | Prefix | Count | Description |
-|--------|--------|-------|-------------|
-| Core MuleSoft | MULE-XXX | 29 | Core Mule 4 XML validation |
-| Security | SEC-XXX | 5 | Security best practices (TLS, rate limiting, etc.) |
-| Logging | LOG-XXX | 2 | Structured logging and sensitive data |
-| Operations | OPS-XXX, RES-XXX, HYG-XXX | 7 | Reconnection, auto-discovery, hygiene |
-| YAML Properties | YAML-XXX | 3 | YAML configuration validation |
-| DataWeave | DW-XXX | 4 | DataWeave file validation |
-| API-Led | API-XXX | 5 | API-Led connectivity patterns |
-| Governance | PROJ-XXX | 2 | POM and Git hygiene |
-| Experimental | EXP-XXX | 3 | Beta rules for evaluation |
+| Family          | Prefix                    | Count | Description                                        |
+| --------------- | ------------------------- | ----- | -------------------------------------------------- |
+| Core MuleSoft   | MULE-XXX                  | 29    | Core Mule 4 XML validation                         |
+| Security        | SEC-XXX                   | 5     | Security best practices (TLS, rate limiting, etc.) |
+| Logging         | LOG-XXX                   | 2     | Structured logging and sensitive data              |
+| Operations      | OPS-XXX, RES-XXX, HYG-XXX | 7     | Reconnection, auto-discovery, hygiene              |
+| YAML Properties | YAML-XXX                  | 3     | YAML configuration validation                      |
+| DataWeave       | DW-XXX                    | 4     | DataWeave file validation                          |
+| API-Led         | API-XXX                   | 5     | API-Led connectivity patterns                      |
+| Governance      | PROJ-XXX                  | 2     | POM and Git hygiene                                |
+| Experimental    | EXP-XXX                   | 3     | Beta rules for evaluation                          |
 
 **Total: 56 rules**
 

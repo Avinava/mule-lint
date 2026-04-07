@@ -7,6 +7,7 @@
 ## Table of Contents
 
 ### Linter-Enforced Practices
+
 - [API-Led Connectivity](#api-led-connectivity)
 - [Error Handling](#error-handling)
 - [Logging Standards](#logging-standards)
@@ -19,6 +20,7 @@
 - [Documentation Standards](#documentation-standards)
 
 ### General Developer Guidelines
+
 - [Testing with MUnit](#testing-with-munit)
 - [CI/CD Integration](#cicd-integration)
 - [API Versioning](#api-versioning)
@@ -55,11 +57,11 @@ MuleSoft's API-Led Connectivity approach organizes APIs into three layers, each 
 
 ### Layer Guidelines
 
-| Layer | Should Have | Should NOT Have |
-|-------|-------------|-----------------|
+| Layer          | Should Have                                      | Should NOT Have                                |
+| -------------- | ------------------------------------------------ | ---------------------------------------------- |
 | **Experience** | HTTP listeners, channel-specific transformations | Direct database access, complex business logic |
-| **Process** | Flow-refs to other APIs, orchestration logic | Direct system connections, database queries |
-| **System** | Database operations, HTTP requests to backends | Business logic, data aggregation |
+| **Process**    | Flow-refs to other APIs, orchestration logic     | Direct system connections, database queries    |
+| **System**     | Database operations, HTTP requests to backends   | Business logic, data aggregation               |
 
 ### Example Flow Structure
 
@@ -121,16 +123,16 @@ output application/json
 }]]></ee:set-payload>
         </ee:transform>
     </on-error-propagate>
-    
+
     <on-error-propagate type="APIKIT:NOT_FOUND">
         <set-variable variableName="httpStatus" value="404"/>
         <!-- ... -->
     </on-error-propagate>
-    
+
     <!-- Catch-all for unexpected errors -->
     <on-error-propagate>
         <set-variable variableName="httpStatus" value="500"/>
-        <logger category="com.myorg.errors" level="ERROR" 
+        <logger category="com.myorg.errors" level="ERROR"
                 message="#['Error: ' ++ error.description ++ ' | CorrelationId: ' ++ correlationId]"/>
         <!-- ... -->
     </on-error-propagate>
@@ -168,10 +170,10 @@ Use hierarchical category names:
 
 ```xml
 <!-- ✅ Good - Hierarchical categories -->
-<logger category="com.myorg.orders.api" level="INFO" 
+<logger category="com.myorg.orders.api" level="INFO"
         message="#['Processing order: ' ++ vars.orderId]"/>
 
-<logger category="com.myorg.orders.db" level="DEBUG" 
+<logger category="com.myorg.orders.db" level="DEBUG"
         message="#['Query executed in ' ++ vars.queryTime ++ 'ms']"/>
 ```
 
@@ -232,12 +234,12 @@ Protect sensitive data and follow secure development practices.
 ```xml
 <!-- ❌ Bad - Hardcoded credentials -->
 <http:request-config host="api.example.com"
-                     username="admin" 
+                     username="admin"
                      password="secret123"/>
 
 <!-- ✅ Good - Property placeholders -->
 <http:request-config host="${api.host}"
-                     username="${api.username}" 
+                     username="${api.username}"
                      password="${secure::api.password}"/>
 ```
 
@@ -258,8 +260,8 @@ Use MuleSoft Secure Properties:
 ```yaml
 # secure.yaml (encrypted)
 api:
-  password: "![encryptedValue]"
-  clientSecret: "![encryptedValue]"
+  password: '![encryptedValue]'
+  clientSecret: '![encryptedValue]'
 ```
 
 ### TLS Configuration
@@ -272,7 +274,7 @@ api:
 
 <!-- ✅ Good - Proper certificate validation -->
 <tls:context name="Secure_TLS">
-    <tls:trust-store path="${tls.truststore.path}" 
+    <tls:trust-store path="${tls.truststore.path}"
                      password="${secure::tls.truststore.password}"/>
 </tls:context>
 ```
@@ -301,7 +303,7 @@ Async scopes don't propagate errors to parent flows:
         <http:request config-ref="HTTP_Config" path="/webhook"/>
         <error-handler>
             <on-error-continue>
-                <logger category="com.myorg.async" level="ERROR" 
+                <logger category="com.myorg.async" level="ERROR"
                         message="#['Async failed: ' ++ error.description]"/>
             </on-error-continue>
         </error-handler>
@@ -340,9 +342,9 @@ handlers[vars.status] default "default-handler-subflow"
 
 ```xml
 <!-- ✅ Always set explicit timeouts -->
-<http:request-config name="HTTP_Request_Config" 
+<http:request-config name="HTTP_Request_Config"
                      responseTimeout="30000">
-    <http:request-connection host="${api.host}" 
+    <http:request-connection host="${api.host}"
                               port="${api.port}"/>
 </http:request-config>
 ```
@@ -395,12 +397,12 @@ my-mule-project/
 
 ### File Organization Guidelines
 
-| Guideline | Recommendation |
-|-----------|----------------|
-| Flows per file | Max 10 flows/sub-flows per XML file |
-| File responsibility | One domain/feature per file |
-| Global configs | Centralize in `global.xml` |
-| Error handling | Separate `global-error-handler.xml` |
+| Guideline           | Recommendation                      |
+| ------------------- | ----------------------------------- |
+| Flows per file      | Max 10 flows/sub-flows per XML file |
+| File responsibility | One domain/feature per file         |
+| Global configs      | Centralize in `global.xml`          |
+| Error handling      | Separate `global-error-handler.xml` |
 
 **Related Rules:** `MULE-802`, `MULE-803`, `MULE-804`
 
@@ -449,17 +451,17 @@ Create separate files for each environment:
 ```yaml
 # dev.yaml
 http:
-  host: "0.0.0.0"
-  port: "8081"
+  host: '0.0.0.0'
+  port: '8081'
 
 api:
   orders:
-    baseUrl: "http://localhost:8082/api"
-    timeout: "30000"
+    baseUrl: 'http://localhost:8082/api'
+    timeout: '30000'
 
 db:
-  host: "localhost"
-  port: "5432"
+  host: 'localhost'
+  port: '5432'
 ```
 
 ### Property Naming
@@ -508,10 +510,10 @@ Write maintainable and reusable DataWeave code.
 // src/main/resources/dwl/common.dwl
 %dw 2.0
 
-fun formatDate(date: DateTime) = 
+fun formatDate(date: DateTime) =
     date as String {format: "yyyy-MM-dd"}
 
-fun maskPII(value: String) = 
+fun maskPII(value: String) =
     value[0 to 2] ++ "****" ++ value[-2 to -1]
 
 fun toErrorResponse(error, correlationId: String) = {
@@ -525,6 +527,7 @@ fun toErrorResponse(error, correlationId: String) = {
 ### File Naming
 
 Use kebab-case for DWL files:
+
 - `transform-order.dwl`
 - `validate-input.dwl`
 - `common-utils.dwl`
@@ -540,16 +543,16 @@ Document for maintainability.
 ### Flow Documentation
 
 ```xml
-<flow name="orders-api-create-order-flow" 
-      doc:name="Create Order" 
+<flow name="orders-api-create-order-flow"
+      doc:name="Create Order"
       doc:description="Creates a new order in the system. Validates input, checks inventory, and persists to database.">
 ```
 
 ### Component Documentation
 
 ```xml
-<logger doc:name="Log Order Received" 
-        category="com.myorg.orders" 
+<logger doc:name="Log Order Received"
+        category="com.myorg.orders"
         message="#['Order received: ' ++ payload.orderId]"/>
 
 <ee:transform doc:name="Transform to Database Format">
@@ -563,16 +566,16 @@ Document for maintainability.
 
 ## Quick Reference Card
 
-| Practice | Do | Don't |
-|----------|-----|-------|
-| **Error Handling** | Use global handler, set httpStatus | Catch `type="ANY"`, ignore errors |
-| **Logging** | Use categories, log specific fields | Log `#[payload]`, log in retry loops |
-| **Security** | Use `${property}`, encrypt secrets | Hardcode URLs, passwords, keys |
-| **Performance** | Set timeouts, handle async errors | Unlimited retries, huge choice blocks |
-| **Naming** | kebab-case flows, camelCase vars | Inconsistent casing, no suffixes |
-| **Structure** | Separate files by domain | Monolithic XML files |
-| **Config** | Environment-specific YAML files | Hardcoded values |
-| **DataWeave** | External .dwl files, reusable modules | Large inline transforms |
+| Practice           | Do                                    | Don't                                 |
+| ------------------ | ------------------------------------- | ------------------------------------- |
+| **Error Handling** | Use global handler, set httpStatus    | Catch `type="ANY"`, ignore errors     |
+| **Logging**        | Use categories, log specific fields   | Log `#[payload]`, log in retry loops  |
+| **Security**       | Use `${property}`, encrypt secrets    | Hardcode URLs, passwords, keys        |
+| **Performance**    | Set timeouts, handle async errors     | Unlimited retries, huge choice blocks |
+| **Naming**         | kebab-case flows, camelCase vars      | Inconsistent casing, no suffixes      |
+| **Structure**      | Separate files by domain              | Monolithic XML files                  |
+| **Config**         | Environment-specific YAML files       | Hardcoded values                      |
+| **DataWeave**      | External .dwl files, reusable modules | Large inline transforms               |
 
 ---
 
@@ -588,11 +591,11 @@ MUnit is MuleSoft's native testing framework. Comprehensive testing is essential
 
 ### Test Coverage Goals
 
-| Test Type | Coverage Target | Purpose |
-|-----------|-----------------|---------|
-| Unit Tests | 80%+ flow coverage | Validate individual flow logic |
-| Integration Tests | All critical paths | Validate end-to-end scenarios |
-| Error Scenario Tests | All error handlers | Validate error responses |
+| Test Type            | Coverage Target    | Purpose                        |
+| -------------------- | ------------------ | ------------------------------ |
+| Unit Tests           | 80%+ flow coverage | Validate individual flow logic |
+| Integration Tests    | All critical paths | Validate end-to-end scenarios  |
+| Error Scenario Tests | All error handlers | Validate error responses       |
 
 ### MUnit Best Practices
 
@@ -600,12 +603,12 @@ MUnit is MuleSoft's native testing framework. Comprehensive testing is essential
 <!-- test/munit/orders-api-test-suite.xml -->
 <munit:test name="create-order-success-test"
             description="Validates successful order creation">
-    
+
     <!-- Mock external dependencies -->
     <munit:behavior>
         <munit-tools:mock-when processor="http:request">
             <munit-tools:with-attributes>
-                <munit-tools:with-attribute attributeName="config-ref" 
+                <munit-tools:with-attribute attributeName="config-ref"
                                             whereValue="Orders_HTTP_Config"/>
             </munit-tools:with-attributes>
             <munit-tools:then-return>
@@ -613,15 +616,15 @@ MUnit is MuleSoft's native testing framework. Comprehensive testing is essential
             </munit-tools:then-return>
         </munit-tools:mock-when>
     </munit:behavior>
-    
+
     <!-- Execute -->
     <munit:execution>
         <flow-ref name="create-order-flow"/>
     </munit:execution>
-    
+
     <!-- Assert -->
     <munit:validation>
-        <munit-tools:assert-that expression="#[payload.orderId]" 
+        <munit-tools:assert-that expression="#[payload.orderId]"
                                   is="#[MunitTools::notNullValue()]"/>
     </munit:validation>
 </munit:test>
@@ -678,28 +681,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'adopt'
-          
+
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          
+
       - name: Build with Maven
         run: mvn -B clean compile
-        
+
       - name: Run mule-lint
         run: npx @sfdxy/mule-lint ./src/main/mule -f sarif -o lint-results.sarif
-        
+
       - name: Run MUnit tests
         run: mvn -B test
-        
+
       - name: Upload SARIF results
         uses: github/codeql-action/upload-sarif@v2
         with:
@@ -708,12 +711,12 @@ jobs:
 
 ### Git Branch Strategy
 
-| Branch | Purpose | Deployment Target |
-|--------|---------|-------------------|
-| `main` | Production-ready code | Production |
-| `develop` | Integration branch | QA/Staging |
-| `feature/*` | New features | Development |
-| `hotfix/*` | Production fixes | Production |
+| Branch      | Purpose               | Deployment Target |
+| ----------- | --------------------- | ----------------- |
+| `main`      | Production-ready code | Production        |
+| `develop`   | Integration branch    | QA/Staging        |
+| `feature/*` | New features          | Development       |
+| `hotfix/*`  | Production fixes      | Production        |
 
 ---
 
@@ -776,14 +779,14 @@ Development → QA → Staging → Production
 
 ### Deployment Checklist
 
-| Item | Description |
-|------|-------------|
-| ✅ All tests pass | MUnit and integration tests |
-| ✅ Lint checks pass | No errors from mule-lint |
-| ✅ Properties configured | Environment YAML verified |
-| ✅ Secrets encrypted | No plaintext credentials |
-| ✅ API Manager policies | Authentication, rate limiting |
-| ✅ Monitoring configured | Dashboards and alerts ready |
+| Item                     | Description                   |
+| ------------------------ | ----------------------------- |
+| ✅ All tests pass        | MUnit and integration tests   |
+| ✅ Lint checks pass      | No errors from mule-lint      |
+| ✅ Properties configured | Environment YAML verified     |
+| ✅ Secrets encrypted     | No plaintext credentials      |
+| ✅ API Manager policies  | Authentication, rate limiting |
+| ✅ Monitoring configured | Dashboards and alerts ready   |
 
 ### Blue-Green Deployment
 
@@ -814,11 +817,11 @@ Production applications need comprehensive monitoring.
 
 ### The Three Pillars
 
-| Pillar | Tool | Purpose |
-|--------|------|---------|
-| **Logs** | Anypoint Monitoring, Splunk, ELK | Debug issues, audit trail |
-| **Metrics** | Anypoint Monitoring, Grafana | Performance, health status |
-| **Traces** | Anypoint Monitoring, Jaeger | Request flow, latency analysis |
+| Pillar      | Tool                             | Purpose                        |
+| ----------- | -------------------------------- | ------------------------------ |
+| **Logs**    | Anypoint Monitoring, Splunk, ELK | Debug issues, audit trail      |
+| **Metrics** | Anypoint Monitoring, Grafana     | Performance, health status     |
+| **Traces**  | Anypoint Monitoring, Jaeger      | Request flow, latency analysis |
 
 ### Key Metrics to Monitor
 
@@ -839,11 +842,11 @@ Business Metrics:
 
 ### Alerting Best Practices
 
-| Alert Level | Condition | Response |
-|-------------|-----------|----------|
-| **Critical** | Error rate > 10%, App down | Immediate on-call response |
-| **Warning** | Error rate > 5%, Latency > 5s | Investigate within 1 hour |
-| **Info** | Unusual patterns, Resource > 70% | Review in daily standup |
+| Alert Level  | Condition                        | Response                   |
+| ------------ | -------------------------------- | -------------------------- |
+| **Critical** | Error rate > 10%, App down       | Immediate on-call response |
+| **Warning**  | Error rate > 5%, Latency > 5s    | Investigate within 1 hour  |
+| **Info**     | Unusual patterns, Resource > 70% | Review in daily standup    |
 
 ### Correlation ID Pattern
 
@@ -851,7 +854,7 @@ Ensure correlation IDs flow through all systems:
 
 ```xml
 <!-- Set correlation ID at entry point -->
-<set-variable variableName="correlationId" 
+<set-variable variableName="correlationId"
               value="#[correlationId default uuid()]"/>
 
 <!-- Include in all outbound requests -->
@@ -862,7 +865,7 @@ Ensure correlation IDs flow through all systems:
 </http:request>
 
 <!-- Include in all log messages -->
-<logger category="com.myorg" 
+<logger category="com.myorg"
         message="#['[' ++ vars.correlationId ++ '] Processing request...']"/>
 ```
 
@@ -891,12 +894,11 @@ output application/json
 
 This guide covers both linter-enforced practices and general developer guidelines:
 
-| Category | Linter Enforced | General Guidelines |
-|----------|-----------------|-------------------|
-| Code Quality | ✅ Naming, Structure, Complexity | Testing, Code Review |
-| Security | ✅ Hardcoded secrets, TLS | Secrets Management, IAM |
-| Operations | ✅ Error handling, Logging | CI/CD, Monitoring, Deployment |
-| Architecture | ✅ API-Led patterns | Versioning, Documentation |
+| Category     | Linter Enforced                  | General Guidelines            |
+| ------------ | -------------------------------- | ----------------------------- |
+| Code Quality | ✅ Naming, Structure, Complexity | Testing, Code Review          |
+| Security     | ✅ Hardcoded secrets, TLS        | Secrets Management, IAM       |
+| Operations   | ✅ Error handling, Logging       | CI/CD, Monitoring, Deployment |
+| Architecture | ✅ API-Led patterns              | Versioning, Documentation     |
 
 For linter rule details, see the [Rules Catalog](rules-catalog.md).
-

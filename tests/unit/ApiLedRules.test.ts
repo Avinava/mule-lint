@@ -1,7 +1,7 @@
 import {
-    ExperienceLayerRule,
-    ProcessLayerRule,
-    SystemLayerRule,
+  ExperienceLayerRule,
+  ProcessLayerRule,
+  SystemLayerRule,
 } from '../../src/rules/api-led/ApiLedRules';
 import { SingleSystemSapiRule } from '../../src/rules/api-led/SingleSystemSapiRule';
 import { parseXml } from '../../src/core/XmlParser';
@@ -11,21 +11,21 @@ import * as path from 'path';
 import * as os from 'os';
 
 describe('API-Led Rules', () => {
-    const createContext = (filePath = 'test.xml', projectRoot = '/project'): ValidationContext => ({
-        filePath,
-        relativePath: filePath,
-        projectRoot,
-        config: { enabled: true },
-    });
+  const createContext = (filePath = 'test.xml', projectRoot = '/project'): ValidationContext => ({
+    filePath,
+    relativePath: filePath,
+    projectRoot,
+    config: { enabled: true },
+  });
 
-    // =================================================================
-    // API-001: Experience Layer Pattern
-    // =================================================================
-    describe('ExperienceLayerRule (API-001)', () => {
-        const rule = new ExperienceLayerRule();
+  // =================================================================
+  // API-001: Experience Layer Pattern
+  // =================================================================
+  describe('ExperienceLayerRule (API-001)', () => {
+    const rule = new ExperienceLayerRule();
 
-        it('should pass for experience API with listener', () => {
-            const xml = `
+    it('should pass for experience API with listener', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <flow name="orders-exp-get-flow">
@@ -34,43 +34,43 @@ describe('API-Led Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should pass for non-experience flows without listener', () => {
-            const xml = `
+    it('should pass for non-experience flows without listener', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="internal-process-flow">
                         <flow-ref name="process"/>
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('API-001');
-            expect(rule.severity).toBe('info');
-            expect(rule.category).toBe('api-led');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
 
-    // =================================================================
-    // API-002: Process Layer Pattern
-    // =================================================================
-    describe('ProcessLayerRule (API-002)', () => {
-        const rule = new ProcessLayerRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('API-001');
+      expect(rule.severity).toBe('info');
+      expect(rule.category).toBe('api-led');
+    });
+  });
 
-        it('should pass for process layer with flow-ref', () => {
-            const xml = `
+  // =================================================================
+  // API-002: Process Layer Pattern
+  // =================================================================
+  describe('ProcessLayerRule (API-002)', () => {
+    const rule = new ProcessLayerRule();
+
+    it('should pass for process layer with flow-ref', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="orders-proc-aggregate-flow">
                         <flow-ref name="orders-sys-get"/>
@@ -78,15 +78,15 @@ describe('API-Led Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should pass for process layer with HTTP request', () => {
-            const xml = `
+    it('should pass for process layer with HTTP request', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <flow name="orders-process-flow">
@@ -94,28 +94,28 @@ describe('API-Led Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('API-002');
-            expect(rule.severity).toBe('info');
-            expect(rule.category).toBe('api-led');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
 
-    // =================================================================
-    // API-003: System Layer Pattern
-    // =================================================================
-    describe('SystemLayerRule (API-003)', () => {
-        const rule = new SystemLayerRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('API-002');
+      expect(rule.severity).toBe('info');
+      expect(rule.category).toBe('api-led');
+    });
+  });
 
-        it('should pass for system layer with database', () => {
-            const xml = `
+  // =================================================================
+  // API-003: System Layer Pattern
+  // =================================================================
+  describe('SystemLayerRule (API-003)', () => {
+    const rule = new SystemLayerRule();
+
+    it('should pass for system layer with database', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:db="http://www.mulesoft.org/schema/mule/db">
                     <flow name="orders-sys-get-flow">
@@ -125,15 +125,15 @@ describe('API-Led Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should pass for system layer with HTTP request', () => {
-            const xml = `
+    it('should pass for system layer with HTTP request', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <flow name="salesforce-system-flow">
@@ -141,61 +141,61 @@ describe('API-Led Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('API-003');
-            expect(rule.severity).toBe('info');
-            expect(rule.category).toBe('api-led');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
 
-    // =================================================================
-    // API-004: Single System Per SAPI
-    // =================================================================
-    describe('SingleSystemSapiRule (API-004)', () => {
-        let rule: SingleSystemSapiRule;
-        let tempDir: string;
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('API-003');
+      expect(rule.severity).toBe('info');
+      expect(rule.category).toBe('api-led');
+    });
+  });
 
-        beforeEach(() => {
-            rule = new SingleSystemSapiRule();
-            rule.reset(); // Reset for each test
-        });
+  // =================================================================
+  // API-004: Single System Per SAPI
+  // =================================================================
+  describe('SingleSystemSapiRule (API-004)', () => {
+    let rule: SingleSystemSapiRule;
+    let tempDir: string;
 
-        afterEach(() => {
-            // Clean up temp directory if created
-            if (tempDir && fs.existsSync(tempDir)) {
-                fs.rmSync(tempDir, { recursive: true, force: true });
-            }
-        });
+    beforeEach(() => {
+      rule = new SingleSystemSapiRule();
+      rule.reset(); // Reset for each test
+    });
 
-        /**
-         * Helper to create a temp SAPI project structure
-         */
-        const createTempSapiProject = (
-            projectName: string,
-            xmlFiles: Record<string, string>,
-        ): string => {
-            tempDir = fs.mkdtempSync(path.join(os.tmpdir(), projectName + '-'));
-            const muleDir = path.join(tempDir, 'src', 'main', 'mule');
-            fs.mkdirSync(muleDir, { recursive: true });
+    afterEach(() => {
+      // Clean up temp directory if created
+      if (tempDir && fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
+    });
 
-            for (const [filename, content] of Object.entries(xmlFiles)) {
-                fs.writeFileSync(path.join(muleDir, filename), content);
-            }
+    /**
+     * Helper to create a temp SAPI project structure
+     */
+    const createTempSapiProject = (
+      projectName: string,
+      xmlFiles: Record<string, string>,
+    ): string => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), projectName + '-'));
+      const muleDir = path.join(tempDir, 'src', 'main', 'mule');
+      fs.mkdirSync(muleDir, { recursive: true });
 
-            return tempDir;
-        };
+      for (const [filename, content] of Object.entries(xmlFiles)) {
+        fs.writeFileSync(path.join(muleDir, filename), content);
+      }
 
-        it('should pass for non-SAPI projects', () => {
-            // Create a project without -sapi in the name
-            const projectRoot = createTempSapiProject('my-process-api', {
-                'global.xml': `
+      return tempDir;
+    };
+
+    it('should pass for non-SAPI projects', () => {
+      // Create a project without -sapi in the name
+      const projectRoot = createTempSapiProject('my-process-api', {
+        'global.xml': `
                     <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                           xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
                           xmlns:netsuite="http://www.mulesoft.org/schema/mule/netsuite">
@@ -203,35 +203,35 @@ describe('API-Led Rules', () => {
                         <netsuite:config name="ns-config"/>
                     </mule>
                 `,
-            });
+      });
 
-            const context = createContext('global.xml', projectRoot);
-            const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
-            const issues = rule.validate(doc.document!, context);
+      const context = createContext('global.xml', projectRoot);
+      const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
+      const issues = rule.validate(doc.document!, context);
 
-            expect(issues).toHaveLength(0);
-        });
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should pass for SAPI with single system connector', () => {
-            const projectRoot = createTempSapiProject('orders-sapi', {
-                'global.xml': `
+    it('should pass for SAPI with single system connector', () => {
+      const projectRoot = createTempSapiProject('orders-sapi', {
+        'global.xml': `
                     <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                           xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce">
                         <salesforce:sfdc-config name="salesforce-config"/>
                     </mule>
                 `,
-            });
+      });
 
-            const context = createContext('global.xml', projectRoot);
-            const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
-            const issues = rule.validate(doc.document!, context);
+      const context = createContext('global.xml', projectRoot);
+      const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
+      const issues = rule.validate(doc.document!, context);
 
-            expect(issues).toHaveLength(0);
-        });
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for SAPI with multiple system connectors', () => {
-            const projectRoot = createTempSapiProject('external-sapi', {
-                'global.xml': `
+    it('should fail for SAPI with multiple system connectors', () => {
+      const projectRoot = createTempSapiProject('external-sapi', {
+        'global.xml': `
                     <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                           xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
                           xmlns:netsuite="http://www.mulesoft.org/schema/mule/netsuite">
@@ -239,22 +239,22 @@ describe('API-Led Rules', () => {
                         <netsuite:config name="netsuite-config"/>
                     </mule>
                 `,
-            });
+      });
 
-            const context = createContext('global.xml', projectRoot);
-            const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
-            const issues = rule.validate(doc.document!, context);
+      const context = createContext('global.xml', projectRoot);
+      const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
+      const issues = rule.validate(doc.document!, context);
 
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('API-004');
-            expect(issues[0].message).toContain('2 backend systems');
-            expect(issues[0].message).toContain('NetSuite');
-            expect(issues[0].message).toContain('Salesforce');
-        });
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('API-004');
+      expect(issues[0].message).toContain('2 backend systems');
+      expect(issues[0].message).toContain('NetSuite');
+      expect(issues[0].message).toContain('Salesforce');
+    });
 
-        it('should treat NetSuite and NetSuite Restlet as same system', () => {
-            const projectRoot = createTempSapiProject('netsuite-sapi', {
-                'global.xml': `
+    it('should treat NetSuite and NetSuite Restlet as same system', () => {
+      const projectRoot = createTempSapiProject('netsuite-sapi', {
+        'global.xml': `
                     <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                           xmlns:netsuite="http://www.mulesoft.org/schema/mule/netsuite"
                           xmlns:netsuite-restlet="http://www.mulesoft.org/schema/mule/netsuite-restlet">
@@ -262,19 +262,19 @@ describe('API-Led Rules', () => {
                         <netsuite-restlet:rest-config name="netsuite-restlet-config"/>
                     </mule>
                 `,
-            });
+      });
 
-            const context = createContext('global.xml', projectRoot);
-            const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
-            const issues = rule.validate(doc.document!, context);
+      const context = createContext('global.xml', projectRoot);
+      const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
+      const issues = rule.validate(doc.document!, context);
 
-            // Should pass since NetSuite and NetSuite Restlet are the same system
-            expect(issues).toHaveLength(0);
-        });
+      // Should pass since NetSuite and NetSuite Restlet are the same system
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should ignore infrastructure connectors', () => {
-            const projectRoot = createTempSapiProject('orders-sapi', {
-                'global.xml': `
+    it('should ignore infrastructure connectors', () => {
+      const projectRoot = createTempSapiProject('orders-sapi', {
+        'global.xml': `
                     <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                           xmlns:http="http://www.mulesoft.org/schema/mule/http"
                           xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
@@ -285,21 +285,21 @@ describe('API-Led Rules', () => {
                         <salesforce:sfdc-config name="salesforce-config"/>
                     </mule>
                 `,
-            });
+      });
 
-            const context = createContext('global.xml', projectRoot);
-            const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
-            const issues = rule.validate(doc.document!, context);
+      const context = createContext('global.xml', projectRoot);
+      const doc = parseXml('<mule xmlns="http://www.mulesoft.org/schema/mule/core"/>');
+      const issues = rule.validate(doc.document!, context);
 
-            // Should pass since http, apikit, json-logger are infrastructure
-            expect(issues).toHaveLength(0);
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('API-004');
-            expect(rule.severity).toBe('warning');
-            expect(rule.category).toBe('api-led');
-            expect(rule.name).toBe('Single System Per SAPI');
-        });
+      // Should pass since http, apikit, json-logger are infrastructure
+      expect(issues).toHaveLength(0);
     });
+
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('API-004');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('api-led');
+      expect(rule.name).toBe('Single System Per SAPI');
+    });
+  });
 });

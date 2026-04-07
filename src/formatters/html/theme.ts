@@ -83,9 +83,9 @@ export const themeVariables = `
 `;
 
 export const ratingColors: Record<string, string> = {
-    A: 'var(--rating-a)',
-    B: 'var(--rating-b)',
-    C: 'var(--rating-c)',
-    D: 'var(--rating-d)',
-    E: 'var(--rating-e)',
+  A: 'var(--rating-a)',
+  B: 'var(--rating-b)',
+  C: 'var(--rating-c)',
+  D: 'var(--rating-d)',
+  E: 'var(--rating-e)',
 };

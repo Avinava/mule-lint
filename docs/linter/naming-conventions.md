@@ -10,36 +10,36 @@
 
 mule-lint uses multiple rule prefixes to organize rules by domain:
 
-| Prefix | Format | Domain | Example |
-|--------|--------|--------|---------|
-| `MULE` | `MULE-NNN` | Core MuleSoft XML validation | `MULE-001` |
-| `SEC` | `SEC-NNN` | Security best practices | `SEC-002` |
-| `LOG` | `LOG-NNN` | Structured logging | `LOG-001` |
-| `ERR` | `ERR-NNN` | Error handling best practices | `ERR-001` |
-| `PERF` | `PERF-NNN` | Performance optimization | `PERF-002` |
-| `OPS` | `OPS-NNN` | Operations/deployment | `OPS-001` |
-| `RES` | `RES-NNN` | Resilience patterns | `RES-001` |
-| `HYG` | `HYG-NNN` | Code hygiene | `HYG-001` |
-| `DOC` | `DOC-NNN` | Documentation requirements | `DOC-001` |
-| `PROJ` | `PROJ-NNN` | Project governance | `PROJ-001` |
-| `YAML` | `YAML-NNN` | YAML properties validation | `YAML-001` |
-| `DW` | `DW-NNN` | DataWeave file validation | `DW-001` |
-| `API` | `API-NNN` | API-Led patterns | `API-001` |
-| `EXP` | `EXP-NNN` | Experimental rules | `EXP-001` |
+| Prefix | Format     | Domain                        | Example    |
+| ------ | ---------- | ----------------------------- | ---------- |
+| `MULE` | `MULE-NNN` | Core MuleSoft XML validation  | `MULE-001` |
+| `SEC`  | `SEC-NNN`  | Security best practices       | `SEC-002`  |
+| `LOG`  | `LOG-NNN`  | Structured logging            | `LOG-001`  |
+| `ERR`  | `ERR-NNN`  | Error handling best practices | `ERR-001`  |
+| `PERF` | `PERF-NNN` | Performance optimization      | `PERF-002` |
+| `OPS`  | `OPS-NNN`  | Operations/deployment         | `OPS-001`  |
+| `RES`  | `RES-NNN`  | Resilience patterns           | `RES-001`  |
+| `HYG`  | `HYG-NNN`  | Code hygiene                  | `HYG-001`  |
+| `DOC`  | `DOC-NNN`  | Documentation requirements    | `DOC-001`  |
+| `PROJ` | `PROJ-NNN` | Project governance            | `PROJ-001` |
+| `YAML` | `YAML-NNN` | YAML properties validation    | `YAML-001` |
+| `DW`   | `DW-NNN`   | DataWeave file validation     | `DW-001`   |
+| `API`  | `API-NNN`  | API-Led patterns              | `API-001`  |
+| `EXP`  | `EXP-NNN`  | Experimental rules            | `EXP-001`  |
 
 ### MULE ID Ranges
 
-| Range | Category | Description |
-|-------|----------|-------------|
-| 001-099 | Error Handling | Error handler configuration and patterns |
-| 100-199 | Naming | Naming conventions for flows, variables |
-| 200-299 | Security | Security vulnerabilities, hardcoded values |
-| 300-399 | Logging | Logging standards and structured logging |
-| 400-499 | HTTP | HTTP configuration and headers |
-| 500-599 | Performance | Performance anti-patterns |
-| 600-699 | Documentation | Documentation requirements |
-| 700-799 | Standards | General coding standards |
-| 800-899 | Complexity/Structure | Code complexity and project structure |
+| Range   | Category             | Description                                |
+| ------- | -------------------- | ------------------------------------------ |
+| 001-099 | Error Handling       | Error handler configuration and patterns   |
+| 100-199 | Naming               | Naming conventions for flows, variables    |
+| 200-299 | Security             | Security vulnerabilities, hardcoded values |
+| 300-399 | Logging              | Logging standards and structured logging   |
+| 400-499 | HTTP                 | HTTP configuration and headers             |
+| 500-599 | Performance          | Performance anti-patterns                  |
+| 600-699 | Documentation        | Documentation requirements                 |
+| 700-799 | Standards            | General coding standards                   |
+| 800-899 | Complexity/Structure | Code complexity and project structure      |
 
 ### Rule Names
 
@@ -72,23 +72,23 @@ description = 'Finds missing error handlers';
 
 ### Source Files
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Rule class | PascalCase + `Rule` suffix | `FlowNamingRule.ts` |
-| Multi-rule file | Feature + `Rules` suffix | `YamlRules.ts`, `ApiLedRules.ts` |
-| Base class | PascalCase + `Base` prefix | `BaseRule.ts` |
-| Utility/Helper | PascalCase + `Helper`/`Utils` | `XPathHelper.ts` |
-| Type definitions | PascalCase, singular | `Issue.ts`, `Rule.ts` |
-| Constants | PascalCase or SCREAMING_SNAKE | `Defaults.ts` |
-| Index/barrel files | Lowercase `index.ts` | `index.ts` |
+| Type               | Convention                    | Example                          |
+| ------------------ | ----------------------------- | -------------------------------- |
+| Rule class         | PascalCase + `Rule` suffix    | `FlowNamingRule.ts`              |
+| Multi-rule file    | Feature + `Rules` suffix      | `YamlRules.ts`, `ApiLedRules.ts` |
+| Base class         | PascalCase + `Base` prefix    | `BaseRule.ts`                    |
+| Utility/Helper     | PascalCase + `Helper`/`Utils` | `XPathHelper.ts`                 |
+| Type definitions   | PascalCase, singular          | `Issue.ts`, `Rule.ts`            |
+| Constants          | PascalCase or SCREAMING_SNAKE | `Defaults.ts`                    |
+| Index/barrel files | Lowercase `index.ts`          | `index.ts`                       |
 
 ### Test Files
 
-| Convention | Example |
-|------------|---------|
-| Unit test | `{ClassName}.test.ts` | `FlowNamingRule.test.ts` |
-| Integration test | `{feature}.integration.test.ts` | `engine.integration.test.ts` |
-| Fixture | Descriptive kebab-case | `flow-with-error-handler.xml` |
+| Convention       | Example                         |
+| ---------------- | ------------------------------- | ----------------------------- |
+| Unit test        | `{ClassName}.test.ts`           | `FlowNamingRule.test.ts`      |
+| Integration test | `{feature}.integration.test.ts` | `engine.integration.test.ts`  |
+| Fixture          | Descriptive kebab-case          | `flow-with-error-handler.xml` |
 
 ---
 
@@ -98,25 +98,25 @@ description = 'Finds missing error handlers';
 
 ```typescript
 // ✅ Good - PascalCase, descriptive
-class FlowNamingRule { }
-class XPathHelper { }
-class SarifFormatter { }
+class FlowNamingRule {}
+class XPathHelper {}
+class SarifFormatter {}
 
 // ❌ Bad
-class flowrule { }
-class Helper { }  // Too generic
+class flowrule {}
+class Helper {} // Too generic
 ```
 
 ### Interfaces
 
 ```typescript
 // ✅ Good - PascalCase, noun-based
-interface Rule { }
-interface ValidationContext { }
-interface LintReport { }
+interface Rule {}
+interface ValidationContext {}
+interface LintReport {}
 
 // ❌ Bad - I-prefix (not TypeScript convention)
-interface IRule { }
+interface IRule {}
 ```
 
 ### Type Aliases
@@ -139,8 +139,8 @@ const MULE_NAMESPACE = 'http://www.mulesoft.org/schema/mule/core';
 
 // ✅ Also acceptable - Object of related constants
 const ExitCodes = {
-    Success: 0,
-    Error: 1,
+  Success: 0,
+  Error: 1,
 } as const;
 ```
 
@@ -148,13 +148,13 @@ const ExitCodes = {
 
 ```typescript
 // ✅ Good - camelCase, verb-based
-function validateDocument(doc: Document): Issue[] { }
-function getLineNumber(node: Node): number { }
-function loadConfiguration(): Config { }
+function validateDocument(doc: Document): Issue[] {}
+function getLineNumber(node: Node): number {}
+function loadConfiguration(): Config {}
 
 // ✅ Good - boolean getters with is/has/should prefix
-function isEnabled(rule: Rule): boolean { }
-function hasErrorHandler(flow: Node): boolean { }
+function isEnabled(rule: Rule): boolean {}
+function hasErrorHandler(flow: Node): boolean {}
 ```
 
 ### Variables
@@ -246,11 +246,11 @@ COMMON_UTILS.dwl
 
 ### Files
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Main docs | lowercase-kebab | `rule-engine.md` |
-| Rule docs | Rule ID | `MULE-001.md` |
-| Guides | lowercase-kebab | `getting-started.md` |
+| Type      | Convention      | Example              |
+| --------- | --------------- | -------------------- |
+| Main docs | lowercase-kebab | `rule-engine.md`     |
+| Rule docs | Rule ID         | `MULE-001.md`        |
+| Guides    | lowercase-kebab | `getting-started.md` |
 
 ### Sections
 
@@ -258,7 +258,9 @@ Use sentence case for headers:
 
 ```markdown
 # Getting started
+
 ## How to install
+
 ### Running in CI/CD
 ```
 
@@ -291,19 +293,19 @@ chore: upgrade xmldom to 0.9.0
 
 ## Summary Table
 
-| Entity | Convention | Example |
-|--------|------------|---------|
-| File (rule class) | PascalCase + Rule | `FlowNamingRule.ts` |
-| File (multi-rule) | Feature + Rules | `YamlRules.ts` |
-| File (test) | {Class}.test.ts | `FlowNamingRule.test.ts` |
-| Class | PascalCase | `class FlowNamingRule` |
-| Interface | PascalCase | `interface Rule` |
-| Type | PascalCase | `type Severity` |
-| Constant | SCREAMING_SNAKE | `const MAX_FILES` |
-| Function | camelCase, verb | `validateDocument()` |
-| Variable | camelCase | `const filePath` |
-| Rule ID (MULE) | MULE-NNN | `MULE-001` |
-| Rule ID (YAML) | YAML-NNN | `YAML-001` |
-| Rule ID (DW) | DW-NNN | `DW-001` |
-| Rule ID (API) | API-NNN | `API-001` |
-| Rule ID (EXP) | EXP-NNN | `EXP-001` |
+| Entity            | Convention        | Example                  |
+| ----------------- | ----------------- | ------------------------ |
+| File (rule class) | PascalCase + Rule | `FlowNamingRule.ts`      |
+| File (multi-rule) | Feature + Rules   | `YamlRules.ts`           |
+| File (test)       | {Class}.test.ts   | `FlowNamingRule.test.ts` |
+| Class             | PascalCase        | `class FlowNamingRule`   |
+| Interface         | PascalCase        | `interface Rule`         |
+| Type              | PascalCase        | `type Severity`          |
+| Constant          | SCREAMING_SNAKE   | `const MAX_FILES`        |
+| Function          | camelCase, verb   | `validateDocument()`     |
+| Variable          | camelCase         | `const filePath`         |
+| Rule ID (MULE)    | MULE-NNN          | `MULE-001`               |
+| Rule ID (YAML)    | YAML-NNN          | `YAML-001`               |
+| Rule ID (DW)      | DW-NNN            | `DW-001`                 |
+| Rule ID (API)     | API-NNN           | `API-001`                |
+| Rule ID (EXP)     | EXP-NNN           | `EXP-001`                |

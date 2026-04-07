@@ -5,21 +5,21 @@ import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
 
 describe('HTTP Rules', () => {
-    const createContext = (filePath = 'test.xml'): ValidationContext => ({
-        filePath,
-        relativePath: filePath,
-        projectRoot: '/project',
-        config: { enabled: true },
-    });
+  const createContext = (filePath = 'test.xml'): ValidationContext => ({
+    filePath,
+    relativePath: filePath,
+    projectRoot: '/project',
+    config: { enabled: true },
+  });
 
-    // =================================================================
-    // MULE-401: HTTP User-Agent
-    // =================================================================
-    describe('HttpUserAgentRule (MULE-401)', () => {
-        const rule = new HttpUserAgentRule();
+  // =================================================================
+  // MULE-401: HTTP User-Agent
+  // =================================================================
+  describe('HttpUserAgentRule (MULE-401)', () => {
+    const rule = new HttpUserAgentRule();
 
-        it('should pass when User-Agent header is present', () => {
-            const xml = `
+    it('should pass when User-Agent header is present', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <flow name="test-flow">
@@ -31,15 +31,15 @@ describe('HTTP Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should report when User-Agent header is missing', () => {
-            const xml = `
+    it('should report when User-Agent header is missing', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <flow name="test-flow">
@@ -47,33 +47,33 @@ describe('HTTP Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-401');
-            expect(issues[0].severity).toBe('info');
-        });
-
-        it('should have info severity (not warning)', () => {
-            expect(rule.severity).toBe('info');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-401');
-            expect(rule.category).toBe('http');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-401');
+      expect(issues[0].severity).toBe('info');
     });
 
-    // =================================================================
-    // MULE-403: HTTP Timeout
-    // =================================================================
-    describe('HttpTimeoutRule (MULE-403)', () => {
-        const rule = new HttpTimeoutRule();
+    it('should have info severity (not warning)', () => {
+      expect(rule.severity).toBe('info');
+    });
 
-        it('should pass when responseTimeout is configured', () => {
-            const xml = `
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-401');
+      expect(rule.category).toBe('http');
+    });
+  });
+
+  // =================================================================
+  // MULE-403: HTTP Timeout
+  // =================================================================
+  describe('HttpTimeoutRule (MULE-403)', () => {
+    const rule = new HttpTimeoutRule();
+
+    it('should pass when responseTimeout is configured', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <http:request-config name="HTTP_Config" responseTimeout="30000">
@@ -81,15 +81,15 @@ describe('HTTP Rules', () => {
                     </http:request-config>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail when responseTimeout is missing', () => {
-            const xml = `
+    it('should fail when responseTimeout is missing', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <http:request-config name="HTTP_Config">
@@ -97,30 +97,30 @@ describe('HTTP Rules', () => {
                     </http:request-config>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-403');
-            expect(issues[0].message).toContain('responseTimeout');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-403');
-            expect(rule.severity).toBe('warning');
-            expect(rule.category).toBe('http');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-403');
+      expect(issues[0].message).toContain('responseTimeout');
     });
 
-    // =================================================================
-    // MULE-402: HTTP Content-Type
-    // =================================================================
-    describe('HttpContentTypeRule (MULE-402)', () => {
-        const rule = new HttpContentTypeRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-403');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('http');
+    });
+  });
 
-        it('should pass for POST request with Content-Type', () => {
-            const xml = `
+  // =================================================================
+  // MULE-402: HTTP Content-Type
+  // =================================================================
+  describe('HttpContentTypeRule (MULE-402)', () => {
+    const rule = new HttpContentTypeRule();
+
+    it('should pass for POST request with Content-Type', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <flow name="test-flow">
@@ -132,15 +132,15 @@ describe('HTTP Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for POST request without Content-Type', () => {
-            const xml = `
+    it('should fail for POST request without Content-Type', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <flow name="test-flow">
@@ -148,16 +148,16 @@ describe('HTTP Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-402');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-402');
+    });
 
-        it('should pass for GET request without Content-Type', () => {
-            const xml = `
+    it('should pass for GET request without Content-Type', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <flow name="test-flow">
@@ -165,17 +165,17 @@ describe('HTTP Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-402');
-            expect(rule.severity).toBe('warning');
-            expect(rule.category).toBe('http');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
+
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-402');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('http');
+    });
+  });
 });

@@ -4,11 +4,11 @@
  */
 
 export interface SidebarProps {
-    totalIssues: number;
+  totalIssues: number;
 }
 
 export function renderSidebar(props: SidebarProps): string {
-    return `
+  return `
         <!-- ===== SIDEBAR ===== -->
         <aside class="app-sidebar bg-white dark:bg-slate-800/50 border-r border-slate-100 dark:border-slate-700 py-4">
             <!-- Navigation -->

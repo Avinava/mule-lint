@@ -65,9 +65,9 @@ import { EnvironmentFilesRule, PropertyNamingRule, PlaintextSecretsRule } from '
 
 // Import all rules - Structure
 import {
-    ProjectStructureRule,
-    GlobalConfigRule,
-    MonolithicXmlRule,
+  ProjectStructureRule,
+  GlobalConfigRule,
+  MonolithicXmlRule,
 } from './structure/StructureRules';
 
 // Import all rules - DataWeave
@@ -80,9 +80,9 @@ import { SingleSystemSapiRule } from './api-led/SingleSystemSapiRule';
 
 // Import all rules - Experimental
 import {
-    FlowRefDepthRule,
-    ConnectorConfigNamingRule,
-    MUnitCoverageRule,
+  FlowRefDepthRule,
+  ConnectorConfigNamingRule,
+  MUnitCoverageRule,
 } from './experimental/ExperimentalRules';
 
 // Import all rules - Operations & Hygiene
@@ -140,124 +140,124 @@ export { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
  * Total: 56 rules (including operations, resilience, and hygiene rules)
  */
 export const ALL_RULES: Rule[] = [
-    // Error Handling Rules (MULE-001, 003, 005, 007, 009)
-    new GlobalErrorHandlerRule(),
-    new MissingErrorHandlerRule(),
-    new HttpStatusRule(),
-    new CorrelationIdRule(),
-    new GenericErrorRule(),
-    new TryScopeRule(), // ERR-001: Try Scope Best Practice
+  // Error Handling Rules (MULE-001, 003, 005, 007, 009)
+  new GlobalErrorHandlerRule(),
+  new MissingErrorHandlerRule(),
+  new HttpStatusRule(),
+  new CorrelationIdRule(),
+  new GenericErrorRule(),
+  new TryScopeRule(), // ERR-001: Try Scope Best Practice
 
-    // Naming Rules (MULE-002, 101, 102)
-    new FlowNamingRule(),
-    new FlowCasingRule(),
-    new VariableNamingRule(),
+  // Naming Rules (MULE-002, 101, 102)
+  new FlowNamingRule(),
+  new FlowCasingRule(),
+  new VariableNamingRule(),
 
-    // Security Rules (MULE-004, 201, 202)
-    new HardcodedHttpRule(),
-    new HardcodedCredentialsRule(),
-    new InsecureTlsRule(),
-    new TlsVersionRule(), // SEC-002: TLS Version Check
-    new RateLimitingRule(), // SEC-003: Rate Limiting
-    new InputValidationRule(), // SEC-004: Input Validation
+  // Security Rules (MULE-004, 201, 202)
+  new HardcodedHttpRule(),
+  new HardcodedCredentialsRule(),
+  new InsecureTlsRule(),
+  new TlsVersionRule(), // SEC-002: TLS Version Check
+  new RateLimitingRule(), // SEC-003: Rate Limiting
+  new InputValidationRule(), // SEC-004: Input Validation
 
-    // Logging Rules (MULE-006, 301, 303)
-    new LoggerCategoryRule(),
-    new LoggerPayloadRule(),
-    new LoggerInUntilSuccessfulRule(),
-    new StructuredLoggingRule(), // LOG-001: Structured Logging
-    new SensitiveDataLoggingRule(), // LOG-004: Sensitive Data in Logs
+  // Logging Rules (MULE-006, 301, 303)
+  new LoggerCategoryRule(),
+  new LoggerPayloadRule(),
+  new LoggerInUntilSuccessfulRule(),
+  new StructuredLoggingRule(), // LOG-001: Structured Logging
+  new SensitiveDataLoggingRule(), // LOG-004: Sensitive Data in Logs
 
-    // Standards Rules (MULE-008, 010, 701)
-    new ChoiceAntiPatternRule(),
-    new DwlStandardsRule(),
-    new DeprecatedComponentRule(),
+  // Standards Rules (MULE-008, 010, 701)
+  new ChoiceAntiPatternRule(),
+  new DwlStandardsRule(),
+  new DeprecatedComponentRule(),
 
-    // HTTP Rules (MULE-401, 402, 403)
-    new HttpUserAgentRule(),
-    new HttpContentTypeRule(),
-    new HttpTimeoutRule(),
+  // HTTP Rules (MULE-401, 402, 403)
+  new HttpUserAgentRule(),
+  new HttpContentTypeRule(),
+  new HttpTimeoutRule(),
 
-    // Documentation Rules (MULE-601, 604)
-    new FlowDescriptionRule(),
-    new MissingDocNameRule(),
+  // Documentation Rules (MULE-601, 604)
+  new FlowDescriptionRule(),
+  new MissingDocNameRule(),
 
-    // Performance Rules (MULE-501, 502, 503)
-    new ScatterGatherRoutesRule(),
-    new AsyncErrorHandlerRule(),
-    new LargeChoiceBlockRule(),
-    new ConnectionPoolingRule(), // PERF-002: Connection Pooling
+  // Performance Rules (MULE-501, 502, 503)
+  new ScatterGatherRoutesRule(),
+  new AsyncErrorHandlerRule(),
+  new LargeChoiceBlockRule(),
+  new ConnectionPoolingRule(), // PERF-002: Connection Pooling
 
-    // Complexity Rules (MULE-801)
-    new FlowComplexityRule(),
+  // Complexity Rules (MULE-801)
+  new FlowComplexityRule(),
 
-    // YAML Rules (YAML-001, 003, 004)
-    new EnvironmentFilesRule(),
-    new PropertyNamingRule(),
-    new PlaintextSecretsRule(),
+  // YAML Rules (YAML-001, 003, 004)
+  new EnvironmentFilesRule(),
+  new PropertyNamingRule(),
+  new PlaintextSecretsRule(),
 
-    // Structure Rules (MULE-802, 803, 804)
-    new ProjectStructureRule(),
-    new GlobalConfigRule(),
-    new MonolithicXmlRule(),
+  // Structure Rules (MULE-802, 803, 804)
+  new ProjectStructureRule(),
+  new GlobalConfigRule(),
+  new MonolithicXmlRule(),
 
-    // DataWeave Rules (DW-001, 002, 003, 004)
-    new ExternalDwlRule(),
-    new DwlNamingRule(),
-    new DwlModulesRule(),
-    new Java17DWErrorHandlingRule(),
+  // DataWeave Rules (DW-001, 002, 003, 004)
+  new ExternalDwlRule(),
+  new DwlNamingRule(),
+  new DwlModulesRule(),
+  new Java17DWErrorHandlingRule(),
 
-    // API-Led Rules (API-001, 002, 003, 004)
-    new ExperienceLayerRule(),
-    new ProcessLayerRule(),
-    new SystemLayerRule(),
-    new SingleSystemSapiRule(),
+  // API-Led Rules (API-001, 002, 003, 004)
+  new ExperienceLayerRule(),
+  new ProcessLayerRule(),
+  new SystemLayerRule(),
+  new SingleSystemSapiRule(),
 
-    // Experimental Rules (EXP-001, 002, 003)
-    new FlowRefDepthRule(),
-    new ConnectorConfigNamingRule(),
-    new MUnitCoverageRule(),
+  // Experimental Rules (EXP-001, 002, 003)
+  new FlowRefDepthRule(),
+  new ConnectorConfigNamingRule(),
+  new MUnitCoverageRule(),
 
-    // Operations & Resilience Rules (RES-001, OPS-001, OPS-002, OPS-003)
-    new ReconnectionStrategyRule(),
-    new AutoDiscoveryRule(),
-    new HttpPortPlaceholderRule(),
-    new CronExternalizedRule(),
+  // Operations & Resilience Rules (RES-001, OPS-001, OPS-002, OPS-003)
+  new ReconnectionStrategyRule(),
+  new AutoDiscoveryRule(),
+  new HttpPortPlaceholderRule(),
+  new CronExternalizedRule(),
 
-    // Security Enhancement (SEC-006)
-    new EncryptionKeyInLogsRule(),
+  // Security Enhancement (SEC-006)
+  new EncryptionKeyInLogsRule(),
 
-    // Code Hygiene Rules (HYG-001, HYG-002, HYG-003)
-    new ExcessiveLoggersRule(),
-    new CommentedCodeRule(),
-    new UnusedFlowRule(),
+  // Code Hygiene Rules (HYG-001, HYG-002, HYG-003)
+  new ExcessiveLoggersRule(),
+  new CommentedCodeRule(),
+  new UnusedFlowRule(),
 
-    // Additional Standards (API-005, DOC-001)
-    new ApiKitValidationRule(),
-    new DisplayNameRule(),
+  // Additional Standards (API-005, DOC-001)
+  new ApiKitValidationRule(),
+  new DisplayNameRule(),
 
-    // Governance Rules (PROJ-001, PROJ-002)
-    new PomValidationRule(),
-    new GitHygieneRule(),
+  // Governance Rules (PROJ-001, PROJ-002)
+  new PomValidationRule(),
+  new GitHygieneRule(),
 ];
 
 /**
  * Get rules by category
  */
 export function getRulesByCategory(category: string): Rule[] {
-    return ALL_RULES.filter((rule) => rule.category === category);
+  return ALL_RULES.filter((rule) => rule.category === category);
 }
 
 /**
  * Get rule by ID
  */
 export function getRuleById(id: string): Rule | undefined {
-    return ALL_RULES.find((rule) => rule.id === id);
+  return ALL_RULES.find((rule) => rule.id === id);
 }
 
 /**
  * Get all rule IDs
  */
 export function getAllRuleIds(): string[] {
-    return ALL_RULES.map((rule) => rule.id);
+  return ALL_RULES.map((rule) => rule.id);
 }

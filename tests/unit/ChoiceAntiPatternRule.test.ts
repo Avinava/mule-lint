@@ -3,21 +3,21 @@ import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
 
 describe('ChoiceAntiPatternRule', () => {
-    const rule = new ChoiceAntiPatternRule();
+  const rule = new ChoiceAntiPatternRule();
 
-    const createContext = (filePath = 'test.xml'): ValidationContext => ({
-        filePath,
-        relativePath: filePath,
-        projectRoot: '/project',
-        config: {
-            enabled: true,
-            options: {},
-        },
-    });
+  const createContext = (filePath = 'test.xml'): ValidationContext => ({
+    filePath,
+    relativePath: filePath,
+    projectRoot: '/project',
+    config: {
+      enabled: true,
+      options: {},
+    },
+  });
 
-    describe('validate', () => {
-        it('should fail for raise-error in otherwise block', () => {
-            const xml = `
+  describe('validate', () => {
+    it('should fail for raise-error in otherwise block', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="testFlow">
                         <choice>
@@ -31,15 +31,15 @@ describe('ChoiceAntiPatternRule', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-008');
-        });
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-008');
+    });
 
-        it('should pass for raise-error in until-successful (retry pattern)', () => {
-            const xml = `
+    it('should pass for raise-error in until-successful (retry pattern)', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="testFlow">
                         <until-successful>
@@ -55,14 +55,14 @@ describe('ChoiceAntiPatternRule', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
-        
-        it('should fail for generic ANY type in when block', () => {
-             const xml = `
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should fail for generic ANY type in when block', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="testFlow">
                         <choice>
@@ -73,11 +73,11 @@ describe('ChoiceAntiPatternRule', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].message).toContain('generic type="ANY"');
-        });
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].message).toContain('generic type="ANY"');
     });
+  });
 });

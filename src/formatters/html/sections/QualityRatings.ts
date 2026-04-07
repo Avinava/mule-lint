@@ -6,7 +6,7 @@
 import { renderRatingCard, ratingCards } from '../components/RatingBadge';
 
 export function renderQualityRatingsSection(): string {
-    return `
+  return `
     <div id="quality-ratings" class="mb-6" style="display: none;">
         <div class="mb-3">
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">

@@ -19,13 +19,21 @@ export { renderRatingCard, ratingCards } from './components/RatingBadge';
 export { icons } from './components/Icons';
 
 // Sections
-export { renderQualityRatingsSection, qualityRatingsRendererScript } from './sections/QualityRatings';
+export {
+  renderQualityRatingsSection,
+  qualityRatingsRendererScript,
+} from './sections/QualityRatings';
 export { renderLintSummarySection, LintSummaryProps } from './sections/LintSummary';
 export { renderHeader, HeaderProps } from './sections/Header';
 export { renderSidebar, SidebarProps } from './sections/Sidebar';
 
 // Scripts
-export { connectorMeta, methodStyles, exchangeBaseUrl, generateRendererScript } from './scripts/renderer';
+export {
+  connectorMeta,
+  methodStyles,
+  exchangeBaseUrl,
+  generateRendererScript,
+} from './scripts/renderer';
 export { routerScript } from './scripts/router';
 export { initScript } from './scripts/init';
 

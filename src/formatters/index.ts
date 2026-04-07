@@ -17,20 +17,20 @@ import { formatCsv } from './CsvFormatter';
  * Format a lint report using the specified formatter
  */
 export function format(report: LintReport, type: FormatterType): string {
-    switch (type) {
-        case 'table':
-            return formatTable(report);
-        case 'json':
-            return formatJson(report);
-        case 'sarif':
-            return formatSarif(report, ALL_RULES);
-        case 'html':
-            return formatHtml(report);
-        case 'csv':
-            return formatCsv(report);
-        default: {
-            const _exhaustiveCheck: never = type;
-            throw new Error(`Unknown formatter type: ${String(_exhaustiveCheck)}`);
-        }
+  switch (type) {
+    case 'table':
+      return formatTable(report);
+    case 'json':
+      return formatJson(report);
+    case 'sarif':
+      return formatSarif(report, ALL_RULES);
+    case 'html':
+      return formatHtml(report);
+    case 'csv':
+      return formatCsv(report);
+    default: {
+      const _exhaustiveCheck: never = type;
+      throw new Error(`Unknown formatter type: ${String(_exhaustiveCheck)}`);
     }
+  }
 }

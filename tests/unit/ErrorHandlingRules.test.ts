@@ -2,25 +2,26 @@ import { MissingErrorHandlerRule } from '../../src/rules/error-handling/MissingE
 import { GenericErrorRule } from '../../src/rules/error-handling/GenericErrorRule';
 import { HttpStatusRule } from '../../src/rules/error-handling/HttpStatusRule';
 import { CorrelationIdRule } from '../../src/rules/error-handling/CorrelationIdRule';
+import { TryScopeRule } from '../../src/rules/error-handling/TryScopeRule';
 import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
 
 describe('Error Handling Rules', () => {
-    const createContext = (filePath = 'test.xml'): ValidationContext => ({
-        filePath,
-        relativePath: filePath,
-        projectRoot: '/project',
-        config: { enabled: true },
-    });
+  const createContext = (filePath = 'test.xml'): ValidationContext => ({
+    filePath,
+    relativePath: filePath,
+    projectRoot: '/project',
+    config: { enabled: true },
+  });
 
-    // =================================================================
-    // MULE-003: Missing Error Handler
-    // =================================================================
-    describe('MissingErrorHandlerRule (MULE-003)', () => {
-        const rule = new MissingErrorHandlerRule();
+  // =================================================================
+  // MULE-003: Missing Error Handler
+  // =================================================================
+  describe('MissingErrorHandlerRule (MULE-003)', () => {
+    const rule = new MissingErrorHandlerRule();
 
-        it('should pass for flow with inline error handler', () => {
-            const xml = `
+    it('should pass for flow with inline error handler', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="my-process-flow">
                         <logger message="test"/>
@@ -32,32 +33,32 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for flow without error handler', () => {
-            const xml = `
+    it('should fail for flow without error handler', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="my-process-flow">
                         <logger message="test"/>
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-003');
-            expect(issues[0].message).toContain('my-process-flow');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-003');
+      expect(issues[0].message).toContain('my-process-flow');
+    });
 
-        it('should skip APIKit auto-generated flows', () => {
-            const xml = `
+    it('should skip APIKit auto-generated flows', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="get:\\health:api-config">
                         <logger message="test"/>
@@ -67,43 +68,43 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should skip *-api-main flows', () => {
-            const xml = `
+    it('should skip *-api-main flows', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="orders-api-main">
                         <apikit:router/>
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-003');
-            expect(rule.severity).toBe('error');
-            expect(rule.category).toBe('error-handling');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
 
-    // =================================================================
-    // MULE-009: Generic Error Type
-    // =================================================================
-    describe('GenericErrorRule (MULE-009)', () => {
-        const rule = new GenericErrorRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-003');
+      expect(rule.severity).toBe('error');
+      expect(rule.category).toBe('error-handling');
+    });
+  });
 
-        it('should pass for specific error types', () => {
-            const xml = `
+  // =================================================================
+  // MULE-009: Generic Error Type
+  // =================================================================
+  describe('GenericErrorRule (MULE-009)', () => {
+    const rule = new GenericErrorRule();
+
+    it('should pass for specific error types', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <error-handler>
@@ -117,15 +118,15 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for type="ANY" in on-error-continue', () => {
-            const xml = `
+    it('should fail for type="ANY" in on-error-continue', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <error-handler>
@@ -136,17 +137,17 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-009');
-            expect(issues[0].message).toContain('ANY');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-009');
+      expect(issues[0].message).toContain('ANY');
+    });
 
-        it('should fail for type="MULE:ANY" in on-error-propagate', () => {
-            const xml = `
+    it('should fail for type="MULE:ANY" in on-error-propagate', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <error-handler>
@@ -157,29 +158,29 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].message).toContain('MULE:ANY');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-009');
-            expect(rule.severity).toBe('warning');
-            expect(rule.category).toBe('error-handling');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].message).toContain('MULE:ANY');
     });
 
-    // =================================================================
-    // MULE-005: HTTP Status in Error Handler
-    // =================================================================
-    describe('HttpStatusRule (MULE-005)', () => {
-        const rule = new HttpStatusRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-009');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('error-handling');
+    });
+  });
 
-        it('should pass when httpStatus variable is set', () => {
-            const xml = `
+  // =================================================================
+  // MULE-005: HTTP Status in Error Handler
+  // =================================================================
+  describe('HttpStatusRule (MULE-005)', () => {
+    const rule = new HttpStatusRule();
+
+    it('should pass when httpStatus variable is set', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <error-handler>
@@ -190,15 +191,15 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail when httpStatus is not set in error handler', () => {
-            const xml = `
+    it('should fail when httpStatus is not set in error handler', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <error-handler>
@@ -209,30 +210,30 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-005');
-            expect(issues[0].message).toContain('httpStatus');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-005');
-            expect(rule.severity).toBe('warning');
-            expect(rule.category).toBe('error-handling');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-005');
+      expect(issues[0].message).toContain('httpStatus');
     });
 
-    // =================================================================
-    // MULE-007: Correlation ID in Error Handler
-    // =================================================================
-    describe('CorrelationIdRule (MULE-007)', () => {
-        const rule = new CorrelationIdRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-005');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('error-handling');
+    });
+  });
 
-        it('should pass when correlationId is referenced', () => {
-            const xml = `
+  // =================================================================
+  // MULE-007: Correlation ID in Error Handler
+  // =================================================================
+  describe('CorrelationIdRule (MULE-007)', () => {
+    const rule = new CorrelationIdRule();
+
+    it('should pass when correlationId is referenced', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
                     <flow name="test-flow">
@@ -250,15 +251,15 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail when correlationId is not referenced', () => {
-            const xml = `
+    it('should fail when correlationId is not referenced', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <error-handler>
@@ -269,31 +270,30 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-007');
-            expect(issues[0].message).toContain('correlationId');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-007');
-            expect(rule.severity).toBe('warning');
-            expect(rule.category).toBe('error-handling');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-007');
+      expect(issues[0].message).toContain('correlationId');
     });
 
-    // =================================================================
-    // ERR-001: Try Scope Best Practice
-    // =================================================================
-    describe('TryScopeRule (ERR-001)', () => {
-        const { TryScopeRule } = require('../../src/rules/error-handling/TryScopeRule');
-        const rule = new TryScopeRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-007');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('error-handling');
+    });
+  });
 
-        it('should pass for flow with Try scope', () => {
-            const xml = `
+  // =================================================================
+  // ERR-001: Try Scope Best Practice
+  // =================================================================
+  describe('TryScopeRule (ERR-001)', () => {
+    const rule = new TryScopeRule();
+
+    it('should pass for flow with Try scope', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http"
                       xmlns:db="http://www.mulesoft.org/schema/mule/db">
@@ -305,18 +305,17 @@ describe('Error Handling Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('ERR-001');
-            expect(rule.severity).toBe('info');
-            expect(rule.category).toBe('error-handling');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
-});
 
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('ERR-001');
+      expect(rule.severity).toBe('info');
+      expect(rule.category).toBe('error-handling');
+    });
+  });
+});
