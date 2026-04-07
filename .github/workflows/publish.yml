@@ -49,11 +49,13 @@ jobs:
           echo "✅ Version verified: $PKG_VERSION"
 
       - name: Publish to npm
+        continue-on-error: true
         run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
+        if: always()
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
