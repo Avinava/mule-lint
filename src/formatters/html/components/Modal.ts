@@ -22,28 +22,28 @@ export const modalHtml = `
 `;
 
 export interface ModalContent {
-    title: string;
-    body: string;
+  title: string;
+  body: string;
 }
 
 /**
  * Generate rating scale HTML from centralized thresholds
  */
 function generateRatingScale(dimension: QualityDimension): string {
-    return `<div class="rating-scale">
+  return `<div class="rating-scale">
 ${THRESHOLDS[dimension]
-            .map(
-                (t) =>
-                    `                <div class="rating-row"><span class="badge" style="background: ${t.color};">${t.grade}</span><span>${t.description}</span></div>`,
-            )
-            .join('\n')}
+  .map(
+    (t) =>
+      `                <div class="rating-row"><span class="badge" style="background: ${t.color};">${t.grade}</span><span>${t.description}</span></div>`,
+  )
+  .join('\n')}
             </div>`;
 }
 
 export const modalContent: Record<string, ModalContent> = {
-    complexity: {
-        title: 'Cognitive Complexity (Beta)',
-        body: `
+  complexity: {
+    title: 'Cognitive Complexity (Beta)',
+    body: `
             <h4>What is measured</h4>
             <p>Complexity assesses how difficult code is to understand.</p>
             <h4 style="margin-top: 16px;">It increments/penalizes for</h4>
@@ -55,10 +55,10 @@ export const modalContent: Record<string, ModalContent> = {
             <h4 style="margin-top: 16px;">Rating Thresholds</h4>
             ${generateRatingScale('complexity')}
         `,
-    },
-    maintainability: {
-        title: 'Maintainability Rating (Beta)',
-        body: `
+  },
+  maintainability: {
+    title: 'Maintainability Rating (Beta)',
+    body: `
             <h4>What is measured</h4>
             <p>Technical debt as a percentage of estimated development time.</p>
             <h4 style="margin-top: 16px;">How it's calculated</h4>
@@ -73,10 +73,10 @@ export const modalContent: Record<string, ModalContent> = {
             <h4 style="margin-top: 16px;">Rating Thresholds</h4>
             ${generateRatingScale('maintainability')}
         `,
-    },
-    reliability: {
-        title: 'Reliability Rating (Beta)',
-        body: `
+  },
+  reliability: {
+    title: 'Reliability Rating (Beta)',
+    body: `
             <h4>What is measured</h4>
             <p>Number of bug-type issues that may cause runtime failures.</p>
             <h4 style="margin-top: 16px;">Bug-type rules include</h4>
@@ -87,10 +87,10 @@ export const modalContent: Record<string, ModalContent> = {
             <h4 style="margin-top: 16px;">Rating Thresholds</h4>
             ${generateRatingScale('reliability')}
         `,
-    },
-    security: {
-        title: 'Security Rating (Beta)',
-        body: `
+  },
+  security: {
+    title: 'Security Rating (Beta)',
+    body: `
             <h4>What is measured</h4>
             <p>Vulnerability count from security-related rule violations.</p>
             <h4 style="margin-top: 16px;">Vulnerability rules include</h4>
@@ -103,10 +103,10 @@ export const modalContent: Record<string, ModalContent> = {
             <h4 style="margin-top: 16px;">Rating Thresholds</h4>
             ${generateRatingScale('security')}
         `,
-    },
-    'project-metrics': {
-        title: 'Project Metrics Explained',
-        body: `
+  },
+  'project-metrics': {
+    title: 'Project Metrics Explained',
+    body: `
             <h4>What is analyzed</h4>
             <p>Mule-Lint scans your project structure to identify MuleSoft application components.</p>
             <h4 style="margin-top: 16px;">Metrics Definitions</h4>
@@ -121,10 +121,10 @@ export const modalContent: Record<string, ModalContent> = {
             <h4 style="margin-top: 16px;">Why it matters</h4>
             <p>These metrics help estimate project size, complexity, and integration footprint for capacity planning and maintenance.</p>
         `,
-    },
-    severity: {
-        title: 'Issue Severity Levels',
-        body: `
+  },
+  severity: {
+    title: 'Issue Severity Levels',
+    body: `
             <h4>Understanding Severity</h4>
             <p>Issues are classified by their impact on your application.</p>
             <h4 style="margin-top: 16px;">Severity Levels</h4>
@@ -136,10 +136,10 @@ export const modalContent: Record<string, ModalContent> = {
             <h4 style="margin-top: 16px;">Priority</h4>
             <p>Fix errors first, then address warnings. Info-level issues can be handled during refactoring.</p>
         `,
-    },
-    categories: {
-        title: 'Rule Categories',
-        body: `
+  },
+  categories: {
+    title: 'Rule Categories',
+    body: `
             <h4>How rules are organized</h4>
             <p>Rules are grouped by the aspect of your application they validate.</p>
             <h4 style="margin-top: 16px;">Categories</h4>
@@ -152,7 +152,7 @@ export const modalContent: Record<string, ModalContent> = {
                 <li><strong>Logging:</strong> Logger placement and format</li>
             </ul>
         `,
-    },
+  },
 };
 
 export const modalScript = `

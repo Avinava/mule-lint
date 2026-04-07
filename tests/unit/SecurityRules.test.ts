@@ -1,3 +1,4 @@
+import { HardcodedCredentialsRule } from '../../src/rules/security/HardcodedCredentialsRule';
 import { HardcodedHttpRule } from '../../src/rules/security/HardcodedHttpRule';
 import { InsecureTlsRule } from '../../src/rules/security/InsecureTlsRule';
 import { TlsVersionRule } from '../../src/rules/security/TlsVersionRule';
@@ -5,21 +6,21 @@ import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
 
 describe('Security Rules', () => {
-    const createContext = (filePath = 'test.xml'): ValidationContext => ({
-        filePath,
-        relativePath: filePath,
-        projectRoot: '/project',
-        config: { enabled: true },
-    });
+  const createContext = (filePath = 'test.xml'): ValidationContext => ({
+    filePath,
+    relativePath: filePath,
+    projectRoot: '/project',
+    config: { enabled: true },
+  });
 
-    // =================================================================
-    // MULE-004: Hardcoded HTTP URLs
-    // =================================================================
-    describe('HardcodedHttpRule (MULE-004)', () => {
-        const rule = new HardcodedHttpRule();
+  // =================================================================
+  // MULE-004: Hardcoded HTTP URLs
+  // =================================================================
+  describe('HardcodedHttpRule (MULE-004)', () => {
+    const rule = new HardcodedHttpRule();
 
-        it('should pass for property placeholder URLs', () => {
-            const xml = `
+    it('should pass for property placeholder URLs', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <http:request-config name="HTTP_Config">
@@ -27,73 +28,73 @@ describe('Security Rules', () => {
                     </http:request-config>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for hardcoded HTTP URLs', () => {
-            const xml = `
+    it('should fail for hardcoded HTTP URLs', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <http:request url="http://api.example.com/orders"/>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-004');
-            expect(issues[0].severity).toBe('error');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-004');
+      expect(issues[0].severity).toBe('error');
+    });
 
-        it('should fail for hardcoded HTTPS URLs', () => {
-            const xml = `
+    it('should fail for hardcoded HTTPS URLs', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <http:request url="https://secure-api.example.com/data"/>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].message).toContain('Hardcoded URL');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].message).toContain('Hardcoded URL');
+    });
 
-        it('should pass for DataWeave expression URLs', () => {
-            const xml = `
+    it('should pass for DataWeave expression URLs', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <http:request url="#[vars.apiUrl]"/>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-004');
-            expect(rule.severity).toBe('error');
-            expect(rule.category).toBe('security');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
 
-    // =================================================================
-    // MULE-202: Insecure TLS Configuration
-    // =================================================================
-    describe('InsecureTlsRule (MULE-202)', () => {
-        const rule = new InsecureTlsRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-004');
+      expect(rule.severity).toBe('error');
+      expect(rule.category).toBe('security');
+    });
+  });
 
-        it('should pass for secure TLS configuration', () => {
-            const xml = `
+  // =================================================================
+  // MULE-202: Insecure TLS Configuration
+  // =================================================================
+  describe('InsecureTlsRule (MULE-202)', () => {
+    const rule = new InsecureTlsRule();
+
+    it('should pass for secure TLS configuration', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:tls="http://www.mulesoft.org/schema/mule/tls">
                     <tls:context name="Secure_TLS">
@@ -101,15 +102,15 @@ describe('Security Rules', () => {
                     </tls:context>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for insecure="true" in trust-store', () => {
-            const xml = `
+    it('should fail for insecure="true" in trust-store', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:tls="http://www.mulesoft.org/schema/mule/tls">
                     <tls:context name="Insecure_TLS">
@@ -117,30 +118,30 @@ describe('Security Rules', () => {
                     </tls:context>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-202');
-            expect(issues[0].severity).toBe('error');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-202');
-            expect(rule.severity).toBe('error');
-            expect(rule.category).toBe('security');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-202');
+      expect(issues[0].severity).toBe('error');
     });
 
-    // =================================================================
-    // SEC-002: TLS Version Check
-    // =================================================================
-    describe('TlsVersionRule (SEC-002)', () => {
-        const rule = new TlsVersionRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-202');
+      expect(rule.severity).toBe('error');
+      expect(rule.category).toBe('security');
+    });
+  });
 
-        it('should pass for TLS 1.2', () => {
-            const xml = `
+  // =================================================================
+  // SEC-002: TLS Version Check
+  // =================================================================
+  describe('TlsVersionRule (SEC-002)', () => {
+    const rule = new TlsVersionRule();
+
+    it('should pass for TLS 1.2', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:tls="http://www.mulesoft.org/schema/mule/tls">
                     <tls:context name="TLS12_Context">
@@ -148,15 +149,15 @@ describe('Security Rules', () => {
                     </tls:context>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should pass for TLS 1.3', () => {
-            const xml = `
+    it('should pass for TLS 1.3', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:tls="http://www.mulesoft.org/schema/mule/tls">
                     <tls:context name="TLS13_Context">
@@ -164,61 +165,60 @@ describe('Security Rules', () => {
                     </tls:context>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('SEC-002');
-            expect(rule.severity).toBe('error');
-            expect(rule.category).toBe('security');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
 
-    // =================================================================
-    // MULE-201: Hardcoded Credentials
-    // =================================================================
-    describe('HardcodedCredentialsRule (MULE-201)', () => {
-        const { HardcodedCredentialsRule } = require('../../src/rules/security/HardcodedCredentialsRule');
-        const rule = new HardcodedCredentialsRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('SEC-002');
+      expect(rule.severity).toBe('error');
+      expect(rule.category).toBe('security');
+    });
+  });
 
-        it('should pass for secure property placeholders', () => {
-            const xml = `
+  // =================================================================
+  // MULE-201: Hardcoded Credentials
+  // =================================================================
+  describe('HardcodedCredentialsRule (MULE-201)', () => {
+    const rule = new HardcodedCredentialsRule();
+
+    it('should pass for secure property placeholders', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <http:request-config name="Config" password="\${secure::db.password}"/>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for hardcoded passwords', () => {
-            const xml = `
+    it('should fail for hardcoded passwords', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:db="http://www.mulesoft.org/schema/mule/db">
                     <db:config name="Config" password="secretPassword123"/>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-201');
-            expect(issues[0].message).toContain('Hardcoded');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-201');
-            expect(rule.severity).toBe('error');
-            expect(rule.category).toBe('security');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-201');
+      expect(issues[0].message).toContain('Hardcoded');
     });
+
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-201');
+      expect(rule.severity).toBe('error');
+      expect(rule.category).toBe('security');
+    });
+  });
 });

@@ -1,25 +1,26 @@
 import { AsyncErrorHandlerRule } from '../../src/rules/performance/AsyncErrorHandlerRule';
+import { ConnectionPoolingRule } from '../../src/rules/performance/ConnectionPoolingRule';
 import { LargeChoiceBlockRule } from '../../src/rules/performance/LargeChoiceBlockRule';
 import { ScatterGatherRoutesRule } from '../../src/rules/performance/ScatterGatherRoutesRule';
 import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
 
 describe('Performance Rules', () => {
-    const createContext = (filePath = 'test.xml'): ValidationContext => ({
-        filePath,
-        relativePath: filePath,
-        projectRoot: '/project',
-        config: { enabled: true },
-    });
+  const createContext = (filePath = 'test.xml'): ValidationContext => ({
+    filePath,
+    relativePath: filePath,
+    projectRoot: '/project',
+    config: { enabled: true },
+  });
 
-    // =================================================================
-    // MULE-502: Async Without Error Handler
-    // =================================================================
-    describe('AsyncErrorHandlerRule (MULE-502)', () => {
-        const rule = new AsyncErrorHandlerRule();
+  // =================================================================
+  // MULE-502: Async Without Error Handler
+  // =================================================================
+  describe('AsyncErrorHandlerRule (MULE-502)', () => {
+    const rule = new AsyncErrorHandlerRule();
 
-        it('should pass for async with error handler', () => {
-            const xml = `
+    it('should pass for async with error handler', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <async>
@@ -33,15 +34,15 @@ describe('Performance Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should pass for async with try scope', () => {
-            const xml = `
+    it('should pass for async with try scope', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <async>
@@ -52,15 +53,15 @@ describe('Performance Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for async without error handling', () => {
-            const xml = `
+    it('should fail for async without error handling', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <async doc:name="Process Async">
@@ -69,30 +70,30 @@ describe('Performance Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-502');
-            expect(issues[0].message).toContain('error handling');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-502');
-            expect(rule.severity).toBe('warning');
-            expect(rule.category).toBe('performance');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-502');
+      expect(issues[0].message).toContain('error handling');
     });
 
-    // =================================================================
-    // MULE-503: Large Choice Blocks
-    // =================================================================
-    describe('LargeChoiceBlockRule (MULE-503)', () => {
-        const rule = new LargeChoiceBlockRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-502');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('performance');
+    });
+  });
 
-        it('should pass for choice with few when clauses', () => {
-            const xml = `
+  // =================================================================
+  // MULE-503: Large Choice Blocks
+  // =================================================================
+  describe('LargeChoiceBlockRule (MULE-503)', () => {
+    const rule = new LargeChoiceBlockRule();
+
+    it('should pass for choice with few when clauses', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <choice>
@@ -109,15 +110,15 @@ describe('Performance Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for choice with many when clauses', () => {
-            const xml = `
+    it('should fail for choice with many when clauses', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <choice>
@@ -134,30 +135,30 @@ describe('Performance Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-503');
-            expect(issues[0].message).toContain('8 when clauses');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-503');
-            expect(rule.severity).toBe('warning');
-            expect(rule.category).toBe('performance');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-503');
+      expect(issues[0].message).toContain('8 when clauses');
     });
 
-    // =================================================================
-    // MULE-501: Scatter-Gather Route Count
-    // =================================================================
-    describe('ScatterGatherRoutesRule (MULE-501)', () => {
-        const rule = new ScatterGatherRoutesRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-503');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('performance');
+    });
+  });
 
-        it('should pass for scatter-gather with few routes', () => {
-            const xml = `
+  // =================================================================
+  // MULE-501: Scatter-Gather Route Count
+  // =================================================================
+  describe('ScatterGatherRoutesRule (MULE-501)', () => {
+    const rule = new ScatterGatherRoutesRule();
+
+    it('should pass for scatter-gather with few routes', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <scatter-gather>
@@ -168,15 +169,15 @@ describe('Performance Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for scatter-gather with many routes', () => {
-            const xml = `
+    it('should fail for scatter-gather with many routes', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
                         <scatter-gather>
@@ -190,63 +191,62 @@ describe('Performance Rules', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-501');
-            expect(issues[0].message).toContain('6 routes');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('MULE-501');
-            expect(rule.severity).toBe('info');
-            expect(rule.category).toBe('performance');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-501');
+      expect(issues[0].message).toContain('6 routes');
     });
 
-    // =================================================================
-    // PERF-002: Connection Pooling
-    // =================================================================
-    describe('ConnectionPoolingRule (PERF-002)', () => {
-        const { ConnectionPoolingRule } = require('../../src/rules/performance/ConnectionPoolingRule');
-        const rule = new ConnectionPoolingRule();
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-501');
+      expect(rule.severity).toBe('info');
+      expect(rule.category).toBe('performance');
+    });
+  });
 
-        it('should pass for HTTP config with pooling', () => {
-            const xml = `
+  // =================================================================
+  // PERF-002: Connection Pooling
+  // =================================================================
+  describe('ConnectionPoolingRule (PERF-002)', () => {
+    const rule = new ConnectionPoolingRule();
+
+    it('should pass for HTTP config with pooling', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <http:request-config name="HTTP_Config" maxConnections="20" connectionIdleTimeout="30000"/>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for HTTP config without pooling', () => {
-            const xml = `
+    it('should fail for HTTP config without pooling', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
                     <http:request-config name="HTTP_Config"/>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('PERF-002');
-            expect(issues[0].message).toContain('pooling');
-        });
-
-        it('should have correct rule properties', () => {
-            expect(rule.id).toBe('PERF-002');
-            expect(rule.severity).toBe('warning');
-            expect(rule.category).toBe('performance');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('PERF-002');
+      expect(issues[0].message).toContain('pooling');
     });
+
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('PERF-002');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('performance');
+    });
+  });
 });

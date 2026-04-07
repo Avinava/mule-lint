@@ -4,11 +4,11 @@
  */
 
 export interface IssuesViewProps {
-    totalIssues: number;
+  totalIssues: number;
 }
 
 export function renderIssuesView(props: IssuesViewProps): string {
-    return `
+  return `
             <!-- ===== ISSUES VIEW ===== -->
             <div id="view-issues" class="hidden h-full flex flex-col">
                 <!-- Toolbar -->

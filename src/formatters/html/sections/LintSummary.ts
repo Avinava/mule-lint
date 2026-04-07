@@ -4,14 +4,14 @@
  */
 
 export interface LintSummaryProps {
-    errors: number;
-    warnings: number;
-    info: number;
-    filesScanned: number;
+  errors: number;
+  warnings: number;
+  info: number;
+  filesScanned: number;
 }
 
 export function renderLintSummarySection(props: LintSummaryProps): string {
-    return `
+  return `
     <div class="mb-6">
         <div class="mb-3">
             <div class="flex items-center gap-2">

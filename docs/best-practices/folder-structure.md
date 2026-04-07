@@ -33,26 +33,32 @@ my-mule-project/
 ## Key Directories Explained
 
 ### `src/main/mule`
+
 Contains the actual Mule flow definitions.
-*   **Best Practice**: Split monolithic XML files into logic units.
-    *   `global.xml`: Configuration elements only (HTTP Listener Config, Database Config, etc.).
-    *   `api.xml`: The main entry point (APIKit Router).
-    *   `[feature]-impl.xml`: Implementation flows for a specific feature.
+
+- **Best Practice**: Split monolithic XML files into logic units.
+  - `global.xml`: Configuration elements only (HTTP Listener Config, Database Config, etc.).
+  - `api.xml`: The main entry point (APIKit Router).
+  - `[feature]-impl.xml`: Implementation flows for a specific feature.
 
 ### `src/main/resources`
+
 Contains external assets needed by the application.
-*   **`dwl/`**: Store complex DataWeave transformations here as separate `.dwl` files. Avoid inline scripts longer than 5 lines.
-*   **`properties/`**: Store externalized configuration. Use environment-specific files (e.g., `dev.yaml`, `prod.yaml`).
-*   **`api/`**: The API definition (RAML or OAS).
+
+- **`dwl/`**: Store complex DataWeave transformations here as separate `.dwl` files. Avoid inline scripts longer than 5 lines.
+- **`properties/`**: Store externalized configuration. Use environment-specific files (e.g., `dev.yaml`, `prod.yaml`).
+- **`api/`**: The API definition (RAML or OAS).
 
 ### `src/test/munit`
+
 Contains your MUnit test suites.
-*   **Naming**: Match the source file name, e.g., `orders-test-suite.xml` tests `orders-impl.xml`.
+
+- **Naming**: Match the source file name, e.g., `orders-test-suite.xml` tests `orders-impl.xml`.
 
 ## Naming Conventions
 
-*   **Files**: Use `kebab-case` (e.g., `process-orders.xml`, `common-utils.dwl`).
-*   **Directories**: Use `kebab-case` (e.g., `business-logic`, `error-handling`).
+- **Files**: Use `kebab-case` (e.g., `process-orders.xml`, `common-utils.dwl`).
+- **Directories**: Use `kebab-case` (e.g., `business-logic`, `error-handling`).
 
 ## Why this structure?
 

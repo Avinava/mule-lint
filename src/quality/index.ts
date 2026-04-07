@@ -10,12 +10,12 @@
 
 // Types
 export type {
-    RatingGrade,
-    QualityDimension,
-    RatingThreshold,
-    RatingResult,
-    QualityMetrics,
-    QualityRatings,
+  RatingGrade,
+  QualityDimension,
+  RatingThreshold,
+  RatingResult,
+  QualityMetrics,
+  QualityRatings,
 } from './types';
 
 // Thresholds
@@ -23,13 +23,13 @@ export { THRESHOLDS, getThresholds, getDimensions } from './thresholds';
 
 // Calculator
 export {
-    calculateGrade,
-    calculateRating,
-    calculateAllRatings,
-    calculateDebtMinutes,
-    estimateDevelopmentMinutes,
-    calculateDebtRatio,
-    formatTechDebt,
-    formatValue,
-    getThresholdForValue,
+  calculateGrade,
+  calculateRating,
+  calculateAllRatings,
+  calculateDebtMinutes,
+  estimateDevelopmentMinutes,
+  calculateDebtRatio,
+  formatTechDebt,
+  formatValue,
+  getThresholdForValue,
 } from './calculator';

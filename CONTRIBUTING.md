@@ -78,31 +78,31 @@ import { ValidationContext, Issue } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 
 export class MyNewRule extends BaseRule {
-    id = 'MULE-XXX';
-    name = 'My New Rule';
-    description = 'Description of what this rule checks';
-    severity = 'warning' as const;  // 'error' | 'warning' | 'info'
-    category = 'standards' as const;
+  id = 'MULE-XXX';
+  name = 'My New Rule';
+  description = 'Description of what this rule checks';
+  severity = 'warning' as const; // 'error' | 'warning' | 'info'
+  category = 'standards' as const;
 
-    validate(doc: Document, context: ValidationContext): Issue[] {
-        const issues: Issue[] = [];
-        
-        // Use XPath to find elements
-        const elements = this.select('//mule:flow', doc);
-        
-        for (const element of elements) {
-            // Check condition
-            if (!this.hasAttribute(element, 'name')) {
-                issues.push(this.createIssue(
-                    element,
-                    'Flow is missing name attribute',
-                    { suggestion: 'Add a name attribute to the flow' }
-                ));
-            }
-        }
-        
-        return issues;
+  validate(doc: Document, context: ValidationContext): Issue[] {
+    const issues: Issue[] = [];
+
+    // Use XPath to find elements
+    const elements = this.select('//mule:flow', doc);
+
+    for (const element of elements) {
+      // Check condition
+      if (!this.hasAttribute(element, 'name')) {
+        issues.push(
+          this.createIssue(element, 'Flow is missing name attribute', {
+            suggestion: 'Add a name attribute to the flow',
+          }),
+        );
+      }
     }
+
+    return issues;
+  }
 }
 ```
 
@@ -118,6 +118,7 @@ Use conventional commits:
 - `chore:` Maintenance tasks
 
 Examples:
+
 ```
 feat: add MULE-011 rule for database connection pooling
 fix: correct XPath query in FlowNamingRule

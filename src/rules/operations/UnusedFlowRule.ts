@@ -7,97 +7,89 @@ import { BaseRule } from '../base/BaseRule';
  * Detects flows that are never referenced by flow-ref.
  */
 export class UnusedFlowRule extends BaseRule {
-    id = 'HYG-003';
-    name = 'Unused Flow Detection';
-    description = 'Detects flows that are never referenced';
-    severity = 'warning' as const;
-    category = 'standards' as const;
+  id = 'HYG-003';
+  name = 'Unused Flow Detection';
+  description = 'Detects flows that are never referenced';
+  severity = 'warning' as const;
+  category = 'standards' as const;
 
-    validate(doc: Document, _context: ValidationContext): Issue[] {
-        const issues: Issue[] = [];
+  validate(doc: Document, _context: ValidationContext): Issue[] {
+    const issues: Issue[] = [];
 
-        // Get all flow names in this document
-        const flows = this.select('//*[local-name()="flow"]', doc);
-        const subflows = this.select('//*[local-name()="sub-flow"]', doc);
+    // Get all flow names in this document
+    const flows = this.select('//*[local-name()="flow"]', doc);
+    const subflows = this.select('//*[local-name()="sub-flow"]', doc);
 
-        // Get all flow-ref targets
-        const flowRefs = this.select('//*[local-name()="flow-ref"]', doc);
-        const referencedFlows = new Set<string>();
+    // Get all flow-ref targets
+    const flowRefs = this.select('//*[local-name()="flow-ref"]', doc);
+    const referencedFlows = new Set<string>();
 
-        for (const ref of flowRefs) {
-            const name = this.getNameAttribute(ref);
-            if (name) {
-                referencedFlows.add(name);
-            }
-        }
-
-        // Check sub-flows (they should always be referenced)
-        for (const subflow of subflows) {
-            const name = this.getNameAttribute(subflow);
-            if (name && !referencedFlows.has(name)) {
-                // Exclude common patterns that are referenced externally
-                if (!this.isExternallyReferenced(name)) {
-                    issues.push(
-                        this.createIssue(
-                            subflow,
-                            `Sub-flow "${name}" is never referenced within this file`,
-                            {
-                                severity: 'info',
-                                suggestion:
-                                    'Consider removing unused sub-flows or verify cross-file references',
-                            },
-                        ),
-                    );
-                }
-            }
-        }
-
-        // Check private flows (not triggered by HTTP/scheduler)
-        for (const flow of flows) {
-            const name = this.getNameAttribute(flow);
-            if (!name) { continue; }
-
-            // Skip if it has an external trigger
-            const hasHttpListener = this.exists('.//*[local-name()="listener"]', flow);
-            const hasScheduler = this.exists('.//*[local-name()="scheduler"]', flow);
-            const hasVmListener = this.exists(
-                './/*[local-name()="listener" and contains(@config-ref, "vm")]',
-                flow,
-            );
-
-            if (hasHttpListener || hasScheduler || hasVmListener) {
-                continue; // Entry point flow
-            }
-
-            // Check if referenced
-            if (!referencedFlows.has(name) && !this.isExternallyReferenced(name)) {
-                issues.push(
-                    this.createIssue(
-                        flow,
-                        `Flow "${name}" has no trigger and is never referenced`,
-                        {
-                            severity: 'info',
-                            suggestion:
-                                'Verify this flow is referenced from other files or remove if unused',
-                        },
-                    ),
-                );
-            }
-        }
-
-        return issues;
+    for (const ref of flowRefs) {
+      const name = this.getNameAttribute(ref);
+      if (name) {
+        referencedFlows.add(name);
+      }
     }
 
-    private isExternallyReferenced(name: string): boolean {
-        // Common patterns that are typically referenced externally
-        const externalPatterns = [
-            /-main$/,
-            /-api$/,
-            /^api-/,
-            /-console$/,
-            /-error-handler$/,
-            /global/i,
-        ];
-        return externalPatterns.some((pattern) => pattern.test(name));
+    // Check sub-flows (they should always be referenced)
+    for (const subflow of subflows) {
+      const name = this.getNameAttribute(subflow);
+      if (name && !referencedFlows.has(name)) {
+        // Exclude common patterns that are referenced externally
+        if (!this.isExternallyReferenced(name)) {
+          issues.push(
+            this.createIssue(subflow, `Sub-flow "${name}" is never referenced within this file`, {
+              severity: 'info',
+              suggestion: 'Consider removing unused sub-flows or verify cross-file references',
+            }),
+          );
+        }
+      }
     }
+
+    // Check private flows (not triggered by HTTP/scheduler)
+    for (const flow of flows) {
+      const name = this.getNameAttribute(flow);
+      if (!name) {
+        continue;
+      }
+
+      // Skip if it has an external trigger
+      const hasHttpListener = this.exists('.//*[local-name()="listener"]', flow);
+      const hasScheduler = this.exists('.//*[local-name()="scheduler"]', flow);
+      const hasVmListener = this.exists(
+        './/*[local-name()="listener" and contains(@config-ref, "vm")]',
+        flow,
+      );
+
+      if (hasHttpListener || hasScheduler || hasVmListener) {
+        continue; // Entry point flow
+      }
+
+      // Check if referenced
+      if (!referencedFlows.has(name) && !this.isExternallyReferenced(name)) {
+        issues.push(
+          this.createIssue(flow, `Flow "${name}" has no trigger and is never referenced`, {
+            severity: 'info',
+            suggestion: 'Verify this flow is referenced from other files or remove if unused',
+          }),
+        );
+      }
+    }
+
+    return issues;
+  }
+
+  private isExternallyReferenced(name: string): boolean {
+    // Common patterns that are typically referenced externally
+    const externalPatterns = [
+      /-main$/,
+      /-api$/,
+      /^api-/,
+      /-console$/,
+      /-error-handler$/,
+      /global/i,
+    ];
+    return externalPatterns.some((pattern) => pattern.test(name));
+  }
 }

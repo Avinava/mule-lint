@@ -17,57 +17,57 @@ import { BaseRule } from './BaseRule';
  * DW-002 (DWL naming), DW-003 (common modules)
  */
 export abstract class ProjectRule extends BaseRule {
-    /**
-     * Marker to identify this as a project-level rule
-     */
-    readonly isProjectRule = true;
+  /**
+   * Marker to identify this as a project-level rule
+   */
+  readonly isProjectRule = true;
 
-    /**
-     * Track if this rule has already run during this scan
-     * Reset by LintEngine at the start of each scan
-     */
-    private hasRun = false;
+  /**
+   * Track if this rule has already run during this scan
+   * Reset by LintEngine at the start of each scan
+   */
+  private hasRun = false;
 
-    /**
-     * Override validate to implement run-once semantics
-     */
-    validate(doc: Document, context: ValidationContext): Issue[] {
-        // Only run once per scan
-        if (this.hasRun) {
-            return [];
-        }
-        this.hasRun = true;
-
-        return this.validateProject(context);
+  /**
+   * Override validate to implement run-once semantics
+   */
+  validate(doc: Document, context: ValidationContext): Issue[] {
+    // Only run once per scan
+    if (this.hasRun) {
+      return [];
     }
+    this.hasRun = true;
 
-    /**
-     * Reset the run state for a new scan
-     */
-    reset(): void {
-        this.hasRun = false;
-    }
+    return this.validateProject(context);
+  }
 
-    /**
-     * Implement this method to validate project-level concerns
-     * The XML document is not passed because project rules
-     * typically don't need it
-     */
-    protected abstract validateProject(context: ValidationContext): Issue[];
+  /**
+   * Reset the run state for a new scan
+   */
+  reset(): void {
+    this.hasRun = false;
+  }
 
-    /**
-     * Create a project-level issue (line 0 indicates project scope)
-     */
-    protected createProjectIssue(
-        message: string,
-        options?: { suggestion?: string; severity?: Severity },
-    ): Issue {
-        return {
-            line: 0,
-            message,
-            ruleId: this.id,
-            severity: options?.severity ?? this.severity,
-            suggestion: options?.suggestion,
-        };
-    }
+  /**
+   * Implement this method to validate project-level concerns
+   * The XML document is not passed because project rules
+   * typically don't need it
+   */
+  protected abstract validateProject(context: ValidationContext): Issue[];
+
+  /**
+   * Create a project-level issue (line 0 indicates project scope)
+   */
+  protected createProjectIssue(
+    message: string,
+    options?: { suggestion?: string; severity?: Severity },
+  ): Issue {
+    return {
+      line: 0,
+      message,
+      ruleId: this.id,
+      severity: options?.severity ?? this.severity,
+      suggestion: options?.suggestion,
+    };
+  }
 }

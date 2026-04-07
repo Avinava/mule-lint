@@ -36,6 +36,9 @@ yarn-error.log*
 # ESLint cache
 .eslintcache
 
+# Turbo
+.turbo/
+
 # Test artifacts
 *.lcov
 

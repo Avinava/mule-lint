@@ -3,99 +3,94 @@ import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext, RuleConfig } from '../../src/types';
 
 describe('FlowNamingRule', () => {
-    const rule = new FlowNamingRule();
+  const rule = new FlowNamingRule();
 
-    const createContext = (filePath = 'test.xml'): ValidationContext => ({
-        filePath,
-        relativePath: filePath,
-        projectRoot: '/project',
-        config: {
-            enabled: true,
-            options: {
-                flowSuffix: '-flow',
-                subflowSuffix: '-subflow',
-                excludePatterns: ['*-api-main'],
-            },
-        },
-    });
+  const createContext = (filePath = 'test.xml'): ValidationContext => ({
+    filePath,
+    relativePath: filePath,
+    projectRoot: '/project',
+    config: {
+      enabled: true,
+      options: {
+        flowSuffix: '-flow',
+        subflowSuffix: '-subflow',
+        excludePatterns: ['*-api-main'],
+      },
+    },
+  });
 
-    describe('validate', () => {
-        it('should pass for correctly named flow', () => {
-            const xml = `
+  describe('validate', () => {
+    it('should pass for correctly named flow', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="my-process-flow">
                         <logger message="test"/>
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for incorrectly named flow', () => {
-            const xml = `
+    it('should fail for incorrectly named flow', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="myProcess">
                         <logger message="test"/>
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-002');
-            expect(issues[0].message).toContain('myProcess');
-            expect(issues[0].message).toContain('-flow');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-002');
+      expect(issues[0].message).toContain('myProcess');
+      expect(issues[0].message).toContain('-flow');
+    });
 
-        it('should pass for correctly named sub-flow', () => {
-            const xml = `
+    it('should pass for correctly named sub-flow', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <sub-flow name="transform-data-subflow">
                         <logger message="test"/>
                     </sub-flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should fail for incorrectly named sub-flow', () => {
-            const xml = `
+    it('should fail for incorrectly named sub-flow', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <sub-flow name="transformData">
                         <logger message="test"/>
                     </sub-flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(1);
-            expect(issues[0].ruleId).toBe('MULE-002');
-            expect(issues[0].message).toContain('transformData');
-            expect(issues[0].message).toContain('-subflow');
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-002');
+      expect(issues[0].message).toContain('transformData');
+      expect(issues[0].message).toContain('-subflow');
+    });
 
-        it('should skip excluded patterns', () => {
-            const context = createContext();
-            context.config.options!.excludePatterns = [
-                '*-api-main',
-                '*-main',
-                'get:*',
-                'post:*'
-            ];
+    it('should skip excluded patterns', () => {
+      const context = createContext();
+      context.config.options!.excludePatterns = ['*-api-main', '*-main', 'get:*', 'post:*'];
 
-            const xml = `
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="orders-api-main">
                         <logger message="test"/>
@@ -111,15 +106,15 @@ describe('FlowNamingRule', () => {
                     </flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, context);
-            expect(issues).toHaveLength(0);
-        });
+      const issues = rule.validate(result.document!, context);
+      expect(issues).toHaveLength(0);
+    });
 
-        it('should report multiple issues', () => {
-            const xml = `
+    it('should report multiple issues', () => {
+      const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="getOrders">
                         <logger message="test"/>
@@ -132,25 +127,25 @@ describe('FlowNamingRule', () => {
                     </sub-flow>
                 </mule>
             `;
-            const result = parseXml(xml);
-            expect(result.success).toBe(true);
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
 
-            const issues = rule.validate(result.document!, createContext());
-            expect(issues).toHaveLength(3);
-        });
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(3);
+    });
+  });
+
+  describe('rule properties', () => {
+    it('should have correct id', () => {
+      expect(rule.id).toBe('MULE-002');
     });
 
-    describe('rule properties', () => {
-        it('should have correct id', () => {
-            expect(rule.id).toBe('MULE-002');
-        });
-
-        it('should have correct severity', () => {
-            expect(rule.severity).toBe('warning');
-        });
-
-        it('should have correct category', () => {
-            expect(rule.category).toBe('naming');
-        });
+    it('should have correct severity', () => {
+      expect(rule.severity).toBe('warning');
     });
+
+    it('should have correct category', () => {
+      expect(rule.category).toBe('naming');
+    });
+  });
 });

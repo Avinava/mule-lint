@@ -17,51 +17,51 @@ import { registerPrompts } from './prompts';
  * Exposes linting capabilities via Model Context Protocol.
  */
 export class MuleLintMcpServer {
-    private server: McpServer;
-    private engine: LintEngine;
+  private server: McpServer;
+  private engine: LintEngine;
 
-    constructor() {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const packageJson = require('../../package.json') as { version: string };
-        this.server = new McpServer({
-            name: 'mule-lint',
-            version: packageJson.version,
-        });
+  constructor() {
+     
+    const packageJson = require('../../package.json') as { version: string };
+    this.server = new McpServer({
+      name: 'mule-lint',
+      version: packageJson.version,
+    });
 
-        // Initialize engine with partial config - let LintEngine apply DEFAULT_CONFIG for include/exclude
-        const defaultConfig: Partial<LintConfig> = {
-            rules: {},
-            defaultFormatter: 'json',
-            failOnWarning: false,
-        };
-        this.engine = new LintEngine({
-            rules: ALL_RULES,
-            config: defaultConfig,
-        });
+    // Initialize engine with partial config - let LintEngine apply DEFAULT_CONFIG for include/exclude
+    const defaultConfig: Partial<LintConfig> = {
+      rules: {},
+      defaultFormatter: 'json',
+      failOnWarning: false,
+    };
+    this.engine = new LintEngine({
+      rules: ALL_RULES,
+      config: defaultConfig,
+    });
 
-        this.setupTools();
-        this.setupResources();
-        this.setupPrompts();
-    }
+    this.setupTools();
+    this.setupResources();
+    this.setupPrompts();
+  }
 
-    private setupTools(): void {
-        registerRunLintAnalysis(this.server, this.engine);
-        registerGetRuleDetails(this.server);
-        registerValidateSnippet(this.server);
-        registerFormatMuleXml(this.server);
-    }
+  private setupTools(): void {
+    registerRunLintAnalysis(this.server, this.engine);
+    registerGetRuleDetails(this.server);
+    registerValidateSnippet(this.server);
+    registerFormatMuleXml(this.server);
+  }
 
-    private setupResources(): void {
-        registerResources(this.server);
-    }
+  private setupResources(): void {
+    registerResources(this.server);
+  }
 
-    private setupPrompts(): void {
-        registerPrompts(this.server);
-    }
+  private setupPrompts(): void {
+    registerPrompts(this.server);
+  }
 
-    public async start(): Promise<void> {
-        const transport = new StdioServerTransport();
-        await this.server.connect(transport);
-        console.error('Mule Lint MCP Server running on stdio');
-    }
+  public async start(): Promise<void> {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error('Mule Lint MCP Server running on stdio');
+  }
 }

@@ -1,11 +1,11 @@
 import { LintReport, ProjectMetrics } from '../types/Report';
 import {
-    calculateGrade,
-    calculateDebtMinutes,
-    estimateDevelopmentMinutes,
-    calculateDebtRatio,
-    formatTechDebt,
-    RatingGrade,
+  calculateGrade,
+  calculateDebtMinutes,
+  estimateDevelopmentMinutes,
+  calculateDebtRatio,
+  formatTechDebt,
+  RatingGrade,
 } from '../quality';
 import { ALL_RULES } from '../rules';
 import { IssueType } from '../types';
@@ -22,7 +22,7 @@ export type MetricRating = RatingGrade;
  */
 const ruleIssueTypeMap: Map<string, IssueType> = new Map();
 for (const rule of ALL_RULES) {
-    ruleIssueTypeMap.set(rule.id, rule.issueType ?? 'code-smell');
+  ruleIssueTypeMap.set(rule.id, rule.issueType ?? 'code-smell');
 }
 
 /**
@@ -30,7 +30,7 @@ for (const rule of ALL_RULES) {
  * Falls back to 'code-smell' if rule not found
  */
 function getIssueTypeForRule(ruleId: string): IssueType {
-    return ruleIssueTypeMap.get(ruleId) ?? 'code-smell';
+  return ruleIssueTypeMap.get(ruleId) ?? 'code-smell';
 }
 
 /**
@@ -40,155 +40,162 @@ function getIssueTypeForRule(ruleId: string): IssueType {
  * rating calculations across the codebase.
  */
 export class MetricsAggregator {
-    /**
-     * Calculate complexity rating based on average flow complexity
-     * Delegates to centralized calculator
-     */
-    static getComplexityRating(avgComplexity: number): MetricRating {
-        return calculateGrade('complexity', avgComplexity);
+  /**
+   * Calculate complexity rating based on average flow complexity
+   * Delegates to centralized calculator
+   */
+  static getComplexityRating(avgComplexity: number): MetricRating {
+    return calculateGrade('complexity', avgComplexity);
+  }
+
+  /**
+   * Calculate file complexity rating based on flow count
+   * This matches mule-sonarqube-plugin's logic:
+   * - Simple (A): ≤ 7 flows
+   * - Medium (B): 8-14 flows
+   * - Complex (C+): ≥ 15 flows
+   */
+  static getFileComplexityRating(flowCount: number): MetricRating {
+    if (flowCount <= 7) {
+      return 'A';
+    }
+    if (flowCount <= 14) {
+      return 'B';
+    }
+    if (flowCount <= 21) {
+      return 'C';
+    }
+    if (flowCount <= 30) {
+      return 'D';
+    }
+    return 'E';
+  }
+
+  /**
+   * Calculate maintainability rating based on technical debt ratio
+   * Delegates to centralized calculator
+   */
+  static getMaintainabilityRating(debtRatioPercent: number): MetricRating {
+    return calculateGrade('maintainability', debtRatioPercent);
+  }
+
+  /**
+   * Calculate reliability rating based on bug count
+   * Delegates to centralized calculator
+   */
+  static getReliabilityRating(bugCount: number): MetricRating {
+    return calculateGrade('reliability', bugCount);
+  }
+
+  /**
+   * Calculate security rating based on vulnerability count
+   * Delegates to centralized calculator
+   */
+  static getSecurityRating(vulnerabilityCount: number): MetricRating {
+    return calculateGrade('security', vulnerabilityCount);
+  }
+
+  /**
+   * Format time duration from minutes
+   * Delegates to centralized formatter
+   */
+  static formatDuration(minutes: number): string {
+    return formatTechDebt(minutes);
+  }
+
+  /**
+   * Aggregate metrics from a lint report
+   * Computes complexity, maintainability, reliability, and security ratings
+   */
+  static aggregateMetrics(report: LintReport): ProjectMetrics | undefined {
+    if (!report.metrics) {
+      return undefined;
     }
 
-    /**
-     * Calculate file complexity rating based on flow count
-     * This matches mule-sonarqube-plugin's logic:
-     * - Simple (A): ≤ 7 flows
-     * - Medium (B): 8-14 flows
-     * - Complex (C+): ≥ 15 flows
-     */
-    static getFileComplexityRating(flowCount: number): MetricRating {
-        if (flowCount <= 7) { return 'A'; }
-        if (flowCount <= 14) { return 'B'; }
-        if (flowCount <= 21) { return 'C'; }
-        if (flowCount <= 30) { return 'D'; }
-        return 'E';
-    }
+    const metrics = report.metrics;
 
-    /**
-     * Calculate maintainability rating based on technical debt ratio
-     * Delegates to centralized calculator
-     */
-    static getMaintainabilityRating(debtRatioPercent: number): MetricRating {
-        return calculateGrade('maintainability', debtRatioPercent);
-    }
+    // Calculate complexity aggregates from flow data
+    const flowData = metrics.flowComplexityData || [];
+    const totalComplexity = flowData.reduce((sum, f) => sum + f.complexity, 0);
+    const avgComplexity = flowData.length > 0 ? totalComplexity / flowData.length : 0;
+    const highestFlow = flowData.reduce(
+      (max, f) => (f.complexity > (max?.complexity || 0) ? f : max),
+      flowData[0],
+    );
 
-    /**
-     * Calculate reliability rating based on bug count
-     * Delegates to centralized calculator
-     */
-    static getReliabilityRating(bugCount: number): MetricRating {
-        return calculateGrade('reliability', bugCount);
-    }
+    // Classify issues by type using rule metadata
+    const { bugs, vulnerabilities, codeSmells, hotspots } = this.classifyIssues(report);
 
-    /**
-     * Calculate security rating based on vulnerability count
-     * Delegates to centralized calculator
-     */
-    static getSecurityRating(vulnerabilityCount: number): MetricRating {
-        return calculateGrade('security', vulnerabilityCount);
-    }
+    // Calculate technical debt using centralized calculator
+    const debtMinutes = calculateDebtMinutes(codeSmells, bugs, vulnerabilities);
 
-    /**
-     * Format time duration from minutes
-     * Delegates to centralized formatter
-     */
-    static formatDuration(minutes: number): string {
-        return formatTechDebt(minutes);
-    }
+    // Estimate development time using centralized calculator
+    const estimatedDevMinutes = estimateDevelopmentMinutes(metrics.flowCount, metrics.subFlowCount);
+    const debtRatio = calculateDebtRatio(debtMinutes, estimatedDevMinutes);
 
-    /**
-     * Aggregate metrics from a lint report
-     * Computes complexity, maintainability, reliability, and security ratings
-     */
-    static aggregateMetrics(report: LintReport): ProjectMetrics | undefined {
-        if (!report.metrics) { return undefined; }
+    // Build enhanced metrics with centralized ratings
+    return {
+      ...metrics,
+      complexity: {
+        total: totalComplexity,
+        average: Math.round(avgComplexity * 10) / 10,
+        highest: highestFlow
+          ? { flow: highestFlow.flowName, value: highestFlow.complexity }
+          : undefined,
+        rating: this.getComplexityRating(avgComplexity),
+      },
+      maintainability: {
+        technicalDebtMinutes: debtMinutes,
+        technicalDebt: this.formatDuration(debtMinutes),
+        debtRatio: Math.round(debtRatio * 10) / 10,
+        rating: this.getMaintainabilityRating(debtRatio),
+      },
+      reliability: {
+        bugs,
+        rating: this.getReliabilityRating(bugs),
+      },
+      security: {
+        vulnerabilities,
+        hotspots,
+        rating: this.getSecurityRating(vulnerabilities),
+      },
+    };
+  }
 
-        const metrics = report.metrics;
+  /**
+   * Classify issues into bugs, vulnerabilities, code smells, and hotspots
+   * Uses the issueType metadata from rule definitions for accurate classification
+   */
+  private static classifyIssues(report: LintReport): {
+    bugs: number;
+    vulnerabilities: number;
+    codeSmells: number;
+    hotspots: number;
+  } {
+    let bugs = 0;
+    let vulnerabilities = 0;
+    let codeSmells = 0;
+    const hotspots = 0;
 
-        // Calculate complexity aggregates from flow data
-        const flowData = metrics.flowComplexityData || [];
-        const totalComplexity = flowData.reduce((sum, f) => sum + f.complexity, 0);
-        const avgComplexity = flowData.length > 0 ? totalComplexity / flowData.length : 0;
-        const highestFlow = flowData.reduce(
-            (max, f) => (f.complexity > (max?.complexity || 0) ? f : max),
-            flowData[0],
-        );
+    for (const file of report.files) {
+      for (const issue of file.issues) {
+        const issueType = getIssueTypeForRule(issue.ruleId);
 
-        // Classify issues by type using rule metadata
-        const { bugs, vulnerabilities, codeSmells, hotspots } = this.classifyIssues(report);
-
-        // Calculate technical debt using centralized calculator
-        const debtMinutes = calculateDebtMinutes(codeSmells, bugs, vulnerabilities);
-
-        // Estimate development time using centralized calculator
-        const estimatedDevMinutes = estimateDevelopmentMinutes(
-            metrics.flowCount,
-            metrics.subFlowCount,
-        );
-        const debtRatio = calculateDebtRatio(debtMinutes, estimatedDevMinutes);
-
-        // Build enhanced metrics with centralized ratings
-        return {
-            ...metrics,
-            complexity: {
-                total: totalComplexity,
-                average: Math.round(avgComplexity * 10) / 10,
-                highest: highestFlow
-                    ? { flow: highestFlow.flowName, value: highestFlow.complexity }
-                    : undefined,
-                rating: this.getComplexityRating(avgComplexity),
-            },
-            maintainability: {
-                technicalDebtMinutes: debtMinutes,
-                technicalDebt: this.formatDuration(debtMinutes),
-                debtRatio: Math.round(debtRatio * 10) / 10,
-                rating: this.getMaintainabilityRating(debtRatio),
-            },
-            reliability: {
-                bugs,
-                rating: this.getReliabilityRating(bugs),
-            },
-            security: {
-                vulnerabilities,
-                hotspots,
-                rating: this.getSecurityRating(vulnerabilities),
-            },
-        };
-    }
-
-    /**
-     * Classify issues into bugs, vulnerabilities, code smells, and hotspots
-     * Uses the issueType metadata from rule definitions for accurate classification
-     */
-    private static classifyIssues(report: LintReport): {
-        bugs: number;
-        vulnerabilities: number;
-        codeSmells: number;
-        hotspots: number;
-    } {
-        let bugs = 0;
-        let vulnerabilities = 0;
-        let codeSmells = 0;
-        let hotspots = 0;
-
-        for (const file of report.files) {
-            for (const issue of file.issues) {
-                const issueType = getIssueTypeForRule(issue.ruleId);
-
-                switch (issueType) {
-                    case 'bug':
-                        bugs++;
-                        break;
-                    case 'vulnerability':
-                        vulnerabilities++;
-                        break;
-                    case 'code-smell':
-                    default:
-                        codeSmells++;
-                        break;
-                }
-            }
+        switch (issueType) {
+          case 'bug':
+            bugs++;
+            break;
+          case 'vulnerability':
+            vulnerabilities++;
+            break;
+          case 'code-smell':
+          default:
+            codeSmells++;
+            break;
         }
-
-        return { bugs, vulnerabilities, codeSmells, hotspots };
+      }
     }
+
+    return { bugs, vulnerabilities, codeSmells, hotspots };
+  }
 }

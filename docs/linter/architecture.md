@@ -9,14 +9,14 @@ flowchart TB
     subgraph CLI["CLI Layer (commander)"]
         A["mule-lint ./path -f sarif"]
     end
-    
+
     subgraph Engine["LintEngine"]
         B[FileScanner<br/>fast-glob] --> C[XmlParser<br/>xmldom]
         C --> D[Rule Executor]
         B --> E[YamlParser<br/>yaml]
         E --> D
     end
-    
+
     subgraph Rules["Rules (56 Total)"]
         D --> R1[Error Handling<br/>MULE-001,003,005,007,009]
         D --> R2[Naming<br/>MULE-002,101,102]
@@ -33,14 +33,14 @@ flowchart TB
         D --> R13[API-Led<br/>API-001,002,003]
         D --> R14[Experimental<br/>EXP-001,002,003]
     end
-    
+
     subgraph Output["Formatters"]
         J[Table<br/>Human]
         K[JSON<br/>Scripts]
         L[SARIF<br/>AI Agents]
         M[HTML<br/>Reports]
     end
-    
+
     A --> B
     D --> J
     D --> K
@@ -59,27 +59,27 @@ sequenceDiagram
     participant YAML as YamlParser
     participant Rules
     participant Formatter
-    
+
     CLI->>Engine: scan(path)
     Engine->>Scanner: scanDirectory(path)
     Scanner-->>Engine: ScannedFile[]
-    
+
     loop Each XML File
         Engine->>Parser: parseXml(content)
         Parser-->>Engine: Document
-        
+
         loop Each Rule
             Engine->>Rules: validate(doc, context)
             Rules-->>Engine: Issue[]
         end
     end
-    
+
     loop YAML Rules
         Engine->>YAML: parseYaml(path)
         YAML-->>Engine: Properties
         Engine->>Rules: validate(props, context)
     end
-    
+
     Engine->>Formatter: format(report)
     Formatter-->>CLI: string output
 ```
@@ -89,6 +89,7 @@ sequenceDiagram
 ### LintEngine
 
 The central orchestrator that:
+
 1. Scans directories for XML and YAML files using FileScanner
 2. Parses each file with XmlParser or YamlParser
 3. Executes all enabled rules against each document
@@ -110,20 +111,20 @@ const flows = xpath.selectNodes('//mule:flow', document);
 
 Pre-configured namespaces:
 
-| Prefix | Namespace |
-|--------|-----------|
-| `mule` | http://www.mulesoft.org/schema/mule/core |
-| `http` | http://www.mulesoft.org/schema/mule/http |
-| `ee` | http://www.mulesoft.org/schema/mule/ee/core |
-| `db` | http://www.mulesoft.org/schema/mule/db |
-| `doc` | http://www.mulesoft.org/schema/mule/documentation |
-| `tls` | http://www.mulesoft.org/schema/mule/tls |
-| `file` | http://www.mulesoft.org/schema/mule/file |
-| `sftp` | http://www.mulesoft.org/schema/mule/sftp |
-| `vm` | http://www.mulesoft.org/schema/mule/vm |
-| `jms` | http://www.mulesoft.org/schema/mule/jms |
-| `apikit` | http://www.mulesoft.org/schema/mule/mule-apikit |
-| `batch` | http://www.mulesoft.org/schema/mule/batch |
+| Prefix   | Namespace                                         |
+| -------- | ------------------------------------------------- |
+| `mule`   | http://www.mulesoft.org/schema/mule/core          |
+| `http`   | http://www.mulesoft.org/schema/mule/http          |
+| `ee`     | http://www.mulesoft.org/schema/mule/ee/core       |
+| `db`     | http://www.mulesoft.org/schema/mule/db            |
+| `doc`    | http://www.mulesoft.org/schema/mule/documentation |
+| `tls`    | http://www.mulesoft.org/schema/mule/tls           |
+| `file`   | http://www.mulesoft.org/schema/mule/file          |
+| `sftp`   | http://www.mulesoft.org/schema/mule/sftp          |
+| `vm`     | http://www.mulesoft.org/schema/mule/vm            |
+| `jms`    | http://www.mulesoft.org/schema/mule/jms           |
+| `apikit` | http://www.mulesoft.org/schema/mule/mule-apikit   |
+| `batch`  | http://www.mulesoft.org/schema/mule/batch         |
 
 ### BaseRule
 
@@ -143,21 +144,22 @@ classDiagram
         #createIssue(node, message): Issue
         #getOption(context, key, default): T
     }
-    
+
     class FlowNamingRule {
         +validate()
     }
-    
+
     class YamlRuleBase {
         +validate()
         #findYamlFiles(): string[]
     }
-    
+
     BaseRule <|-- FlowNamingRule
     BaseRule <|-- YamlRuleBase
 ```
 
 **Issue Types for Quality Metrics:**
+
 - `code-smell` (default) - Maintainability issues
 - `bug` - Reliability issues (error-handling rules)
 - `vulnerability` - Security issues (security rules)
@@ -170,10 +172,10 @@ Each rule is a strategy implementing the same interface:
 
 ```typescript
 interface Rule {
-    id: string;
-    name: string;
-    severity: Severity;
-    validate(doc: Document, context: ValidationContext): Issue[];
+  id: string;
+  name: string;
+  severity: Severity;
+  validate(doc: Document, context: ValidationContext): Issue[];
 }
 ```
 
@@ -183,12 +185,16 @@ Formatters are selected via factory function:
 
 ```typescript
 function getFormatter(type: FormatterType): Formatter {
-    switch (type) {
-        case 'table': return formatTable;
-        case 'json': return formatJson;
-        case 'sarif': return formatSarif;
-        case 'html': return formatHtml;
-    }
+  switch (type) {
+    case 'table':
+      return formatTable;
+    case 'json':
+      return formatJson;
+    case 'sarif':
+      return formatSarif;
+    case 'html':
+      return formatHtml;
+  }
 }
 ```
 
@@ -256,22 +262,22 @@ src/
 
 ## Rule Categories
 
-| Category | ID Prefix | Count | Description |
-|----------|-----------|-------|-------------|
-| Error Handling | MULE-00X | 5 | Error handler presence and configuration |
-| Naming | MULE-002, 10X | 3 | Flow, variable, and file naming |
-| Security | MULE-004, 20X | 3 | Hardcoded values and security |
-| Logging | MULE-006, 30X | 3 | Logger configuration |
-| HTTP | MULE-40X | 3 | HTTP request configuration |
-| Performance | MULE-50X | 3 | Performance anti-patterns |
-| Documentation | MULE-60X | 2 | Component documentation |
-| Standards | MULE-008, 010, 70X | 3 | Best practices |
-| Complexity | MULE-80X | 1 | Cyclomatic complexity |
-| Structure | MULE-80X | 3 | Project structure |
-| YAML | YAML-XXX | 3 | Properties validation |
-| DataWeave | DW-XXX | 3 | DWL file validation |
-| API-Led | API-XXX | 3 | API-Led patterns |
-| Experimental | EXP-XXX | 3 | Beta rules |
+| Category       | ID Prefix          | Count | Description                              |
+| -------------- | ------------------ | ----- | ---------------------------------------- |
+| Error Handling | MULE-00X           | 5     | Error handler presence and configuration |
+| Naming         | MULE-002, 10X      | 3     | Flow, variable, and file naming          |
+| Security       | MULE-004, 20X      | 3     | Hardcoded values and security            |
+| Logging        | MULE-006, 30X      | 3     | Logger configuration                     |
+| HTTP           | MULE-40X           | 3     | HTTP request configuration               |
+| Performance    | MULE-50X           | 3     | Performance anti-patterns                |
+| Documentation  | MULE-60X           | 2     | Component documentation                  |
+| Standards      | MULE-008, 010, 70X | 3     | Best practices                           |
+| Complexity     | MULE-80X           | 1     | Cyclomatic complexity                    |
+| Structure      | MULE-80X           | 3     | Project structure                        |
+| YAML           | YAML-XXX           | 3     | Properties validation                    |
+| DataWeave      | DW-XXX             | 3     | DWL file validation                      |
+| API-Led        | API-XXX            | 3     | API-Led patterns                         |
+| Experimental   | EXP-XXX            | 3     | Beta rules                               |
 
 ## Extension Points
 
@@ -296,18 +302,18 @@ src/
 
 ## Performance Specifications
 
-| Metric | Target |
-|--------|--------|
-| Files per second | > 100 |
-| Memory per file | < 10MB |
-| Rule execution | < 50ms per rule |
-| Total for 100 files | < 5 seconds |
+| Metric              | Target          |
+| ------------------- | --------------- |
+| Files per second    | > 100           |
+| Memory per file     | < 10MB          |
+| Rule execution      | < 50ms per rule |
+| Total for 100 files | < 5 seconds     |
 
 ## Exit Codes
 
-| Code | Meaning |
-|------|---------|
-| 0 | No errors or warnings |
-| 1 | At least one error found |
-| 2 | Configuration error |
-| 3 | Critical error (parse failure) |
+| Code | Meaning                        |
+| ---- | ------------------------------ |
+| 0    | No errors or warnings          |
+| 1    | At least one error found       |
+| 2    | Configuration error            |
+| 3    | Critical error (parse failure) |
