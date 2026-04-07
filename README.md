@@ -1,4 +1,13 @@
-# Mule-Lint
+<p align="center">
+  <img src="assets/logo.svg" alt="Mule-Lint" width="600" />
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@sfdxy/mule-lint"><img src="https://img.shields.io/npm/v/@sfdxy/mule-lint?style=flat-square&color=34d399" alt="npm version" /></a>
+  <a href="https://github.com/Avinava/mule-lint/actions"><img src="https://img.shields.io/github/actions/workflow/status/Avinava/mule-lint/ci.yml?style=flat-square&color=38bdf8" alt="CI" /></a>
+  <a href="https://github.com/Avinava/mule-lint/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/@sfdxy/mule-lint?style=flat-square&color=818cf8" alt="License" /></a>
+  <a href="https://www.npmjs.com/package/@sfdxy/mule-lint"><img src="https://img.shields.io/npm/dm/@sfdxy/mule-lint?style=flat-square&color=fbbf24" alt="Downloads" /></a>
+</p>
 
 <p align="center">
   <strong>Enterprise-grade static analysis tool for MuleSoft applications</strong>
