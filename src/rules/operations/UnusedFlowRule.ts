@@ -5,6 +5,11 @@ import { BaseRule } from '../base/BaseRule';
  * HYG-003: Unused Flow Detection
  *
  * Detects flows that are never referenced by flow-ref.
+ *
+ * Cross-file detection: when the LintEngine provides context.allFlowRefs
+ * (populated during the pre-scan phase), the rule checks across all project
+ * files.  When scanning a standalone file (allFlowRefs is undefined), only
+ * intra-file references are checked.
  */
 export class UnusedFlowRule extends BaseRule {
   id = 'HYG-003';
@@ -13,21 +18,28 @@ export class UnusedFlowRule extends BaseRule {
   severity = 'warning' as const;
   category = 'standards' as const;
 
-  validate(doc: Document, _context: ValidationContext): Issue[] {
+  validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
     // Get all flow names in this document
     const flows = this.select('//*[local-name()="flow"]', doc);
     const subflows = this.select('//*[local-name()="sub-flow"]', doc);
 
-    // Get all flow-ref targets
-    const flowRefs = this.select('//*[local-name()="flow-ref"]', doc);
-    const referencedFlows = new Set<string>();
-
-    for (const ref of flowRefs) {
-      const name = this.getNameAttribute(ref);
-      if (name) {
-        referencedFlows.add(name);
+    // Build the set of referenced flow names.
+    // When context.allFlowRefs is available (project-wide pre-scan), use it.
+    // Fall back to intra-file refs only for standalone scans.
+    let referencedFlows: Set<string>;
+    if (context.allFlowRefs) {
+      referencedFlows = context.allFlowRefs;
+    } else {
+      // Intra-file only (standalone scan)
+      const flowRefs = this.select('//*[local-name()="flow-ref"]', doc);
+      referencedFlows = new Set<string>();
+      for (const ref of flowRefs) {
+        const name = this.getNameAttribute(ref);
+        if (name) {
+          referencedFlows.add(name);
+        }
       }
     }
 
@@ -38,7 +50,7 @@ export class UnusedFlowRule extends BaseRule {
         // Exclude common patterns that are referenced externally
         if (!this.isExternallyReferenced(name)) {
           issues.push(
-            this.createIssue(subflow, `Sub-flow "${name}" is never referenced within this file`, {
+            this.createIssue(subflow, `Sub-flow "${name}" is never referenced`, {
               severity: 'info',
               suggestion: 'Consider removing unused sub-flows or verify cross-file references',
             }),

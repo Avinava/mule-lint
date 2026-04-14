@@ -228,6 +228,76 @@ describe('Error Handling Rules', () => {
       expect(rule.severity).toBe('warning');
       expect(rule.category).toBe('error-handling');
     });
+
+    it('should skip check for non-HTTP project (no listener, no apikitRouter)', () => {
+      // Same XML that would normally trigger a warning
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <flow name="batch-process-flow">
+            <error-handler>
+              <on-error-continue>
+                <logger message="error"/>
+              </on-error-continue>
+            </error-handler>
+          </flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      // projectContext explicitly says no HTTP — rule should skip
+      const ctx = {
+        ...createContext(),
+        projectContext: { hasHttpListener: false, hasApikitRouter: false },
+      };
+      const issues = rule.validate(result.document!, ctx);
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should still report for HTTP project missing httpStatus', () => {
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <flow name="api-flow">
+            <error-handler>
+              <on-error-continue>
+                <logger message="error"/>
+              </on-error-continue>
+            </error-handler>
+          </flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      // projectContext says HTTP is present — rule should still fire
+      const ctx = {
+        ...createContext(),
+        projectContext: { hasHttpListener: true, hasApikitRouter: false },
+      };
+      const issues = rule.validate(result.document!, ctx);
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-005');
+    });
+
+    it('should report when projectContext is absent (backward compat / standalone scan)', () => {
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <flow name="test-flow">
+            <error-handler>
+              <on-error-continue>
+                <logger message="error"/>
+              </on-error-continue>
+            </error-handler>
+          </flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      // No projectContext at all (standalone scan) — rule falls back to reporting
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+    });
   });
 
   // =================================================================
