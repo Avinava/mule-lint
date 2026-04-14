@@ -7,6 +7,12 @@ import { BaseRule } from '../base/BaseRule';
  * MULE-802: Project Structure Validation
  *
  * Validates standard MuleSoft project folder structure.
+ *
+ * The recommended directories list is configurable via the rule's `recommendedDirs`
+ * option.  The default list intentionally excludes `src/main/resources/api` because
+ * many modern Mule 4 projects reference their API specification from Anypoint Exchange
+ * rather than bundling it locally — requiring that directory would produce false
+ * positives on valid projects.
  */
 export class ProjectStructureRule extends BaseRule {
   id = 'MULE-802';
@@ -17,11 +23,8 @@ export class ProjectStructureRule extends BaseRule {
 
   private readonly REQUIRED_DIRS = ['src/main/mule', 'src/main/resources'];
 
-  private readonly RECOMMENDED_DIRS = [
-    'src/main/resources/dwl',
-    'src/main/resources/api',
-    'src/test/munit',
-  ];
+  /** Default recommended dirs (api/ excluded — see class JSDoc) */
+  private readonly DEFAULT_RECOMMENDED_DIRS = ['src/main/resources/dwl', 'src/test/munit'];
 
   validate(_doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
@@ -41,8 +44,14 @@ export class ProjectStructureRule extends BaseRule {
       }
     }
 
-    // Check recommended directories
-    for (const dir of this.RECOMMENDED_DIRS) {
+    // Check recommended directories (configurable)
+    const recommendedDirs = this.getOption(
+      context,
+      'recommendedDirs',
+      this.DEFAULT_RECOMMENDED_DIRS,
+    );
+
+    for (const dir of recommendedDirs) {
       const fullPath = path.join(projectRoot, dir);
       if (!fs.existsSync(fullPath)) {
         issues.push({
