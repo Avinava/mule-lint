@@ -37,13 +37,53 @@ describe('Operations & Resilience Rules', () => {
       expect(issues[0].message).toContain('no reconnection strategy');
     });
 
-    it('should pass for config with reconnection element', () => {
+    it('should pass for config with reconnection nested inside http:request-connection (XSD-correct placement)', () => {
+      // Per the Mule HTTP connector XSD, <reconnection> must be a child of
+      // <http:request-connection>, NOT a direct child of <http:request-config>.
+      // Placing it directly under <http:request-config> causes a SAXParseException.
+      const xml = `
+                <mule>
+                    <http:request-config name="HTTPS_Global_Request_Config" basePath="/api">
+                        <http:request-connection
+                            host="\${https.request.host}"
+                            port="\${https.request.port}"
+                            maxConnections="10">
+                            <reconnection>
+                                <reconnect count="3" frequency="2000"/>
+                            </reconnection>
+                        </http:request-connection>
+                    </http:request-config>
+                </mule>
+            `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const issues = rule.validate(doc, createContext());
+      expect(issues.length).toBe(0);
+    });
+
+    it('should pass for config with reconnect element (old-style direct child)', () => {
       const xml = `
                 <mule>
                     <http:request-config name="test-config" basePath="/api">
                         <http:request-connection>
                             <reconnection>
                                 <reconnect frequency="3000" count="3"/>
+                            </reconnection>
+                        </http:request-connection>
+                    </http:request-config>
+                </mule>
+            `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const issues = rule.validate(doc, createContext());
+      expect(issues.length).toBe(0);
+    });
+
+    it('should pass for config with reconnect-forever strategy', () => {
+      const xml = `
+                <mule>
+                    <http:request-config name="test-config" basePath="/api">
+                        <http:request-connection host="api.example.com">
+                            <reconnection>
+                                <reconnect-forever frequency="2000"/>
                             </reconnection>
                         </http:request-connection>
                     </http:request-config>
@@ -306,6 +346,38 @@ describe('Operations & Resilience Rules', () => {
     it('should have correct rule properties', () => {
       expect(rule.id).toBe('HYG-003');
       expect(rule.severity).toBe('warning');
+    });
+
+    it('should pass for sub-flow that is referenced in another file (via allFlowRefs)', () => {
+      // sub-flow only present in this file, but referenced in another file
+      const xml = `
+        <mule>
+          <sub-flow name="my-helper-subflow">
+            <logger message="test"/>
+          </sub-flow>
+        </mule>
+      `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      // Simulate allFlowRefs populated by LintEngine pre-scan
+      const allFlowRefs = new Set(['my-helper-subflow']);
+      const issues = rule.validate(doc, { ...createContext(), allFlowRefs });
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should still flag sub-flow unreferenced cross-file when not in allFlowRefs', () => {
+      const xml = `
+        <mule>
+          <sub-flow name="orphan-subflow">
+            <logger message="test"/>
+          </sub-flow>
+        </mule>
+      `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      // allFlowRefs does NOT contain orphan-subflow
+      const allFlowRefs = new Set(['some-other-flow']);
+      const issues = rule.validate(doc, { ...createContext(), allFlowRefs });
+      expect(issues).toHaveLength(1);
+      expect(issues[0].message).toContain('never referenced');
     });
   });
 

@@ -5,13 +5,19 @@ import {
 } from '../../src/rules/dataweave/DataWeaveRules';
 import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 describe('DataWeave Rules', () => {
-  const createContext = (filePath = 'src/main/mule/test.xml'): ValidationContext => ({
+  const createContext = (
+    filePath = 'src/main/mule/test.xml',
+    options?: Record<string, unknown>,
+  ): ValidationContext => ({
     filePath,
     relativePath: filePath,
     projectRoot: '/project',
-    config: { enabled: true },
+    config: { enabled: true, options },
   });
 
   // =================================================================
@@ -91,6 +97,91 @@ var line11 = "test"
   // =================================================================
   describe('DwlNamingRule (DW-002)', () => {
     const rule = new DwlNamingRule();
+    let tmpDir: string;
+
+    beforeEach(() => {
+      // Create a real temp directory with DWL files for filesystem-based tests
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mule-lint-dw002-'));
+      const dwlDir = path.join(tmpDir, 'src', 'main', 'resources', 'dwl');
+      const lookupsDir = path.join(dwlDir, 'lookups');
+      const transformsDir = path.join(dwlDir, 'transforms');
+      fs.mkdirSync(lookupsDir, { recursive: true });
+      fs.mkdirSync(transformsDir, { recursive: true });
+    });
+
+    afterEach(() => {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    const createFsContext = (options?: Record<string, unknown>): ValidationContext => ({
+      filePath: path.join(tmpDir, 'src/main/mule/test.xml'),
+      relativePath: 'src/main/mule/test.xml',
+      projectRoot: tmpDir,
+      config: { enabled: true, options },
+    });
+
+    it('should flag camelCase file under default kebab-case convention', () => {
+      const dwlDir = path.join(tmpDir, 'src', 'main', 'resources', 'dwl', 'transforms');
+      fs.writeFileSync(path.join(dwlDir, 'errorPayload.dwl'), '%dw 2.0\n---\n{}');
+
+      const issues = rule.validate({} as Document, createFsContext());
+      expect(issues.length).toBe(1);
+      expect(issues[0].ruleId).toBe('DW-002');
+      expect(issues[0].message).toContain('errorPayload.dwl');
+    });
+
+    it('should pass for kebab-case file under default convention', () => {
+      const dwlDir = path.join(tmpDir, 'src', 'main', 'resources', 'dwl', 'transforms');
+      fs.writeFileSync(path.join(dwlDir, 'error-payload.dwl'), '%dw 2.0\n---\n{}');
+
+      const issues = rule.validate({} as Document, createFsContext());
+      expect(issues.length).toBe(0);
+    });
+
+    it('should exempt camelCase DW module files when exemptPaths is configured', () => {
+      // DataWeave module import requires the filename to match the module identifier.
+      // Module identifiers cannot contain hyphens, so countryMap.dwl MUST be camelCase
+      // to be importable as: import countryMap from dwl::lookups::countryMap
+      const lookupsDir = path.join(tmpDir, 'src', 'main', 'resources', 'dwl', 'lookups');
+      fs.writeFileSync(path.join(lookupsDir, 'countryMap.dwl'), '%dw 2.0\n---\n{}');
+      fs.writeFileSync(path.join(lookupsDir, 'currencyMap.dwl'), '%dw 2.0\n---\n{}');
+
+      const issues = rule.validate(
+        {} as Document,
+        createFsContext({
+          exemptPaths: ['src/main/resources/dwl/lookups/**'],
+        }),
+      );
+      expect(issues.length).toBe(0);
+    });
+
+    it('should still flag non-exempt files even when exemptPaths is set', () => {
+      const lookupsDir = path.join(tmpDir, 'src', 'main', 'resources', 'dwl', 'lookups');
+      const transformsDir = path.join(tmpDir, 'src', 'main', 'resources', 'dwl', 'transforms');
+      fs.writeFileSync(path.join(lookupsDir, 'countryMap.dwl'), '%dw 2.0\n---\n{}');
+      // This file is NOT in the exempt path, so it should still be flagged
+      fs.writeFileSync(path.join(transformsDir, 'errorPayload.dwl'), '%dw 2.0\n---\n{}');
+
+      const issues = rule.validate(
+        {} as Document,
+        createFsContext({
+          exemptPaths: ['src/main/resources/dwl/lookups/**'],
+        }),
+      );
+      // countryMap is exempt; errorPayload is not → 1 issue for errorPayload
+      expect(issues.length).toBe(1);
+      expect(issues[0].message).toContain('errorPayload.dwl');
+    });
+
+    it('should pass all files when convention is "any"', () => {
+      const lookupsDir = path.join(tmpDir, 'src', 'main', 'resources', 'dwl', 'lookups');
+      fs.writeFileSync(path.join(lookupsDir, 'countryMap.dwl'), '%dw 2.0\n---\n{}');
+      fs.writeFileSync(path.join(lookupsDir, 'country-map.dwl'), '%dw 2.0\n---\n{}');
+      fs.writeFileSync(path.join(lookupsDir, 'country_map.dwl'), '%dw 2.0\n---\n{}');
+
+      const issues = rule.validate({} as Document, createFsContext({ convention: 'any' }));
+      expect(issues.length).toBe(0);
+    });
 
     it('should have correct rule properties', () => {
       expect(rule.id).toBe('DW-002');

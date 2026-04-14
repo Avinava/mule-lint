@@ -6,6 +6,11 @@ import { BaseRule } from '../base/BaseRule';
  *
  * DB and HTTP connectors should configure connection pools
  * for optimal performance and resource management.
+ *
+ * Per the Mule HTTP connector XSD, `maxConnections` and `connectionIdleTimeout`
+ * are valid on BOTH `<http:request-config>` (older style) and on the nested
+ * `<http:request-connection>` child element (current XSD-correct placement).
+ * The rule must accept either location to avoid false positives.
  */
 export class ConnectionPoolingRule extends BaseRule {
   id = 'PERF-002';
@@ -27,11 +32,24 @@ export class ConnectionPoolingRule extends BaseRule {
       const element = config as Element;
       const name = element.getAttribute('name') ?? 'unnamed';
 
-      // Check for connection pooling attributes
-      const hasPooling =
-        element.hasAttribute('maxConnections') ||
-        element.hasAttribute('connectionIdleTimeout') ||
+      // Check for connection pooling attributes on the request-config element itself
+      const hasPoolingOnConfig =
+        element.hasAttribute('maxConnections') || element.hasAttribute('connectionIdleTimeout');
+
+      // Also check the nested http:request-connection child element (XSD-correct placement).
+      // Per the Mule HTTP connector XSD, maxConnections and connectionIdleTimeout belong on
+      // http:request-connection, not http:request-config. Both placements must be accepted.
+      const connectionChild = this.selectFirst('.//*[local-name()="request-connection"]', config);
+      const hasPoolingOnConnection =
+        connectionChild !== null &&
+        ((connectionChild as Element).hasAttribute('maxConnections') ||
+          (connectionChild as Element).hasAttribute('connectionIdleTimeout'));
+
+      // Also accept a pooling-profile child (db-style config)
+      const hasPoolingProfile =
         this.select('.//*[local-name()="pooling-profile"]', config).length > 0;
+
+      const hasPooling = hasPoolingOnConfig || hasPoolingOnConnection || hasPoolingProfile;
 
       if (!hasPooling) {
         issues.push(
@@ -40,7 +58,7 @@ export class ConnectionPoolingRule extends BaseRule {
             `HTTP request config "${name}" has no connection pooling configured`,
             {
               suggestion:
-                'Add maxConnections and connectionIdleTimeout for optimal connection management',
+                'Add maxConnections and connectionIdleTimeout on <http:request-connection> for optimal connection management',
             },
           ),
         );

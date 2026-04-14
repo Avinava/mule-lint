@@ -213,7 +213,7 @@ describe('Performance Rules', () => {
   describe('ConnectionPoolingRule (PERF-002)', () => {
     const rule = new ConnectionPoolingRule();
 
-    it('should pass for HTTP config with pooling', () => {
+    it('should pass for HTTP config with pooling attributes on request-config (legacy placement)', () => {
       const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
@@ -227,7 +227,50 @@ describe('Performance Rules', () => {
       expect(issues).toHaveLength(0);
     });
 
-    it('should fail for HTTP config without pooling', () => {
+    it('should pass when maxConnections is on http:request-connection (XSD-correct placement)', () => {
+      // Per the Mule HTTP connector XSD, maxConnections belongs on http:request-connection,
+      // NOT on http:request-config. Placing it on the config element causes SAXParseException.
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:http="http://www.mulesoft.org/schema/mule/http">
+                    <http:request-config name="HTTPS_Global_Request_Config"
+                        basePath="/api"
+                        responseTimeout="\${https.request.responseTimeout}">
+                        <http:request-connection
+                            host="\${https.request.host}"
+                            port="\${https.request.port}"
+                            connectionIdleTimeout="\${https.request.connectionIdleTimeout}"
+                            maxConnections="10"/>
+                    </http:request-config>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should pass when only connectionIdleTimeout is on http:request-connection', () => {
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:http="http://www.mulesoft.org/schema/mule/http">
+                    <http:request-config name="HTTP_Config">
+                        <http:request-connection
+                            host="api.example.com"
+                            port="443"
+                            connectionIdleTimeout="30000"/>
+                    </http:request-config>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should fail for HTTP config without pooling on either request-config or request-connection', () => {
       const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:http="http://www.mulesoft.org/schema/mule/http">
@@ -241,6 +284,23 @@ describe('Performance Rules', () => {
       expect(issues).toHaveLength(1);
       expect(issues[0].ruleId).toBe('PERF-002');
       expect(issues[0].message).toContain('pooling');
+    });
+
+    it('should fail when request-connection exists but has no pooling attributes', () => {
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:http="http://www.mulesoft.org/schema/mule/http">
+                    <http:request-config name="HTTP_Config">
+                        <http:request-connection host="api.example.com" port="443"/>
+                    </http:request-config>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('PERF-002');
     });
 
     it('should have correct rule properties', () => {

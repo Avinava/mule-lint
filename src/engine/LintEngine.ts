@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import fg from 'fast-glob';
-import { Rule, Issue, RuleConfig, ValidationContext, Severity } from '../types';
+import { Rule, Issue, RuleConfig, ValidationContext, Severity, ProjectContext } from '../types';
 import { LintConfig, DEFAULT_CONFIG } from '../types/Config';
 import { LintReport, LintSummary, FileResult, ProjectMetrics } from '../types/Report';
 import { parseXml } from '../core/XmlParser';
@@ -71,6 +71,11 @@ export class LintEngine {
 
     this.log(`Found ${files.length} files to scan`);
 
+    // Pre-scan: collect cross-file context before rule execution
+    const { allFlowRefs, projectContext } = isStandalone
+      ? { allFlowRefs: undefined, projectContext: undefined }
+      : this.preScanFiles(files);
+
     // Process each file and collect metrics
     const fileResults: FileResult[] = [];
     const metricsAggregator: ProjectMetrics = {
@@ -92,7 +97,14 @@ export class LintEngine {
     };
 
     for (const file of files) {
-      const result = this.processFile(file, projectRoot, isStandalone, metricsAggregator);
+      const result = this.processFile(
+        file,
+        projectRoot,
+        isStandalone,
+        metricsAggregator,
+        allFlowRefs,
+        projectContext,
+      );
       fileResults.push(result);
     }
 
@@ -215,6 +227,8 @@ export class LintEngine {
     projectRoot: string,
     isStandalone: boolean = false,
     metricsAggregator?: ProjectMetrics,
+    allFlowRefs?: Set<string>,
+    projectContext?: ProjectContext,
   ): FileResult {
     this.log(`  Processing: ${file.relativePath}`);
 
@@ -237,6 +251,8 @@ export class LintEngine {
         file.absolutePath,
         projectRoot,
         isStandalone,
+        allFlowRefs,
+        projectContext,
       );
 
       // Collect metrics from parsed document
@@ -270,6 +286,8 @@ export class LintEngine {
     filePath: string,
     projectRoot: string,
     isStandalone: boolean = false,
+    allFlowRefs?: Set<string>,
+    projectContext?: ProjectContext,
   ): Issue[] {
     const issues: Issue[] = [];
     const enabledRules = this.getEnabledRules();
@@ -286,6 +304,8 @@ export class LintEngine {
           relativePath: path.relative(projectRoot, filePath),
           projectRoot,
           config: this.getRuleConfig(rule.id),
+          allFlowRefs,
+          projectContext,
         };
 
         const ruleIssues = rule.validate(doc, context);
@@ -411,5 +431,75 @@ export class LintEngine {
    */
   private collectFileMetrics(doc: Document, relativePath: string, metrics: ProjectMetrics): void {
     collectMetrics(doc, relativePath, metrics);
+  }
+
+  /**
+   * Pre-scan all XML files to build cross-file context:
+   *   - allFlowRefs: union of all <flow-ref name="..."> targets across files
+   *   - projectContext: whether the project has HTTP listeners / APIkit routers
+   *
+   * This runs before the main per-file rule execution so that rules can use
+   * the aggregated information (e.g. HYG-003 cross-file unused flow detection,
+   * MULE-005 HTTP-only project detection).
+   */
+  private preScanFiles(files: ScannedFile[]): {
+    allFlowRefs: Set<string>;
+    projectContext: ProjectContext;
+  } {
+    const allFlowRefs = new Set<string>();
+    const projectContext: ProjectContext = {
+      hasHttpListener: false,
+      hasApikitRouter: false,
+    };
+
+    for (const file of files) {
+      // Only process XML files
+      if (!file.absolutePath.endsWith('.xml')) {
+        continue;
+      }
+
+      try {
+        const content = readFileContent(file.absolutePath);
+        const parseResult = parseXml(content, file.relativePath);
+
+        if (!parseResult.success || !parseResult.document) {
+          continue;
+        }
+
+        const doc = parseResult.document;
+
+        // Collect flow-ref targets
+        const allElements = doc.getElementsByTagName('*');
+        for (let i = 0; i < allElements.length; i++) {
+          const el = allElements[i];
+          const localName = el.localName ?? el.nodeName.split(':').pop() ?? '';
+
+          if (localName === 'flow-ref') {
+            const name = el.getAttribute('name');
+            if (name) {
+              allFlowRefs.add(name);
+            }
+          }
+
+          // Detect HTTP listener
+          if (localName === 'listener') {
+            projectContext.hasHttpListener = true;
+          }
+
+          // Detect APIkit router or console
+          if (localName === 'router' || localName === 'console') {
+            // Check namespace to be sure it's apikit
+            const nodeName = el.nodeName;
+            if (nodeName.includes('apikit:')) {
+              projectContext.hasApikitRouter = true;
+            }
+          }
+        }
+      } catch {
+        // Ignore unreadable files during pre-scan
+      }
+    }
+
+    return { allFlowRefs, projectContext };
   }
 }
