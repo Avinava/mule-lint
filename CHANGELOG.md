@@ -2,7 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.16.0] - 2026-01-11
+## [1.20.0] - 2026-04-14
+
+### Fixed
+
+- **PERF-002** (`ConnectionPoolingRule`): `maxConnections`/`connectionIdleTimeout` now checked on both `<http:request-config>` and its nested `<http:request-connection>` child. Previously only checking the top-level element caused SAXParseException on XSD-valid projects.
+- **RES-001** (`ReconnectionStrategyRule`): Improved suggestion text to clarify XSD-correct nesting of `<reconnection>` inside `<http:request-connection>`. Added `reconnect-forever` and nested-config test coverage.
+- **DW-002** (`DwlNamingRule`): Added `exemptPaths` option to skip naming convention enforcement for DataWeave module directories. Hyphens are invalid in DW module identifiers so `camelCase` is the only valid choice for module files.
+- **MULE-402** (`HttpContentTypeRule`): Now detects Content-Type in three patterns — static `<http:header>` elements (A), CDATA DataWeave blocks inside `<http:headers>` (B), and inline DW expressions on the `value=` attribute (C). When headers are set via a DataWeave expression but Content-Type is not statically visible, the issue is downgraded to `info`.
+- **MULE-007** (`CorrelationIdRule`): Now follows `resource="..."` references on `ee:set-payload` and similar elements. The referenced `.dwl` file is read from `src/main/resources/<resourcePath>` and checked for correlationId patterns. Unresolvable resource references are downgraded to `info` to avoid false positives.
+- **MULE-001** (`GlobalErrorHandlerRule`): Removed `context.relativePath.includes('global')` guard that restricted the check to files named "global". The rule now fires on any flow file (containing `<flow>` or `<sub-flow>`) that lacks both a named `<error-handler>` element and the expected global error handler file. Pure configuration files (no flows) are skipped.
+- **MULE-005** (`HttpStatusRule`): Added `projectContext` detection — the rule is now automatically skipped for non-HTTP projects (those with no `http:listener` or `apikit:router`). Prevents false positives in event-driven and batch Mule applications.
+- **HYG-003** (`UnusedFlowRule`): Upgraded to cross-file reference detection. `LintEngine` now runs a pre-scan phase that collects all `<flow-ref name="...">` targets across all XML files before executing rules. The collected set is passed as `context.allFlowRefs` so sub-flows and flows referenced in other files are no longer incorrectly flagged.
+- **MULE-802** (`ProjectStructureRule`): Removed `src/main/resources/api` from the default recommended directories. Many Mule 4 projects reference their API spec from Anypoint Exchange and do not bundle it locally. The full recommended dirs list is now configurable via the `recommendedDirs` option.
+
+### Added
+
+- **`ValidationContext.allFlowRefs`** (`src/types/Rule.ts`): Optional `Set<string>` populated by `LintEngine` pre-scan with all `<flow-ref>` targets across the project.
+- **`ValidationContext.projectContext`** (`src/types/Rule.ts`): Optional `ProjectContext` object with `hasHttpListener` and `hasApikitRouter` flags, populated during pre-scan.
+- **`LintEngine` pre-scan phase**: Before per-file rule execution, the engine now scans all XML files to populate `allFlowRefs` and `projectContext`.
+- **`tests/unit/YamlRules.test.ts`**: New test file (12 tests) covering `EnvironmentFilesRule` (YAML-001) with configurable environments, naming patterns, and filesystem layouts; plus `PropertyNamingRule` (YAML-003) and `PlaintextSecretsRule` (YAML-004).
+
+### Improved
+
+- **YAML-001** (`EnvironmentFilesRule`): Configurable environments via `getOption(context, 'environments', ['dev', 'qa', 'prod'])` was already in place; now has full test coverage and documentation.
+- **MULE-002** (`FlowNamingRule`): Sub-flow naming enforcement was already implemented; added 4 explicit tests and updated documentation to document the `subflowSuffix` and `excludePatterns` options.
+
+### Tests
+
+- `tests/unit/PerformanceRules.test.ts`: +3 tests for PERF-002 and RES-001
+- `tests/unit/OperationsRules.test.ts`: +2 cross-file tests for HYG-003
+- `tests/unit/DataWeaveRules.test.ts`: Rewritten with filesystem-based tests for DW-002 `exemptPaths`
+- `tests/unit/HttpRules.test.ts`: +4 tests for MULE-402 patterns B, C, and dynamic-unverified
+- `tests/unit/ErrorHandlingRules.test.ts`: +7 tests for MULE-001, +3 tests for MULE-005 projectContext, +4 tests for MULE-007 resource references
+- `tests/unit/StructureRules.test.ts`: +5 tests for MULE-802 configurable recommended dirs
+- `tests/unit/FlowNamingRule.test.ts`: +4 tests for MULE-002 sub-flow enforcement
+- `tests/unit/YamlRules.test.ts`: New file, 12 tests
+
+**Total: 302 tests (up from 270)**
+
+---
 
 ### Added
 
