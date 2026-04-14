@@ -2,15 +2,19 @@ import { MissingErrorHandlerRule } from '../../src/rules/error-handling/MissingE
 import { GenericErrorRule } from '../../src/rules/error-handling/GenericErrorRule';
 import { HttpStatusRule } from '../../src/rules/error-handling/HttpStatusRule';
 import { CorrelationIdRule } from '../../src/rules/error-handling/CorrelationIdRule';
+import { GlobalErrorHandlerRule } from '../../src/rules/error-handling/GlobalErrorHandlerRule';
 import { TryScopeRule } from '../../src/rules/error-handling/TryScopeRule';
 import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 describe('Error Handling Rules', () => {
-  const createContext = (filePath = 'test.xml'): ValidationContext => ({
+  const createContext = (filePath = 'test.xml', projectRoot = '/project'): ValidationContext => ({
     filePath,
     relativePath: filePath,
-    projectRoot: '/project',
+    projectRoot,
     config: { enabled: true },
   });
 
@@ -231,8 +235,19 @@ describe('Error Handling Rules', () => {
   // =================================================================
   describe('CorrelationIdRule (MULE-007)', () => {
     const rule = new CorrelationIdRule();
+    let tmpDir: string;
 
-    it('should pass when correlationId is referenced', () => {
+    beforeEach(() => {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mule-lint-007-'));
+      const dwlDir = path.join(tmpDir, 'src', 'main', 'resources', 'dwl', 'transforms');
+      fs.mkdirSync(dwlDir, { recursive: true });
+    });
+
+    afterEach(() => {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    it('should pass when correlationId is referenced inline', () => {
       const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
                       xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
@@ -258,7 +273,120 @@ describe('Error Handling Rules', () => {
       expect(issues).toHaveLength(0);
     });
 
-    it('should fail when correlationId is not referenced', () => {
+    it('should pass when correlationId is in a resource-referenced DWL file', () => {
+      // Write a DWL file that contains correlationId
+      const dwlPath = path.join(
+        tmpDir,
+        'src',
+        'main',
+        'resources',
+        'dwl',
+        'transforms',
+        'error-payload.dwl',
+      );
+      fs.writeFileSync(
+        dwlPath,
+        `%dw 2.0
+output application/json
+---
+{
+    correlationId: vars.correlationId default "",
+    message: error.detailedDescription default ""
+}`,
+      );
+
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+                    <error-handler name="global-error-handler">
+                        <on-error-propagate type="ANY">
+                            <ee:transform>
+                                <ee:message>
+                                    <ee:set-payload resource="dwl/transforms/error-payload.dwl"/>
+                                </ee:message>
+                            </ee:transform>
+                        </on-error-propagate>
+                    </error-handler>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext('test.xml', tmpDir));
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should downgrade to info when resource file exists but has no correlationId', () => {
+      // DWL file exists but doesn't include correlationId
+      const dwlPath = path.join(
+        tmpDir,
+        'src',
+        'main',
+        'resources',
+        'dwl',
+        'transforms',
+        'error-payload.dwl',
+      );
+      fs.writeFileSync(
+        dwlPath,
+        `%dw 2.0
+output application/json
+---
+{
+    message: error.detailedDescription default ""
+}`,
+      );
+
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+                    <error-handler name="global-error-handler">
+                        <on-error-propagate type="ANY">
+                            <ee:transform>
+                                <ee:message>
+                                    <ee:set-payload resource="dwl/transforms/error-payload.dwl"/>
+                                </ee:message>
+                            </ee:transform>
+                        </on-error-propagate>
+                    </error-handler>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext('test.xml', tmpDir));
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-007');
+      // Should still flag it, but as warning (inline path, file found but no correlationId)
+    });
+
+    it('should downgrade to info when resource file cannot be read', () => {
+      // Resource= attribute present but points to a non-existent file
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+                      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+                    <error-handler name="global-error-handler">
+                        <on-error-propagate type="ANY">
+                            <ee:transform>
+                                <ee:message>
+                                    <ee:set-payload resource="dwl/transforms/nonexistent.dwl"/>
+                                </ee:message>
+                            </ee:transform>
+                        </on-error-propagate>
+                    </error-handler>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext('test.xml', tmpDir));
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-007');
+      expect(issues[0].severity).toBe('info');
+      expect(issues[0].message).toContain('external DWL file');
+    });
+
+    it('should fail when correlationId is not referenced and no resource references exist', () => {
       const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
@@ -276,6 +404,7 @@ describe('Error Handling Rules', () => {
       const issues = rule.validate(result.document!, createContext());
       expect(issues).toHaveLength(1);
       expect(issues[0].ruleId).toBe('MULE-007');
+      expect(issues[0].severity).toBe('warning');
       expect(issues[0].message).toContain('correlationId');
     });
 
