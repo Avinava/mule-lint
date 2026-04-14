@@ -37,13 +37,53 @@ describe('Operations & Resilience Rules', () => {
       expect(issues[0].message).toContain('no reconnection strategy');
     });
 
-    it('should pass for config with reconnection element', () => {
+    it('should pass for config with reconnection nested inside http:request-connection (XSD-correct placement)', () => {
+      // Per the Mule HTTP connector XSD, <reconnection> must be a child of
+      // <http:request-connection>, NOT a direct child of <http:request-config>.
+      // Placing it directly under <http:request-config> causes a SAXParseException.
+      const xml = `
+                <mule>
+                    <http:request-config name="HTTPS_Global_Request_Config" basePath="/api">
+                        <http:request-connection
+                            host="\${https.request.host}"
+                            port="\${https.request.port}"
+                            maxConnections="10">
+                            <reconnection>
+                                <reconnect count="3" frequency="2000"/>
+                            </reconnection>
+                        </http:request-connection>
+                    </http:request-config>
+                </mule>
+            `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const issues = rule.validate(doc, createContext());
+      expect(issues.length).toBe(0);
+    });
+
+    it('should pass for config with reconnect element (old-style direct child)', () => {
       const xml = `
                 <mule>
                     <http:request-config name="test-config" basePath="/api">
                         <http:request-connection>
                             <reconnection>
                                 <reconnect frequency="3000" count="3"/>
+                            </reconnection>
+                        </http:request-connection>
+                    </http:request-config>
+                </mule>
+            `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const issues = rule.validate(doc, createContext());
+      expect(issues.length).toBe(0);
+    });
+
+    it('should pass for config with reconnect-forever strategy', () => {
+      const xml = `
+                <mule>
+                    <http:request-config name="test-config" basePath="/api">
+                        <http:request-connection host="api.example.com">
+                            <reconnection>
+                                <reconnect-forever frequency="2000"/>
                             </reconnection>
                         </http:request-connection>
                     </http:request-config>

@@ -53,6 +53,12 @@ export class ExternalDwlRule extends BaseRule {
  *
  * DataWeave files should follow naming conventions for consistency.
  * Supports configurable conventions: 'kebab-case' (default), 'camelCase', or 'any'.
+ *
+ * IMPORTANT: DataWeave module files (imported via `import X from dwl::path::X`)
+ * MUST use camelCase because the module identifier in the import statement must
+ * exactly match the filename, and hyphens are not valid in DataWeave identifiers.
+ * Use the `exemptPaths` option to exclude module directories from this rule, or
+ * set `convention: "camelCase"` for projects that use DW modules extensively.
  */
 export class DwlNamingRule extends BaseRule {
   id = 'DW-002';
@@ -78,10 +84,22 @@ export class DwlNamingRule extends BaseRule {
       return issues;
     }
 
+    // Get configurable exempt paths (glob-style patterns relative to projectRoot).
+    // Files matching any exempt pattern are skipped entirely regardless of convention.
+    // Use this for DataWeave module directories where camelCase is required by the
+    // DataWeave runtime import system (e.g., "src/main/resources/dwl/lookups/**").
+    const exemptPaths = this.getOption(context, 'exemptPaths', [] as string[]) as string[];
+
     const dwlFiles = this.findDwlFiles(dwlDir);
 
     for (const file of dwlFiles) {
       const basename = path.basename(file, '.dwl');
+
+      // Check if this file matches any exempt path pattern
+      const relativeToDwlDir = path.relative(context.projectRoot, file);
+      if (exemptPaths.length > 0 && this.isExcluded(relativeToDwlDir, exemptPaths)) {
+        continue;
+      }
 
       if (!this.isValidDwlName(basename, convention)) {
         const suggestedName = this.toConvention(basename, convention);
