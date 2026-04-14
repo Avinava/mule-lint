@@ -447,4 +447,146 @@ output application/json
       expect(rule.category).toBe('error-handling');
     });
   });
+
+  // =================================================================
+  // MULE-001: Global Error Handler Exists
+  // =================================================================
+  describe('GlobalErrorHandlerRule (MULE-001)', () => {
+    const rule = new GlobalErrorHandlerRule();
+
+    it('should pass when doc contains a named error-handler element', () => {
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <error-handler name="global-error-handler">
+            <on-error-continue>
+              <logger message="error"/>
+            </on-error-continue>
+          </error-handler>
+          <flow name="my-flow">
+            <logger message="test"/>
+          </flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(
+        result.document!,
+        createContext('src/main/mule/config.xml', '/nonexistent-project'),
+      );
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should pass when doc contains an error-handler with ref attribute', () => {
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <flow name="my-flow">
+            <logger message="test"/>
+            <error-handler ref="global-error-handler"/>
+          </flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(
+        result.document!,
+        createContext('src/main/mule/config.xml', '/nonexistent-project'),
+      );
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should report warning for flow file without any error handler when global file missing', () => {
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <flow name="my-process-flow">
+            <logger message="test"/>
+          </flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      // Use /nonexistent-project so the expected file definitely doesn't exist
+      const issues = rule.validate(
+        result.document!,
+        createContext('src/main/mule/my-process-flow.xml', '/nonexistent-project'),
+      );
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-001');
+      expect(issues[0].severity).toBe('warning');
+    });
+
+    it('should NOT report for non-flow files (pure config without flows)', () => {
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core"
+              xmlns:http="http://www.mulesoft.org/schema/mule/http">
+          <http:request-config name="HTTP_Request_Config"/>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(
+        result.document!,
+        createContext('src/main/mule/http-config.xml', '/nonexistent-project'),
+      );
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should pass when the expected global error handler file exists on disk', () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mule-001-'));
+      try {
+        const muleDir = path.join(tmpDir, 'src', 'main', 'mule');
+        fs.mkdirSync(muleDir, { recursive: true });
+        fs.writeFileSync(path.join(muleDir, 'global-error-handler.xml'), '<mule/>');
+
+        const xml = `
+          <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+            <flow name="my-flow">
+              <logger message="test"/>
+            </flow>
+          </mule>
+        `;
+        const result = parseXml(xml);
+        expect(result.success).toBe(true);
+
+        const issues = rule.validate(
+          result.document!,
+          createContext('src/main/mule/my-flow.xml', tmpDir),
+        );
+        expect(issues).toHaveLength(0);
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true });
+      }
+    });
+
+    it('should NOT report for file that was previously only detected via global name (regression guard)', () => {
+      // Previously only files with "global" in their path triggered the rule.
+      // Now ANY flow file without a global handler should trigger — verify
+      // a file without "global" in its name also gets reported.
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <flow name="api-main-flow">
+            <logger message="test"/>
+          </flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(
+        result.document!,
+        createContext('src/main/mule/api-main.xml', '/nonexistent-project'),
+      );
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-001');
+    });
+
+    it('should have correct rule properties', () => {
+      expect(rule.id).toBe('MULE-001');
+      expect(rule.severity).toBe('warning');
+      expect(rule.category).toBe('error-handling');
+    });
+  });
 });
