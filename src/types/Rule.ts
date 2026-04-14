@@ -64,6 +64,17 @@ export interface RuleConfig {
 }
 
 /**
+ * Project-level context derived from a pre-scan of all files.
+ * Populated by LintEngine before per-file rule execution.
+ */
+export interface ProjectContext {
+  /** True if any file in the project contains an http:listener element */
+  hasHttpListener: boolean;
+  /** True if any file contains an apikit:router or apikit:console element */
+  hasApikitRouter: boolean;
+}
+
+/**
  * Context passed to each rule during validation
  */
 export interface ValidationContext {
@@ -75,6 +86,18 @@ export interface ValidationContext {
   projectRoot: string;
   /** Configuration for this specific rule */
   config: RuleConfig;
+  /**
+   * Set of all flow/sub-flow names referenced via <flow-ref> across all
+   * project files.  Populated during the LintEngine pre-scan phase.
+   * When undefined (e.g. standalone file scan), intra-file refs only.
+   */
+  allFlowRefs?: Set<string>;
+  /**
+   * Project-level feature flags derived from a pre-scan of all files.
+   * Rules that only apply to HTTP-exposed projects (e.g. MULE-005) should
+   * check these flags before reporting issues.
+   */
+  projectContext?: ProjectContext;
 }
 
 /**

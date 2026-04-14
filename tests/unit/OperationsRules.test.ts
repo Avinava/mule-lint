@@ -347,6 +347,38 @@ describe('Operations & Resilience Rules', () => {
       expect(rule.id).toBe('HYG-003');
       expect(rule.severity).toBe('warning');
     });
+
+    it('should pass for sub-flow that is referenced in another file (via allFlowRefs)', () => {
+      // sub-flow only present in this file, but referenced in another file
+      const xml = `
+        <mule>
+          <sub-flow name="my-helper-subflow">
+            <logger message="test"/>
+          </sub-flow>
+        </mule>
+      `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      // Simulate allFlowRefs populated by LintEngine pre-scan
+      const allFlowRefs = new Set(['my-helper-subflow']);
+      const issues = rule.validate(doc, { ...createContext(), allFlowRefs });
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should still flag sub-flow unreferenced cross-file when not in allFlowRefs', () => {
+      const xml = `
+        <mule>
+          <sub-flow name="orphan-subflow">
+            <logger message="test"/>
+          </sub-flow>
+        </mule>
+      `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      // allFlowRefs does NOT contain orphan-subflow
+      const allFlowRefs = new Set(['some-other-flow']);
+      const issues = rule.validate(doc, { ...createContext(), allFlowRefs });
+      expect(issues).toHaveLength(1);
+      expect(issues[0].message).toContain('never referenced');
+    });
   });
 
   describe('DisplayNameRule (DOC-001)', () => {
