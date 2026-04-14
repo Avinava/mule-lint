@@ -6,6 +6,11 @@ import { BaseRule } from '../base/BaseRule';
  *
  * Error handlers should set an httpStatus variable for proper API responses.
  * This ensures clients receive appropriate HTTP status codes.
+ *
+ * This rule only applies to projects that are HTTP-exposed (i.e., have at
+ * least one http:listener or apikit:router).  When the LintEngine provides
+ * context.projectContext, projects without HTTP entry points skip this check
+ * to avoid false positives on event-driven or batch Mule applications.
  */
 export class HttpStatusRule extends BaseRule {
   id = 'MULE-005';
@@ -17,6 +22,17 @@ export class HttpStatusRule extends BaseRule {
 
   validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
+
+    // Skip this rule for non-HTTP projects.
+    // When projectContext is available (project-wide scan), check whether
+    // the project has any HTTP listeners or APIkit routers.  If not, the
+    // httpStatus variable is irrelevant (e.g. batch or event-driven apps).
+    if (context.projectContext) {
+      const { hasHttpListener, hasApikitRouter } = context.projectContext;
+      if (!hasHttpListener && !hasApikitRouter) {
+        return issues;
+      }
+    }
 
     // Variable name to look for
     const variableName = this.getOption(context, 'variableName', 'httpStatus');

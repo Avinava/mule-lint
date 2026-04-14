@@ -133,6 +133,83 @@ describe('FlowNamingRule', () => {
       const issues = rule.validate(result.document!, createContext());
       expect(issues).toHaveLength(3);
     });
+
+    it('should enforce sub-flow naming independently of flow naming (MULE-002 scope)', () => {
+      // A flow with the correct suffix and a sub-flow with the wrong suffix
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <flow name="order-process-flow">
+            <logger message="ok"/>
+          </flow>
+          <sub-flow name="transformOrderData">
+            <logger message="bad name - no suffix"/>
+          </sub-flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].message).toContain('transformOrderData');
+      expect(issues[0].message).toContain('-subflow');
+    });
+
+    it('should support configurable sub-flow suffix', () => {
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <sub-flow name="transform-data-helper">
+            <logger message="test"/>
+          </sub-flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const ctx: ValidationContext = {
+        filePath: 'test.xml',
+        relativePath: 'test.xml',
+        projectRoot: '/project',
+        config: {
+          enabled: true,
+          options: {
+            flowSuffix: '-flow',
+            subflowSuffix: '-helper', // Custom suffix
+            excludePatterns: [],
+          },
+        },
+      };
+      const issues = rule.validate(result.document!, ctx);
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should skip sub-flows matching excluded patterns', () => {
+      const xml = `
+        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+          <sub-flow name="shared-utility">
+            <logger message="test"/>
+          </sub-flow>
+        </mule>
+      `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const ctx: ValidationContext = {
+        filePath: 'test.xml',
+        relativePath: 'test.xml',
+        projectRoot: '/project',
+        config: {
+          enabled: true,
+          options: {
+            flowSuffix: '-flow',
+            subflowSuffix: '-subflow',
+            excludePatterns: ['shared-*'],
+          },
+        },
+      };
+      const issues = rule.validate(result.document!, ctx);
+      expect(issues).toHaveLength(0);
+    });
   });
 
   describe('rule properties', () => {

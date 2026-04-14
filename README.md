@@ -282,55 +282,55 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 
 ### Core Rules (MVP)
 
-| ID       | Name                  | Severity | Category       | Description                                       |
-| -------- | --------------------- | -------- | -------------- | ------------------------------------------------- |
-| MULE-001 | Global Error Handler  | Error    | Error Handling | Project should have global error handler          |
-| MULE-002 | Flow Naming           | Warning  | Naming         | Flows end with `-flow`, sub-flows with `-subflow` |
-| MULE-003 | Missing Error Handler | Error    | Error Handling | Flows should have error handlers                  |
-| MULE-004 | Hardcoded URLs        | Error    | Security       | Use property placeholders for URLs                |
-| MULE-005 | HTTP Status Check     | Warning  | Error Handling | Error handlers should set httpStatus              |
-| MULE-006 | Logger Category       | Warning  | Logging        | Loggers should have category attribute            |
-| MULE-007 | Correlation ID        | Warning  | Error Handling | Error handlers should reference correlationId     |
-| MULE-008 | Choice Anti-Pattern   | Warning  | Standards      | Avoid raise-error in otherwise                    |
-| MULE-009 | Generic Error Type    | Warning  | Error Handling | Avoid catching type="ANY"                         |
-| MULE-010 | DWL Standards         | Info     | Standards      | Standard DataWeave files should exist             |
+| ID       | Name                  | Severity | Category       | Description                                                          |
+| -------- | --------------------- | -------- | -------------- | -------------------------------------------------------------------- |
+| MULE-001 | Global Error Handler  | Warning  | Error Handling | Any flow file should have a global error handler                     |
+| MULE-002 | Flow Naming           | Warning  | Naming         | Flows end with `-flow`, sub-flows with `-subflow`                    |
+| MULE-003 | Missing Error Handler | Error    | Error Handling | Flows should have error handlers                                     |
+| MULE-004 | Hardcoded URLs        | Error    | Security       | Use property placeholders for URLs                                   |
+| MULE-005 | HTTP Status Check     | Warning  | Error Handling | Error handlers should set httpStatus (skipped for non-HTTP projects) |
+| MULE-006 | Logger Category       | Warning  | Logging        | Loggers should have category attribute                               |
+| MULE-007 | Correlation ID        | Warning  | Error Handling | Error handlers should reference correlationId (checks DWL files too) |
+| MULE-008 | Choice Anti-Pattern   | Warning  | Standards      | Avoid raise-error in otherwise                                       |
+| MULE-009 | Generic Error Type    | Warning  | Error Handling | Avoid catching type="ANY"                                            |
+| MULE-010 | DWL Standards         | Info     | Standards      | Standard DataWeave files should exist                                |
 
 ### Extended Rules
 
-| ID       | Name                  | Severity | Category      | Description                       |
-| -------- | --------------------- | -------- | ------------- | --------------------------------- |
-| MULE-101 | Flow Casing           | Warning  | Naming        | kebab-case for flows              |
-| MULE-102 | Variable Naming       | Warning  | Naming        | camelCase for variables           |
-| MULE-201 | Hardcoded Credentials | Error    | Security      | Use `${secure::}`                 |
-| MULE-202 | Insecure TLS          | Error    | Security      | No insecure="true"                |
-| MULE-301 | Logger Payload        | Warning  | Logging       | Don't log entire payload          |
-| MULE-303 | Logger in Retry       | Warning  | Logging       | Avoid loggers in until-successful |
-| MULE-401 | HTTP User-Agent       | Warning  | HTTP          | Include User-Agent                |
-| MULE-402 | HTTP Content-Type     | Warning  | HTTP          | POST/PUT needs Content-Type       |
-| MULE-403 | HTTP Timeout          | Warning  | HTTP          | Set responseTimeout               |
-| MULE-501 | Scatter-Gather        | Info     | Performance   | Limit parallel routes             |
-| MULE-502 | Async Error           | Warning  | Performance   | Async needs error handling        |
-| MULE-503 | Large Choice          | Warning  | Performance   | Max 7 when clauses                |
-| MULE-601 | Flow Description      | Info     | Documentation | Add doc:description               |
-| MULE-604 | Missing doc:name      | Warning  | Documentation | Key components need doc:name      |
-| MULE-701 | Deprecated            | Warning  | Standards     | Detect deprecated elements        |
-| MULE-801 | Flow Complexity       | Warning  | Complexity    | Cyclomatic complexity threshold   |
-| MULE-802 | Project Structure     | Warning  | Structure     | Validate folder structure         |
-| MULE-803 | Global Config         | Warning  | Structure     | global.xml should exist           |
-| MULE-804 | Monolithic XML        | Warning  | Structure     | Split large XML files             |
+| ID       | Name                  | Severity | Category      | Description                                               |
+| -------- | --------------------- | -------- | ------------- | --------------------------------------------------------- |
+| MULE-101 | Flow Casing           | Warning  | Naming        | kebab-case for flows                                      |
+| MULE-102 | Variable Naming       | Warning  | Naming        | camelCase for variables                                   |
+| MULE-201 | Hardcoded Credentials | Error    | Security      | Use `${secure::}`                                         |
+| MULE-202 | Insecure TLS          | Error    | Security      | No insecure="true"                                        |
+| MULE-301 | Logger Payload        | Warning  | Logging       | Don't log entire payload                                  |
+| MULE-303 | Logger in Retry       | Warning  | Logging       | Avoid loggers in until-successful                         |
+| MULE-401 | HTTP User-Agent       | Warning  | HTTP          | Include User-Agent                                        |
+| MULE-402 | HTTP Content-Type     | Warning  | HTTP          | POST/PUT needs Content-Type (static, CDATA, or inline DW) |
+| MULE-403 | HTTP Timeout          | Warning  | HTTP          | Set responseTimeout                                       |
+| MULE-501 | Scatter-Gather        | Info     | Performance   | Limit parallel routes                                     |
+| MULE-502 | Async Error           | Warning  | Performance   | Async needs error handling                                |
+| MULE-503 | Large Choice          | Warning  | Performance   | Max 7 when clauses                                        |
+| MULE-601 | Flow Description      | Info     | Documentation | Add doc:description                                       |
+| MULE-604 | Missing doc:name      | Warning  | Documentation | Key components need doc:name                              |
+| MULE-701 | Deprecated            | Warning  | Standards     | Detect deprecated elements                                |
+| MULE-801 | Flow Complexity       | Warning  | Complexity    | Cyclomatic complexity threshold                           |
+| MULE-802 | Project Structure     | Warning  | Structure     | Validate folder structure                                 |
+| MULE-803 | Global Config         | Warning  | Structure     | global.xml should exist                                   |
+| MULE-804 | Monolithic XML        | Warning  | Structure     | Split large XML files                                     |
 
 ### DataWeave & API-Led Rules
 
-| ID      | Name              | Severity | Category  | Description                       |
-| ------- | ----------------- | -------- | --------- | --------------------------------- |
-| DW-001  | External DWL      | Warning  | DataWeave | Externalize complex transforms    |
-| DW-002  | DWL Naming        | Info     | DataWeave | kebab-case for .dwl files         |
-| DW-003  | DWL Modules       | Info     | DataWeave | Use common modules                |
-| DW-004  | Java 17 DW Errors | Error    | DataWeave | Java 17 compatible error handling |
-| API-001 | Experience Layer  | Info     | API-Led   | Experience API patterns           |
-| API-002 | Process Layer     | Info     | API-Led   | Process layer orchestration       |
-| API-003 | System Layer      | Info     | API-Led   | System layer connections          |
-| API-004 | Single SAPI       | Warning  | API-Led   | Single system per SAPI            |
+| ID      | Name              | Severity | Category  | Description                                          |
+| ------- | ----------------- | -------- | --------- | ---------------------------------------------------- |
+| DW-001  | External DWL      | Warning  | DataWeave | Externalize complex transforms                       |
+| DW-002  | DWL Naming        | Info     | DataWeave | kebab-case for .dwl files (configurable exemptPaths) |
+| DW-003  | DWL Modules       | Info     | DataWeave | Use common modules                                   |
+| DW-004  | Java 17 DW Errors | Error    | DataWeave | Java 17 compatible error handling                    |
+| API-001 | Experience Layer  | Info     | API-Led   | Experience API patterns                              |
+| API-002 | Process Layer     | Info     | API-Led   | Process layer orchestration                          |
+| API-003 | System Layer      | Info     | API-Led   | System layer connections                             |
+| API-004 | Single SAPI       | Warning  | API-Led   | Single system per SAPI                               |
 
 ### Experimental Rules
 
@@ -357,18 +357,18 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 
 ### Operations & Resilience Rules
 
-| ID      | Name                   | Severity | Category      | Description                                     |
-| ------- | ---------------------- | -------- | ------------- | ----------------------------------------------- |
-| RES-001 | Reconnection Strategy  | Warning  | Performance   | Connectors should have reconnection strategies  |
-| OPS-001 | Auto-Discovery         | Info     | Standards     | APIs should have auto-discovery for API Manager |
-| OPS-002 | HTTP Port Placeholder  | Warning  | Standards     | HTTP ports should use property placeholders     |
-| OPS-003 | Externalized Cron      | Warning  | Standards     | Cron expressions should use placeholders        |
-| SEC-006 | Encryption Key in Logs | Error    | Security      | Detect sensitive data in log messages           |
-| HYG-001 | Excessive Loggers      | Warning  | Logging       | Flows should not have too many loggers          |
-| HYG-002 | Commented Code         | Info     | Standards     | Detect commented-out code blocks                |
-| HYG-003 | Unused Flow            | Warning  | Standards     | Detect flows/sub-flows never referenced         |
-| API-005 | APIKit Validation      | Info     | Standards     | APIs should use APIKit for interfaces           |
-| DOC-001 | Display Name           | Info     | Documentation | Key components should have meaningful names     |
+| ID      | Name                   | Severity | Category      | Description                                          |
+| ------- | ---------------------- | -------- | ------------- | ---------------------------------------------------- |
+| RES-001 | Reconnection Strategy  | Warning  | Performance   | Connectors should have reconnection strategies       |
+| OPS-001 | Auto-Discovery         | Info     | Standards     | APIs should have auto-discovery for API Manager      |
+| OPS-002 | HTTP Port Placeholder  | Warning  | Standards     | HTTP ports should use property placeholders          |
+| OPS-003 | Externalized Cron      | Warning  | Standards     | Cron expressions should use placeholders             |
+| SEC-006 | Encryption Key in Logs | Error    | Security      | Detect sensitive data in log messages                |
+| HYG-001 | Excessive Loggers      | Warning  | Logging       | Flows should not have too many loggers               |
+| HYG-002 | Commented Code         | Info     | Standards     | Detect commented-out code blocks                     |
+| HYG-003 | Unused Flow            | Warning  | Standards     | Detect flows/sub-flows never referenced (cross-file) |
+| API-005 | APIKit Validation      | Info     | Standards     | APIs should use APIKit for interfaces                |
+| DOC-001 | Display Name           | Info     | Documentation | Key components should have meaningful names          |
 
 ### Project Governance Rules
 

@@ -75,16 +75,24 @@
 
 | Property     | Value          |
 | ------------ | -------------- |
-| **Severity** | Error          |
+| **Severity** | Warning        |
 | **Category** | Error Handling |
 | **Fixable**  | No             |
 
-**Description:** Every Mule project should have a global error handler file with a reusable error-handler configuration.
+**Description:** Every Mule project should have a global error handler — either a dedicated file (`src/main/mule/global-error-handler.xml` by default) **or** any XML flow file that contains a named `<error-handler>` element.
 
 **Check Logic:**
 
-1. Verify file exists: `src/main/mule/global-error-handler.xml`
-2. Verify contains: `<error-handler name="global-error-handler">`
+1. If the expected file exists (`src/main/mule/global-error-handler.xml`), the rule passes.
+2. Otherwise, checks each flow file for a named `<error-handler name="...">` or `<error-handler ref="...">` element.
+3. If neither is found in a flow file (a file containing `<flow>` or `<sub-flow>` elements), a warning is reported.
+4. Pure configuration files (no flows) are skipped to reduce noise.
+
+**Options:**
+
+| Option     | Default                                  | Description                    |
+| ---------- | ---------------------------------------- | ------------------------------ |
+| `filePath` | `src/main/mule/global-error-handler.xml` | Relative path to expected file |
 
 **Why This Matters:** A global error handler ensures consistent error responses across all flows and reduces code duplication.
 
@@ -118,6 +126,14 @@
 
 **Description:** Error handlers should set an `httpStatus` variable for proper API responses.
 
+**Project Detection:** This rule is automatically skipped for non-HTTP projects. When `mule-lint` scans a project, it detects whether any `http:listener` or `apikit:router` element is present. If neither is found, the rule is suppressed to avoid false positives in event-driven or batch Mule applications.
+
+**Options:**
+
+| Option         | Default      | Description                 |
+| -------------- | ------------ | --------------------------- |
+| `variableName` | `httpStatus` | Name of the variable to set |
+
 **Best Practice:** Always set httpStatus in error handlers to return appropriate HTTP codes (400, 404, 500, etc.).
 
 ---
@@ -131,6 +147,24 @@
 | **Fixable**  | No             |
 
 **Description:** Error handlers should reference `correlationId` for traceability across distributed systems.
+
+**Check Logic:**
+
+1. Checks inline XML text and attributes for correlation ID patterns (`correlationId`, `correlation_id`, `x-correlation-id`, `x-request-id`, etc.)
+2. For `ee:set-payload` elements with a `resource="..."` attribute, reads the referenced `.dwl` file from `src/main/resources/<resourcePath>` and checks its content.
+3. If a resource file is referenced but cannot be read (e.g. not yet generated), downgrades to `info` severity to avoid false positives.
+
+**Example (inline):**
+
+```xml
+<on-error-continue>
+  <ee:transform>
+    <ee:set-payload resource="classpath:dwl/error-response.dwl"/>
+  </ee:transform>
+</on-error-continue>
+```
+
+The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for `correlationId` usage.
 
 ---
 
@@ -197,7 +231,7 @@
 | **Category** | Naming  |
 | **Fixable**  | Yes     |
 
-**Description:** Flows must end with `-flow` suffix, sub-flows with `-subflow`.
+**Description:** Flows must end with `-flow` suffix, sub-flows with `-subflow`. Both flow and sub-flow naming are enforced by this rule.
 
 **Examples:**
 
@@ -210,6 +244,14 @@
 <flow name="processOrder">
 <sub-flow name="validateInput">
 ```
+
+**Options:**
+
+| Option            | Default                                            | Description                               |
+| ----------------- | -------------------------------------------------- | ----------------------------------------- |
+| `flowSuffix`      | `-flow`                                            | Required suffix for `<flow>` elements     |
+| `subflowSuffix`   | `-subflow`                                         | Required suffix for `<sub-flow>` elements |
+| `excludePatterns` | `['*-api-main', '*-main', 'get:*', 'post:*', ...]` | Glob patterns to skip                     |
 
 ---
 
@@ -535,6 +577,16 @@
 
 **Description:** POST/PUT HTTP requests should include a `Content-Type` header.
 
+**Detection Patterns:**
+
+| Pattern                   | Description                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------- |
+| A — Static header         | `<http:header headerName="Content-Type" value="..."/>` inside `<http:headers>`                    |
+| B — CDATA DataWeave block | `<http:headers><![CDATA[#[output application/java --- {"Content-Type": "..."}]]]></http:headers>` |
+| C — Inline DW expression  | `<http:headers value='#[{"Content-Type": "..."}]'/>`                                              |
+
+When headers are set via a DataWeave expression (patterns B/C) but `Content-Type` is not visible in the expression text, the issue is downgraded to **info** severity to acknowledge the static analysis limitation of evaluating dynamic expressions.
+
 ---
 
 ### MULE-403: HTTP Request Timeout
@@ -603,13 +655,20 @@
 
 **Description:** DB and HTTP connectors should configure connection pools for optimal performance and resource management.
 
-**Check Logic:** Flags HTTP request configs missing `maxConnections`/`connectionIdleTimeout` and DB configs missing `pooling-profile`.
+**Check Logic:** Flags HTTP `request-config` elements missing `maxConnections`/`connectionIdleTimeout` — checks both the `<http:request-config>` element and its nested `<http:request-connection>` child (XSD-correct placement). Also flags DB configs missing `pooling-profile`.
 
 **Example:**
 
 ```xml
-<!-- ✅ Good - HTTP with pooling -->
-<http:request-config name="API_Config" maxConnections="20" connectionIdleTimeout="30000"/>
+<!-- ✅ Good - HTTP with pooling on request-connection (XSD-correct) -->
+<http:request-config name="API_Config">
+  <http:request-connection>
+    <http:client-socket-properties>
+      <http:tcp-client-socket-properties connectionTimeout="30000"/>
+    </http:client-socket-properties>
+  </http:request-connection>
+</http:request-config>
+<!-- maxConnections on http:request-connection avoids SAXParseException -->
 
 <!-- ✅ Good - DB with pooling -->
 <db:config name="Database_Config">
@@ -883,11 +942,16 @@
 - `src/main/mule`
 - `src/main/resources`
 
-**Recommended Directories:**
+**Recommended Directories** (configurable via `recommendedDirs` option):
 
 - `src/main/resources/dwl`
-- `src/main/resources/api`
 - `src/test/munit`
+
+> **Note:** `src/main/resources/api` was removed from the default recommended list in v1.20.0. Many Mule 4 projects reference their API specification from Anypoint Exchange and do not bundle it locally. To restore this check, configure the rule explicitly:
+>
+> ```json
+> "MULE-802": { "enabled": true, "options": { "recommendedDirs": ["src/main/resources/dwl", "src/main/resources/api", "src/test/munit"] } }
+> ```
 
 ---
 
@@ -929,11 +993,25 @@
 
 **Description:** Environment-specific YAML property files should exist for each environment.
 
-**Expected Files:**
+**Expected Files** (default environments: `dev`, `qa`, `prod`):
 
 - `dev.yaml` or `config-dev.yaml`
 - `qa.yaml` or `config-qa.yaml`
 - `prod.yaml` or `config-prod.yaml`
+
+Files can also live in `src/main/resources/config/` or `src/main/resources/properties/` subdirectories.
+
+**Options:**
+
+| Option         | Default                 | Description                        |
+| -------------- | ----------------------- | ---------------------------------- |
+| `environments` | `["dev", "qa", "prod"]` | List of required environment names |
+
+**Example configuration** to add `staging` or change defaults:
+
+```json
+"YAML-001": { "enabled": true, "options": { "environments": ["dev", "staging", "prod"] } }
+```
 
 ---
 
@@ -1008,6 +1086,21 @@ db.password: "![encryptedValue]"
 | **Fixable**  | No        |
 
 **Description:** DataWeave files should use kebab-case naming (`my-transform.dwl`).
+
+> **Note on DataWeave module directories:** DataWeave module files **must** use camelCase because hyphens (`-`) are invalid in DataWeave module identifiers (importing `my-module` would be a compile error). Use the `exemptPaths` option to exclude module directories from kebab-case enforcement.
+
+**Options:**
+
+| Option        | Default      | Description                                                |
+| ------------- | ------------ | ---------------------------------------------------------- |
+| `convention`  | `kebab-case` | Naming convention: `kebab-case`, `camelCase`, or `any`     |
+| `exemptPaths` | `[]`         | Glob patterns for paths to skip (e.g. `["**/modules/**"]`) |
+
+**Example configuration** to exempt a modules directory:
+
+```json
+"DW-002": { "enabled": true, "options": { "exemptPaths": ["**/modules/**", "**/lib/**"] } }
+```
 
 ---
 
@@ -1142,11 +1235,12 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 | **Category** | Standards |
 | **Fixable**  | No        |
 
-**Description:** Detects flows and sub-flows that are never referenced by `flow-ref` within the same file.
+**Description:** Detects flows and sub-flows that are never referenced by `flow-ref` across the entire project.
 
 **Check Logic:**
 
-- **Sub-flows**: Always expected to be referenced; flagged if no `flow-ref` points to them.
+- **Cross-file detection**: The engine pre-scans all XML files to collect every `<flow-ref name="...">` target before running rules. A sub-flow or flow is only flagged if it is not referenced in _any_ file in the project.
+- **Sub-flows**: Always expected to be referenced; flagged if no `flow-ref` points to them anywhere in the project.
 - **Flows without triggers**: Flows that have no HTTP listener, scheduler, or VM listener and aren't referenced are flagged.
 - **Exclusions**: Flows matching common external patterns (`-main`, `-api`, `api-`, `-console`, `-error-handler`, `global`) are excluded.
 
