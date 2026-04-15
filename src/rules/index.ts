@@ -23,6 +23,10 @@ import { TlsVersionRule } from './security/TlsVersionRule';
 import { RateLimitingRule } from './security/RateLimitingRule';
 import { InputValidationRule } from './security/InputValidationRule';
 import { EncryptionKeyInLogsRule } from './security/EncryptionKeyInLogsRule';
+import { ConnectorCredentialsSecuredRule } from './security/ConnectorCredentialsSecuredRule';
+import { SecurePropertiesKeyRule } from './security/SecurePropertiesKeyRule';
+import { TlsKeystorePasswordRule } from './security/TlsKeystorePasswordRule';
+import { SecurePropertiesEncryptionRule } from './security/SecurePropertiesEncryptionRule';
 
 // Import all rules - Logging
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -88,6 +92,7 @@ import {
 // Import all rules - Operations & Hygiene
 import { CommentedCodeRule } from './operations/CommentedCodeRule';
 import { UnusedFlowRule } from './operations/UnusedFlowRule';
+import { FlowRefTargetExistsRule } from './operations/FlowRefTargetExistsRule';
 
 // Import all rules - Governance
 import { PomValidationRule, GitHygieneRule } from './governance/GovernanceRules';
@@ -224,13 +229,18 @@ export const ALL_RULES: Rule[] = [
   new HttpPortPlaceholderRule(),
   new CronExternalizedRule(),
 
-  // Security Enhancement (SEC-006)
+  // Security Enhancement (SEC-006, SEC-007, SEC-008, SEC-009, SEC-010)
   new EncryptionKeyInLogsRule(),
+  new ConnectorCredentialsSecuredRule(),
+  new SecurePropertiesKeyRule(),
+  new TlsKeystorePasswordRule(),
+  new SecurePropertiesEncryptionRule(),
 
-  // Code Hygiene Rules (HYG-001, HYG-002, HYG-003)
+  // Code Hygiene Rules (HYG-001, HYG-002, HYG-003, HYG-004)
   new ExcessiveLoggersRule(),
   new CommentedCodeRule(),
   new UnusedFlowRule(),
+  new FlowRefTargetExistsRule(),
 
   // Additional Standards (API-005, DOC-001)
   new ApiKitValidationRule(),

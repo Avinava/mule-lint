@@ -93,6 +93,12 @@ export interface ValidationContext {
    */
   allFlowRefs?: Set<string>;
   /**
+   * Set of all flow/sub-flow names defined across all project files.
+   * Populated during the LintEngine pre-scan phase.
+   * Used by HYG-004 (FlowRefTargetExistsRule) for cross-file validation.
+   */
+  allFlowNames?: Set<string>;
+  /**
    * Project-level feature flags derived from a pre-scan of all files.
    * Rules that only apply to HTTP-exposed projects (e.g. MULE-005) should
    * check these flags before reporting issues.
