@@ -9,6 +9,9 @@ import { HttpStatusRule } from './error-handling/HttpStatusRule';
 import { CorrelationIdRule } from './error-handling/CorrelationIdRule';
 import { GenericErrorRule } from './error-handling/GenericErrorRule';
 import { TryScopeRule } from './error-handling/TryScopeRule';
+import { ErrorHandlerTypeCoverageRule } from './error-handling/ErrorHandlerTypeCoverageRule';
+import { ErrorResponseStructureRule } from './error-handling/ErrorResponseStructureRule';
+import { CatchAllLastRule } from './error-handling/CatchAllLastRule';
 
 // Import all rules - Naming
 import { FlowNamingRule } from './naming/FlowNamingRule';
@@ -43,6 +46,7 @@ import { AutoDiscoveryRule } from './standards/AutoDiscoveryRule';
 import { HttpPortPlaceholderRule } from './standards/HttpPortPlaceholderRule';
 import { CronExternalizedRule } from './standards/CronExternalizedRule';
 import { ApiKitValidationRule } from './standards/ApiKitValidationRule';
+import { ConfigPropertiesOrderingRule } from './standards/ConfigPropertiesOrderingRule';
 
 // Import all rules - HTTP
 import { HttpUserAgentRule } from './http/HttpUserAgentRule';
@@ -60,6 +64,7 @@ import { AsyncErrorHandlerRule } from './performance/AsyncErrorHandlerRule';
 import { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 import { ConnectionPoolingRule } from './performance/ConnectionPoolingRule';
 import { ReconnectionStrategyRule } from './performance/ReconnectionStrategyRule';
+import { ListenerReconnectForeverRule } from './performance/ListenerReconnectForeverRule';
 
 // Import all rules - Complexity
 import { FlowComplexityRule } from './complexity/FlowComplexityRule';
@@ -152,6 +157,9 @@ export const ALL_RULES: Rule[] = [
   new CorrelationIdRule(),
   new GenericErrorRule(),
   new TryScopeRule(), // ERR-001: Try Scope Best Practice
+  new ErrorHandlerTypeCoverageRule(), // ERR-002: APIKit Error Type Coverage
+  new ErrorResponseStructureRule(), // ERR-003: Error Response Structure
+  new CatchAllLastRule(), // ERR-004: Catch-All Must Be Last
 
   // Naming Rules (MULE-002, 101, 102)
   new FlowNamingRule(),
@@ -223,8 +231,9 @@ export const ALL_RULES: Rule[] = [
   new ConnectorConfigNamingRule(),
   new MUnitCoverageRule(),
 
-  // Operations & Resilience Rules (RES-001, OPS-001, OPS-002, OPS-003)
+  // Operations & Resilience Rules (RES-001, RES-002, OPS-001, OPS-002, OPS-003)
   new ReconnectionStrategyRule(),
+  new ListenerReconnectForeverRule(), // RES-002: Listener Reconnect-Forever
   new AutoDiscoveryRule(),
   new HttpPortPlaceholderRule(),
   new CronExternalizedRule(),
@@ -242,9 +251,10 @@ export const ALL_RULES: Rule[] = [
   new UnusedFlowRule(),
   new FlowRefTargetExistsRule(),
 
-  // Additional Standards (API-005, DOC-001)
+  // Additional Standards (API-005, DOC-001, CFG-001)
   new ApiKitValidationRule(),
   new DisplayNameRule(),
+  new ConfigPropertiesOrderingRule(), // CFG-001: Config Properties Ordering
 
   // Governance Rules (PROJ-001, PROJ-002)
   new PomValidationRule(),
