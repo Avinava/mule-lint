@@ -17,21 +17,23 @@ flowchart TB
         E --> D
     end
 
-    subgraph Rules["Rules (56 Total)"]
-        D --> R1[Error Handling<br/>MULE-001,003,005,007,009]
+    subgraph Rules["Rules (82 Total)"]
+        D --> R1[Error Handling<br/>MULE-001,003,005,007,009<br/>ERR-001,002,003,004]
         D --> R2[Naming<br/>MULE-002,101,102]
-        D --> R3[Security<br/>MULE-004,201,202]
-        D --> R4[Logging<br/>MULE-006,301,303]
-        D --> R5[HTTP<br/>MULE-401,402,403]
-        D --> R6[Performance<br/>MULE-501,502,503]
-        D --> R7[Documentation<br/>MULE-601,604]
-        D --> R8[Standards<br/>MULE-008,010,701]
+        D --> R3[Security<br/>MULE-004,201,202<br/>SEC-002,003,004,006,007,008,009,010]
+        D --> R4[Logging<br/>MULE-006,301,303<br/>LOG-001,004,HYG-001]
+        D --> R5[HTTP<br/>MULE-401,402,403,HTTP-004]
+        D --> R6[Performance<br/>MULE-501,502,503<br/>PERF-002,RES-001,002]
+        D --> R7[Documentation<br/>MULE-601,604,DOC-001]
+        D --> R8[Standards<br/>MULE-008,010,701<br/>OPS,CFG,STD]
         D --> R9[Complexity<br/>MULE-801]
         D --> R10[Structure<br/>MULE-802-804]
         D --> R11[YAML<br/>YAML-001,003,004]
-        D --> R12[DataWeave<br/>DW-001,002,003]
-        D --> R13[API-Led<br/>API-001,002,003]
-        D --> R14[Experimental<br/>EXP-001,002,003]
+        D --> R12[DataWeave<br/>DW-001,002,003,004,005]
+        D --> R13[API-Led<br/>API-001-008]
+        D --> R14[Connectors<br/>SF-001,002]
+        D --> R15[Governance<br/>PROJ-001,002]
+        D --> R16[Experimental<br/>EXP-001,002,003]
     end
 
     subgraph Output["Formatters"]
@@ -64,14 +66,26 @@ sequenceDiagram
     Engine->>Scanner: scanDirectory(path)
     Scanner-->>Engine: ScannedFile[]
 
-    loop Each XML File
+    Note over Engine: Pre-Scan Phase
+    loop Each XML File (Pre-Scan)
         Engine->>Parser: parseXml(content)
-        Parser-->>Engine: Document
+        Parser-->>Engine: Document (cached)
+        Note over Engine: Collect allFlowRefs, allFlowNames
+    end
+    Note over Engine: Detect projectLayer
 
-        loop Each Rule
+    loop Each XML File
+        Engine->>Engine: Get Document from cache
+        loop Each Per-File Rule
             Engine->>Rules: validate(doc, context)
             Rules-->>Engine: Issue[]
         end
+    end
+
+    Note over Engine: Project Rules
+    loop Each Project Rule
+        Engine->>Rules: validateProject(context)
+        Rules-->>Engine: Issue[]
     end
 
     loop YAML Rules
@@ -91,14 +105,35 @@ sequenceDiagram
 The central orchestrator that:
 
 1. Scans directories for XML and YAML files using FileScanner
-2. Parses each file with XmlParser or YamlParser
-3. Executes all enabled rules against each document
-4. Aggregates results into a LintReport
+2. **Pre-scans** all XML files to collect cross-file metadata (`allFlowRefs`, `allFlowNames`, `projectContext` with `projectLayer`)
+3. **Caches** parsed XML `Document` objects to avoid redundant parsing
+4. Executes all enabled per-file rules against each cached document
+5. Executes project-level rules (`ProjectRule` subclasses) once per scan
+6. Aggregates results into a LintReport
 
 ```typescript
 const engine = new LintEngine({ rules: ALL_RULES, config });
 const report = await engine.scan('./project');
 ```
+
+#### Document Cache
+
+During `preScanFiles()`, the engine parses each XML file and stores the resulting `Document` in an internal `Map<string, Document>`. When `processFile()` runs, it retrieves the cached document instead of re-parsing. The cache is cleared after each scan to free memory.
+
+#### Project Layer Detection
+
+The engine automatically classifies projects into a `ProjectLayer`:
+
+| Layer     | Detection Heuristic                                         |
+| --------- | ----------------------------------------------------------- |
+| `sapi`    | Directory name contains `-sapi`, `-sys-`, or `-system-`     |
+| `papi`    | Directory name contains `-papi`, `-proc-`, or `-process-`   |
+| `eapi`    | Directory name contains `-eapi`, `-exp-`, or `-experience-` |
+| `library` | Directory name contains `-library`, `-lib`, or `-common`    |
+| `batch`   | Batch job elements detected in XML files                    |
+| `unknown` | Default when no pattern matches                             |
+
+Available to rules via `context.projectContext?.projectLayer`.
 
 ### XPathHelper
 
@@ -111,20 +146,24 @@ const flows = xpath.selectNodes('//mule:flow', document);
 
 Pre-configured namespaces:
 
-| Prefix   | Namespace                                         |
-| -------- | ------------------------------------------------- |
-| `mule`   | http://www.mulesoft.org/schema/mule/core          |
-| `http`   | http://www.mulesoft.org/schema/mule/http          |
-| `ee`     | http://www.mulesoft.org/schema/mule/ee/core       |
-| `db`     | http://www.mulesoft.org/schema/mule/db            |
-| `doc`    | http://www.mulesoft.org/schema/mule/documentation |
-| `tls`    | http://www.mulesoft.org/schema/mule/tls           |
-| `file`   | http://www.mulesoft.org/schema/mule/file          |
-| `sftp`   | http://www.mulesoft.org/schema/mule/sftp          |
-| `vm`     | http://www.mulesoft.org/schema/mule/vm            |
-| `jms`    | http://www.mulesoft.org/schema/mule/jms           |
-| `apikit` | http://www.mulesoft.org/schema/mule/mule-apikit   |
-| `batch`  | http://www.mulesoft.org/schema/mule/batch         |
+| Prefix        | Namespace                                         |
+| ------------- | ------------------------------------------------- |
+| `mule`        | http://www.mulesoft.org/schema/mule/core          |
+| `http`        | http://www.mulesoft.org/schema/mule/http          |
+| `ee`          | http://www.mulesoft.org/schema/mule/ee/core       |
+| `db`          | http://www.mulesoft.org/schema/mule/db            |
+| `doc`         | http://www.mulesoft.org/schema/mule/documentation |
+| `tls`         | http://www.mulesoft.org/schema/mule/tls           |
+| `file`        | http://www.mulesoft.org/schema/mule/file          |
+| `sftp`        | http://www.mulesoft.org/schema/mule/sftp          |
+| `vm`          | http://www.mulesoft.org/schema/mule/vm            |
+| `jms`         | http://www.mulesoft.org/schema/mule/jms           |
+| `apikit`      | http://www.mulesoft.org/schema/mule/mule-apikit   |
+| `batch`       | http://www.mulesoft.org/schema/mule/batch         |
+| `netsuite`    | http://www.mulesoft.org/schema/mule/netsuite      |
+| `sap`         | http://www.mulesoft.org/schema/mule/sap           |
+| `anypoint-mq` | http://www.mulesoft.org/schema/mule/anypoint-mq   |
+| `oauth`       | http://www.mulesoft.org/schema/mule/oauth         |
 
 ### BaseRule
 
@@ -145,6 +184,11 @@ classDiagram
         #getOption(context, key, default): T
     }
 
+    class ProjectRule {
+        +validateProject(context): Issue[]
+        +validate(doc, context): Issue[]
+    }
+
     class FlowNamingRule {
         +validate()
     }
@@ -154,8 +198,14 @@ classDiagram
         #findYamlFiles(): string[]
     }
 
+    class GlobalErrorHandlerRule {
+        +validateProject()
+    }
+
     BaseRule <|-- FlowNamingRule
     BaseRule <|-- YamlRuleBase
+    BaseRule <|-- ProjectRule
+    ProjectRule <|-- GlobalErrorHandlerRule
 ```
 
 **Issue Types for Quality Metrics:**
@@ -212,11 +262,11 @@ XPathHelper.getInstance(); // Same instance always
 src/
 ├── index.ts              # Package entry point
 ├── types/                # TypeScript interfaces
-│   ├── Rule.ts          # Rule, Issue, Severity, IssueType
+│   ├── Rule.ts          # Rule, Issue, Severity, IssueType, ProjectLayer
 │   ├── Report.ts        # LintReport, FileResult
 │   └── Config.ts        # LintConfig, CliOptions
 ├── core/                 # Core utilities
-│   ├── XPathHelper.ts   # Namespace-aware XPath
+│   ├── XPathHelper.ts   # Namespace-aware XPath (16 namespaces)
 │   ├── XmlParser.ts     # DOM parsing
 │   ├── YamlParser.ts    # YAML parsing
 │   ├── FileScanner.ts   # File discovery
@@ -228,23 +278,26 @@ src/
 │   ├── thresholds.ts    # A-E rating boundaries
 │   └── calculator.ts    # Rating calculation functions
 ├── engine/               # Orchestration
-│   └── LintEngine.ts    # Main engine
-├── rules/                # All rules (56 total)
-│   ├── index.ts         # Rule registry
-│   ├── base/            # BaseRule class
-│   ├── api-led/         # API-001, 002, 003, 004
+│   └── LintEngine.ts    # Main engine (document cache, pre-scan, project layer)
+├── rules/                # All rules (82 total)
+│   ├── index.ts         # Rule registry (ALL_RULES array)
+│   ├── base/            # BaseRule + ProjectRule classes
+│   ├── api-led/         # API-001–004, API-006–008
 │   ├── complexity/      # MULE-801
-│   ├── dataweave/       # DW-001, 002, 003, 004
-│   ├── documentation/   # MULE-601, 604
-│   ├── error-handling/  # MULE-001, 003, 005, 007, 009 (issueType: bug)
-│   ├── experimental/    # EXP-001, 002, 003
-│   ├── http/            # MULE-401, 402, 403
-│   ├── logging/         # MULE-006, 301, 303
+│   ├── connector/       # SF-001, SF-002
+│   ├── dataweave/       # DW-001–005
+│   ├── documentation/   # MULE-601, 604, DOC-001
+│   ├── error-handling/  # MULE-001,003,005,007,009, ERR-001–004
+│   ├── experimental/    # EXP-001–003
+│   ├── governance/      # PROJ-001, PROJ-002
+│   ├── http/            # MULE-401–403, HTTP-004
+│   ├── logging/         # MULE-006,301,303, LOG-001,004, HYG-001
 │   ├── naming/          # MULE-002, 101, 102
-│   ├── performance/     # MULE-501, 502, 503
-│   ├── security/        # MULE-004, 201, 202 (issueType: vulnerability)
-│   ├── standards/       # MULE-008, 010, 701
-│   ├── structure/       # MULE-802, 803, 804
+│   ├── operations/      # HYG-002–005
+│   ├── performance/     # MULE-501–503, PERF-002, RES-001–002
+│   ├── security/        # MULE-004,201,202, SEC-002–004,006–010
+│   ├── standards/       # MULE-008,010,701, OPS-001–003, API-005, CFG-001–002, STD-001
+│   ├── structure/       # MULE-802–804
 │   └── yaml/            # YAML-001, 003, 004
 └── formatters/           # Output formatters
     ├── TableFormatter.ts
@@ -262,22 +315,24 @@ src/
 
 ## Rule Categories
 
-| Category       | ID Prefix          | Count | Description                              |
-| -------------- | ------------------ | ----- | ---------------------------------------- |
-| Error Handling | MULE-00X           | 5     | Error handler presence and configuration |
-| Naming         | MULE-002, 10X      | 3     | Flow, variable, and file naming          |
-| Security       | MULE-004, 20X      | 3     | Hardcoded values and security            |
-| Logging        | MULE-006, 30X      | 3     | Logger configuration                     |
-| HTTP           | MULE-40X           | 3     | HTTP request configuration               |
-| Performance    | MULE-50X           | 3     | Performance anti-patterns                |
-| Documentation  | MULE-60X           | 2     | Component documentation                  |
-| Standards      | MULE-008, 010, 70X | 3     | Best practices                           |
-| Complexity     | MULE-80X           | 1     | Cyclomatic complexity                    |
-| Structure      | MULE-80X           | 3     | Project structure                        |
-| YAML           | YAML-XXX           | 3     | Properties validation                    |
-| DataWeave      | DW-XXX             | 3     | DWL file validation                      |
-| API-Led        | API-XXX            | 3     | API-Led patterns                         |
-| Experimental   | EXP-XXX            | 3     | Beta rules                               |
+| Category       | ID Prefix                       | Count | Description                                    |
+| -------------- | ------------------------------- | ----- | ---------------------------------------------- |
+| Error Handling | MULE-00X, ERR-001–004           | 9     | Error handler configuration and best practices |
+| Naming         | MULE-002, 10X                   | 3     | Flow, variable, and file naming                |
+| Security       | MULE-004, 20X, SEC-002–010      | 11    | Hardcoded values, TLS, credentials             |
+| Logging        | MULE-006, 30X, LOG, HYG-001     | 6     | Logger configuration and hygiene               |
+| HTTP           | MULE-40X, HTTP-004              | 4     | HTTP request configuration                     |
+| Performance    | MULE-50X, PERF-002, RES-001–002 | 6     | Performance anti-patterns and resilience       |
+| Documentation  | MULE-60X, DOC-001               | 3     | Component documentation                        |
+| Standards      | MULE-008,010,70X, OPS, CFG, STD | 10    | Best practices and operations                  |
+| Complexity     | MULE-801                        | 1     | Cyclomatic complexity                          |
+| Structure      | MULE-80X                        | 3     | Project structure                              |
+| YAML           | YAML-XXX                        | 3     | Properties validation                          |
+| DataWeave      | DW-XXX                          | 5     | DWL file validation                            |
+| API-Led        | API-XXX                         | 7     | API-Led patterns                               |
+| Connectors     | SF-001, SF-002                  | 2     | Salesforce and event connector rules           |
+| Governance     | PROJ-XXX                        | 2     | POM and Git hygiene                            |
+| Experimental   | EXP-XXX                         | 3     | Beta rules                                     |
 
 ## Extension Points
 

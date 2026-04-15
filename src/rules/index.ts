@@ -159,7 +159,7 @@ export { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 
 /**
  * All available rules - instantiated and ready to use
- * Total: 77 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
+ * Total: 82 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
  */
 export const ALL_RULES: Rule[] = [
   // Error Handling Rules (MULE-001, 003, 005, 007, 009)

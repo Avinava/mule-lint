@@ -1,8 +1,8 @@
 # Rules Catalog
 
-> **Version:** 3.0.0  
-> **Total Rules:** 56 implemented across 14 categories  
-> **Last Updated:** February 2026
+> **Version:** 1.50.0
+> **Total Rules:** 82 implemented across 16 categories
+> **Last Updated:** April 2026
 
 ---
 
@@ -22,6 +22,7 @@
 - [YAML Rules](#yaml-rules)
 - [DataWeave Rules](#dataweave-rules)
 - [API-Led Rules](#api-led-rules)
+- [Connector Rules](#connector-rules)
 - [Operations & Hygiene Rules](#operations--hygiene-rules)
 - [Governance Rules](#governance-rules)
 - [Experimental Rules](#experimental-rules)
@@ -30,24 +31,25 @@
 
 ## Rule Categories
 
-| Family         | Prefix                                     | Count | Description                                    |
-| -------------- | ------------------------------------------ | ----- | ---------------------------------------------- |
-| Error Handling | MULE-001/003/005/007/009, ERR-001          | 6     | Error handler configuration and best practices |
-| Naming         | MULE-002/101/102                           | 3     | Naming conventions for flows and variables     |
-| Security       | MULE-004/201/202, SEC-002/003/004/006      | 7     | Security vulnerabilities, TLS, rate limiting   |
-| Logging        | MULE-006/301/303, LOG-001/004, HYG-001     | 6     | Logging standards, structured logging, hygiene |
-| HTTP           | MULE-401/402/403                           | 3     | HTTP configuration and headers                 |
-| Performance    | MULE-501/502/503, PERF-002, RES-001        | 5     | Performance anti-patterns and resilience       |
-| Documentation  | MULE-601/604, DOC-001                      | 3     | Documentation requirements                     |
-| Standards      | MULE-008/010/701, OPS-001/002/003, API-005 | 7     | Coding standards and operations                |
-| Complexity     | MULE-801                                   | 1     | Code complexity                                |
-| Structure      | MULE-802/803/804                           | 3     | Project structure                              |
-| YAML           | YAML-001/003/004                           | 3     | YAML configuration validation                  |
-| DataWeave      | DW-001/002/003/004                         | 4     | DataWeave file validation                      |
-| API-Led        | API-001/002/003/004                        | 4     | API-Led connectivity patterns                  |
-| Governance     | PROJ-001/002                               | 2     | POM and Git hygiene                            |
-| Code Hygiene   | HYG-002/003                                | 2     | Commented code and unused flows                |
-| Experimental   | EXP-001/002/003                            | 3     | Beta rules for evaluation                      |
+| Family         | Prefix                                                       | Count | Description                                    |
+| -------------- | ------------------------------------------------------------ | ----- | ---------------------------------------------- |
+| Error Handling | MULE-001/003/005/007/009, ERR-001–004                        | 9     | Error handler configuration and best practices |
+| Naming         | MULE-002/101/102                                             | 3     | Naming conventions for flows and variables     |
+| Security       | MULE-004/201/202, SEC-002–004/006–010                        | 11    | Security vulnerabilities, TLS, credentials     |
+| Logging        | MULE-006/301/303, LOG-001/004, HYG-001                       | 6     | Logging standards, structured logging, hygiene |
+| HTTP           | MULE-401/402/403, HTTP-004                                   | 4     | HTTP configuration and headers                 |
+| Performance    | MULE-501/502/503, PERF-002, RES-001/002                      | 6     | Performance anti-patterns and resilience       |
+| Documentation  | MULE-601/604, DOC-001                                        | 3     | Documentation requirements                     |
+| Standards      | MULE-008/010/701, OPS-001–003, API-005, CFG-001/002, STD-001 | 10    | Coding standards and operations                |
+| Complexity     | MULE-801                                                     | 1     | Code complexity                                |
+| Structure      | MULE-802/803/804                                             | 3     | Project structure                              |
+| YAML           | YAML-001/003/004                                             | 3     | YAML configuration validation                  |
+| DataWeave      | DW-001/002/003/004/005                                       | 5     | DataWeave file validation                      |
+| API-Led        | API-001–004/006–008                                          | 7     | API-Led connectivity patterns                  |
+| Connectors     | SF-001/002                                                   | 2     | Salesforce and event connector rules           |
+| Governance     | PROJ-001/002                                                 | 2     | POM and Git hygiene                            |
+| Code Hygiene   | HYG-002–005                                                  | 4     | Commented code, unused flows/variables         |
+| Experimental   | EXP-001/002/003                                              | 3     | Beta rules for evaluation                      |
 
 ### MULE Category ID Ranges
 
@@ -180,6 +182,8 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 **Why This Matters:** Catching `ANY` can mask important errors and make debugging difficult.
 
+> **Note (v1.50):** The rule now skips `type="ANY"` when it is the **last** `on-error` block in the chain. Using `type="ANY"` as a catch-all fallback (returning HTTP 500) is an accepted MuleSoft pattern per accelerator best practices.
+
 ---
 
 ### ERR-001: Try Scope Best Practice
@@ -219,6 +223,73 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 ---
 
+### ERR-002: Error Handler Type Coverage
+
+| Property       | Value          |
+| -------------- | -------------- |
+| **Severity**   | Warning        |
+| **Category**   | Error Handling |
+| **Issue Type** | Bug            |
+| **Fixable**    | No             |
+
+**Description:** APIKit-based flows should handle common HTTP error types. Error handlers should cover at least the standard set: `APIKIT:BAD_REQUEST`, `APIKIT:NOT_FOUND`, `APIKIT:METHOD_NOT_ALLOWED`, and `APIKIT:NOT_ACCEPTABLE`.
+
+**Example:**
+
+```xml
+<!-- ✅ Good - covers common error types -->
+<error-handler>
+    <on-error-propagate type="APIKIT:BAD_REQUEST">...</on-error-propagate>
+    <on-error-propagate type="APIKIT:NOT_FOUND">...</on-error-propagate>
+    <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">...</on-error-propagate>
+    <on-error-propagate type="ANY">...</on-error-propagate>
+</error-handler>
+```
+
+---
+
+### ERR-003: Error Response Structure
+
+| Property       | Value          |
+| -------------- | -------------- |
+| **Severity**   | Warning        |
+| **Category**   | Error Handling |
+| **Issue Type** | Bug            |
+| **Fixable**    | No             |
+
+**Description:** Error handlers should set both an `httpStatus` variable and a response body (via `set-payload` or `ee:set-payload`). Missing either results in incomplete error responses to API consumers.
+
+---
+
+### ERR-004: Catch-All Must Be Last
+
+| Property       | Value          |
+| -------------- | -------------- |
+| **Severity**   | Error          |
+| **Category**   | Error Handling |
+| **Issue Type** | Bug            |
+| **Fixable**    | No             |
+
+**Description:** An `on-error-propagate` or `on-error-continue` with `type="ANY"` must be the **last** handler in the `error-handler` block. Placing it before specific error type handlers would shadow those handlers.
+
+**Example:**
+
+````xml
+<!-- ❌ Bad - ANY shadows subsequent handlers -->
+<error-handler>
+    <on-error-propagate type="ANY">...</on-error-propagate>
+    <on-error-propagate type="HTTP:CONNECTIVITY">...</on-error-propagate>
+</error-handler>
+
+<!-- ✅ Good - ANY is last -->
+<error-handler>
+    <on-error-propagate type="HTTP:CONNECTIVITY">...</on-error-propagate>
+    <on-error-propagate type="ANY">...</on-error-propagate>
+</error-handler>
+```
+
+---
+
 ## Naming Rules
 
 > **Best Practice**: Consistent naming conventions improve readability and maintainability. Use kebab-case for flows and camelCase for variables.
@@ -243,7 +314,7 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 <!-- ❌ Bad -->
 <flow name="processOrder">
 <sub-flow name="validateInput">
-```
+````
 
 **Options:**
 
@@ -425,6 +496,68 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 <!-- ✅ Good -->
 <logger message="Processing completed for order #[vars.orderId]"/>
 ```
+
+---
+
+### SEC-007: Connector Credentials Secured
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Error         |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Connector configurations (Salesforce, Database, HTTP, etc.) must use `${secure::...}` property placeholders for credential attributes like `username`, `password`, `clientId`, and `clientSecret`. Plain `${...}` placeholders are accepted but `${secure::...}` is recommended.
+
+---
+
+### SEC-008: Secure Properties Key
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Error         |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** The `secure-properties:config` element's encryption `key` attribute must use a property placeholder (`${...}`), not a hardcoded value. Hardcoding the encryption key defeats the purpose of encrypted properties.
+
+**Example:**
+
+```xml
+<!-- ❌ Bad - hardcoded key -->
+<secure-properties:config key="mySecretKey123" file="secure.yaml"/>
+
+<!-- ✅ Good - externalized key -->
+<secure-properties:config key="${mule.key}" file="secure.yaml"/>
+```
+
+---
+
+### SEC-009: TLS Keystore Password
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Error         |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** TLS keystore and truststore passwords must use secure property placeholders, not hardcoded values.
+
+---
+
+### SEC-010: Secure Properties Encryption
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Secure properties configuration should use a strong encryption algorithm. DES is considered weak; AES or Blowfish are recommended.
 
 ---
 
@@ -688,12 +821,14 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 
 **Description:** Connectors should have reconnection strategies configured for resilience.
 
-**Checked Connectors:** HTTP Request, HTTP Listener, JMS, AMQP, SFTP, FTP, VM, Database
+**Checked Connectors:** HTTP Request, HTTP Listener, JMS, AMQP, SFTP, FTP, VM, Database, Salesforce
+
+> **Note (v1.50):** The rule now differentiates between listener and request configurations. Listeners are recommended to use `reconnect-forever`, while requests should use bounded reconnect with `count` and `frequency`.
 
 **Example:**
 
 ```xml
-<!-- ✅ Good -->
+<!-- ✅ Good - bounded reconnect for requests -->
 <http:request-config name="API_Config">
     <http:request-connection>
         <reconnection>
@@ -701,7 +836,28 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
         </reconnection>
     </http:request-connection>
 </http:request-config>
+
+<!-- ✅ Good - reconnect-forever for listeners -->
+<http:listener-config name="Listener_Config">
+    <http:listener-connection>
+        <reconnection>
+            <reconnect-forever frequency="5000"/>
+        </reconnection>
+    </http:listener-connection>
+</http:listener-config>
 ```
+
+---
+
+### RES-002: Listener Reconnect-Forever
+
+| Property     | Value       |
+| ------------ | ----------- |
+| **Severity** | Warning     |
+| **Category** | Performance |
+| **Fixable**  | No          |
+
+**Description:** Listener connectors (HTTP Listener, JMS, AMQP, VM) should use `reconnect-forever` strategy rather than bounded reconnection. Listeners are critical entry points — if they stop reconnecting after N attempts, the application becomes unreachable.
 
 ---
 
@@ -877,6 +1033,42 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 **Check Logic:** Flags API projects (those with HTTP listeners and main flows) that don't use an APIKit router.
 
 **Best Practice:** APIKit provides consistent API implementation patterns and automatic input validation based on the RAML/OAS spec.
+
+---
+
+### CFG-001: Config Properties Ordering
+
+| Property     | Value     |
+| ------------ | --------- |
+| **Severity** | Info      |
+| **Category** | Standards |
+| **Fixable**  | No        |
+
+**Description:** Configuration property elements (`secure-properties:config`, `configuration-properties`, HTTP configs) should follow a consistent ordering at the top of Mule configuration files. This improves readability and makes it easier to locate configurations.
+
+---
+
+### CFG-002: Missing Env Properties Declaration
+
+| Property     | Value     |
+| ------------ | --------- |
+| **Severity** | Warning   |
+| **Category** | Standards |
+| **Fixable**  | No        |
+
+**Description:** Property placeholders referenced in XML files (`${property.name}`) should have corresponding entries in the project's YAML configuration files. Detects potential runtime failures from missing property definitions.
+
+---
+
+### STD-001: APIKit Route Variable Consistency
+
+| Property     | Value     |
+| ------------ | --------- |
+| **Severity** | Info      |
+| **Category** | Standards |
+| **Fixable**  | No        |
+
+**Description:** APIKit route implementation flows should use consistent variable naming patterns. For example, if some routes set `httpStatus` and others set `http_status`, this rule flags the inconsistency.
 
 ---
 
@@ -1149,6 +1341,18 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 
 ---
 
+### DW-005: Duplicate Transform Logic
+
+| Property     | Value     |
+| ------------ | --------- |
+| **Severity** | Warning   |
+| **Category** | DataWeave |
+| **Fixable**  | No        |
+
+**Description:** Detects duplicated DataWeave transform expressions within a single file. If the same `ee:set-payload` or `ee:set-variable` CDATA content appears multiple times, this suggests extracting it into a reusable `.dwl` module.
+
+---
+
 ## API-Led Rules
 
 > **Best Practice**: Follow API-Led Connectivity architecture with clear layer separation:
@@ -1209,6 +1413,80 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 
 ---
 
+### API-006: APIKit Main Flow Structure
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | API-Led |
+| **Fixable**  | No      |
+
+**Description:** APIKit main flow (the flow containing the `apikit:router`) should follow the standard structure: HTTP listener followed by APIKit router, with an error handler referencing the APIKit error handler.
+
+---
+
+### API-007: APIKit Status Code Variable
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | API-Led |
+| **Fixable**  | No      |
+
+**Description:** APIKit route implementation flows (e.g., `get:\resource:api-config`) should set an `httpStatus` variable to ensure correct HTTP response codes are returned.
+
+---
+
+### API-008: APIKit Console in Production
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | API-Led |
+| **Fixable**  | No      |
+
+**Description:** The APIKit console endpoint (`apikit:console`) should be disabled or removed in production configurations. Exposing the console in production is a security risk.
+
+---
+
+## Connector Rules
+
+### SF-001: Salesforce Replay Channel Config
+
+| Property     | Value     |
+| ------------ | --------- |
+| **Severity** | Warning   |
+| **Category** | Connector |
+| **Fixable**  | No        |
+
+**Description:** Salesforce Streaming and Platform Event subscriptions should configure a replay channel with proper `replayOption` and `resumeOffset` settings to avoid missing events after restarts.
+
+---
+
+### SF-002: Event Listener Null Guard
+
+| Property     | Value     |
+| ------------ | --------- |
+| **Severity** | Warning   |
+| **Category** | Connector |
+| **Fixable**  | No        |
+
+**Description:** Event-driven listeners (Salesforce CDC, JMS, Anypoint MQ, etc.) should guard against null payloads. A null check or validation step should occur early in the flow to prevent `NullPointerException` in downstream processing.
+
+---
+
+### HTTP-004: Connection Idle Timeout
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | HTTP    |
+| **Fixable**  | No      |
+
+**Description:** HTTP request configurations should set `connectionIdleTimeout` to release idle connections and prevent resource exhaustion under load.
+
+---
+
 ## Operations & Hygiene Rules
 
 ### HYG-002: Commented Code Detection
@@ -1243,6 +1521,36 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 - **Sub-flows**: Always expected to be referenced; flagged if no `flow-ref` points to them anywhere in the project.
 - **Flows without triggers**: Flows that have no HTTP listener, scheduler, or VM listener and aren't referenced are flagged.
 - **Exclusions**: Flows matching common external patterns (`-main`, `-api`, `api-`, `-console`, `-error-handler`, `global`) are excluded.
+
+> **Note (v1.50):** The rule now also recognizes APIKit-generated flows (e.g., `get:\resource:api-config`) and flows with external triggers (Salesforce CDC, JMS, AMQP, VM, Anypoint MQ, Kafka, and 14+ connector patterns).
+
+---
+
+### HYG-004: Flow-Ref Target Exists
+
+| Property     | Value     |
+| ------------ | --------- |
+| **Severity** | Error     |
+| **Category** | Standards |
+| **Fixable**  | No        |
+
+**Description:** Every `<flow-ref name="...">` must point to an existing flow or sub-flow in the project. This rule uses cross-file validation via the `allFlowNames` set populated during the engine's pre-scan phase.
+
+**Why This Matters:** Broken flow references cause runtime errors. Catching them during static analysis prevents deployment failures.
+
+---
+
+### HYG-005: Unused Variable Detection
+
+| Property     | Value     |
+| ------------ | --------- |
+| **Severity** | Warning   |
+| **Category** | Standards |
+| **Fixable**  | No        |
+
+**Description:** Detects `set-variable` values that are never referenced elsewhere in the project (via `vars.variableName`, `#[vars.variableName]`, or `variableName` in DataWeave expressions).
+
+**Best Practice:** Remove unused variables to reduce clutter and improve maintainability.
 
 ---
 
@@ -1322,11 +1630,11 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 
 ## Rule Priority Matrix
 
-| Severity | Count | Rules                                                                                                                                                                                                    |
-| -------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Error    | 10    | MULE-001, 003, 004, 201, 202, SEC-002, SEC-006, LOG-004, DW-004, YAML-004, PROJ-001                                                                                                                      |
-| Warning  | 25    | MULE-002, 005, 006, 007, 008, 009, 101, 102, 301, 303, 401, 402, 403, 502, 503, 604, 701, 801, 802, 803, 804, SEC-003, SEC-004, PERF-002, RES-001, OPS-002, OPS-003, HYG-001, HYG-003, API-004, PROJ-002 |
-| Info     | 21    | MULE-010, 501, 601, YAML-001, 003, DW-001, 002, 003, API-001, 002, 003, 005, EXP-001, 002, 003, ERR-001, LOG-001, OPS-001, DOC-001, HYG-002                                                              |
+| Severity | Count | Rules                                                                                                                                                                                                                                                                                                                       |
+| -------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Error    | 14    | MULE-001, 003, 004, 201, 202, SEC-002, SEC-006, SEC-007, SEC-008, SEC-009, LOG-004, DW-004, YAML-004, ERR-004, HYG-004, PROJ-001                                                                                                                                                                                            |
+| Warning  | 37    | MULE-002, 005, 006, 007, 008, 009, 101, 102, 301, 303, 401, 402, 403, 502, 503, 604, 701, 801, 802, 803, 804, SEC-003, SEC-004, SEC-010, PERF-002, RES-001, RES-002, OPS-002, OPS-003, HYG-001, HYG-003, HYG-005, API-004, API-006, API-007, API-008, ERR-002, ERR-003, SF-001, SF-002, HTTP-004, CFG-002, DW-005, PROJ-002 |
+| Info     | 27    | MULE-010, 501, 601, YAML-001, 003, DW-001, 002, 003, API-001, 002, 003, 005, EXP-001, 002, 003, ERR-001, LOG-001, OPS-001, DOC-001, HYG-002, CFG-001, STD-001                                                                                                                                                               |
 
 ---
 
