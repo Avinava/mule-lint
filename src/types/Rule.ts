@@ -64,6 +64,12 @@ export interface RuleConfig {
 }
 
 /**
+ * Detected project layer in MuleSoft API-led connectivity architecture.
+ * Used to auto-adjust rule severity and enable/disable rules per layer.
+ */
+export type ProjectLayer = 'sapi' | 'papi' | 'eapi' | 'library' | 'batch' | 'unknown';
+
+/**
  * Project-level context derived from a pre-scan of all files.
  * Populated by LintEngine before per-file rule execution.
  */
@@ -72,6 +78,8 @@ export interface ProjectContext {
   hasHttpListener: boolean;
   /** True if any file contains an apikit:router or apikit:console element */
   hasApikitRouter: boolean;
+  /** Detected project layer based on naming conventions and content */
+  projectLayer?: ProjectLayer;
 }
 
 /**
@@ -92,6 +100,12 @@ export interface ValidationContext {
    * When undefined (e.g. standalone file scan), intra-file refs only.
    */
   allFlowRefs?: Set<string>;
+  /**
+   * Set of all flow/sub-flow names defined across all project files.
+   * Populated during the LintEngine pre-scan phase.
+   * Used by HYG-004 (FlowRefTargetExistsRule) for cross-file validation.
+   */
+  allFlowNames?: Set<string>;
   /**
    * Project-level feature flags derived from a pre-scan of all files.
    * Rules that only apply to HTTP-exposed projects (e.g. MULE-005) should

@@ -379,6 +379,53 @@ describe('Operations & Resilience Rules', () => {
       expect(issues).toHaveLength(1);
       expect(issues[0].message).toContain('never referenced');
     });
+
+    it('should skip APIKit-generated flows (verb:\\path:config pattern)', () => {
+      const xml = `
+        <mule>
+          <flow name="get:\\salesforce:api-config">
+            <logger message="get salesforce"/>
+          </flow>
+          <flow name="post:\\orders:api-config">
+            <logger message="post orders"/>
+          </flow>
+          <flow name="delete:\\customers\\(id):api-config">
+            <logger message="delete customer"/>
+          </flow>
+        </mule>
+      `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const issues = rule.validate(doc, createContext());
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should skip flows with Salesforce replay-channel-listener', () => {
+      const xml = `
+        <mule>
+          <flow name="sf-order-event-listener">
+            <salesforce:replay-channel-listener channel="/event/OrderEvent__e" config-ref="sf-config"/>
+            <logger message="received event"/>
+          </flow>
+        </mule>
+      `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const issues = rule.validate(doc, createContext());
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should skip flows with Salesforce subscribe-channel-listener', () => {
+      const xml = `
+        <mule>
+          <flow name="sf-cdc-listener">
+            <salesforce:subscribe-channel-listener channel="/data/ChangeEvents" config-ref="sf-config"/>
+            <logger message="received CDC event"/>
+          </flow>
+        </mule>
+      `;
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const issues = rule.validate(doc, createContext());
+      expect(issues).toHaveLength(0);
+    });
   });
 
   describe('DisplayNameRule (DOC-001)', () => {

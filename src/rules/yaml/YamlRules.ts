@@ -2,21 +2,25 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
+import { ProjectRule } from '../base/ProjectRule';
 import { YamlParser } from '../../core/YamlParser';
 
 /**
  * YAML-001: Environment Properties Files
  *
  * Checks that environment-specific YAML files exist.
+ *
+ * This is a ProjectRule — it runs once per scan to avoid producing
+ * N identical issues (one per XML file).
  */
-export class EnvironmentFilesRule extends BaseRule {
+export class EnvironmentFilesRule extends ProjectRule {
   id = 'YAML-001';
   name = 'Environment Properties Files';
   description = 'Environment-specific YAML property files should exist';
   severity = 'warning' as const;
   category = 'standards' as const;
 
-  validate(_doc: Document, context: ValidationContext): Issue[] {
+  protected validateProject(context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
     const configDir = path.join(context.projectRoot, 'src/main/resources');
@@ -51,13 +55,11 @@ export class EnvironmentFilesRule extends BaseRule {
         existingFiles.has(`${env}-properties.yaml`);
 
       if (!hasEnvFile) {
-        issues.push({
-          line: 1,
-          message: `Missing environment properties file for "${env}"`,
-          ruleId: this.id,
-          severity: this.severity,
-          suggestion: `Create ${env}.yaml or config-${env}.yaml in src/main/resources/`,
-        });
+        issues.push(
+          this.createProjectIssue(`Missing environment properties file for "${env}"`, {
+            suggestion: `Create ${env}.yaml or config-${env}.yaml in src/main/resources/`,
+          }),
+        );
       }
     }
 
@@ -109,10 +111,14 @@ export class PropertyNamingRule extends BaseRule {
   private isValidPropertyName(key: string): boolean {
     // Valid: db.host, api.client.timeout, http.port, salesforce.authorizationUrl
     // Valid: external-sapi.basepath, ramp.polling.max_retries
-    // Invalid: DBHOST, DbHost (no uppercase at start of segment)
-    // Now allows camelCase, hyphens in categories, underscores in properties
+    // Valid: netsuite.NSQLPath (uppercase segments for vendor conventions)
+    // Invalid: completely random strings without dots (unless single word key)
+    //
+    // Each segment must start with a letter (any case) and can contain
+    // letters, digits, underscores, and hyphens. Segments are separated by dots.
     return (
-      /^[a-z][a-zA-Z0-9_-]*(\.[a-z][a-zA-Z0-9_-]*)+$/.test(key) || /^[a-z][a-zA-Z0-9_-]*$/.test(key)
+      /^[a-zA-Z][a-zA-Z0-9_-]*(\.[a-zA-Z][a-zA-Z0-9_-]*)+$/.test(key) ||
+      /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(key)
     ); // Single word keys OK too
   }
 
