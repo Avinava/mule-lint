@@ -35,10 +35,14 @@ describe('YAML Rules', () => {
   };
 
   // ===================================================================
-  // YAML-001: Environment Properties Files
+  // YAML-001: Environment Properties Files (ProjectRule — runs once per scan)
   // ===================================================================
   describe('EnvironmentFilesRule (YAML-001)', () => {
-    const rule = new EnvironmentFilesRule();
+    let rule: EnvironmentFilesRule;
+
+    beforeEach(() => {
+      rule = new EnvironmentFilesRule();
+    });
 
     it('should pass when default environments (dev, qa, prod) files exist', () => {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'yaml-001-'));

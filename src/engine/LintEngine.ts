@@ -298,6 +298,11 @@ export class LintEngine {
         continue;
       }
 
+      // Skip ProjectRule instances — they are handled separately in runProjectRules()
+      if (rule instanceof ProjectRule) {
+        continue;
+      }
+
       try {
         const context: ValidationContext = {
           filePath,

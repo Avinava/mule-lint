@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/index.ts",
+    "bin/mule-lint.ts",
+    "bin/mule-lint-mcp.ts",
+    "src/mcp/index.ts",
+    "src/formatters/html/index.ts",
+    "src/formatters/html/components/index.ts",
+    "src/formatters/html/scripts/index.ts",
+    "src/formatters/html/sections/index.ts",
+    "src/formatters/html/styles/index.ts",
+    "src/formatters/html/views/index.ts"
+  ],
+  "ignoreDependencies": ["@prettier/plugin-xml", "publint", "@vitest/coverage-v8"],
+  "ignore": ["commitlint.config.ts"],
+  "ignoreExportsUsedInFile": true
+}

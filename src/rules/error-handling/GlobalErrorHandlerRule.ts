@@ -1,27 +1,22 @@
 import { ValidationContext, Issue, IssueType } from '../../types';
-import { BaseRule } from '../base/BaseRule';
+import { ProjectRule } from '../base/ProjectRule';
 import { fileExists } from '../../core/FileScanner';
 import * as path from 'path';
+import * as fs from 'fs';
 
 /**
  * MULE-001: Global Error Handler Exists
  *
  * Every Mule project should have a global error handler: either a dedicated
- * file (default: global-error-handler.xml) OR any scanned XML file that
- * contains a named <error-handler> element.
+ * file (default: global-error-handler.xml) OR any XML file in the project
+ * that contains a named <error-handler> element.
  *
- * The rule fires on every scanned XML file that:
- *   1. Contains at least one <flow> or <sub-flow> (is a flow file), AND
- *   2. Does not itself define an <error-handler> element
- *
- * If neither the expected file exists NOR any named <error-handler> has been
- * found in the current document, an issue is raised.
- *
- * Note: the old guard `context.relativePath.includes('global')` has been
- * removed.  Restricting reports to only "global" files hid the rule for
- * projects that did not follow that naming convention.
+ * This is a ProjectRule — it runs once per scan (not per file). It scans all
+ * XML files in the Mule source directory looking for a named error-handler
+ * definition. If none is found and the expected file doesn't exist, it reports
+ * a single project-level issue.
  */
-export class GlobalErrorHandlerRule extends BaseRule {
+export class GlobalErrorHandlerRule extends ProjectRule {
   id = 'MULE-001';
   name = 'Global Error Handler Exists';
   description =
@@ -30,9 +25,7 @@ export class GlobalErrorHandlerRule extends BaseRule {
   category = 'error-handling' as const;
   issueType: IssueType = 'bug';
 
-  validate(doc: Document, context: ValidationContext): Issue[] {
-    const issues: Issue[] = [];
-
+  protected validateProject(context: ValidationContext): Issue[] {
     // Get configurable expected file path
     const expectedFile = this.getOption(
       context,
@@ -42,44 +35,65 @@ export class GlobalErrorHandlerRule extends BaseRule {
 
     const fullPath = path.join(context.projectRoot, expectedFile);
 
-    // If the dedicated global error handler file exists, the project satisfies
-    // the rule regardless of what is in the current file.
+    // 1. If the dedicated global error handler file exists, the project
+    //    satisfies the rule.
     if (fileExists(fullPath)) {
-      return issues;
+      return [];
     }
 
-    // The expected file does not exist.  Check whether the current document
-    // itself provides a global error handler via:
-    //   (a) a named <error-handler> element, OR
-    //   (b) a flow that references an error handler by ref attribute
-    const hasNamedErrorHandler = this.exists('//*[local-name()="error-handler"][@name]', doc);
-    if (hasNamedErrorHandler) {
-      return issues;
+    // 2. Scan all XML files in src/main/mule for a named <error-handler>
+    //    element or an <error-handler ref="..."> reference.
+    const muleDir = path.join(context.projectRoot, 'src/main/mule');
+    if (fs.existsSync(muleDir)) {
+      const hasErrorHandler = this.scanForErrorHandler(muleDir);
+      if (hasErrorHandler) {
+        return [];
+      }
     }
 
-    const hasErrorHandlerRef = this.exists('//*[local-name()="error-handler"][@ref]', doc);
-    if (hasErrorHandlerRef) {
-      return issues;
-    }
-
-    // Only report for files that actually contain flows / sub-flows so that
-    // pure configuration files (e.g. global.xml without flows) are excluded.
-    const hasFlows = this.exists('//*[local-name()="flow" or local-name()="sub-flow"]', doc);
-
-    if (!hasFlows) {
-      return issues;
-    }
-
-    issues.push(
-      this.createFileIssue(
-        `Global error handler configuration not found. Expected "${expectedFile}" or a named <error-handler> element in any flow file.`,
+    return [
+      this.createProjectIssue(
+        `Global error handler configuration not found. Expected "${expectedFile}" or a named <error-handler> element in any Mule XML file.`,
         {
           suggestion:
             'Create a global-error-handler.xml file with a named <error-handler> element, or add an <error-handler name="..."> to an existing configuration file',
         },
       ),
-    );
+    ];
+  }
 
-    return issues;
+  /**
+   * Recursively scan a directory for XML files containing a named
+   * <error-handler> or <error-handler ref="..."> element.
+   */
+  private scanForErrorHandler(dir: string): boolean {
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (this.scanForErrorHandler(fullPath)) {
+            return true;
+          }
+        } else if (entry.name.endsWith('.xml')) {
+          try {
+            const content = fs.readFileSync(fullPath, 'utf-8');
+            // Quick string check before full parse — avoids parsing every file
+            if (
+              content.includes('error-handler') &&
+              (/<error-handler\s[^>]*name\s*=/.test(content) ||
+                /<error-handler\s[^>]*ref\s*=/.test(content))
+            ) {
+              return true;
+            }
+          } catch {
+            // Unreadable file, skip
+          }
+        }
+      }
+    } catch {
+      // Unreadable directory
+    }
+    return false;
   }
 }

@@ -96,10 +96,11 @@ var line11 = "test"
   // DW-002: DWL File Naming Convention
   // =================================================================
   describe('DwlNamingRule (DW-002)', () => {
-    const rule = new DwlNamingRule();
+    let rule: DwlNamingRule;
     let tmpDir: string;
 
     beforeEach(() => {
+      rule = new DwlNamingRule();
       // Create a real temp directory with DWL files for filesystem-based tests
       tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mule-lint-dw002-'));
       const dwlDir = path.join(tmpDir, 'src', 'main', 'resources', 'dwl');
@@ -198,7 +199,11 @@ var line11 = "test"
   // DW-003: DWL Modules Usage
   // =================================================================
   describe('DwlModulesRule (DW-003)', () => {
-    const rule = new DwlModulesRule();
+    let rule: DwlModulesRule;
+
+    beforeEach(() => {
+      rule = new DwlModulesRule();
+    });
 
     it('should have correct rule properties', () => {
       expect(rule.id).toBe('DW-003');
