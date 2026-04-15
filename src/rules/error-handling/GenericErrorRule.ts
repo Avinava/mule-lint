@@ -4,8 +4,13 @@ import { BaseRule } from '../base/BaseRule';
 /**
  * MULE-009: Generic Error Type
  *
- * Avoid catching type="ANY" in error handlers.
- * Be specific about error types to handle them appropriately.
+ * Avoid catching type="ANY" in error handlers — unless it is the LAST
+ * on-error block in the error-handler, where it serves as a catch-all
+ * fallback (the accelerator pattern maps this to HTTP 500).
+ *
+ * Enhanced: only flag type="ANY" when it is NOT the last sibling in
+ * its parent error-handler, since a catch-all as the final block is
+ * an accepted MuleSoft best practice.
  */
 export class GenericErrorRule extends BaseRule {
   id = 'MULE-009';
@@ -21,43 +26,82 @@ export class GenericErrorRule extends BaseRule {
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
-    // Find on-error-continue with type="ANY"
-    const onErrorContinue = this.select('//mule:on-error-continue[@type]', doc);
+    // Find all on-error-continue and on-error-propagate with type attribute
+    const allHandlers = [
+      ...this.select('//mule:on-error-continue[@type]', doc).map((h) => ({
+        node: h,
+        type: 'on-error-continue',
+      })),
+      ...this.select('//mule:on-error-propagate[@type]', doc).map((h) => ({
+        node: h,
+        type: 'on-error-propagate',
+      })),
+    ];
 
-    for (const handler of onErrorContinue) {
-      this.checkGenericType(handler, 'on-error-continue', issues);
-    }
-
-    // Find on-error-propagate with type="ANY"
-    const onErrorPropagate = this.select('//mule:on-error-propagate[@type]', doc);
-
-    for (const handler of onErrorPropagate) {
-      this.checkGenericType(handler, 'on-error-propagate', issues);
+    for (const handler of allHandlers) {
+      this.checkGenericType(handler.node, handler.type, issues);
     }
 
     return issues;
   }
 
   /**
-   * Check if handler uses generic error type
+   * Check if handler uses generic error type.
+   * Skip if this handler is the LAST on-error block in its parent
+   * error-handler (catch-all fallback is an accepted pattern).
    */
   private checkGenericType(handler: Node, handlerType: string, issues: Issue[]): void {
     const errorType = this.getAttribute(handler, 'type');
 
-    if (errorType && this.GENERIC_TYPES.includes(errorType.toUpperCase())) {
-      const docName = this.getDocName(handler);
-      const displayName = docName ? `"${docName}"` : '';
-
-      issues.push(
-        this.createIssue(
-          handler,
-          `${handlerType} ${displayName} uses generic type="${errorType}"`,
-          {
-            suggestion:
-              'Catch specific error types (e.g., HTTP:CONNECTIVITY, DB:CONNECTIVITY, VALIDATION:INVALID_JSON) for better error handling',
-          },
-        ),
-      );
+    if (!errorType || !this.GENERIC_TYPES.includes(errorType.toUpperCase())) {
+      return;
     }
+
+    // Check if this is the last on-error sibling in its parent error-handler
+    if (this.isLastOnErrorBlock(handler)) {
+      return; // Catch-all as last block is fine
+    }
+
+    const docName = this.getDocName(handler);
+    const displayName = docName ? `"${docName}"` : '';
+
+    issues.push(
+      this.createIssue(
+        handler,
+        `${handlerType} ${displayName} uses generic type="${errorType}" but is not the last error handler — move it to the end or use specific types`,
+        {
+          suggestion:
+            'If this is a catch-all, place it as the last on-error block. Otherwise, catch specific error types (e.g., HTTP:CONNECTIVITY, DB:CONNECTIVITY)',
+        },
+      ),
+    );
+  }
+
+  /**
+   * Returns true if the given on-error node is the last on-error child
+   * of its parent error-handler element.
+   */
+  private isLastOnErrorBlock(handler: Node): boolean {
+    const parent = handler.parentNode;
+    if (!parent) {
+      return true; // No parent, can't determine position — assume last
+    }
+
+    // Collect on-error siblings (continue and propagate)
+    const siblings = parent.childNodes;
+    let lastOnError: Node | null = null;
+
+    for (let i = 0; i < siblings.length; i++) {
+      const sibling = siblings[i];
+      if (sibling.nodeType === 1 /* ELEMENT_NODE */) {
+        const el = sibling as Element;
+        const localName = el.localName ?? el.tagName ?? '';
+        if (localName === 'on-error-continue' || localName === 'on-error-propagate') {
+          lastOnError = sibling;
+        }
+      }
+    }
+
+    return lastOnError === handler;
   }
 }

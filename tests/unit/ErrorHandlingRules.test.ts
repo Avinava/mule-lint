@@ -129,7 +129,31 @@ describe('Error Handling Rules', () => {
       expect(issues).toHaveLength(0);
     });
 
-    it('should fail for type="ANY" in on-error-continue', () => {
+    it('should fail for type="ANY" when NOT the last on-error block', () => {
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+                    <flow name="test-flow">
+                        <error-handler>
+                            <on-error-continue type="ANY">
+                                <logger message="error"/>
+                            </on-error-continue>
+                            <on-error-propagate type="HTTP:CONNECTIVITY">
+                                <logger message="connectivity error"/>
+                            </on-error-propagate>
+                        </error-handler>
+                    </flow>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-009');
+      expect(issues[0].message).toContain('ANY');
+    });
+
+    it('should allow type="ANY" when it IS the last on-error block (catch-all fallback)', () => {
       const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
@@ -145,12 +169,10 @@ describe('Error Handling Rules', () => {
       expect(result.success).toBe(true);
 
       const issues = rule.validate(result.document!, createContext());
-      expect(issues).toHaveLength(1);
-      expect(issues[0].ruleId).toBe('MULE-009');
-      expect(issues[0].message).toContain('ANY');
+      expect(issues).toHaveLength(0);
     });
 
-    it('should fail for type="MULE:ANY" in on-error-propagate', () => {
+    it('should fail for type="MULE:ANY" when NOT the last on-error block', () => {
       const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
@@ -158,6 +180,9 @@ describe('Error Handling Rules', () => {
                             <on-error-propagate type="MULE:ANY">
                                 <logger message="error"/>
                             </on-error-propagate>
+                            <on-error-continue type="VALIDATION:INVALID_JSON">
+                                <logger message="validation error"/>
+                            </on-error-continue>
                         </error-handler>
                     </flow>
                 </mule>
@@ -168,6 +193,28 @@ describe('Error Handling Rules', () => {
       const issues = rule.validate(result.document!, createContext());
       expect(issues).toHaveLength(1);
       expect(issues[0].message).toContain('MULE:ANY');
+    });
+
+    it('should allow type="MULE:ANY" as last on-error block', () => {
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+                    <flow name="test-flow">
+                        <error-handler>
+                            <on-error-continue type="HTTP:CONNECTIVITY">
+                                <logger message="connectivity"/>
+                            </on-error-continue>
+                            <on-error-propagate type="MULE:ANY">
+                                <logger message="catch all"/>
+                            </on-error-propagate>
+                        </error-handler>
+                    </flow>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
 
     it('should have correct rule properties', () => {
