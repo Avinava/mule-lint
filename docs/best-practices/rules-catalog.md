@@ -1,6 +1,6 @@
 # Rules Catalog
 
-> **Version:** 1.50.0
+> **Version:** 1.21.0
 > **Total Rules:** 82 implemented across 16 categories
 > **Last Updated:** April 2026
 
@@ -182,7 +182,7 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 **Why This Matters:** Catching `ANY` can mask important errors and make debugging difficult.
 
-> **Note (v1.50):** The rule now skips `type="ANY"` when it is the **last** `on-error` block in the chain. Using `type="ANY"` as a catch-all fallback (returning HTTP 500) is an accepted MuleSoft pattern per accelerator best practices.
+> **Note (v1.21):** The rule now skips `type="ANY"` when it is the **last** `on-error` block in the chain. Using `type="ANY"` as a catch-all fallback (returning HTTP 500) is an accepted MuleSoft pattern per accelerator best practices.
 
 ---
 
@@ -823,7 +823,7 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 
 **Checked Connectors:** HTTP Request, HTTP Listener, JMS, AMQP, SFTP, FTP, VM, Database, Salesforce
 
-> **Note (v1.50):** The rule now differentiates between listener and request configurations. Listeners are recommended to use `reconnect-forever`, while requests should use bounded reconnect with `count` and `frequency`.
+> **Note (v1.21):** The rule now differentiates between listener and request configurations. Listeners are recommended to use `reconnect-forever`, while requests should use bounded reconnect with `count` and `frequency`.
 
 **Example:**
 
@@ -1522,7 +1522,7 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 - **Flows without triggers**: Flows that have no HTTP listener, scheduler, or VM listener and aren't referenced are flagged.
 - **Exclusions**: Flows matching common external patterns (`-main`, `-api`, `api-`, `-console`, `-error-handler`, `global`) are excluded.
 
-> **Note (v1.50):** The rule now also recognizes APIKit-generated flows (e.g., `get:\resource:api-config`) and flows with external triggers (Salesforce CDC, JMS, AMQP, VM, Anypoint MQ, Kafka, and 14+ connector patterns).
+> **Note (v1.21):** The rule now also recognizes APIKit-generated flows (e.g., `get:\resource:api-config`) and flows with external triggers (Salesforce CDC, JMS, AMQP, VM, Anypoint MQ, Kafka, and 14+ connector patterns).
 
 ---
 

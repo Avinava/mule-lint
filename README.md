@@ -361,7 +361,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | ERR-001  | Try Scope              | Info     | Error Handling | Complex operations should use Try scope   |
 | PERF-002 | Connection Pooling     | Warning  | Performance    | DB/HTTP should configure connection pools |
 
-### Security & Integrity Rules (v1.50)
+### Security & Integrity Rules (v1.21)
 
 | ID      | Name                         | Severity | Category  | Description                                             |
 | ------- | ---------------------------- | -------- | --------- | ------------------------------------------------------- |
@@ -371,7 +371,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | SEC-010 | Secure Properties Encryption | Warning  | Security  | Secure properties must use strong encryption algorithm  |
 | HYG-004 | Flow-Ref Target Exists       | Error    | Standards | Flow-ref must point to an existing flow/sub-flow        |
 
-### Error Handling & Resilience Rules (v1.50)
+### Error Handling & Resilience Rules (v1.21)
 
 | ID      | Name                       | Severity | Category       | Description                                                 |
 | ------- | -------------------------- | -------- | -------------- | ----------------------------------------------------------- |
@@ -381,7 +381,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | RES-002 | Listener Reconnect Forever | Warning  | Performance    | Listener connectors should use reconnect-forever strategy   |
 | CFG-001 | Config Properties Ordering | Info     | Standards      | Config properties should follow a consistent ordering       |
 
-### API-Led & Connector Rules (v1.50)
+### API-Led & Connector Rules (v1.21)
 
 | ID       | Name                    | Severity | Category  | Description                                             |
 | -------- | ----------------------- | -------- | --------- | ------------------------------------------------------- |
@@ -391,7 +391,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | SF-001   | Replay Channel Config   | Warning  | Connector | Salesforce replay channel should have proper config     |
 | HTTP-004 | Connection Idle Timeout | Warning  | HTTP      | HTTP request configs should set connection idle timeout |
 
-### Code Hygiene Rules (v1.50)
+### Code Hygiene Rules (v1.21)
 
 | ID      | Name                         | Severity | Category  | Description                                                |
 | ------- | ---------------------------- | -------- | --------- | ---------------------------------------------------------- |
