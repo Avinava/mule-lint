@@ -72,8 +72,8 @@ export class LintEngine {
     this.log(`Found ${files.length} files to scan`);
 
     // Pre-scan: collect cross-file context before rule execution
-    const { allFlowRefs, projectContext } = isStandalone
-      ? { allFlowRefs: undefined, projectContext: undefined }
+    const { allFlowRefs, allFlowNames, projectContext } = isStandalone
+      ? { allFlowRefs: undefined, allFlowNames: undefined, projectContext: undefined }
       : this.preScanFiles(files);
 
     // Process each file and collect metrics
@@ -103,6 +103,7 @@ export class LintEngine {
         isStandalone,
         metricsAggregator,
         allFlowRefs,
+        allFlowNames,
         projectContext,
       );
       fileResults.push(result);
@@ -228,6 +229,7 @@ export class LintEngine {
     isStandalone: boolean = false,
     metricsAggregator?: ProjectMetrics,
     allFlowRefs?: Set<string>,
+    allFlowNames?: Set<string>,
     projectContext?: ProjectContext,
   ): FileResult {
     this.log(`  Processing: ${file.relativePath}`);
@@ -252,6 +254,7 @@ export class LintEngine {
         projectRoot,
         isStandalone,
         allFlowRefs,
+        allFlowNames,
         projectContext,
       );
 
@@ -287,6 +290,7 @@ export class LintEngine {
     projectRoot: string,
     isStandalone: boolean = false,
     allFlowRefs?: Set<string>,
+    allFlowNames?: Set<string>,
     projectContext?: ProjectContext,
   ): Issue[] {
     const issues: Issue[] = [];
@@ -310,6 +314,7 @@ export class LintEngine {
           projectRoot,
           config: this.getRuleConfig(rule.id),
           allFlowRefs,
+          allFlowNames,
           projectContext,
         };
 
@@ -441,17 +446,21 @@ export class LintEngine {
   /**
    * Pre-scan all XML files to build cross-file context:
    *   - allFlowRefs: union of all <flow-ref name="..."> targets across files
+   *   - allFlowNames: union of all <flow>/<sub-flow> name attributes across files
    *   - projectContext: whether the project has HTTP listeners / APIkit routers
    *
    * This runs before the main per-file rule execution so that rules can use
    * the aggregated information (e.g. HYG-003 cross-file unused flow detection,
+   * HYG-004 cross-file flow-ref target validation,
    * MULE-005 HTTP-only project detection).
    */
   private preScanFiles(files: ScannedFile[]): {
     allFlowRefs: Set<string>;
+    allFlowNames: Set<string>;
     projectContext: ProjectContext;
   } {
     const allFlowRefs = new Set<string>();
+    const allFlowNames = new Set<string>();
     const projectContext: ProjectContext = {
       hasHttpListener: false,
       hasApikitRouter: false,
@@ -486,6 +495,14 @@ export class LintEngine {
             }
           }
 
+          // Collect flow/sub-flow definitions
+          if (localName === 'flow' || localName === 'sub-flow') {
+            const name = el.getAttribute('name');
+            if (name) {
+              allFlowNames.add(name);
+            }
+          }
+
           // Detect HTTP listener
           if (localName === 'listener') {
             projectContext.hasHttpListener = true;
@@ -505,6 +522,6 @@ export class LintEngine {
       }
     }
 
-    return { allFlowRefs, projectContext };
+    return { allFlowRefs, allFlowNames, projectContext };
   }
 }
