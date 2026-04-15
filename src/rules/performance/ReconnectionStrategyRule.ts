@@ -6,12 +6,14 @@ import { BaseRule } from '../base/BaseRule';
  *
  * Connectors should have reconnection strategies configured for resilience.
  *
+ * Enhanced to differentiate listener vs request configs:
+ * - Listeners (inbound): recommend `reconnect-forever` (service must stay alive)
+ * - Requests (outbound): recommend bounded `reconnect count="3"` (fail fast for callers)
+ *
  * Per the Mule HTTP connector XSD, `<reconnection>` is a child element of
  * `<http:request-connection>`, NOT a direct child of `<http:request-config>`.
- * Placing `<reconnection>` directly under `<http:request-config>` causes a
- * SAXParseException at build time. The rule uses a descendant search (`.//*`)
- * to correctly resolve reconnection elements at any depth, including the valid
- * `http:request-config > http:request-connection > reconnection` nesting.
+ * The rule uses a descendant search (`.//*`) to correctly resolve reconnection
+ * elements at any depth.
  */
 export class ReconnectionStrategyRule extends BaseRule {
   id = 'RES-001';
@@ -23,33 +25,14 @@ export class ReconnectionStrategyRule extends BaseRule {
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
-    // Specific connector configurations that benefit from reconnection strategies
-    // Using more specific patterns to avoid false positives on generic "config" elements
-    const connectorConfigs = [
-      { pattern: 'request-config', name: 'HTTP Request' },
-      { pattern: 'listener-config', name: 'HTTP Listener' },
-      { pattern: 'jms-config', name: 'JMS' },
-      { pattern: 'amqp-config', name: 'AMQP' },
-      { pattern: 'sftp-config', name: 'SFTP' },
-      { pattern: 'ftp-config', name: 'FTP' },
-      { pattern: 'vm-config', name: 'VM' },
-    ];
+    // Listener configs (inbound) — recommend reconnect-forever
+    const listenerConfigs = [{ pattern: 'listener-config', name: 'HTTP Listener' }];
 
-    for (const connector of connectorConfigs) {
+    for (const connector of listenerConfigs) {
       const configs = this.select(`//*[local-name()="${connector.pattern}"]`, doc);
 
       for (const config of configs) {
-        // Use descendant search (.//*) so that reconnection elements nested anywhere
-        // inside the config element are detected. This handles the XSD-correct pattern:
-        //   <http:request-config>
-        //     <http:request-connection>
-        //       <reconnection>...</reconnection>   ← correct per HTTP connector XSD
-        //     </http:request-connection>
-        //   </http:request-config>
-        const hasReconnection =
-          this.exists('.//*[local-name()="reconnection"]', config) ||
-          this.exists('.//*[local-name()="reconnect"]', config) ||
-          this.exists('.//*[local-name()="reconnect-forever"]', config);
+        const hasReconnection = this.hasAnyReconnection(config);
 
         if (!hasReconnection) {
           const name = this.getNameAttribute(config) ?? connector.name;
@@ -59,7 +42,7 @@ export class ReconnectionStrategyRule extends BaseRule {
               `${connector.name} config "${name}" has no reconnection strategy`,
               {
                 suggestion:
-                  'Add <reconnection><reconnect count="3" frequency="2000"/></reconnection> inside <http:request-connection> for HTTP connectors',
+                  'Add <reconnection><reconnect-forever frequency="5000"/></reconnection> for listener configs — the service should always attempt to reconnect',
               },
             ),
           );
@@ -67,23 +50,81 @@ export class ReconnectionStrategyRule extends BaseRule {
       }
     }
 
-    // Database configs specifically - check for db namespace
+    // Request/outbound configs — recommend bounded reconnect
+    const requestConfigs = [
+      { pattern: 'request-config', name: 'HTTP Request' },
+      { pattern: 'jms-config', name: 'JMS' },
+      { pattern: 'amqp-config', name: 'AMQP' },
+      { pattern: 'sftp-config', name: 'SFTP' },
+      { pattern: 'ftp-config', name: 'FTP' },
+      { pattern: 'vm-config', name: 'VM' },
+    ];
+
+    for (const connector of requestConfigs) {
+      const configs = this.select(`//*[local-name()="${connector.pattern}"]`, doc);
+
+      for (const config of configs) {
+        const hasReconnection = this.hasAnyReconnection(config);
+
+        if (!hasReconnection) {
+          const name = this.getNameAttribute(config) ?? connector.name;
+          issues.push(
+            this.createIssue(
+              config,
+              `${connector.name} config "${name}" has no reconnection strategy`,
+              {
+                suggestion:
+                  'Add <reconnection><reconnect count="3" frequency="2000"/></reconnection> inside the connection element for outbound connectors',
+              },
+            ),
+          );
+        }
+      }
+    }
+
+    // Database configs — check for db namespace
     const dbConfigs = this.select('//*[local-name()="config" and starts-with(name(), "db:")]', doc);
     for (const config of dbConfigs) {
-      const hasReconnection =
-        this.exists('.//*[local-name()="reconnection"]', config) ||
-        this.exists('.//*[local-name()="reconnect"]', config);
+      const hasReconnection = this.hasAnyReconnection(config);
 
       if (!hasReconnection) {
         const name = this.getNameAttribute(config) ?? 'Database';
         issues.push(
           this.createIssue(config, `Database config "${name}" has no reconnection strategy`, {
-            suggestion: 'Add <reconnection> inside the connection element',
+            suggestion:
+              'Add <reconnection><reconnect count="3" frequency="2000"/></reconnection> inside the connection element',
+          }),
+        );
+      }
+    }
+
+    // Salesforce configs — check for sfdc-config
+    const sfdcConfigs = this.select(
+      '//*[local-name()="sfdc-config" or local-name()="config" and starts-with(name(), "salesforce:")]',
+      doc,
+    );
+    for (const config of sfdcConfigs) {
+      const hasReconnection = this.hasAnyReconnection(config);
+
+      if (!hasReconnection) {
+        const name = this.getNameAttribute(config) ?? 'Salesforce';
+        issues.push(
+          this.createIssue(config, `Salesforce config "${name}" has no reconnection strategy`, {
+            suggestion:
+              'Add <reconnection><reconnect count="3" frequency="2000"/></reconnection> inside the Salesforce connection element',
           }),
         );
       }
     }
 
     return issues;
+  }
+
+  private hasAnyReconnection(config: Node): boolean {
+    return (
+      this.exists('.//*[local-name()="reconnection"]', config) ||
+      this.exists('.//*[local-name()="reconnect"]', config) ||
+      this.exists('.//*[local-name()="reconnect-forever"]', config)
+    );
   }
 }
