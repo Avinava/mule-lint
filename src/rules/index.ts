@@ -47,6 +47,8 @@ import { HttpPortPlaceholderRule } from './standards/HttpPortPlaceholderRule';
 import { CronExternalizedRule } from './standards/CronExternalizedRule';
 import { ApiKitValidationRule } from './standards/ApiKitValidationRule';
 import { ConfigPropertiesOrderingRule } from './standards/ConfigPropertiesOrderingRule';
+import { MissingEnvPropertiesDeclarationRule } from './standards/MissingEnvPropertiesDeclarationRule';
+import { ApikitRouteVariableConsistencyRule } from './standards/ApikitRouteVariableConsistencyRule';
 
 // Import all rules - HTTP
 import { HttpUserAgentRule } from './http/HttpUserAgentRule';
@@ -56,6 +58,7 @@ import { ConnectionIdleTimeoutRule } from './http/ConnectionIdleTimeoutRule';
 
 // Import all rules - Connector
 import { ReplayChannelConfigRule } from './connector/ReplayChannelConfigRule';
+import { EventListenerNullGuardRule } from './connector/EventListenerNullGuardRule';
 
 // Import all rules - Documentation
 import { FlowDescriptionRule } from './documentation/FlowDescriptionRule';
@@ -86,6 +89,7 @@ import {
 // Import all rules - DataWeave
 import { ExternalDwlRule, DwlNamingRule, DwlModulesRule } from './dataweave/DataWeaveRules';
 import { Java17DWErrorHandlingRule } from './dataweave/Java17DWErrorHandlingRule';
+import { DuplicateTransformLogicRule } from './dataweave/DuplicateTransformLogicRule';
 
 // Import all rules - API-Led
 import { ExperienceLayerRule, ProcessLayerRule, SystemLayerRule } from './api-led/ApiLedRules';
@@ -105,6 +109,7 @@ import {
 import { CommentedCodeRule } from './operations/CommentedCodeRule';
 import { UnusedFlowRule } from './operations/UnusedFlowRule';
 import { FlowRefTargetExistsRule } from './operations/FlowRefTargetExistsRule';
+import { UnusedVariableRule } from './operations/UnusedVariableRule';
 
 // Import all rules - Governance
 import { PomValidationRule, GitHygieneRule } from './governance/GovernanceRules';
@@ -154,7 +159,7 @@ export { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 
 /**
  * All available rules - instantiated and ready to use
- * Total: 72 rules (including operations, resilience, hygiene, API-led, and connector rules)
+ * Total: 77 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
  */
 export const ALL_RULES: Rule[] = [
   // Error Handling Rules (MULE-001, 003, 005, 007, 009)
@@ -222,11 +227,12 @@ export const ALL_RULES: Rule[] = [
   new GlobalConfigRule(),
   new MonolithicXmlRule(),
 
-  // DataWeave Rules (DW-001, 002, 003, 004)
+  // DataWeave Rules (DW-001, 002, 003, 004, 005)
   new ExternalDwlRule(),
   new DwlNamingRule(),
   new DwlModulesRule(),
   new Java17DWErrorHandlingRule(),
+  new DuplicateTransformLogicRule(), // DW-005: Duplicate Transform Logic
 
   // API-Led Rules (API-001, 002, 003, 004, 006, 007, 008)
   new ExperienceLayerRule(),
@@ -256,23 +262,27 @@ export const ALL_RULES: Rule[] = [
   new TlsKeystorePasswordRule(),
   new SecurePropertiesEncryptionRule(),
 
-  // Code Hygiene Rules (HYG-001, HYG-002, HYG-003, HYG-004)
+  // Code Hygiene Rules (HYG-001, HYG-002, HYG-003, HYG-004, HYG-005)
   new ExcessiveLoggersRule(),
   new CommentedCodeRule(),
   new UnusedFlowRule(),
   new FlowRefTargetExistsRule(),
+  new UnusedVariableRule(), // HYG-005: Unused Variable
 
-  // Additional Standards (API-005, DOC-001, CFG-001)
+  // Additional Standards (API-005, DOC-001, CFG-001, CFG-002, STD-001)
   new ApiKitValidationRule(),
   new DisplayNameRule(),
   new ConfigPropertiesOrderingRule(), // CFG-001: Config Properties Ordering
+  new MissingEnvPropertiesDeclarationRule(), // CFG-002: Missing Env Properties
+  new ApikitRouteVariableConsistencyRule(), // STD-001: APIKit Route Variable Consistency
 
   // Governance Rules (PROJ-001, PROJ-002)
   new PomValidationRule(),
   new GitHygieneRule(),
 
-  // Connector Rules (SF-001)
+  // Connector Rules (SF-001, SF-002)
   new ReplayChannelConfigRule(), // SF-001: Salesforce Replay Channel Config
+  new EventListenerNullGuardRule(), // SF-002: Event Listener Null Guard
 ];
 
 /**
