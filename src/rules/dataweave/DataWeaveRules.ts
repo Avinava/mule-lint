@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ValidationContext, Issue } from '../../types';
 import { BaseRule } from '../base/BaseRule';
+import { ProjectRule } from '../base/ProjectRule';
 
 /**
  * DW-001: External DWL for Complex Transforms
@@ -59,8 +60,11 @@ export class ExternalDwlRule extends BaseRule {
  * exactly match the filename, and hyphens are not valid in DataWeave identifiers.
  * Use the `exemptPaths` option to exclude module directories from this rule, or
  * set `convention: "camelCase"` for projects that use DW modules extensively.
+ *
+ * This is a ProjectRule — it runs once per scan to avoid producing
+ * N identical issues (one per XML file).
  */
-export class DwlNamingRule extends BaseRule {
+export class DwlNamingRule extends ProjectRule {
   id = 'DW-002';
   name = 'DWL File Naming';
   description =
@@ -68,7 +72,7 @@ export class DwlNamingRule extends BaseRule {
   severity = 'info' as const;
   category = 'dataweave' as const;
 
-  validate(_doc: Document, context: ValidationContext): Issue[] {
+  protected validateProject(context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
     const dwlDir = path.join(context.projectRoot, 'src/main/resources/dwl');
 
@@ -88,7 +92,7 @@ export class DwlNamingRule extends BaseRule {
     // Files matching any exempt pattern are skipped entirely regardless of convention.
     // Use this for DataWeave module directories where camelCase is required by the
     // DataWeave runtime import system (e.g., "src/main/resources/dwl/lookups/**").
-    const exemptPaths = this.getOption(context, 'exemptPaths', [] as string[]) as string[];
+    const exemptPaths = this.getOption(context, 'exemptPaths', []) as string[];
 
     const dwlFiles = this.findDwlFiles(dwlDir);
 
@@ -103,13 +107,11 @@ export class DwlNamingRule extends BaseRule {
 
       if (!this.isValidDwlName(basename, convention)) {
         const suggestedName = this.toConvention(basename, convention);
-        issues.push({
-          line: 1,
-          message: `DWL file "${basename}.dwl" should use ${convention} naming`,
-          ruleId: this.id,
-          severity: this.severity,
-          suggestion: `Rename to: ${suggestedName}.dwl`,
-        });
+        issues.push(
+          this.createProjectIssue(`DWL file "${basename}.dwl" should use ${convention} naming`, {
+            suggestion: `Rename to: ${suggestedName}.dwl`,
+          }),
+        );
       }
     }
 
@@ -168,36 +170,36 @@ export class DwlNamingRule extends BaseRule {
  * DW-003: DWL Modules Usage
  *
  * Common DataWeave functions should be in reusable modules.
+ *
+ * This is a ProjectRule — it runs once per scan to avoid producing
+ * N identical issues (one per XML file).
  */
-export class DwlModulesRule extends BaseRule {
+export class DwlModulesRule extends ProjectRule {
   id = 'DW-003';
   name = 'DWL Modules';
   description = 'Project should have common DataWeave modules';
   severity = 'info' as const;
   category = 'dataweave' as const;
 
-  validate(_doc: Document, context: ValidationContext): Issue[] {
-    const issues: Issue[] = [];
+  protected validateProject(context: ValidationContext): Issue[] {
     const dwlDir = path.join(context.projectRoot, 'src/main/resources/dwl');
 
     if (!fs.existsSync(dwlDir)) {
-      return issues;
+      return [];
     }
 
     const hasCommonModule = this.hasFile(dwlDir, 'common');
     const hasUtilsModule = this.hasFile(dwlDir, 'utils');
 
     if (!hasCommonModule && !hasUtilsModule) {
-      issues.push({
-        line: 1,
-        message: 'No common/utils DWL module found',
-        ruleId: this.id,
-        severity: this.severity,
-        suggestion: 'Create common.dwl or utils.dwl for reusable functions',
-      });
+      return [
+        this.createProjectIssue('No common/utils DWL module found', {
+          suggestion: 'Create common.dwl or utils.dwl for reusable functions',
+        }),
+      ];
     }
 
-    return issues;
+    return [];
   }
 
   private hasFile(dir: string, pattern: string): boolean {

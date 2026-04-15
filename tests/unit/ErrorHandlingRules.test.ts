@@ -129,7 +129,31 @@ describe('Error Handling Rules', () => {
       expect(issues).toHaveLength(0);
     });
 
-    it('should fail for type="ANY" in on-error-continue', () => {
+    it('should fail for type="ANY" when NOT the last on-error block', () => {
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+                    <flow name="test-flow">
+                        <error-handler>
+                            <on-error-continue type="ANY">
+                                <logger message="error"/>
+                            </on-error-continue>
+                            <on-error-propagate type="HTTP:CONNECTIVITY">
+                                <logger message="connectivity error"/>
+                            </on-error-propagate>
+                        </error-handler>
+                    </flow>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(1);
+      expect(issues[0].ruleId).toBe('MULE-009');
+      expect(issues[0].message).toContain('ANY');
+    });
+
+    it('should allow type="ANY" when it IS the last on-error block (catch-all fallback)', () => {
       const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
@@ -145,12 +169,10 @@ describe('Error Handling Rules', () => {
       expect(result.success).toBe(true);
 
       const issues = rule.validate(result.document!, createContext());
-      expect(issues).toHaveLength(1);
-      expect(issues[0].ruleId).toBe('MULE-009');
-      expect(issues[0].message).toContain('ANY');
+      expect(issues).toHaveLength(0);
     });
 
-    it('should fail for type="MULE:ANY" in on-error-propagate', () => {
+    it('should fail for type="MULE:ANY" when NOT the last on-error block', () => {
       const xml = `
                 <mule xmlns="http://www.mulesoft.org/schema/mule/core">
                     <flow name="test-flow">
@@ -158,6 +180,9 @@ describe('Error Handling Rules', () => {
                             <on-error-propagate type="MULE:ANY">
                                 <logger message="error"/>
                             </on-error-propagate>
+                            <on-error-continue type="VALIDATION:INVALID_JSON">
+                                <logger message="validation error"/>
+                            </on-error-continue>
                         </error-handler>
                     </flow>
                 </mule>
@@ -168,6 +193,28 @@ describe('Error Handling Rules', () => {
       const issues = rule.validate(result.document!, createContext());
       expect(issues).toHaveLength(1);
       expect(issues[0].message).toContain('MULE:ANY');
+    });
+
+    it('should allow type="MULE:ANY" as last on-error block', () => {
+      const xml = `
+                <mule xmlns="http://www.mulesoft.org/schema/mule/core">
+                    <flow name="test-flow">
+                        <error-handler>
+                            <on-error-continue type="HTTP:CONNECTIVITY">
+                                <logger message="connectivity"/>
+                            </on-error-continue>
+                            <on-error-propagate type="MULE:ANY">
+                                <logger message="catch all"/>
+                            </on-error-propagate>
+                        </error-handler>
+                    </flow>
+                </mule>
+            `;
+      const result = parseXml(xml);
+      expect(result.success).toBe(true);
+
+      const issues = rule.validate(result.document!, createContext());
+      expect(issues).toHaveLength(0);
     });
 
     it('should have correct rule properties', () => {
@@ -519,89 +566,88 @@ output application/json
   });
 
   // =================================================================
-  // MULE-001: Global Error Handler Exists
+  // MULE-001: Global Error Handler Exists (ProjectRule — runs once per scan)
   // =================================================================
   describe('GlobalErrorHandlerRule (MULE-001)', () => {
-    const rule = new GlobalErrorHandlerRule();
+    let rule: GlobalErrorHandlerRule;
 
-    it('should pass when doc contains a named error-handler element', () => {
-      const xml = `
-        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
-          <error-handler name="global-error-handler">
-            <on-error-continue>
-              <logger message="error"/>
-            </on-error-continue>
-          </error-handler>
-          <flow name="my-flow">
-            <logger message="test"/>
-          </flow>
-        </mule>
-      `;
-      const result = parseXml(xml);
-      expect(result.success).toBe(true);
-
-      const issues = rule.validate(
-        result.document!,
-        createContext('src/main/mule/config.xml', '/nonexistent-project'),
-      );
-      expect(issues).toHaveLength(0);
+    beforeEach(() => {
+      rule = new GlobalErrorHandlerRule();
     });
 
-    it('should pass when doc contains an error-handler with ref attribute', () => {
-      const xml = `
-        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
-          <flow name="my-flow">
-            <logger message="test"/>
-            <error-handler ref="global-error-handler"/>
-          </flow>
-        </mule>
-      `;
-      const result = parseXml(xml);
-      expect(result.success).toBe(true);
+    it('should pass when an XML file contains a named error-handler element', () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mule-001-'));
+      try {
+        const muleDir = path.join(tmpDir, 'src', 'main', 'mule');
+        fs.mkdirSync(muleDir, { recursive: true });
+        // error-handling.xml contains <error-handler name="global-error-handler">
+        fs.writeFileSync(
+          path.join(muleDir, 'error-handling.xml'),
+          `<mule xmlns="http://www.mulesoft.org/schema/mule/core">
+            <error-handler name="global-error-handler">
+              <on-error-continue><logger message="error"/></on-error-continue>
+            </error-handler>
+          </mule>`,
+        );
 
-      const issues = rule.validate(
-        result.document!,
-        createContext('src/main/mule/config.xml', '/nonexistent-project'),
-      );
-      expect(issues).toHaveLength(0);
+        const issues = rule.validate(
+          {} as Document,
+          createContext('src/main/mule/api.xml', tmpDir),
+        );
+        expect(issues).toHaveLength(0);
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true });
+      }
     });
 
-    it('should report warning for flow file without any error handler when global file missing', () => {
-      const xml = `
-        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
-          <flow name="my-process-flow">
-            <logger message="test"/>
-          </flow>
-        </mule>
-      `;
-      const result = parseXml(xml);
-      expect(result.success).toBe(true);
+    it('should pass when an XML file contains an error-handler with ref attribute', () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mule-001-'));
+      try {
+        const muleDir = path.join(tmpDir, 'src', 'main', 'mule');
+        fs.mkdirSync(muleDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(muleDir, 'api.xml'),
+          `<mule xmlns="http://www.mulesoft.org/schema/mule/core">
+            <flow name="my-flow">
+              <logger message="test"/>
+              <error-handler ref="global-error-handler"/>
+            </flow>
+          </mule>`,
+        );
 
-      // Use /nonexistent-project so the expected file definitely doesn't exist
-      const issues = rule.validate(
-        result.document!,
-        createContext('src/main/mule/my-process-flow.xml', '/nonexistent-project'),
-      );
-      expect(issues).toHaveLength(1);
-      expect(issues[0].ruleId).toBe('MULE-001');
-      expect(issues[0].severity).toBe('warning');
+        const issues = rule.validate(
+          {} as Document,
+          createContext('src/main/mule/api.xml', tmpDir),
+        );
+        expect(issues).toHaveLength(0);
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true });
+      }
     });
 
-    it('should NOT report for non-flow files (pure config without flows)', () => {
-      const xml = `
-        <mule xmlns="http://www.mulesoft.org/schema/mule/core"
-              xmlns:http="http://www.mulesoft.org/schema/mule/http">
-          <http:request-config name="HTTP_Request_Config"/>
-        </mule>
-      `;
-      const result = parseXml(xml);
-      expect(result.success).toBe(true);
+    it('should report warning when no error handler found anywhere in project', () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mule-001-'));
+      try {
+        const muleDir = path.join(tmpDir, 'src', 'main', 'mule');
+        fs.mkdirSync(muleDir, { recursive: true });
+        // Flow file without any error handler reference
+        fs.writeFileSync(
+          path.join(muleDir, 'my-flow.xml'),
+          `<mule xmlns="http://www.mulesoft.org/schema/mule/core">
+            <flow name="my-process-flow"><logger message="test"/></flow>
+          </mule>`,
+        );
 
-      const issues = rule.validate(
-        result.document!,
-        createContext('src/main/mule/http-config.xml', '/nonexistent-project'),
-      );
-      expect(issues).toHaveLength(0);
+        const issues = rule.validate(
+          {} as Document,
+          createContext('src/main/mule/my-flow.xml', tmpDir),
+        );
+        expect(issues).toHaveLength(1);
+        expect(issues[0].ruleId).toBe('MULE-001');
+        expect(issues[0].severity).toBe('warning');
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true });
+      }
     });
 
     it('should pass when the expected global error handler file exists on disk', () => {
@@ -611,18 +657,8 @@ output application/json
         fs.mkdirSync(muleDir, { recursive: true });
         fs.writeFileSync(path.join(muleDir, 'global-error-handler.xml'), '<mule/>');
 
-        const xml = `
-          <mule xmlns="http://www.mulesoft.org/schema/mule/core">
-            <flow name="my-flow">
-              <logger message="test"/>
-            </flow>
-          </mule>
-        `;
-        const result = parseXml(xml);
-        expect(result.success).toBe(true);
-
         const issues = rule.validate(
-          result.document!,
+          {} as Document,
           createContext('src/main/mule/my-flow.xml', tmpDir),
         );
         expect(issues).toHaveLength(0);
@@ -631,26 +667,53 @@ output application/json
       }
     });
 
-    it('should NOT report for file that was previously only detected via global name (regression guard)', () => {
-      // Previously only files with "global" in their path triggered the rule.
-      // Now ANY flow file without a global handler should trigger — verify
-      // a file without "global" in its name also gets reported.
-      const xml = `
-        <mule xmlns="http://www.mulesoft.org/schema/mule/core">
-          <flow name="api-main-flow">
-            <logger message="test"/>
-          </flow>
-        </mule>
-      `;
-      const result = parseXml(xml);
-      expect(result.success).toBe(true);
+    it('should find error-handler in subdirectories of src/main/mule', () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mule-001-'));
+      try {
+        const commonDir = path.join(tmpDir, 'src', 'main', 'mule', 'common');
+        fs.mkdirSync(commonDir, { recursive: true });
+        // Error handler in a subdirectory (common pattern in accelerator projects)
+        fs.writeFileSync(
+          path.join(commonDir, 'error-handling.xml'),
+          `<mule xmlns="http://www.mulesoft.org/schema/mule/core">
+            <error-handler name="global-error-handler">
+              <on-error-continue><logger message="error"/></on-error-continue>
+            </error-handler>
+          </mule>`,
+        );
 
-      const issues = rule.validate(
-        result.document!,
-        createContext('src/main/mule/api-main.xml', '/nonexistent-project'),
+        const issues = rule.validate(
+          {} as Document,
+          createContext('src/main/mule/api.xml', tmpDir),
+        );
+        expect(issues).toHaveLength(0);
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true });
+      }
+    });
+
+    it('should only run once per scan (ProjectRule)', () => {
+      // First call should produce an issue
+      const issues1 = rule.validate(
+        {} as Document,
+        createContext('src/main/mule/a.xml', '/nonexistent-project'),
       );
-      expect(issues).toHaveLength(1);
-      expect(issues[0].ruleId).toBe('MULE-001');
+      expect(issues1).toHaveLength(1);
+
+      // Second call should return empty (already ran)
+      const issues2 = rule.validate(
+        {} as Document,
+        createContext('src/main/mule/b.xml', '/nonexistent-project'),
+      );
+      expect(issues2).toHaveLength(0);
+
+      // After reset, should run again
+      rule.reset();
+      const issues3 = rule.validate(
+        {} as Document,
+        createContext('src/main/mule/c.xml', '/nonexistent-project'),
+      );
+      expect(issues3).toHaveLength(1);
     });
 
     it('should have correct rule properties', () => {

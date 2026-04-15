@@ -9,6 +9,9 @@ import { HttpStatusRule } from './error-handling/HttpStatusRule';
 import { CorrelationIdRule } from './error-handling/CorrelationIdRule';
 import { GenericErrorRule } from './error-handling/GenericErrorRule';
 import { TryScopeRule } from './error-handling/TryScopeRule';
+import { ErrorHandlerTypeCoverageRule } from './error-handling/ErrorHandlerTypeCoverageRule';
+import { ErrorResponseStructureRule } from './error-handling/ErrorResponseStructureRule';
+import { CatchAllLastRule } from './error-handling/CatchAllLastRule';
 
 // Import all rules - Naming
 import { FlowNamingRule } from './naming/FlowNamingRule';
@@ -23,6 +26,10 @@ import { TlsVersionRule } from './security/TlsVersionRule';
 import { RateLimitingRule } from './security/RateLimitingRule';
 import { InputValidationRule } from './security/InputValidationRule';
 import { EncryptionKeyInLogsRule } from './security/EncryptionKeyInLogsRule';
+import { ConnectorCredentialsSecuredRule } from './security/ConnectorCredentialsSecuredRule';
+import { SecurePropertiesKeyRule } from './security/SecurePropertiesKeyRule';
+import { TlsKeystorePasswordRule } from './security/TlsKeystorePasswordRule';
+import { SecurePropertiesEncryptionRule } from './security/SecurePropertiesEncryptionRule';
 
 // Import all rules - Logging
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -39,11 +46,19 @@ import { AutoDiscoveryRule } from './standards/AutoDiscoveryRule';
 import { HttpPortPlaceholderRule } from './standards/HttpPortPlaceholderRule';
 import { CronExternalizedRule } from './standards/CronExternalizedRule';
 import { ApiKitValidationRule } from './standards/ApiKitValidationRule';
+import { ConfigPropertiesOrderingRule } from './standards/ConfigPropertiesOrderingRule';
+import { MissingEnvPropertiesDeclarationRule } from './standards/MissingEnvPropertiesDeclarationRule';
+import { ApikitRouteVariableConsistencyRule } from './standards/ApikitRouteVariableConsistencyRule';
 
 // Import all rules - HTTP
 import { HttpUserAgentRule } from './http/HttpUserAgentRule';
 import { HttpContentTypeRule } from './http/HttpContentTypeRule';
 import { HttpTimeoutRule } from './http/HttpTimeoutRule';
+import { ConnectionIdleTimeoutRule } from './http/ConnectionIdleTimeoutRule';
+
+// Import all rules - Connector
+import { ReplayChannelConfigRule } from './connector/ReplayChannelConfigRule';
+import { EventListenerNullGuardRule } from './connector/EventListenerNullGuardRule';
 
 // Import all rules - Documentation
 import { FlowDescriptionRule } from './documentation/FlowDescriptionRule';
@@ -56,6 +71,7 @@ import { AsyncErrorHandlerRule } from './performance/AsyncErrorHandlerRule';
 import { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 import { ConnectionPoolingRule } from './performance/ConnectionPoolingRule';
 import { ReconnectionStrategyRule } from './performance/ReconnectionStrategyRule';
+import { ListenerReconnectForeverRule } from './performance/ListenerReconnectForeverRule';
 
 // Import all rules - Complexity
 import { FlowComplexityRule } from './complexity/FlowComplexityRule';
@@ -73,10 +89,14 @@ import {
 // Import all rules - DataWeave
 import { ExternalDwlRule, DwlNamingRule, DwlModulesRule } from './dataweave/DataWeaveRules';
 import { Java17DWErrorHandlingRule } from './dataweave/Java17DWErrorHandlingRule';
+import { DuplicateTransformLogicRule } from './dataweave/DuplicateTransformLogicRule';
 
 // Import all rules - API-Led
 import { ExperienceLayerRule, ProcessLayerRule, SystemLayerRule } from './api-led/ApiLedRules';
 import { SingleSystemSapiRule } from './api-led/SingleSystemSapiRule';
+import { ApikitMainFlowStructureRule } from './api-led/ApikitMainFlowStructureRule';
+import { ApikitStatusCodeVariableRule } from './api-led/ApikitStatusCodeVariableRule';
+import { ApikitConsoleProductionRule } from './api-led/ApikitConsoleProductionRule';
 
 // Import all rules - Experimental
 import {
@@ -88,6 +108,8 @@ import {
 // Import all rules - Operations & Hygiene
 import { CommentedCodeRule } from './operations/CommentedCodeRule';
 import { UnusedFlowRule } from './operations/UnusedFlowRule';
+import { FlowRefTargetExistsRule } from './operations/FlowRefTargetExistsRule';
+import { UnusedVariableRule } from './operations/UnusedVariableRule';
 
 // Import all rules - Governance
 import { PomValidationRule, GitHygieneRule } from './governance/GovernanceRules';
@@ -137,7 +159,7 @@ export { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 
 /**
  * All available rules - instantiated and ready to use
- * Total: 56 rules (including operations, resilience, and hygiene rules)
+ * Total: 82 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
  */
 export const ALL_RULES: Rule[] = [
   // Error Handling Rules (MULE-001, 003, 005, 007, 009)
@@ -147,6 +169,9 @@ export const ALL_RULES: Rule[] = [
   new CorrelationIdRule(),
   new GenericErrorRule(),
   new TryScopeRule(), // ERR-001: Try Scope Best Practice
+  new ErrorHandlerTypeCoverageRule(), // ERR-002: APIKit Error Type Coverage
+  new ErrorResponseStructureRule(), // ERR-003: Error Response Structure
+  new CatchAllLastRule(), // ERR-004: Catch-All Must Be Last
 
   // Naming Rules (MULE-002, 101, 102)
   new FlowNamingRule(),
@@ -173,10 +198,11 @@ export const ALL_RULES: Rule[] = [
   new DwlStandardsRule(),
   new DeprecatedComponentRule(),
 
-  // HTTP Rules (MULE-401, 402, 403)
+  // HTTP Rules (MULE-401, 402, 403, HTTP-004)
   new HttpUserAgentRule(),
   new HttpContentTypeRule(),
   new HttpTimeoutRule(),
+  new ConnectionIdleTimeoutRule(), // HTTP-004: Connection Idle Timeout
 
   // Documentation Rules (MULE-601, 604)
   new FlowDescriptionRule(),
@@ -201,44 +227,62 @@ export const ALL_RULES: Rule[] = [
   new GlobalConfigRule(),
   new MonolithicXmlRule(),
 
-  // DataWeave Rules (DW-001, 002, 003, 004)
+  // DataWeave Rules (DW-001, 002, 003, 004, 005)
   new ExternalDwlRule(),
   new DwlNamingRule(),
   new DwlModulesRule(),
   new Java17DWErrorHandlingRule(),
+  new DuplicateTransformLogicRule(), // DW-005: Duplicate Transform Logic
 
-  // API-Led Rules (API-001, 002, 003, 004)
+  // API-Led Rules (API-001, 002, 003, 004, 006, 007, 008)
   new ExperienceLayerRule(),
   new ProcessLayerRule(),
   new SystemLayerRule(),
   new SingleSystemSapiRule(),
+  new ApikitMainFlowStructureRule(), // API-006: APIKit Main Flow Structure
+  new ApikitStatusCodeVariableRule(), // API-007: APIKit Status Code Variable
+  new ApikitConsoleProductionRule(), // API-008: APIKit Console in Production
 
   // Experimental Rules (EXP-001, 002, 003)
   new FlowRefDepthRule(),
   new ConnectorConfigNamingRule(),
   new MUnitCoverageRule(),
 
-  // Operations & Resilience Rules (RES-001, OPS-001, OPS-002, OPS-003)
+  // Operations & Resilience Rules (RES-001, RES-002, OPS-001, OPS-002, OPS-003)
   new ReconnectionStrategyRule(),
+  new ListenerReconnectForeverRule(), // RES-002: Listener Reconnect-Forever
   new AutoDiscoveryRule(),
   new HttpPortPlaceholderRule(),
   new CronExternalizedRule(),
 
-  // Security Enhancement (SEC-006)
+  // Security Enhancement (SEC-006, SEC-007, SEC-008, SEC-009, SEC-010)
   new EncryptionKeyInLogsRule(),
+  new ConnectorCredentialsSecuredRule(),
+  new SecurePropertiesKeyRule(),
+  new TlsKeystorePasswordRule(),
+  new SecurePropertiesEncryptionRule(),
 
-  // Code Hygiene Rules (HYG-001, HYG-002, HYG-003)
+  // Code Hygiene Rules (HYG-001, HYG-002, HYG-003, HYG-004, HYG-005)
   new ExcessiveLoggersRule(),
   new CommentedCodeRule(),
   new UnusedFlowRule(),
+  new FlowRefTargetExistsRule(),
+  new UnusedVariableRule(), // HYG-005: Unused Variable
 
-  // Additional Standards (API-005, DOC-001)
+  // Additional Standards (API-005, DOC-001, CFG-001, CFG-002, STD-001)
   new ApiKitValidationRule(),
   new DisplayNameRule(),
+  new ConfigPropertiesOrderingRule(), // CFG-001: Config Properties Ordering
+  new MissingEnvPropertiesDeclarationRule(), // CFG-002: Missing Env Properties
+  new ApikitRouteVariableConsistencyRule(), // STD-001: APIKit Route Variable Consistency
 
   // Governance Rules (PROJ-001, PROJ-002)
   new PomValidationRule(),
   new GitHygieneRule(),
+
+  // Connector Rules (SF-001, SF-002)
+  new ReplayChannelConfigRule(), // SF-001: Salesforce Replay Channel Config
+  new EventListenerNullGuardRule(), // SF-002: Event Listener Null Guard
 ];
 
 /**

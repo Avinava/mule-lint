@@ -2,6 +2,87 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.50.0] - 2026-04-15
+
+### Highlights
+
+- **82 rules** (up from 56) — 20+ new rules added across security, error handling, API-led, connectors, and code hygiene
+- **442 tests** (up from 302) — comprehensive coverage for all new and enhanced rules
+- **Document cache** — XML documents parsed once during pre-scan and reused, eliminating redundant parsing
+- **Project layer detection** — Automatic SAPI/PAPI/EAPI/library/batch classification via heuristics
+- **False positive fixes** — 6 rules fixed based on analysis of real-world MuleSoft accelerator projects
+
+### Added
+
+#### New Security & Integrity Rules (P0)
+
+- **SEC-007** (`ConnectorCredentialsSecuredRule`): Connector configurations must use `${secure::...}` for credentials
+- **SEC-008** (`SecurePropertiesKeyRule`): Secure properties file encryption key must be externalized (not hardcoded)
+- **SEC-009** (`TlsKeystorePasswordRule`): TLS keystore/truststore passwords must use secure property placeholders
+- **SEC-010** (`SecurePropertiesEncryptionRule`): Secure properties must use strong encryption algorithms (AES/Blowfish)
+- **HYG-004** (`FlowRefTargetExistsRule`): Every `flow-ref` must point to an existing flow or sub-flow (cross-file validation via `allFlowNames`)
+
+#### New Error Handling & Resilience Rules (P1)
+
+- **ERR-002** (`ErrorHandlerTypeCoverageRule`): APIKit flows should handle common HTTP error types (400, 404, 405, 500, etc.)
+- **ERR-003** (`ErrorResponseStructureRule`): Error handlers should set both `httpStatus` variable and a response body
+- **ERR-004** (`CatchAllLastRule`): `type="ANY"` on-error block must be the last handler in the chain
+- **RES-002** (`ListenerReconnectForeverRule`): Listener connectors (HTTP, JMS, AMQP, VM) should use `reconnect-forever`
+- **CFG-001** (`ConfigPropertiesOrderingRule`): Configuration properties should follow a consistent ordering pattern
+
+#### New API-Led & Connector Rules (P2)
+
+- **API-006** (`ApikitMainFlowStructureRule`): APIKit main flow should follow the standard router + error-handler structure
+- **API-007** (`ApikitStatusCodeVariableRule`): APIKit route implementations should set `httpStatus` variable
+- **API-008** (`ApikitConsoleProductionRule`): APIKit console endpoint should be disabled in production configs
+- **SF-001** (`ReplayChannelConfigRule`): Salesforce Streaming/Platform Events replay channel should have proper config
+- **HTTP-004** (`ConnectionIdleTimeoutRule`): HTTP request configurations should set connection idle timeout
+
+#### New Code Hygiene Rules (P3)
+
+- **DW-005** (`DuplicateTransformLogicRule`): Detect duplicated DataWeave transform expressions within a file
+- **HYG-005** (`UnusedVariableRule`): Detect `set-variable` values never referenced elsewhere in the project
+- **CFG-002** (`MissingEnvPropertiesDeclarationRule`): Properties referenced in XML (`${...}`) should exist in YAML config files
+- **STD-001** (`ApikitRouteVariableConsistencyRule`): APIKit route variable names should be consistent across routes
+- **SF-002** (`EventListenerNullGuardRule`): Event-driven listeners (Salesforce, JMS, etc.) should guard against null payloads
+
+#### Engine Improvements
+
+- **Document Cache**: `LintEngine` now caches parsed XML `Document` objects during `preScanFiles()` and reuses them in `processFile()`, eliminating double XML parsing. Cache is cleared after each scan to free memory.
+- **Project Layer Detection**: New `detectProjectLayer()` method classifies projects as `sapi`, `papi`, `eapi`, `library`, `batch`, or `unknown` using directory name patterns, flow name patterns, and connector presence heuristics. Available to rules via `context.projectContext?.projectLayer`.
+- **`allFlowNames`**: New `Set<string>` on `ValidationContext` tracking all flow/sub-flow definitions across the project, enabling cross-file validation (used by HYG-004).
+- **Namespace Registry**: Added `netsuite`, `sap`, `anypoint-mq`, and `oauth` namespaces to `MULE_NAMESPACES` in `XPathHelper`.
+
+### Fixed (False Positives)
+
+- **MULE-001** (`GlobalErrorHandlerRule`): Converted from per-file to `ProjectRule` — no longer reports false positives when the global error handler is defined in a separate XML file
+- **HYG-003** (`UnusedFlowRule`): Now recognizes APIKit-generated flows (e.g., `get:\resource:api-config`) and flows with external triggers (Salesforce CDC, JMS, AMQP, VM, Anypoint MQ, Kafka, and 14+ connector patterns)
+- **YAML-001, DW-002, DW-003**: Converted from per-file to `ProjectRule` — filesystem-based checks now run once per scan instead of once per XML file
+- **YAML-003** (`PropertyNamingRule`): Relaxed regex to accept valid vendor-specific property naming conventions
+- **MULE-301** (`LoggerPayloadRule`): Enhanced to detect `write(payload,...)` and `--- payload` DataWeave patterns in logger messages
+- **LintEngine**: Added `instanceof ProjectRule` guard to prevent project-level rules from running per-file
+
+### Enhanced (Existing Rules)
+
+- **ERR-001** (`TryScopeRule`): Now also checks sub-flows containing `http:request` without Try scope; added WSC (Web Service Consumer) detection via `countRiskyOperations()`
+- **RES-001** (`ReconnectionStrategyRule`): Split listener vs request configurations with different suggestions — `reconnect-forever` for listeners, bounded `reconnect count="3"` for requests; added Salesforce config detection
+- **MULE-201** (`HardcodedCredentialsRule`): Added 8 new sensitive attributes: `consumerKey`, `consumerSecret`, `storePassword`, `tokenId`, `tokenSecret`, `tokenKey`, `keyPassword`, `keystorePassword`
+- **MULE-009** (`GenericErrorRule`): Now skips `type="ANY"` when it is the last `on-error` block in the chain — this is an accepted MuleSoft catch-all pattern per accelerator best practices
+
+### Tests
+
+- `tests/unit/P0SecurityRules.test.ts`: 25 tests for HYG-004, SEC-007, SEC-008, SEC-009, SEC-010
+- `tests/unit/P1ErrorResilienceRules.test.ts`: 25 tests for ERR-002, ERR-003, ERR-004, RES-002, CFG-001
+- `tests/unit/P2ApiConnectorRules.test.ts`: 25 tests for API-006, API-007, API-008, SF-001, HTTP-004
+- `tests/unit/P3CodeHygieneRules.test.ts`: 25 tests for DW-005, HYG-005, CFG-002, STD-001, SF-002
+- `tests/unit/ExistingRuleEnhancements.test.ts`: 26 tests for ERR-001, RES-001, MULE-201, MULE-009 enhancements
+- `tests/unit/EngineImprovements.test.ts`: 9 tests for document cache, project layer detection, namespace registry
+- Updated `tests/unit/ErrorHandlingRules.test.ts` for MULE-009 catch-all behavior change
+
+**Total: 442 tests (up from 302)**
+
+---
+
 ## [1.20.0] - 2026-04-14
 
 ### Fixed

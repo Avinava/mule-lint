@@ -28,12 +28,14 @@
 
 **Mule-Lint** is a TypeScript-based linting tool designed to enforce best practices and standards for MuleSoft applications. It provides:
 
-- ✅ **56 Built-in Rules** covering error handling, security, naming, logging, performance, and more
-- ✅ **Multiple Output Formats** - Table, JSON, SARIF, HTML, CSV <!-- id: 4 -->
-- ✅ **CI/CD Ready** - Exit codes and machine-readable output
-- ✅ **156+ Unit Tests** - Comprehensive test coverage for reliability
-- ✅ **TypeScript** - Fully typed for VS Code extension integration
-- ✅ **Extensible** - Add custom rules for your organization
+- **82 Built-in Rules** covering error handling, security, naming, logging, performance, API-led, connectors, and more
+- **Multiple Output Formats** - Table, JSON, SARIF, HTML, CSV <!-- id: 4 -->
+- **CI/CD Ready** - Exit codes and machine-readable output
+- **442 Unit Tests** - Comprehensive test coverage for reliability
+- **TypeScript** - Fully typed for VS Code extension integration
+- **Extensible** - Add custom rules for your organization
+- **Document Cache** - Parsed XML documents cached to eliminate redundant parsing
+- **Project Layer Detection** - Automatic SAPI/PAPI/EAPI/library/batch classification
 
 ### Architecture
 
@@ -44,15 +46,18 @@ flowchart TB
     end
 
     subgraph Engine["LintEngine"]
-        B[FileScanner] --> C[XmlParser]
+        B[FileScanner] --> C[XmlParser + Document Cache]
         C --> D[Rule Executor]
+        B --> PreScan[Pre-Scan: allFlowRefs, allFlowNames, projectLayer]
+        PreScan --> D
     end
 
     subgraph Rules["Rules - Strategy Pattern"]
-        D --> E[MULE-001]
-        D --> F[MULE-002]
-        D --> G[...]
-        D --> H[MULE-010]
+        D --> E[Per-File Rules]
+        D --> F[Project Rules]
+        E --> G[MULE-001..804]
+        E --> H[SEC, ERR, API, DW, ...]
+        F --> I2[YAML, HYG, CFG, ...]
     end
 
     subgraph Output["Formatters"]
@@ -81,11 +86,12 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    A["XML Files"] --> B["Parse DOM"]
-    B --> C["Execute Rules"]
-    C --> D["Collect Issues"]
-    D --> E["Format Output"]
-    E --> F["Table / JSON / SARIF / HTML / CSV"]
+    A["XML Files"] --> B["Pre-Scan (flow-refs, flow-names, project layer)"]
+    B --> C["Parse DOM (cached)"]
+    C --> D["Execute Rules"]
+    D --> E["Collect Issues"]
+    E --> F["Format Output"]
+    F --> G["Table / JSON / SARIF / HTML / CSV"]
 ```
 
 ---
@@ -355,6 +361,46 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | ERR-001  | Try Scope              | Info     | Error Handling | Complex operations should use Try scope   |
 | PERF-002 | Connection Pooling     | Warning  | Performance    | DB/HTTP should configure connection pools |
 
+### Security & Integrity Rules (v1.50)
+
+| ID      | Name                         | Severity | Category  | Description                                             |
+| ------- | ---------------------------- | -------- | --------- | ------------------------------------------------------- |
+| SEC-007 | Connector Credentials        | Error    | Security  | Connector configs must use secure property placeholders |
+| SEC-008 | Secure Properties Key        | Error    | Security  | Secure properties file must use externalized key        |
+| SEC-009 | TLS Keystore Password        | Error    | Security  | TLS keystore passwords must use secure properties       |
+| SEC-010 | Secure Properties Encryption | Warning  | Security  | Secure properties must use strong encryption algorithm  |
+| HYG-004 | Flow-Ref Target Exists       | Error    | Standards | Flow-ref must point to an existing flow/sub-flow        |
+
+### Error Handling & Resilience Rules (v1.50)
+
+| ID      | Name                       | Severity | Category       | Description                                                 |
+| ------- | -------------------------- | -------- | -------------- | ----------------------------------------------------------- |
+| ERR-002 | Error Type Coverage        | Warning  | Error Handling | APIKit flows should handle common HTTP error types          |
+| ERR-003 | Error Response Structure   | Warning  | Error Handling | Error handlers should set both httpStatus and response body |
+| ERR-004 | Catch-All Must Be Last     | Error    | Error Handling | type="ANY" on-error must be the last handler block          |
+| RES-002 | Listener Reconnect Forever | Warning  | Performance    | Listener connectors should use reconnect-forever strategy   |
+| CFG-001 | Config Properties Ordering | Info     | Standards      | Config properties should follow a consistent ordering       |
+
+### API-Led & Connector Rules (v1.50)
+
+| ID       | Name                    | Severity | Category  | Description                                             |
+| -------- | ----------------------- | -------- | --------- | ------------------------------------------------------- |
+| API-006  | APIKit Main Flow        | Warning  | API-Led   | APIKit main flow should follow standard structure       |
+| API-007  | APIKit Status Code Var  | Warning  | API-Led   | APIKit routes should set httpStatus variable            |
+| API-008  | APIKit Console Prod     | Warning  | API-Led   | APIKit console should be disabled in production         |
+| SF-001   | Replay Channel Config   | Warning  | Connector | Salesforce replay channel should have proper config     |
+| HTTP-004 | Connection Idle Timeout | Warning  | HTTP      | HTTP request configs should set connection idle timeout |
+
+### Code Hygiene Rules (v1.50)
+
+| ID      | Name                         | Severity | Category  | Description                                                |
+| ------- | ---------------------------- | -------- | --------- | ---------------------------------------------------------- |
+| DW-005  | Duplicate Transform Logic    | Warning  | DataWeave | Detect duplicated DataWeave transform expressions          |
+| HYG-005 | Unused Variable              | Warning  | Standards | Detect set-variable values never referenced in the project |
+| CFG-002 | Missing Env Properties       | Warning  | Standards | Properties referenced in XML should exist in YAML configs  |
+| STD-001 | APIKit Route Var Consistency | Info     | Standards | APIKit route variable names should be consistent           |
+| SF-002  | Event Listener Null Guard    | Warning  | Connector | Event listeners should guard against null payloads         |
+
 ### Operations & Resilience Rules
 
 | ID      | Name                   | Severity | Category      | Description                                          |
@@ -377,7 +423,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | PROJ-001 | POM Validation | Error    | Structure | Validates pom.xml existence and plugins    |
 | PROJ-002 | Git Hygiene    | Warning  | Structure | Validates .gitignore existence and entries |
 
-**Total: 56 rules** across 14 categories.
+**Total: 82 rules** across 16 categories.
 
 See [Rules Catalog](docs/best-practices/rules-catalog.md) for detailed documentation.
 

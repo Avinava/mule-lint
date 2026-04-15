@@ -5,6 +5,10 @@ import { BaseRule } from '../base/BaseRule';
  * MULE-201: Hardcoded Credentials
  *
  * Passwords and secrets should use secure property placeholders.
+ *
+ * Enhanced to cover Salesforce connector-specific sensitive attributes
+ * (consumerKey, storePassword, tokenId, tokenSecret) and NetSuite
+ * OAuth attributes (consumerSecret, tokenKey, tokenSecret).
  */
 export class HardcodedCredentialsRule extends BaseRule {
   id = 'MULE-201';
@@ -24,6 +28,17 @@ export class HardcodedCredentialsRule extends BaseRule {
     'token',
     'accessToken',
     'privateKey',
+    // Salesforce connector attrs
+    'consumerKey',
+    'consumerSecret',
+    'storePassword',
+    'tokenId',
+    'tokenSecret',
+    // NetSuite OAuth attrs
+    'tokenKey',
+    // Keystore/truststore
+    'keyPassword',
+    'keystorePassword',
   ];
 
   validate(doc: Document, _context: ValidationContext): Issue[] {
