@@ -52,6 +52,10 @@ import { ConfigPropertiesOrderingRule } from './standards/ConfigPropertiesOrderi
 import { HttpUserAgentRule } from './http/HttpUserAgentRule';
 import { HttpContentTypeRule } from './http/HttpContentTypeRule';
 import { HttpTimeoutRule } from './http/HttpTimeoutRule';
+import { ConnectionIdleTimeoutRule } from './http/ConnectionIdleTimeoutRule';
+
+// Import all rules - Connector
+import { ReplayChannelConfigRule } from './connector/ReplayChannelConfigRule';
 
 // Import all rules - Documentation
 import { FlowDescriptionRule } from './documentation/FlowDescriptionRule';
@@ -86,6 +90,9 @@ import { Java17DWErrorHandlingRule } from './dataweave/Java17DWErrorHandlingRule
 // Import all rules - API-Led
 import { ExperienceLayerRule, ProcessLayerRule, SystemLayerRule } from './api-led/ApiLedRules';
 import { SingleSystemSapiRule } from './api-led/SingleSystemSapiRule';
+import { ApikitMainFlowStructureRule } from './api-led/ApikitMainFlowStructureRule';
+import { ApikitStatusCodeVariableRule } from './api-led/ApikitStatusCodeVariableRule';
+import { ApikitConsoleProductionRule } from './api-led/ApikitConsoleProductionRule';
 
 // Import all rules - Experimental
 import {
@@ -147,7 +154,7 @@ export { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
 
 /**
  * All available rules - instantiated and ready to use
- * Total: 56 rules (including operations, resilience, and hygiene rules)
+ * Total: 72 rules (including operations, resilience, hygiene, API-led, and connector rules)
  */
 export const ALL_RULES: Rule[] = [
   // Error Handling Rules (MULE-001, 003, 005, 007, 009)
@@ -186,10 +193,11 @@ export const ALL_RULES: Rule[] = [
   new DwlStandardsRule(),
   new DeprecatedComponentRule(),
 
-  // HTTP Rules (MULE-401, 402, 403)
+  // HTTP Rules (MULE-401, 402, 403, HTTP-004)
   new HttpUserAgentRule(),
   new HttpContentTypeRule(),
   new HttpTimeoutRule(),
+  new ConnectionIdleTimeoutRule(), // HTTP-004: Connection Idle Timeout
 
   // Documentation Rules (MULE-601, 604)
   new FlowDescriptionRule(),
@@ -220,11 +228,14 @@ export const ALL_RULES: Rule[] = [
   new DwlModulesRule(),
   new Java17DWErrorHandlingRule(),
 
-  // API-Led Rules (API-001, 002, 003, 004)
+  // API-Led Rules (API-001, 002, 003, 004, 006, 007, 008)
   new ExperienceLayerRule(),
   new ProcessLayerRule(),
   new SystemLayerRule(),
   new SingleSystemSapiRule(),
+  new ApikitMainFlowStructureRule(), // API-006: APIKit Main Flow Structure
+  new ApikitStatusCodeVariableRule(), // API-007: APIKit Status Code Variable
+  new ApikitConsoleProductionRule(), // API-008: APIKit Console in Production
 
   // Experimental Rules (EXP-001, 002, 003)
   new FlowRefDepthRule(),
@@ -259,6 +270,9 @@ export const ALL_RULES: Rule[] = [
   // Governance Rules (PROJ-001, PROJ-002)
   new PomValidationRule(),
   new GitHygieneRule(),
+
+  // Connector Rules (SF-001)
+  new ReplayChannelConfigRule(), // SF-001: Salesforce Replay Channel Config
 ];
 
 /**
