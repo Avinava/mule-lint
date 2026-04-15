@@ -1,7 +1,15 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import fg from 'fast-glob';
-import { Rule, Issue, RuleConfig, ValidationContext, Severity, ProjectContext } from '../types';
+import {
+  Rule,
+  Issue,
+  RuleConfig,
+  ValidationContext,
+  Severity,
+  ProjectContext,
+  ProjectLayer,
+} from '../types';
 import { LintConfig, DEFAULT_CONFIG } from '../types/Config';
 import { LintReport, LintSummary, FileResult, ProjectMetrics } from '../types/Report';
 import { parseXml } from '../core/XmlParser';
@@ -30,6 +38,13 @@ export class LintEngine {
   private rules: Rule[];
   private config: LintConfig;
   private verbose: boolean;
+
+  /**
+   * Cache of parsed XML documents keyed by absolute file path.
+   * Populated during preScanFiles() and reused in processFile()
+   * to avoid parsing every XML file twice.
+   */
+  private documentCache: Map<string, Document> = new Map();
 
   constructor(options: EngineOptions) {
     this.rules = options.rules;
@@ -150,6 +165,9 @@ export class LintEngine {
     this.log(`Scan complete in ${durationMs}ms`);
     this.log(`Found ${summary.bySeverity.error} errors, ${summary.bySeverity.warning} warnings`);
 
+    // Release cached documents to free memory
+    this.documentCache.clear();
+
     // Build initial report with base metrics
     const baseReport: LintReport = {
       projectRoot,
@@ -235,21 +253,32 @@ export class LintEngine {
     this.log(`  Processing: ${file.relativePath}`);
 
     try {
-      const content = readFileContent(file.absolutePath);
-      const parseResult = parseXml(content, file.relativePath);
+      // Try to use the cached document from preScanFiles() first
+      const cachedDoc = this.documentCache.get(file.absolutePath);
+      let doc: Document;
 
-      if (!parseResult.success || !parseResult.document) {
-        return {
-          filePath: file.absolutePath,
-          relativePath: file.relativePath,
-          issues: [],
-          parsed: false,
-          parseError: parseResult.error,
-        };
+      if (cachedDoc) {
+        doc = cachedDoc;
+      } else {
+        // Cache miss (standalone mode or non-XML processed first time)
+        const content = readFileContent(file.absolutePath);
+        const parseResult = parseXml(content, file.relativePath);
+
+        if (!parseResult.success || !parseResult.document) {
+          return {
+            filePath: file.absolutePath,
+            relativePath: file.relativePath,
+            issues: [],
+            parsed: false,
+            parseError: parseResult.error,
+          };
+        }
+
+        doc = parseResult.document;
       }
 
       const issues = this.runRules(
-        parseResult.document,
+        doc,
         file.absolutePath,
         projectRoot,
         isStandalone,
@@ -260,7 +289,7 @@ export class LintEngine {
 
       // Collect metrics from parsed document
       if (metricsAggregator) {
-        this.collectFileMetrics(parseResult.document, file.relativePath, metricsAggregator);
+        this.collectFileMetrics(doc, file.relativePath, metricsAggregator);
       }
 
       return {
@@ -449,6 +478,9 @@ export class LintEngine {
    *   - allFlowNames: union of all <flow>/<sub-flow> name attributes across files
    *   - projectContext: whether the project has HTTP listeners / APIkit routers
    *
+   * Parsed documents are cached in this.documentCache so that processFile()
+   * can reuse them instead of re-parsing.
+   *
    * This runs before the main per-file rule execution so that rules can use
    * the aggregated information (e.g. HYG-003 cross-file unused flow detection,
    * HYG-004 cross-file flow-ref target validation,
@@ -466,6 +498,9 @@ export class LintEngine {
       hasApikitRouter: false,
     };
 
+    // Clear the cache at the start of each scan
+    this.documentCache.clear();
+
     for (const file of files) {
       // Only process XML files
       if (!file.absolutePath.endsWith('.xml')) {
@@ -481,6 +516,9 @@ export class LintEngine {
         }
 
         const doc = parseResult.document;
+
+        // Cache the parsed document for reuse in processFile()
+        this.documentCache.set(file.absolutePath, doc);
 
         // Collect flow-ref targets
         const allElements = doc.getElementsByTagName('*');
@@ -522,6 +560,63 @@ export class LintEngine {
       }
     }
 
+    // Detect project layer from directory name, flow names, and content
+    projectContext.projectLayer = this.detectProjectLayer(files, allFlowNames, projectContext);
+
     return { allFlowRefs, allFlowNames, projectContext };
+  }
+
+  /**
+   * Detect the API-led connectivity layer of the project.
+   *
+   * Heuristics (in priority order):
+   * 1. Directory/project name contains `-sapi`, `-papi`, `-eapi`
+   * 2. Flow names contain `sapi`, `papi`, `eapi` patterns
+   * 3. No HTTP listener + batch jobs → batch
+   * 4. No flows at all → library
+   * 5. Otherwise → unknown
+   */
+  private detectProjectLayer(
+    files: ScannedFile[],
+    allFlowNames: Set<string>,
+    projectContext: ProjectContext,
+  ): ProjectLayer {
+    // Check project directory name
+    const projectDir =
+      files.length > 0
+        ? path.basename(path.resolve(files[0].absolutePath, '..', '..', '..', '..'))
+        : '';
+    const dirLower = projectDir.toLowerCase();
+
+    if (dirLower.includes('-sapi') || dirLower.includes('_sapi') || dirLower.endsWith('sapi')) {
+      return 'sapi';
+    }
+    if (dirLower.includes('-papi') || dirLower.includes('_papi') || dirLower.endsWith('papi')) {
+      return 'papi';
+    }
+    if (dirLower.includes('-eapi') || dirLower.includes('_eapi') || dirLower.endsWith('eapi')) {
+      return 'eapi';
+    }
+
+    // Check flow names for layer hints
+    const flowNamesArray = [...allFlowNames].map((n) => n.toLowerCase());
+    const hasSapiFlow = flowNamesArray.some((n) => n.includes('sapi') || n.includes('system-api'));
+    const hasPapiFlow = flowNamesArray.some((n) => n.includes('papi') || n.includes('process-api'));
+    const hasEapiFlow = flowNamesArray.some(
+      (n) => n.includes('eapi') || n.includes('experience-api'),
+    );
+
+    if (hasSapiFlow && !hasPapiFlow && !hasEapiFlow) return 'sapi';
+    if (hasPapiFlow && !hasSapiFlow && !hasEapiFlow) return 'papi';
+    if (hasEapiFlow && !hasSapiFlow && !hasPapiFlow) return 'eapi';
+
+    // No flows → library
+    if (allFlowNames.size === 0) return 'library';
+
+    // Has batch jobs but no HTTP listener → batch
+    const hasBatch = flowNamesArray.some((n) => n.includes('batch'));
+    if (hasBatch && !projectContext.hasHttpListener) return 'batch';
+
+    return 'unknown';
   }
 }

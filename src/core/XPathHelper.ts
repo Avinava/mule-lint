@@ -68,6 +68,18 @@ export const MULE_NAMESPACES: Record<string, string> = {
 
   // Web Service Consumer
   wsc: 'http://www.mulesoft.org/schema/mule/wsc',
+
+  // NetSuite
+  netsuite: 'http://www.mulesoft.org/schema/mule/netsuite',
+
+  // SAP
+  sap: 'http://www.mulesoft.org/schema/mule/sap',
+
+  // Anypoint MQ
+  'anypoint-mq': 'http://www.mulesoft.org/schema/mule/anypoint-mq',
+
+  // OAuth
+  oauth: 'http://www.mulesoft.org/schema/mule/oauth',
 };
 
 /**
@@ -180,7 +192,7 @@ export function getAttribute(node: Node, attrName: string): string | null {
   const element = node as Element;
   if (element.getAttribute) {
     const value = element.getAttribute(attrName);
-     
+
     return value || null;
   }
   return null;
