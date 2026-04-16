@@ -69,7 +69,7 @@ function registerDocsResource(server: McpServer): void {
               uri: 'mule-lint://docs/error-handling',
               name: 'Error Handling',
               description:
-                'Global error handlers, HTTP vs event-driven patterns, connector error types, try scopes',
+                'Global error handlers, HTTP vs event-driven patterns, connector error types, centralized CRM error log objects, self-healing error flows',
               mimeType: 'text/markdown',
             },
             {
@@ -97,7 +97,7 @@ function registerDocsResource(server: McpServer): void {
               uri: 'mule-lint://docs/performance',
               name: 'Performance',
               description:
-                'Timeouts, connection pooling, async error handling, streaming, flow complexity limits',
+                'Timeouts, connection pooling, async error handling, streaming, flow complexity limits, pre-batch bulk lookup (N+1 prevention with scatter-gather + groupBy)',
               mimeType: 'text/markdown',
             },
             // ── Architecture & Patterns ──
@@ -105,21 +105,21 @@ function registerDocsResource(server: McpServer): void {
               uri: 'mule-lint://docs/event-driven',
               name: 'Event-Driven Patterns',
               description:
-                'Platform Events, Anypoint MQ, AsyncAPI 2.6, deduplication, event listener configuration',
+                'Platform Events, Anypoint MQ, VM Queue Dispatcher, scheduler watermarking with ObjectStore, deferred task polling, AsyncAPI 2.6, deduplication',
               mimeType: 'text/markdown',
             },
             {
               uri: 'mule-lint://docs/connectors',
               name: 'Connector Patterns',
               description:
-                'Entity config YAML pattern, Salesforce/NetSuite connector gotchas, protocol negotiation, DWL utility modules',
+                'Entity config YAML pattern, Salesforce/NetSuite connector gotchas, protocol negotiation, ObjectStore caching, DWL utility modules',
               mimeType: 'text/markdown',
             },
             {
               uri: 'mule-lint://docs/dataweave',
               name: 'DataWeave Patterns',
               description:
-                'DWL modules, type coercion for connectors, lookup maps, import path rules, array normalization',
+                'DWL modules, type coercion for connectors, cross-system value mapping (4 strategies: DWL, JSON dictionary, bidirectional, external), import path rules',
               mimeType: 'text/markdown',
             },
             // ── Project & Operations ──

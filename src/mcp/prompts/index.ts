@@ -129,8 +129,8 @@ function registerReviewBestPractices(server: McpServer): void {
       const commonDocs = ['error-handling', 'logging', 'security', 'variables', 'dataweave'];
       const typeDocs: Record<string, string[]> = {
         'http-api': ['connectors', 'performance', 'folder-structure'],
-        'event-driven': ['event-driven', 'connectors'],
-        batch: ['performance'],
+        'event-driven': ['event-driven', 'connectors', 'performance'],
+        batch: ['event-driven', 'performance', 'connectors'],
       };
       const extraDocs = typeDocs[projectType] ?? [];
       const recommendedDocs = [...commonDocs, ...extraDocs];
@@ -155,6 +155,7 @@ This is a "${projectType}" project. Follow these steps:
    - Lint rule violations and their recommended fixes
    - Patterns that are technically valid but don't follow best practices
    - Missing patterns that should be present (e.g., entity configs, DWL modules, correlation IDs)
+   - **Advanced patterns**: VM queue dispatchers for multi-entity orchestration, scheduler watermarking for incremental polling, pre-batch bulk lookups to prevent N+1 queries, cross-system value mapping strategy selection, centralized error log objects for CRM visibility
 
 4. **Report** — provide a structured summary with:
    - Critical issues (must fix)
