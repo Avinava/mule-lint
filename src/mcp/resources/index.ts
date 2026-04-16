@@ -51,45 +51,139 @@ function registerRulesResource(server: McpServer): void {
 
 /**
  * Resource: mule-lint://docs/{slug}
- * Access official MuleSoft development best practices documentation
+ * Access official MuleSoft development best practices documentation.
+ *
+ * Each slug maps to a focused, self-contained guide optimized for LLM consumption.
+ * Guides are typically < 200 lines and cover a single topic with decision matrices,
+ * code examples, anti-patterns, and checklists.
  */
 function registerDocsResource(server: McpServer): void {
   server.registerResource(
     'docs',
     new ResourceTemplate('mule-lint://docs/{slug}', {
-       
       list: () => {
         return {
           resources: [
+            // ── Core Development ──
             {
-              uri: 'mule-lint://docs/architecture',
-              name: 'Architecture',
+              uri: 'mule-lint://docs/error-handling',
+              name: 'Error Handling',
+              description:
+                'Global error handlers, HTTP vs event-driven patterns, connector error types, try scopes',
               mimeType: 'text/markdown',
             },
             {
-              uri: 'mule-lint://docs/best-practices',
-              name: 'Best Practices',
+              uri: 'mule-lint://docs/variables',
+              name: 'Variable Contracts',
+              description:
+                'Standard variable sets for APIKit routes and event listeners, correlation ID sourcing, array mirroring',
+              mimeType: 'text/markdown',
+            },
+            {
+              uri: 'mule-lint://docs/logging',
+              name: 'Logging Standards',
+              description:
+                'Logger categories, structured JSON logging, MDC/tracing module, PII prevention, log levels',
+              mimeType: 'text/markdown',
+            },
+            {
+              uri: 'mule-lint://docs/security',
+              name: 'Security',
+              description:
+                'Secure properties, TLS 1.2+, credential management, zero-trust architecture, input validation',
+              mimeType: 'text/markdown',
+            },
+            {
+              uri: 'mule-lint://docs/performance',
+              name: 'Performance',
+              description:
+                'Timeouts, connection pooling, async error handling, streaming, flow complexity limits',
+              mimeType: 'text/markdown',
+            },
+            // ── Architecture & Patterns ──
+            {
+              uri: 'mule-lint://docs/event-driven',
+              name: 'Event-Driven Patterns',
+              description:
+                'Platform Events, Anypoint MQ, AsyncAPI 2.6, deduplication, event listener configuration',
+              mimeType: 'text/markdown',
+            },
+            {
+              uri: 'mule-lint://docs/connectors',
+              name: 'Connector Patterns',
+              description:
+                'Entity config YAML pattern, Salesforce/NetSuite connector gotchas, protocol negotiation, DWL utility modules',
+              mimeType: 'text/markdown',
+            },
+            {
+              uri: 'mule-lint://docs/dataweave',
+              name: 'DataWeave Patterns',
+              description:
+                'DWL modules, type coercion for connectors, lookup maps, import path rules, array normalization',
+              mimeType: 'text/markdown',
+            },
+            // ── Project & Operations ──
+            {
+              uri: 'mule-lint://docs/folder-structure',
+              name: 'Folder Structure',
+              description:
+                'Standard Maven layout for Mule 4 projects, file naming, directory organization',
               mimeType: 'text/markdown',
             },
             {
               uri: 'mule-lint://docs/documentation-standards',
               name: 'Documentation Standards',
-              mimeType: 'text/markdown',
-            },
-            { uri: 'mule-lint://docs/extending', name: 'Extending', mimeType: 'text/markdown' },
-            {
-              uri: 'mule-lint://docs/folder-structure',
-              name: 'Folder Structure',
+              description:
+                'Flow doc:description, README templates, DataWeave comments, commit message conventions',
               mimeType: 'text/markdown',
             },
             {
-              uri: 'mule-lint://docs/naming',
-              name: 'Naming Conventions',
+              uri: 'mule-lint://docs/testing',
+              name: 'Testing (MUnit)',
+              description:
+                'MUnit test structure, error scenario testing, event-driven testing, coverage goals',
+              mimeType: 'text/markdown',
+            },
+            {
+              uri: 'mule-lint://docs/ci-cd',
+              name: 'CI/CD Integration',
+              description:
+                'Pipeline stages, mule-lint integration, quality gates, SARIF output, GitHub Actions',
+              mimeType: 'text/markdown',
+            },
+            {
+              uri: 'mule-lint://docs/deployment',
+              name: 'Deployment & Modernization (2026)',
+              description:
+                'CloudHub 2.0, Java 17 migration, Anypoint Code Builder, API Governance, monitoring',
+              mimeType: 'text/markdown',
+            },
+            // ── Reference ──
+            {
+              uri: 'mule-lint://docs/best-practices',
+              name: 'Best Practices Index',
+              description:
+                'Master index linking to all topic-specific guides with quick reference card and API-Led overview',
               mimeType: 'text/markdown',
             },
             {
               uri: 'mule-lint://docs/rules-catalog',
               name: 'Rules Catalog',
+              description:
+                'Complete reference for all 82 lint rules with severity, examples, and configuration options',
+              mimeType: 'text/markdown',
+            },
+            // ── Linter Internals (for contributors) ──
+            {
+              uri: 'mule-lint://docs/architecture',
+              name: 'Linter Architecture',
+              description: 'Internal linter design, patterns, and data flow (for contributors)',
+              mimeType: 'text/markdown',
+            },
+            {
+              uri: 'mule-lint://docs/extending',
+              name: 'Extending the Linter',
+              description: 'How to create custom rules and extend mule-lint (for contributors)',
               mimeType: 'text/markdown',
             },
           ],
@@ -98,28 +192,51 @@ function registerDocsResource(server: McpServer): void {
     }),
     {
       description:
-        'Access the official MuleSoft development best practices and internal documentation. Read these documents to ensure your generated code aligns with our architectural standards, naming conventions, and project structure.',
+        'Access MuleSoft development best practices and linter documentation. Each slug maps to a focused topic guide. Start by listing available resources, then read the guides relevant to your current task. For example, read "error-handling" when implementing error handlers, or "connectors" when configuring Salesforce/NetSuite connectors.',
       mimeType: 'text/markdown',
     },
     (uri, variables) => {
       const slug = variables.slug as string;
+
+      // Map slugs to file paths — topic-specific best practices + linter docs
       const docsMap: Record<string, string> = {
-        architecture: 'docs/linter/architecture.md',
-        'best-practices': 'docs/best-practices/mulesoft-best-practices.md',
-        'documentation-standards': 'docs/best-practices/documentation-standards.md',
-        extending: 'docs/linter/extending.md',
+        // Core Development
+        'error-handling': 'docs/best-practices/error-handling.md',
+        variables: 'docs/best-practices/variable-contracts.md',
+        logging: 'docs/best-practices/logging.md',
+        security: 'docs/best-practices/security.md',
+        performance: 'docs/best-practices/performance.md',
+
+        // Architecture & Patterns
+        'event-driven': 'docs/best-practices/event-driven-patterns.md',
+        connectors: 'docs/best-practices/connector-patterns.md',
+        dataweave: 'docs/best-practices/dataweave-patterns.md',
+
+        // Project & Operations
         'folder-structure': 'docs/best-practices/folder-structure.md',
-        naming: 'docs/linter/naming-conventions.md',
+        'documentation-standards': 'docs/best-practices/documentation-standards.md',
+        testing: 'docs/best-practices/testing.md',
+        'ci-cd': 'docs/best-practices/ci-cd.md',
+        deployment: 'docs/best-practices/deployment-2026.md',
+
+        // Reference
+        'best-practices': 'docs/best-practices/mulesoft-best-practices.md',
         'rules-catalog': 'docs/best-practices/rules-catalog.md',
+
+        // Linter Internals — keep for contributors
+        architecture: 'docs/linter/architecture.md',
+        extending: 'docs/linter/extending.md',
+        naming: 'docs/linter/naming-conventions.md',
       };
 
       const relativePath = docsMap[slug];
       if (!relativePath) {
+        const available = Object.keys(docsMap).join(', ');
         return {
           contents: [
             {
               uri: uri.href,
-              text: `Document not found: ${slug}. Available: ${Object.keys(docsMap).join(', ')}`,
+              text: `Document not found: "${slug}". Available slugs: ${available}`,
               mimeType: 'text/plain',
             },
           ],

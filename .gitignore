@@ -45,3 +45,6 @@ yarn-error.log*
 # OS files
 Thumbs.db
 report.html
+
+# Separate project — not part of mule-lint
+antigravity-plus/
