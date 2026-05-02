@@ -8,8 +8,37 @@ Follow these steps to add a new lint rule to mule-lint.
 
 ## 1. Choose Rule ID and Category
 
-- **Rule ID Format**: `MULE-XXX` (e.g., MULE-011)
-- **Categories**: `error-handling`, `naming`, `security`, `logging`, `http`, `performance`, `documentation`, `standards`
+### Rule ID Prefixes
+
+| Prefix | Domain                       | Example    |
+| ------ | ---------------------------- | ---------- |
+| `MULE` | Core MuleSoft XML validation | `MULE-011` |
+| `SEC`  | Security best practices      | `SEC-011`  |
+| `ERR`  | Error handling patterns      | `ERR-005`  |
+| `LOG`  | Structured logging           | `LOG-005`  |
+| `HTTP` | HTTP configuration           | `HTTP-005` |
+| `PERF` | Performance optimization     | `PERF-003` |
+| `DW`   | DataWeave file validation    | `DW-006`   |
+| `API`  | API-Led patterns             | `API-009`  |
+| `HYG`  | Code hygiene                 | `HYG-006`  |
+| `YAML` | YAML properties validation   | `YAML-005` |
+| `PROJ` | Project governance           | `PROJ-003` |
+| `DOC`  | Documentation requirements   | `DOC-002`  |
+| `CFG`  | Configuration patterns       | `CFG-003`  |
+| `STD`  | Coding standards             | `STD-002`  |
+| `SF`   | Salesforce connector         | `SF-003`   |
+| `EXP`  | Experimental rules           | `EXP-004`  |
+
+For MULE-prefixed rules, see `docs/linter/naming-conventions.md` for range allocation (001-099=error-handling, 100-199=naming, 200-299=security, etc.).
+
+### Categories
+
+`error-handling`, `naming`, `security`, `logging`, `http`, `performance`, `documentation`, `standards`, `complexity`, `dataweave`, `structure`, `api-led`, `governance`, `operations`, `experimental`, `connector`
+
+### BaseRule vs ProjectRule
+
+- **BaseRule** — runs once per XML file. Use when validating elements within a single file (flows, loggers, connectors).
+- **ProjectRule** — runs once per scan. Use when validating cross-file concerns (global error handler exists, DWL file naming, environment files).
 
 ## 2. Create the Rule File
 

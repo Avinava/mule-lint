@@ -4,7 +4,7 @@ import { LoggerInUntilSuccessfulRule } from '../../src/rules/logging/LoggerInUnt
 import {
   StructuredLoggingRule,
   SensitiveDataLoggingRule,
-} from '../../src/rules/logging/NewLoggingRules';
+} from '../../src/rules/logging/LoggingPatternRules';
 import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
 

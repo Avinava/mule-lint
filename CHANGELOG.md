@@ -215,7 +215,7 @@ All notable changes to this project will be documented in this file.
 - **MCP Server**: Full validation of MCP server implementation
   - All 3 tools working: `run_lint_analysis`, `get_rule_details`, `validate_snippet`
   - All 8 resources working: rules list and 7 documentation endpoints
-- **CLI Scan**: Verified on real MuleSoft project (private-client-external-sapi)
+- **CLI Scan**: Verified on real MuleSoft project
 - **All Tests Passing**: 43 tests passing
 
 ### Fixed
