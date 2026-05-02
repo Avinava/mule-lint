@@ -35,7 +35,7 @@ import { SecurePropertiesEncryptionRule } from './security/SecurePropertiesEncry
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
 import { LoggerPayloadRule } from './logging/LoggerPayloadRule';
 import { LoggerInUntilSuccessfulRule } from './logging/LoggerInUntilSuccessfulRule';
-import { StructuredLoggingRule, SensitiveDataLoggingRule } from './logging/NewLoggingRules';
+import { StructuredLoggingRule, SensitiveDataLoggingRule } from './logging/LoggingPatternRules';
 import { ExcessiveLoggersRule } from './logging/ExcessiveLoggersRule';
 
 // Import all rules - Standards

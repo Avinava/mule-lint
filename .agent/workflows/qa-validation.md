@@ -18,7 +18,7 @@ This workflow validates that mule-lint rules are working correctly by running th
 // turbo
 
 ```bash
-cd /Users/avi/Workspaces/github/mule-lint
+cd <PROJECT_ROOT>
 npm run build
 ```
 

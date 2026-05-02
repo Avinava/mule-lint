@@ -25,6 +25,10 @@ mule-lint uses multiple rule prefixes to organize rules by domain:
 | `YAML` | `YAML-NNN` | YAML properties validation    | `YAML-001` |
 | `DW`   | `DW-NNN`   | DataWeave file validation     | `DW-001`   |
 | `API`  | `API-NNN`  | API-Led patterns              | `API-001`  |
+| `HTTP` | `HTTP-NNN` | HTTP configuration            | `HTTP-001` |
+| `SF`   | `SF-NNN`   | Salesforce connector          | `SF-001`   |
+| `CFG`  | `CFG-NNN`  | Configuration patterns        | `CFG-001`  |
+| `STD`  | `STD-NNN`  | Coding standards              | `STD-001`  |
 | `EXP`  | `EXP-NNN`  | Experimental rules            | `EXP-001`  |
 
 ### MULE ID Ranges
