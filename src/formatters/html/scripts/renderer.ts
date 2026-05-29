@@ -248,6 +248,16 @@ export function generateRendererScript(config: {
 }): string {
   return `
         // ===== RENDERER =====
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         const renderer = {
             init() {
                 this.renderSidebar();
@@ -284,9 +294,9 @@ export function generateRendererScript(config: {
                             const pillClass = 'inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors';
                             const iconHtml = meta.icon ? '<img src="' + meta.icon + '" alt="" class="w-3.5 h-3.5 rounded-sm" onerror="this.style.display=\\'none\\'">' : '<span class="w-3.5 h-3.5 rounded-sm bg-slate-300 dark:bg-slate-600 flex items-center justify-center text-2xs">⚙</span>';
                             if (docUrl) {
-                                return '<a href="' + docUrl + '" target="_blank" rel="noopener" class="' + pillClass + '" title="View ' + meta.name + ' docs">' + iconHtml + '<span>' + meta.name + '</span></a>';
+                                return '<a href="' + docUrl + '" target="_blank" rel="noopener" class="' + pillClass + '" title="View ' + escapeHtml(meta.name) + ' docs">' + iconHtml + '<span>' + escapeHtml(meta.name) + '</span></a>';
                             }
-                            return '<span class="' + pillClass + '" title="' + meta.name + '">' + iconHtml + '<span>' + meta.name + '</span></span>';
+                            return '<span class="' + pillClass + '" title="' + escapeHtml(meta.name) + '">' + iconHtml + '<span>' + escapeHtml(meta.name) + '</span></span>';
                         }).join('');
                     } else if (pillsContainer) {
                         document.getElementById('connector-inventory').style.display = 'none';
@@ -323,7 +333,7 @@ export function generateRendererScript(config: {
                         if (endpointList) {
                             endpointList.innerHTML = m.apiEndpoints.map(ep => {
                                 const style = methodStyles[ep.method] || methodStyles['ALL'];
-                                return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + ' ' + style.text + '"><span class="font-bold">' + ep.method + '</span><span class="opacity-75">' + ep.path + '</span></span>';
+                                return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + ' ' + style.text + '"><span class="font-bold">' + escapeHtml(ep.method) + '</span><span class="opacity-75">' + escapeHtml(ep.path) + '</span></span>';
                             }).join('');
                         }
                         
@@ -343,7 +353,7 @@ export function generateRendererScript(config: {
                         const envStyles = ${JSON.stringify(environmentStyles)};
                         envContainer.innerHTML = m.environments.map(env => {
                             const style = envStyles[env] || envStyles['local'];
-                            return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + '"><span class="w-2 h-2 rounded-full ' + style.dot + '"></span><span>' + env + '</span></span>';
+                            return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + '"><span class="w-2 h-2 rounded-full ' + style.dot + '"></span><span>' + escapeHtml(env) + '</span></span>';
                         }).join('');
                     }
                     
@@ -355,7 +365,7 @@ export function generateRendererScript(config: {
                         const defaultSecStyle = ${JSON.stringify(defaultSecurityStyle)};
                         securityContainer.innerHTML = m.securityPatterns.map(pattern => {
                             const style = secStyles[pattern] || defaultSecStyle;
-                            return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + '">' + style.icon + ' ' + pattern + '</span>';
+                            return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + '">' + style.icon + ' ' + escapeHtml(pattern) + '</span>';
                         }).join('');
                     }
                     
@@ -367,8 +377,8 @@ export function generateRendererScript(config: {
                         
                         const serviceList = document.getElementById('service-list');
                         if (serviceList) {
-                            serviceList.innerHTML = m.externalServices.map(svc => 
-                                '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400">🔗 ' + svc.name + ' <span class="opacity-50">(' + svc.host + ')</span></span>'
+                            serviceList.innerHTML = m.externalServices.map(svc =>
+                                '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400">🔗 ' + escapeHtml(svc.name) + ' <span class="opacity-50">(' + escapeHtml(svc.host) + ')</span></span>'
                             ).join('');
                         }
                         
@@ -396,7 +406,7 @@ export function generateRendererScript(config: {
                             schedulerList.innerHTML = m.schedulers.map(sched => {
                                 const icon = sched.type === 'cron' ? '⏰' : '🔄';
                                 const bg = sched.type === 'cron' ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400' : 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400';
-                                return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + bg + '">' + icon + ' ' + sched.value + ' <span class="opacity-50">(' + sched.flow + ')</span></span>';
+                                return '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-medium rounded-full ' + bg + '">' + icon + ' ' + escapeHtml(sched.value) + ' <span class="opacity-50">(' + escapeHtml(sched.flow) + ')</span></span>';
                             }).join('');
                         }
                         
@@ -678,7 +688,7 @@ export function generateRendererScript(config: {
                                 const row = cell.getRow().getData();
                                 const path = row.fileName;
                                 const display = path.length > 40 ? '...' + path.slice(-37) : path;
-                                return \`<div><div class="font-mono text-sky-600 dark:text-sky-400 text-xs truncate" title="\${path}">\${display}</div><div class="text-xs text-slate-400">Line \${row.line}</div></div>\`;
+                                return \`<div><div class="font-mono text-sky-600 dark:text-sky-400 text-xs truncate" title="\${escapeHtml(path)}">\${escapeHtml(display)}</div><div class="text-xs text-slate-400">Line \${row.line}</div></div>\`;
                             }
                         },
                         {
@@ -689,9 +699,9 @@ export function generateRendererScript(config: {
                             headerFilterPlaceholder: 'Filter...',
                             formatter: (cell) => {
                                 const row = cell.getRow().getData();
-                                let html = \`<div class="text-slate-700 dark:text-slate-300">\${cell.getValue()}</div>\`;
+                                let html = \`<div class="text-slate-700 dark:text-slate-300">\${escapeHtml(cell.getValue())}</div>\`;
                                 if (row.suggestion) {
-                                    html += \`<div class="text-xs text-slate-400 mt-0.5 truncate" title="\${row.suggestion}">💡 \${row.suggestion}</div>\`;
+                                    html += \`<div class="text-xs text-slate-400 mt-0.5 truncate" title="\${escapeHtml(row.suggestion)}">💡 \${escapeHtml(row.suggestion)}</div>\`;
                                 }
                                 return html;
                             }
