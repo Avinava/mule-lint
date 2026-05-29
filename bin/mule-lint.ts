@@ -133,8 +133,19 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
     for (const file of report.files) {
       file.issues = file.issues.filter((issue) => issue.severity === 'error');
     }
+    // Rebuild summary from filtered files to keep byRule and filesWithIssues accurate
+    const byRule: Record<string, number> = {};
+    let filesWithIssues = 0;
     report.summary.bySeverity.warning = 0;
     report.summary.bySeverity.info = 0;
+    for (const file of report.files) {
+      if (file.issues.length > 0) filesWithIssues++;
+      for (const issue of file.issues) {
+        byRule[issue.ruleId] = (byRule[issue.ruleId] ?? 0) + 1;
+      }
+    }
+    report.summary.byRule = byRule;
+    report.summary.filesWithIssues = filesWithIssues;
   }
 
   // Format output

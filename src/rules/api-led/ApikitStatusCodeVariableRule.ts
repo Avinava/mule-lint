@@ -37,9 +37,10 @@ export class ApikitStatusCodeVariableRule extends BaseRule {
       }
 
       // Check if httpStatus is set anywhere in the flow
-      const setsHttpStatus =
-        this.exists('.//*[local-name()="set-variable" and @variableName="httpStatus"]', flow) ||
-        this.exists('.//*[local-name()="set-variable" and @variableName="httpStatus"]', flow);
+      const setsHttpStatus = this.exists(
+        './/*[local-name()="set-variable" and @variableName="httpStatus"]',
+        flow,
+      );
 
       if (!setsHttpStatus) {
         // Determine expected status code from HTTP method
