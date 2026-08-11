@@ -17,7 +17,7 @@ export class ApikitConsoleProductionRule extends BaseRule {
   description = 'APIKit console should be disabled or protected in production deployments';
   severity = 'warning' as const;
   category = 'api-led' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
@@ -28,7 +28,7 @@ export class ApikitConsoleProductionRule extends BaseRule {
     for (const el of consoleElements) {
       // Confirm it's an APIKit console (has config-ref or is in apikit namespace)
       const configRef = this.getAttribute(el, 'config-ref');
-      const nodeName = el.nodeName ?? '';
+      const nodeName = el.nodeName;
 
       // Only flag if it looks like an apikit console
       if (

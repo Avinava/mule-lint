@@ -73,6 +73,44 @@ describe('QualityGateEvaluator', () => {
       expect(result.status).toBe('failed');
     });
 
+    it('evaluates first-party vulnerability metrics', () => {
+      const report = createReport(0, 0, 0);
+      report.metrics = {
+        flowCount: 0,
+        subFlowCount: 0,
+        dwTransformCount: 0,
+        connectorConfigCount: 0,
+        httpListenerCount: 0,
+        connectorTypes: [],
+        errorHandlerCount: 0,
+        choiceRouterCount: 0,
+        apiEndpoints: [],
+        environments: [],
+        securityPatterns: [],
+        externalServices: [],
+        schedulers: [],
+        fileComplexity: {},
+        flowComplexityData: [],
+        security: { vulnerabilities: 1, hotspots: 0, rating: 'B' },
+      };
+
+      expect(evaluateQualityGate(report, DEFAULT_QUALITY_GATE).status).toBe('warning');
+      expect(evaluateQualityGate(report, STRICT_QUALITY_GATE).status).toBe('failed');
+    });
+
+    it('retains warning violations when a later condition fails', () => {
+      const gate: QualityGate = {
+        name: 'Mixed',
+        conditions: [
+          { metric: 'warnings', operator: '>', threshold: 0, status: 'warn' },
+          { metric: 'errors', operator: '>', threshold: 0, status: 'fail' },
+        ],
+      };
+      const result = evaluateQualityGate(createReport(1, 1, 0), gate);
+      expect(result.status).toBe('failed');
+      expect(result.conditions.every((condition) => !condition.passed)).toBe(true);
+    });
+
     it('should use custom gate', () => {
       const customGate: QualityGate = {
         name: 'Custom',

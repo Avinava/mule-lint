@@ -17,7 +17,7 @@ export class ApikitMainFlowStructureRule extends BaseRule {
   description = 'APIKit main flow should contain only listener and router, no business logic';
   severity = 'warning' as const;
   category = 'api-led' as const;
-  issueType: IssueType = 'code-smell';
+  override issueType: IssueType = 'code-smell';
 
   /** Max number of direct child elements (excluding error-handler) allowed in main flow */
   private readonly MAX_MAIN_FLOW_CHILDREN = 4;
@@ -38,19 +38,10 @@ export class ApikitMainFlowStructureRule extends BaseRule {
         continue; // Not an APIKit main flow
       }
 
-      const isMainFlow =
-        flowName.endsWith('-main') ||
-        flowName.includes('-api-main') ||
-        flowName.includes('api-main');
-
-      if (!isMainFlow && !hasRouter) {
-        continue;
-      }
-
       // Count child elements (excluding error-handler and comments)
       const children = this.select(
         './*[not(local-name()="error-handler") and not(local-name()="description")]',
-        flow as Document,
+        flow,
       );
 
       if (children.length > this.MAX_MAIN_FLOW_CHILDREN) {

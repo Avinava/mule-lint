@@ -187,6 +187,10 @@ describe('YAML Rules', () => {
   describe('PlaintextSecretsRule (YAML-004)', () => {
     const rule = new PlaintextSecretsRule();
 
+    beforeEach(() => {
+      rule.reset();
+    });
+
     it('should pass when secrets are encrypted', () => {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'yaml-004-'));
       try {

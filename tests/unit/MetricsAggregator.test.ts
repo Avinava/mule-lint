@@ -1,6 +1,67 @@
-import { MetricsAggregator, MetricRating } from '../../src/core/MetricsAggregator';
+import { MetricsAggregator } from '../../src/core/MetricsAggregator';
+import { Rule } from '../../src/types';
+import { LintReport, ProjectMetrics } from '../../src/types/Report';
 
 describe('MetricsAggregator', () => {
+  it('uses the active rule registry when classifying custom-rule issues', () => {
+    const customRule: Rule = {
+      id: 'CUSTOM-001',
+      name: 'Custom bug',
+      description: 'A custom reliability rule',
+      severity: 'error',
+      category: 'standards',
+      issueType: 'bug',
+      validate: () => [],
+    };
+    const metrics: ProjectMetrics = {
+      flowCount: 0,
+      subFlowCount: 0,
+      dwTransformCount: 0,
+      connectorConfigCount: 0,
+      httpListenerCount: 0,
+      connectorTypes: [],
+      errorHandlerCount: 0,
+      choiceRouterCount: 0,
+      apiEndpoints: [],
+      environments: [],
+      securityPatterns: [],
+      externalServices: [],
+      schedulers: [],
+      fileComplexity: {},
+      flowComplexityData: [],
+    };
+    const report: LintReport = {
+      projectRoot: '/test',
+      timestamp: new Date(0).toISOString(),
+      durationMs: 0,
+      files: [
+        {
+          filePath: '/test/test.xml',
+          relativePath: 'test.xml',
+          parsed: true,
+          issues: [
+            {
+              line: 1,
+              ruleId: customRule.id,
+              message: 'custom issue',
+              severity: 'error',
+            },
+          ],
+        },
+      ],
+      summary: {
+        totalFiles: 1,
+        filesWithIssues: 1,
+        parseErrors: 0,
+        bySeverity: { error: 1, warning: 0, info: 0 },
+        byRule: { [customRule.id]: 1 },
+      },
+      metrics,
+    };
+
+    expect(MetricsAggregator.aggregateMetrics(report, [customRule])?.reliability?.bugs).toBe(1);
+  });
+
   describe('getComplexityRating', () => {
     it('should return A for low complexity', () => {
       expect(MetricsAggregator.getComplexityRating(3)).toBe('A');

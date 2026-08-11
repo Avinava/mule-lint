@@ -1,5 +1,4 @@
 import { defineConfig } from 'vitest/config';
-import path from 'path';
 
 export default defineConfig({
   test: {
@@ -8,16 +7,21 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-    },
-  },
-  resolve: {
-    alias: {
-      '@core': path.resolve(__dirname, 'src/core'),
-      '@rules': path.resolve(__dirname, 'src/rules'),
-      '@formatters': path.resolve(__dirname, 'src/formatters'),
-      '@types': path.resolve(__dirname, 'src/types'),
-      '@engine': path.resolve(__dirname, 'src/engine'),
-      '@config': path.resolve(__dirname, 'src/config'),
+      include: ['src/**/*.ts'],
+      exclude: [
+        'src/**/*.d.ts',
+        'src/**/index.ts',
+        'src/types/**',
+        'src/mcp/index.ts',
+        'src/formatters/html/scripts/**',
+        'src/formatters/html/styles/**',
+      ],
+      thresholds: {
+        statements: 70,
+        lines: 70,
+        branches: 70,
+        functions: 85,
+      },
     },
   },
 });

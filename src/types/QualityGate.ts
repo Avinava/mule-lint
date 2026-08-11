@@ -14,6 +14,7 @@ export type QualityMetric =
   | 'complexity_avg'
   | 'coverage'
   | 'duplications'
+  | 'security_vulnerabilities'
   | 'security_hotspots'
   | 'technical_debt_ratio';
 
@@ -39,7 +40,7 @@ export interface QualityCondition {
   threshold: number;
   /** Status to assign when condition is violated */
   status: 'fail' | 'warn';
-  /** Optional: Apply only to new/changed code */
+  /** Reserved for future new-code analysis; currently has no runtime effect. */
   onNewCode?: boolean;
 }
 
@@ -88,7 +89,7 @@ export const DEFAULT_QUALITY_GATE: QualityGate = {
     { metric: 'errors', operator: '>', threshold: 0, status: 'fail' },
     { metric: 'warnings', operator: '>', threshold: 10, status: 'warn' },
     { metric: 'complexity_max', operator: '>', threshold: 20, status: 'fail' },
-    { metric: 'security_hotspots', operator: '>', threshold: 0, status: 'warn' },
+    { metric: 'security_vulnerabilities', operator: '>', threshold: 0, status: 'warn' },
   ],
 };
 
@@ -101,6 +102,6 @@ export const STRICT_QUALITY_GATE: QualityGate = {
     { metric: 'errors', operator: '>', threshold: 0, status: 'fail' },
     { metric: 'warnings', operator: '>', threshold: 0, status: 'fail' },
     { metric: 'complexity_max', operator: '>', threshold: 10, status: 'fail' },
-    { metric: 'security_hotspots', operator: '>', threshold: 0, status: 'fail' },
+    { metric: 'security_vulnerabilities', operator: '>', threshold: 0, status: 'fail' },
   ],
 };

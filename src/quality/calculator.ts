@@ -37,7 +37,11 @@ export function getThresholdForValue(dimension: QualityDimension, value: number)
       return t;
     }
   }
-  return thresholds[thresholds.length - 1];
+  const fallback = thresholds.at(-1);
+  if (!fallback) {
+    throw new Error(`No rating thresholds configured for ${dimension}`);
+  }
+  return fallback;
 }
 
 /**

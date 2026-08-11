@@ -20,7 +20,7 @@ export class EventListenerNullGuardRule extends BaseRule {
     'Salesforce CDC/Platform Event listeners should include null-safety checks for event payload fields';
   severity = 'info' as const;
   category = 'operations' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];

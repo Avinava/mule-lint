@@ -122,6 +122,10 @@ export { MissingErrorHandlerRule } from './error-handling/MissingErrorHandlerRul
 export { HttpStatusRule } from './error-handling/HttpStatusRule';
 export { CorrelationIdRule } from './error-handling/CorrelationIdRule';
 export { GenericErrorRule } from './error-handling/GenericErrorRule';
+export { TryScopeRule } from './error-handling/TryScopeRule';
+export { ErrorHandlerTypeCoverageRule } from './error-handling/ErrorHandlerTypeCoverageRule';
+export { ErrorResponseStructureRule } from './error-handling/ErrorResponseStructureRule';
+export { CatchAllLastRule } from './error-handling/CatchAllLastRule';
 
 // Export individual rules - Naming
 export { FlowNamingRule } from './naming/FlowNamingRule';
@@ -132,30 +136,83 @@ export { VariableNamingRule } from './naming/VariableNamingRule';
 export { HardcodedHttpRule } from './security/HardcodedHttpRule';
 export { HardcodedCredentialsRule } from './security/HardcodedCredentialsRule';
 export { InsecureTlsRule } from './security/InsecureTlsRule';
+export { TlsVersionRule } from './security/TlsVersionRule';
+export { RateLimitingRule } from './security/RateLimitingRule';
+export { InputValidationRule } from './security/InputValidationRule';
+export { EncryptionKeyInLogsRule } from './security/EncryptionKeyInLogsRule';
+export { ConnectorCredentialsSecuredRule } from './security/ConnectorCredentialsSecuredRule';
+export { SecurePropertiesKeyRule } from './security/SecurePropertiesKeyRule';
+export { TlsKeystorePasswordRule } from './security/TlsKeystorePasswordRule';
+export { SecurePropertiesEncryptionRule } from './security/SecurePropertiesEncryptionRule';
 
 // Export individual rules - Logging
 export { LoggerCategoryRule } from './logging/LoggerCategoryRule';
 export { LoggerPayloadRule } from './logging/LoggerPayloadRule';
 export { LoggerInUntilSuccessfulRule } from './logging/LoggerInUntilSuccessfulRule';
+export { StructuredLoggingRule, SensitiveDataLoggingRule } from './logging/LoggingPatternRules';
+export { ExcessiveLoggersRule } from './logging/ExcessiveLoggersRule';
 
 // Export individual rules - Standards
 export { ChoiceAntiPatternRule } from './standards/ChoiceAntiPatternRule';
 export { DwlStandardsRule } from './standards/DwlStandardsRule';
 export { DeprecatedComponentRule } from './standards/DeprecatedComponentRule';
+export { AutoDiscoveryRule } from './standards/AutoDiscoveryRule';
+export { HttpPortPlaceholderRule } from './standards/HttpPortPlaceholderRule';
+export { CronExternalizedRule } from './standards/CronExternalizedRule';
+export { ApiKitValidationRule } from './standards/ApiKitValidationRule';
+export { ConfigPropertiesOrderingRule } from './standards/ConfigPropertiesOrderingRule';
+export { MissingEnvPropertiesDeclarationRule } from './standards/MissingEnvPropertiesDeclarationRule';
+export { ApikitRouteVariableConsistencyRule } from './standards/ApikitRouteVariableConsistencyRule';
 
 // Export individual rules - HTTP
 export { HttpUserAgentRule } from './http/HttpUserAgentRule';
 export { HttpContentTypeRule } from './http/HttpContentTypeRule';
 export { HttpTimeoutRule } from './http/HttpTimeoutRule';
+export { ConnectionIdleTimeoutRule } from './http/ConnectionIdleTimeoutRule';
+
+// Export individual rules - Connectors
+export { ReplayChannelConfigRule } from './connector/ReplayChannelConfigRule';
+export { EventListenerNullGuardRule } from './connector/EventListenerNullGuardRule';
 
 // Export individual rules - Documentation
 export { FlowDescriptionRule } from './documentation/FlowDescriptionRule';
 export { MissingDocNameRule } from './documentation/MissingDocNameRule';
+export { DisplayNameRule } from './documentation/DisplayNameRule';
 
 // Export individual rules - Performance
 export { ScatterGatherRoutesRule } from './performance/ScatterGatherRoutesRule';
 export { AsyncErrorHandlerRule } from './performance/AsyncErrorHandlerRule';
 export { LargeChoiceBlockRule } from './performance/LargeChoiceBlockRule';
+export { ConnectionPoolingRule } from './performance/ConnectionPoolingRule';
+export { ReconnectionStrategyRule } from './performance/ReconnectionStrategyRule';
+export { ListenerReconnectForeverRule } from './performance/ListenerReconnectForeverRule';
+
+// Export remaining rule families
+export { FlowComplexityRule } from './complexity/FlowComplexityRule';
+export { EnvironmentFilesRule, PropertyNamingRule, PlaintextSecretsRule } from './yaml/YamlRules';
+export {
+  ProjectStructureRule,
+  GlobalConfigRule,
+  MonolithicXmlRule,
+} from './structure/StructureRules';
+export { ExternalDwlRule, DwlNamingRule, DwlModulesRule } from './dataweave/DataWeaveRules';
+export { Java17DWErrorHandlingRule } from './dataweave/Java17DWErrorHandlingRule';
+export { DuplicateTransformLogicRule } from './dataweave/DuplicateTransformLogicRule';
+export { ExperienceLayerRule, ProcessLayerRule, SystemLayerRule } from './api-led/ApiLedRules';
+export { SingleSystemSapiRule } from './api-led/SingleSystemSapiRule';
+export { ApikitMainFlowStructureRule } from './api-led/ApikitMainFlowStructureRule';
+export { ApikitStatusCodeVariableRule } from './api-led/ApikitStatusCodeVariableRule';
+export { ApikitConsoleProductionRule } from './api-led/ApikitConsoleProductionRule';
+export {
+  FlowRefDepthRule,
+  ConnectorConfigNamingRule,
+  MUnitCoverageRule,
+} from './experimental/ExperimentalRules';
+export { CommentedCodeRule } from './operations/CommentedCodeRule';
+export { UnusedFlowRule } from './operations/UnusedFlowRule';
+export { FlowRefTargetExistsRule } from './operations/FlowRefTargetExistsRule';
+export { UnusedVariableRule } from './operations/UnusedVariableRule';
+export { PomValidationRule, GitHygieneRule } from './governance/GovernanceRules';
 
 /**
  * All available rules - instantiated and ready to use

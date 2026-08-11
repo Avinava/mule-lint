@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.24.1] - 2026-08-11
+
+### Fixed
+
+- Corrected project-rule lifecycle handling so project validation runs once per scan and remains
+  repeatable when an engine instance is reused.
+- Fixed cross-file APIKit, autodiscovery, DataWeave, YAML, structure, and unused-flow analysis.
+- Corrected summary counts, quiet-mode metrics, severity overrides, security quality metrics, and
+  quality-gate status derivation.
+- Added validated CLI configuration loading with explicit formatter precedence and warnings for
+  unsupported compatibility settings.
+- Updated MCP registration to the supported SDK API and fixed snippet validation and bundled
+  documentation resolution.
+- Corrected package entry points and release ordering so a failed npm publish cannot create a
+  successful GitHub release.
+
+### Quality
+
+- Enabled strict TypeScript checks and zero-warning typed ESLint across source, CLI, MCP, and tests.
+- Added coverage thresholds, registry invariants, dead-code checks, isolated package installation
+  smoke tests, production dependency auditing, and Node 20/22 CI coverage.
+- Updated dependencies and resolved all production audit findings.
+- Reconciled user, contributor, architecture, extension, QA, and release documentation with the
+  implemented behavior.
+
+**Total: 457 tests across 37 test files.**
+
 ## [1.21.0] - 2026-04-15
 
 ### Highlights

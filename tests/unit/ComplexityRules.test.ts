@@ -114,7 +114,11 @@ describe('Complexity Rules', () => {
       const select = xpath.useNamespaces({
         mule: 'http://www.mulesoft.org/schema/mule/core',
       });
-      return select('//mule:flow', result.document!)[0] as Node;
+      const nodes = select('//mule:flow', result.document!);
+      if (!Array.isArray(nodes) || !nodes[0]) {
+        throw new Error('Expected a flow node');
+      }
+      return nodes[0];
     };
 
     it('should count async scopes', () => {
@@ -224,7 +228,11 @@ describe('Complexity Rules', () => {
       const select = xpath.useNamespaces({
         mule: 'http://www.mulesoft.org/schema/mule/core',
       });
-      return select('//mule:flow', result.document!)[0] as Node;
+      const nodes = select('//mule:flow', result.document!);
+      if (!Array.isArray(nodes) || !nodes[0]) {
+        throw new Error('Expected a flow node');
+      }
+      return nodes[0];
     };
 
     it('should calculate cognitive complexity for simple flow', () => {

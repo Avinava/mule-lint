@@ -88,11 +88,11 @@ description = 'Finds missing error handlers';
 
 ### Test Files
 
-| Convention       | Example                         |
+| Convention | Example |
 | ---------------- | ------------------------------- | ----------------------------- |
-| Unit test        | `{ClassName}.test.ts`           | `FlowNamingRule.test.ts`      |
-| Integration test | `{feature}.integration.test.ts` | `engine.integration.test.ts`  |
-| Fixture          | Descriptive kebab-case          | `flow-with-error-handler.xml` |
+| Unit test | `{ClassName}.test.ts` | `FlowNamingRule.test.ts` |
+| Integration test | `{feature}.integration.test.ts` | `engine.integration.test.ts` |
+| Fixture | Descriptive kebab-case | `flow-with-error-handler.xml` |
 
 ---
 

@@ -95,7 +95,7 @@ export class HttpContentTypeRule extends BaseRule {
    */
   private checkContentTypeHeader(request: Node): 'present' | 'dynamic-unverified' | 'missing' {
     // Pattern A: Static <http:header headerName="Content-Type" ...>
-    const staticHeaders = this.select('.//*[local-name()="header"]', request as Document);
+    const staticHeaders = this.select('.//*[local-name()="header"]', request);
     for (const header of staticHeaders) {
       const headerName = this.getAttribute(header, 'headerName') ?? '';
       if (headerName.toLowerCase() === 'content-type') {
@@ -104,7 +104,7 @@ export class HttpContentTypeRule extends BaseRule {
     }
 
     // Patterns B & C: Check <http:headers> element for DataWeave expression content
-    const headersElements = this.select('.//*[local-name()="headers"]', request as Document);
+    const headersElements = this.select('.//*[local-name()="headers"]', request);
     let hasDynamicHeaders = false;
 
     for (const headersEl of headersElements) {

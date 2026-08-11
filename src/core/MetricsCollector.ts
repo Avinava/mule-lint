@@ -19,7 +19,7 @@ function selectNodes(expression: string, context: Node): Node[] {
  */
 function getAttr(node: Node, name: string, fallback = ''): string {
   const el = node as Element;
-  return el.getAttribute?.(name) ?? fallback;
+  return el.getAttribute(name) || fallback;
 }
 
 /**
@@ -84,7 +84,7 @@ export function collectFileMetrics(
 
     // Extract connector types from config elements
     for (const config of configs) {
-      const nodeName = (config as Element).nodeName ?? '';
+      const nodeName = config.nodeName;
       const prefix = nodeName.split(':')[0];
       if (prefix && !metrics.connectorTypes.includes(prefix)) {
         metrics.connectorTypes.push(prefix);
@@ -93,19 +93,16 @@ export function collectFileMetrics(
 
     // ── Connector types from namespace declarations ────────
     const root = doc.documentElement;
-    if (root?.attributes) {
-      const muleNsPattern = /^http:\/\/www\.mulesoft\.org\/schema\/mule\/(.+)$/;
-      const skipList = ['core', 'documentation', 'ee/core', 'doc'];
+    const muleNsPattern = /^http:\/\/www\.mulesoft\.org\/schema\/mule\/(.+)$/;
+    const skipList = ['core', 'documentation', 'ee/core', 'doc'];
 
-      for (let i = 0; i < root.attributes.length; i++) {
-        const attr = root.attributes[i];
-        if (attr.name.startsWith('xmlns:')) {
-          const match = muleNsPattern.exec(attr.value);
-          if (match) {
-            const connector = match[1];
-            if (!skipList.includes(connector) && !metrics.connectorTypes.includes(connector)) {
-              metrics.connectorTypes.push(connector);
-            }
+    for (const attr of Array.from(root.attributes)) {
+      if (attr.name.startsWith('xmlns:')) {
+        const match = muleNsPattern.exec(attr.value);
+        const connector = match?.[1];
+        if (connector) {
+          if (!skipList.includes(connector) && !metrics.connectorTypes.includes(connector)) {
+            metrics.connectorTypes.push(connector);
           }
         }
       }
@@ -128,9 +125,11 @@ export function collectFileMetrics(
       const flowName = getAttr(flow, 'name');
       // Pattern: method:\\path:config-name (e.g., "get:\\customers:api-config")
       const match = flowName.match(/^(get|post|put|patch|delete|head|options):\\(.+?)(?::|$)/i);
-      if (match) {
-        const method = match[1].toUpperCase();
-        const path = match[2].replace(/\\/g, '/');
+      const methodMatch = match?.[1];
+      const pathMatch = match?.[2];
+      if (methodMatch && pathMatch) {
+        const method = methodMatch.toUpperCase();
+        const path = pathMatch.replace(/\\/g, '/');
         if (!metrics.apiEndpoints.some((ep) => ep.path === path && ep.method === method)) {
           metrics.apiEndpoints.push({ path: '/' + path, method });
         }
@@ -146,17 +145,14 @@ export function collectFileMetrics(
     }
 
     // ── Security patterns ──────────────────────────────────
-    if (root?.attributes) {
-      for (let i = 0; i < root.attributes.length; i++) {
-        const attr = root.attributes[i];
-        if (attr.name.startsWith('xmlns:')) {
-          const ns = attr.value.toLowerCase();
-          if (ns.includes('tls') && !metrics.securityPatterns.includes('TLS')) {
-            metrics.securityPatterns.push('TLS');
-          }
-          if (ns.includes('oauth') && !metrics.securityPatterns.includes('OAuth')) {
-            metrics.securityPatterns.push('OAuth');
-          }
+    for (const attr of Array.from(root.attributes)) {
+      if (attr.name.startsWith('xmlns:')) {
+        const ns = attr.value.toLowerCase();
+        if (ns.includes('tls') && !metrics.securityPatterns.includes('TLS')) {
+          metrics.securityPatterns.push('TLS');
+        }
+        if (ns.includes('oauth') && !metrics.securityPatterns.includes('OAuth')) {
+          metrics.securityPatterns.push('OAuth');
         }
       }
     }
@@ -186,8 +182,9 @@ export function collectFileMetrics(
     // ── Schedulers ─────────────────────────────────────────
     const schedulerTriggers = selectNodes('//*[local-name()="scheduling-strategy"]/*', doc);
     for (const trigger of schedulerTriggers) {
-      const triggerName = (trigger as Element).localName ?? '';
-      const parent = (trigger as Element).parentNode?.parentNode;
+      const triggerElement = trigger as Element;
+      const triggerName = triggerElement.localName;
+      const parent = triggerElement.parentNode?.parentNode;
       const flowName = parent ? getAttr(parent, 'name', 'unknown') : 'unknown';
 
       if (triggerName === 'cron') {

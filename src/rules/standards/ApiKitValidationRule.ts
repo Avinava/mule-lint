@@ -13,21 +13,30 @@ export class ApiKitValidationRule extends BaseRule {
   severity = 'info' as const;
   category = 'standards' as const;
 
-  validate(doc: Document, _context: ValidationContext): Issue[] {
+  validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
     // Check if this appears to be an API project (has HTTP listener)
-    const hasHttpListener = this.exists('//*[local-name()="listener"]', doc);
+    const hasHttpListener =
+      context.projectContext?.hasHttpListener ??
+      this.exists('//*[local-name()="listener" and contains(namespace-uri(), "/mule/http")]', doc);
     if (!hasHttpListener) {
       return issues;
     }
 
     // Check for APIKit router
-    const hasApiKitRouter = this.exists('//*[local-name()="router"]', doc);
-    const hasApiKitConfig = this.exists(
-      '//*[local-name()="config" and contains(@name, "api")]',
-      doc,
-    );
+    const hasApiKitRouter =
+      context.projectContext?.hasApikitRouter ??
+      this.exists(
+        '//*[local-name()="router" and (contains(namespace-uri(), "/mule/apikit") or starts-with(name(), "apikit:"))]',
+        doc,
+      );
+    const hasApiKitConfig =
+      context.projectContext?.hasApiKitConfig ??
+      this.exists(
+        '//*[local-name()="config" and (contains(namespace-uri(), "/mule/apikit") or starts-with(name(), "apikit:"))]',
+        doc,
+      );
 
     if (!hasApiKitRouter && !hasApiKitConfig) {
       // Only flag if this looks like an interface file

@@ -19,7 +19,7 @@ export class ReplayChannelConfigRule extends BaseRule {
     'Salesforce CDC/Platform Event listeners should configure replay channel for reliability';
   severity = 'warning' as const;
   category = 'operations' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];

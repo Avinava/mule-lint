@@ -10,22 +10,22 @@ Comprehensive guidelines for building maintainable, secure, and performant Mule 
 
 ### Core Development
 
-| Document                                                          | Description                                                                  |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [Best Practices Index](best-practices/mulesoft-best-practices.md) | Master index with quick reference card and API-Led overview                  |
+| Document                                                          | Description                                                                                         |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| [Best Practices Index](best-practices/mulesoft-best-practices.md) | Master index with quick reference card and API-Led overview                                         |
 | [Error Handling](best-practices/error-handling.md)                | Global error handlers, HTTP vs. event-driven patterns, connector error types, CRM error log objects |
-| [Variable Contracts](best-practices/variable-contracts.md)        | Standard variables, correlation IDs, array mirroring, action routing         |
-| [Logging](best-practices/logging.md)                              | Categories, structured JSON logging, MDC/tracing, PII prevention             |
-| [Security](best-practices/security.md)                            | Secure properties, TLS 1.2+, credentials, zero-trust architecture            |
-| [Performance](best-practices/performance.md)                      | Timeouts, connection pooling, async error handling, streaming, bulk lookup (N+1 prevention)  |
+| [Variable Contracts](best-practices/variable-contracts.md)        | Standard variables, correlation IDs, array mirroring, action routing                                |
+| [Logging](best-practices/logging.md)                              | Categories, structured JSON logging, MDC/tracing, PII prevention                                    |
+| [Security](best-practices/security.md)                            | Secure properties, TLS 1.2+, credentials, zero-trust architecture                                   |
+| [Performance](best-practices/performance.md)                      | Timeouts, connection pooling, async error handling, streaming, bulk lookup (N+1 prevention)         |
 
 ### Architecture & Patterns
 
-| Document                                                         | Description                                                       |
-| ---------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Document                                                         | Description                                                                                      |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [Event-Driven Patterns](best-practices/event-driven-patterns.md) | Platform Events, Anypoint MQ, VM Queue Dispatcher, scheduler watermarking, deferred task polling |
-| [Connector Patterns](best-practices/connector-patterns.md)       | Entity config YAML, SF/NS connector gotchas, protocol negotiation, ObjectStore caching |
-| [DataWeave Patterns](best-practices/dataweave-patterns.md)       | Modules, type coercion, cross-system value mapping (4 strategies), import path rules            |
+| [Connector Patterns](best-practices/connector-patterns.md)       | Entity config YAML, SF/NS connector gotchas, protocol negotiation, ObjectStore caching           |
+| [DataWeave Patterns](best-practices/dataweave-patterns.md)       | Modules, type coercion, cross-system value mapping (4 strategies), import path rules             |
 
 ### Project & Operations
 

@@ -1,7 +1,7 @@
 import { Java17DWErrorHandlingRule } from '../../../src/rules/dataweave/Java17DWErrorHandlingRule';
 import { DOMParser } from '@xmldom/xmldom';
-import * as path from 'path';
 import { vi } from 'vitest';
+import { ValidationContext } from '../../../src/types';
 
 // Mock fs module
 vi.mock('fs', () => ({
@@ -14,10 +14,11 @@ vi.mock('fs', () => ({
 import * as fs from 'fs';
 
 // Mock validation context
-const mockContext = {
+const mockContext: ValidationContext = {
+  filePath: '/mock/project/root/test.xml',
+  relativePath: 'test.xml',
   projectRoot: '/mock/project/root',
-  config: {},
-  isMuleApp: true,
+  config: { enabled: true },
 };
 
 describe('Java17DWErrorHandlingRule', () => {
@@ -55,7 +56,7 @@ describe('Java17DWErrorHandlingRule', () => {
             </mule>
         `;
     const doc = parser.parseFromString(xml, 'text/xml');
-    const issues = rule.validate(doc, mockContext as any);
+    const issues = rule.validate(doc, mockContext);
 
     expect(issues.length).toBe(1);
     expect(issues[0].message).toContain('Accessing "error.description" is restricted in Java 17');
@@ -77,7 +78,7 @@ describe('Java17DWErrorHandlingRule', () => {
             </mule>
         `;
     const doc = parser.parseFromString(xml, 'text/xml');
-    const issues = rule.validate(doc, mockContext as any);
+    const issues = rule.validate(doc, mockContext);
 
     expect(issues.length).toBe(1);
     expect(issues[0].message).toContain(
@@ -98,7 +99,7 @@ describe('Java17DWErrorHandlingRule', () => {
             </mule>
         `;
     const doc = parser.parseFromString(xml, 'text/xml');
-    const issues = rule.validate(doc, mockContext as any);
+    const issues = rule.validate(doc, mockContext);
 
     expect(issues.length).toBe(1);
     expect(issues[0].message).toContain('Accessing "error.muleMessage" is restricted in Java 17');
@@ -115,12 +116,11 @@ describe('Java17DWErrorHandlingRule', () => {
 
     (fs.existsSync as ReturnType<typeof vi.fn>).mockReturnValue(true);
     (fs.readdirSync as ReturnType<typeof vi.fn>).mockReturnValue([
-      { name: 'test.dwl', isDirectory: () => false } as any,
+      { name: 'test.dwl', isDirectory: () => false },
     ]);
     (fs.readFileSync as ReturnType<typeof vi.fn>).mockReturnValue(mockDwlContent);
 
-    const doc = parser.parseFromString('<mule/>', 'text/xml');
-    const issues = rule.validate(doc, mockContext as any);
+    const issues = rule.runProject(mockContext);
 
     expect(issues.length).toBe(1);
     expect(issues[0].message).toContain('Accessing "error.errors" is restricted in Java 17');
@@ -149,7 +149,7 @@ describe('Java17DWErrorHandlingRule', () => {
             </mule>
         `;
     const doc = parser.parseFromString(xml, 'text/xml');
-    const issues = rule.validate(doc, mockContext as any);
+    const issues = rule.validate(doc, mockContext);
 
     expect(issues.length).toBe(0);
   });

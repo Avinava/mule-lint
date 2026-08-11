@@ -38,7 +38,7 @@ export interface Issue {
   /** Line number where the issue was found (1-indexed) */
   line: number;
   /** Column number where the issue was found (1-indexed, optional) */
-  column?: number;
+  column?: number | undefined;
   /** Human-readable description of the issue */
   message: string;
   /** Rule ID that triggered this issue (e.g., "MULE-001") */
@@ -46,9 +46,9 @@ export interface Issue {
   /** Severity of the issue */
   severity: Severity;
   /** Optional suggestion for fixing the issue */
-  suggestion?: string;
+  suggestion?: string | undefined;
   /** Optional code snippet showing the problematic code */
-  codeSnippet?: string;
+  codeSnippet?: string | undefined;
 }
 
 /**
@@ -58,9 +58,9 @@ export interface RuleConfig {
   /** Whether the rule is enabled */
   enabled: boolean;
   /** Override the default severity */
-  severity?: Severity;
+  severity?: Severity | undefined;
   /** Rule-specific options */
-  options?: Record<string, unknown>;
+  options?: Record<string, unknown> | undefined;
 }
 
 /**
@@ -78,8 +78,12 @@ export interface ProjectContext {
   hasHttpListener: boolean;
   /** True if any file contains an apikit:router or apikit:console element */
   hasApikitRouter: boolean;
+  /** True if any file contains an APIKit config element */
+  hasApiKitConfig?: boolean | undefined;
+  /** True if any file contains an API Manager autodiscovery element */
+  hasAutoDiscovery?: boolean | undefined;
   /** Detected project layer based on naming conventions and content */
-  projectLayer?: ProjectLayer;
+  projectLayer?: ProjectLayer | undefined;
 }
 
 /**
@@ -99,19 +103,19 @@ export interface ValidationContext {
    * project files.  Populated during the LintEngine pre-scan phase.
    * When undefined (e.g. standalone file scan), intra-file refs only.
    */
-  allFlowRefs?: Set<string>;
+  allFlowRefs?: Set<string> | undefined;
   /**
    * Set of all flow/sub-flow names defined across all project files.
    * Populated during the LintEngine pre-scan phase.
    * Used by HYG-004 (FlowRefTargetExistsRule) for cross-file validation.
    */
-  allFlowNames?: Set<string>;
+  allFlowNames?: Set<string> | undefined;
   /**
    * Project-level feature flags derived from a pre-scan of all files.
    * Rules that only apply to HTTP-exposed projects (e.g. MULE-005) should
    * check these flags before reporting issues.
    */
-  projectContext?: ProjectContext;
+  projectContext?: ProjectContext | undefined;
 }
 
 /**
@@ -129,9 +133,9 @@ export interface Rule {
   /** Category for grouping in reports */
   category: RuleCategory;
   /** Issue type for quality metrics (defaults to 'code-smell') */
-  issueType?: IssueType;
+  issueType?: IssueType | undefined;
   /** Optional URL to documentation */
-  docsUrl?: string;
+  docsUrl?: string | undefined;
   /**
    * Validate a parsed XML document
    * @param doc - The parsed XML document
@@ -139,4 +143,9 @@ export interface Rule {
    * @returns Array of issues found
    */
   validate(doc: Document, context: ValidationContext): Issue[];
+  /**
+   * Optionally validate project-wide state once per directory scan.
+   * Hybrid rules may implement both validate() and runProject().
+   */
+  runProject?(context: ValidationContext): Issue[];
 }

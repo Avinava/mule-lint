@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { registerPrompt } from '../register';
 
 /**
  * Register all MCP prompts (analyze-project, explain-rule, fix-issue, review-best-practices)
@@ -15,8 +16,8 @@ export function registerPrompts(server: McpServer): void {
  * Prompt: analyze-project
  */
 function registerAnalyzeProject(server: McpServer): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
-  (server as any).registerPrompt(
+  registerPrompt<{ path: string }>(
+    server,
     'analyze-project',
     {
       description:
@@ -25,7 +26,7 @@ function registerAnalyzeProject(server: McpServer): void {
         path: z.string().describe('The absolute path to the project to analyze'),
       },
     },
-    ({ path }: { path: string }) => {
+    ({ path }) => {
       return {
         messages: [
           {
@@ -45,8 +46,8 @@ function registerAnalyzeProject(server: McpServer): void {
  * Prompt: explain-rule
  */
 function registerExplainRule(server: McpServer): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
-  (server as any).registerPrompt(
+  registerPrompt<{ ruleId: string }>(
+    server,
     'explain-rule',
     {
       description: 'Explain a specific linting rule and provide examples of good vs bad code.',
@@ -54,7 +55,7 @@ function registerExplainRule(server: McpServer): void {
         ruleId: z.string().describe('The ID of the rule to explain (e.g., MULE-001)'),
       },
     },
-    ({ ruleId }: { ruleId: string }) => {
+    ({ ruleId }) => {
       return {
         messages: [
           {
@@ -74,8 +75,8 @@ function registerExplainRule(server: McpServer): void {
  * Prompt: fix-issue
  */
 function registerFixIssue(server: McpServer): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
-  (server as any).registerPrompt(
+  registerPrompt<{ issue: string; file: string; code: string }>(
+    server,
     'fix-issue',
     {
       description: 'Suggest a fix for a specific linting issue in a file.',
@@ -85,7 +86,7 @@ function registerFixIssue(server: McpServer): void {
         code: z.string().describe('The specific code snippet causing the issue'),
       },
     },
-    ({ issue, file, code }: { issue: string; file: string; code: string }) => {
+    ({ issue, file, code }) => {
       return {
         messages: [
           {
@@ -109,8 +110,8 @@ function registerFixIssue(server: McpServer): void {
  * to provide improvement suggestions beyond just lint rule violations.
  */
 function registerReviewBestPractices(server: McpServer): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
-  (server as any).registerPrompt(
+  registerPrompt<{ path: string; projectType: string }>(
+    server,
     'review-best-practices',
     {
       description:
@@ -124,7 +125,7 @@ function registerReviewBestPractices(server: McpServer): void {
           ),
       },
     },
-    ({ path, projectType }: { path: string; projectType: string }) => {
+    ({ path, projectType }) => {
       // Build the list of recommended docs based on project type
       const commonDocs = ['error-handling', 'logging', 'security', 'variables', 'dataweave'];
       const typeDocs: Record<string, string[]> = {

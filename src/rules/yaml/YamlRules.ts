@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { ValidationContext, Issue, IssueType } from '../../types';
-import { BaseRule } from '../base/BaseRule';
 import { ProjectRule } from '../base/ProjectRule';
 import { YamlParser } from '../../core/YamlParser';
 
@@ -72,14 +71,14 @@ export class EnvironmentFilesRule extends ProjectRule {
  *
  * Property keys should follow category.property format.
  */
-export class PropertyNamingRule extends BaseRule {
+export class PropertyNamingRule extends ProjectRule {
   id = 'YAML-003';
   name = 'Property Naming Convention';
   description = 'Property keys should follow category.property format';
   severity = 'info' as const;
   category = 'standards' as const;
 
-  validate(_doc: Document, context: ValidationContext): Issue[] {
+  protected validateProject(context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
     const configDir = path.join(context.projectRoot, 'src/main/resources');
@@ -152,15 +151,15 @@ export class PropertyNamingRule extends BaseRule {
  *
  * Sensitive properties should be encrypted.
  */
-export class PlaintextSecretsRule extends BaseRule {
+export class PlaintextSecretsRule extends ProjectRule {
   id = 'YAML-004';
   name = 'No Plaintext Secrets';
   description = 'Sensitive properties should be encrypted with ![...]';
   severity = 'error' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
-  validate(_doc: Document, context: ValidationContext): Issue[] {
+  protected validateProject(context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
     const configDir = path.join(context.projectRoot, 'src/main/resources');

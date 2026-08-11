@@ -13,7 +13,7 @@ export class RateLimitingRule extends BaseRule {
   description = 'APIs should have rate limiting or throttling configured';
   severity = 'warning' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
@@ -46,11 +46,12 @@ export class RateLimitingRule extends BaseRule {
     );
 
     // If no rate limiting found and this looks like an API
-    if (rateLimitingElements.length === 0 && policyRefs.length === 0) {
+    const firstListener = httpListeners[0];
+    if (firstListener && rateLimitingElements.length === 0 && policyRefs.length === 0) {
       // Only report once per file, on the first listener
       issues.push(
         this.createIssue(
-          httpListeners[0],
+          firstListener,
           'API endpoint has no rate limiting or throttling configured',
           {
             suggestion:

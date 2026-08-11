@@ -31,7 +31,7 @@
 - **82 Built-in Rules** covering error handling, security, naming, logging, performance, API-led, connectors, and more
 - **Multiple Output Formats** - Table, JSON, SARIF, HTML, CSV <!-- id: 4 -->
 - **CI/CD Ready** - Exit codes and machine-readable output
-- **442 Unit Tests** - Comprehensive test coverage for reliability
+- **457 Unit Tests** - Comprehensive test coverage for reliability
 - **TypeScript** - Fully typed for VS Code extension integration
 - **Extensible** - Add custom rules for your organization
 - **Document Cache** - Parsed XML documents cached to eliminate redundant parsing
@@ -151,10 +151,10 @@ Quality gates provide pass/fail thresholds for your CI/CD pipelines. When a gate
 
 ### Built-in Gates
 
-| Gate      | Description                                                                   |
-| --------- | ----------------------------------------------------------------------------- |
-| `default` | Fails if errors > 0, warnings > 10, complexity > 20, or security hotspots > 0 |
-| `strict`  | Fails if any errors, warnings > 0, or complexity > 10                         |
+| Gate      | Description                                                                                |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `default` | Fails on errors or complexity > 20; warns on warnings > 10 or security vulnerabilities > 0 |
+| `strict`  | Fails on errors, warnings, security vulnerabilities, or complexity > 10                    |
 
 ### Usage
 
@@ -249,7 +249,7 @@ The HTML report displays quality ratings for four key dimensions. These follow i
 
 #### Security Rating
 
-**What it measures:** Vulnerability and security hotspot count.
+**What it measures:** Security vulnerability count. Hotspots are reserved for externally enriched reports.
 
 **Vulnerability rules:** All `security` category rules are classified as vulnerabilities, including:
 
@@ -423,7 +423,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | PROJ-001 | POM Validation | Error    | Structure | Validates pom.xml existence and plugins    |
 | PROJ-002 | Git Hygiene    | Warning  | Structure | Validates .gitignore existence and entries |
 
-**Total: 82 rules** across 16 categories.
+**Total: 82 rules** across 15 runtime categories.
 
 See [Rules Catalog](docs/best-practices/rules-catalog.md) for detailed documentation.
 
@@ -541,9 +541,20 @@ Create a `.mulelintrc.json` file in your project root:
   },
   "include": ["src/main/mule/**/*.xml"],
   "exclude": ["**/test/**", "**/*.munit.xml"],
+  "defaultFormatter": "table",
   "failOnWarning": false
 }
 ```
+
+Pass the configuration explicitly with `-c`; the CLI does not search for it implicitly:
+
+```bash
+npx @sfdxy/mule-lint ./src/main/mule -c .mulelintrc.json
+```
+
+The supported top-level keys are `rules`, `include`, `exclude`, `defaultFormatter`,
+`failOnWarning`, and `qualityGate`. Reserved compatibility keys such as `extends`,
+`customRulesPath`, and `maxIssues` produce a warning and have no runtime effect.
 
 ---
 
@@ -623,7 +634,7 @@ The agent will now be able to "see" your MuleSoft project structure and offer li
 See [Extending Guide](docs/linter/extending.md) for detailed instructions on creating custom rules.
 
 ```typescript
-import { BaseRule, ValidationContext, Issue } from '@sfdxy/mule-lint';
+import { ALL_RULES, BaseRule, Issue, LintEngine, ValidationContext } from '@sfdxy/mule-lint';
 
 export class MyCustomRule extends BaseRule {
   id = 'CUSTOM-001';
@@ -638,7 +649,12 @@ export class MyCustomRule extends BaseRule {
     // ...
   }
 }
+
+const engine = new LintEngine({ rules: [...ALL_RULES, new MyCustomRule()] });
 ```
+
+Config entries only tune rules that are registered with the engine. The CLI does not dynamically
+load custom JavaScript or TypeScript rule modules.
 
 ---
 

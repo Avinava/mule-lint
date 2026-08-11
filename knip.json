@@ -12,7 +12,6 @@
     "src/formatters/html/styles/index.ts",
     "src/formatters/html/views/index.ts"
   ],
-  "ignoreDependencies": ["@prettier/plugin-xml", "publint", "@vitest/coverage-v8"],
-  "ignore": ["commitlint.config.ts"],
+  "ignoreDependencies": ["@prettier/plugin-xml"],
   "ignoreExportsUsedInFile": true
 }

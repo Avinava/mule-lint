@@ -6,6 +6,12 @@
     "outDir": "./dist",
     "rootDir": ".",
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmitOnError": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -13,16 +19,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "moduleResolution": "node",
-    "baseUrl": "./src",
-    "paths": {
-      "@core/*": ["core/*"],
-      "@rules/*": ["rules/*"],
-      "@formatters/*": ["formatters/*"],
-      "@types/*": ["types/*"],
-      "@engine/*": ["engine/*"],
-      "@config/*": ["config/*"]
-    }
+    "moduleResolution": "node"
   },
   "include": ["src/**/*", "bin/**/*"],
   "exclude": ["node_modules", "dist", "tests"]

@@ -8,7 +8,7 @@ import {
   RatingGrade,
 } from '../quality';
 import { ALL_RULES } from '../rules';
-import { IssueType } from '../types';
+import { IssueType, Rule } from '../types';
 
 /**
  * Rating type for metrics (SonarQube-style A-E)
@@ -20,17 +20,8 @@ export type MetricRating = RatingGrade;
  * Build a lookup map of rule ID -> issueType
  * This is built once and cached for performance
  */
-const ruleIssueTypeMap: Map<string, IssueType> = new Map();
-for (const rule of ALL_RULES) {
-  ruleIssueTypeMap.set(rule.id, rule.issueType ?? 'code-smell');
-}
-
-/**
- * Get issue type for a rule ID
- * Falls back to 'code-smell' if rule not found
- */
-function getIssueTypeForRule(ruleId: string): IssueType {
-  return ruleIssueTypeMap.get(ruleId) ?? 'code-smell';
+function buildRuleIssueTypeMap(rules: Rule[]): Map<string, IssueType> {
+  return new Map(rules.map((rule) => [rule.id, rule.issueType ?? 'code-smell']));
 }
 
 /**
@@ -44,7 +35,7 @@ export class MetricsAggregator {
    * Calculate complexity rating based on average flow complexity
    * Delegates to centralized calculator
    */
-  static getComplexityRating(avgComplexity: number): MetricRating {
+  static getComplexityRating(avgComplexity: number): RatingGrade {
     return calculateGrade('complexity', avgComplexity);
   }
 
@@ -55,7 +46,7 @@ export class MetricsAggregator {
    * - Medium (B): 8-14 flows
    * - Complex (C+): ≥ 15 flows
    */
-  static getFileComplexityRating(flowCount: number): MetricRating {
+  static getFileComplexityRating(flowCount: number): RatingGrade {
     if (flowCount <= 7) {
       return 'A';
     }
@@ -75,7 +66,7 @@ export class MetricsAggregator {
    * Calculate maintainability rating based on technical debt ratio
    * Delegates to centralized calculator
    */
-  static getMaintainabilityRating(debtRatioPercent: number): MetricRating {
+  static getMaintainabilityRating(debtRatioPercent: number): RatingGrade {
     return calculateGrade('maintainability', debtRatioPercent);
   }
 
@@ -83,7 +74,7 @@ export class MetricsAggregator {
    * Calculate reliability rating based on bug count
    * Delegates to centralized calculator
    */
-  static getReliabilityRating(bugCount: number): MetricRating {
+  static getReliabilityRating(bugCount: number): RatingGrade {
     return calculateGrade('reliability', bugCount);
   }
 
@@ -91,7 +82,7 @@ export class MetricsAggregator {
    * Calculate security rating based on vulnerability count
    * Delegates to centralized calculator
    */
-  static getSecurityRating(vulnerabilityCount: number): MetricRating {
+  static getSecurityRating(vulnerabilityCount: number): RatingGrade {
     return calculateGrade('security', vulnerabilityCount);
   }
 
@@ -107,7 +98,10 @@ export class MetricsAggregator {
    * Aggregate metrics from a lint report
    * Computes complexity, maintainability, reliability, and security ratings
    */
-  static aggregateMetrics(report: LintReport): ProjectMetrics | undefined {
+  static aggregateMetrics(
+    report: LintReport,
+    rules: Rule[] = ALL_RULES,
+  ): ProjectMetrics | undefined {
     if (!report.metrics) {
       return undefined;
     }
@@ -115,7 +109,7 @@ export class MetricsAggregator {
     const metrics = report.metrics;
 
     // Calculate complexity aggregates from flow data
-    const flowData = metrics.flowComplexityData || [];
+    const flowData = metrics.flowComplexityData;
     const totalComplexity = flowData.reduce((sum, f) => sum + f.complexity, 0);
     const avgComplexity = flowData.length > 0 ? totalComplexity / flowData.length : 0;
     const highestFlow = flowData.reduce(
@@ -124,7 +118,10 @@ export class MetricsAggregator {
     );
 
     // Classify issues by type using rule metadata
-    const { bugs, vulnerabilities, codeSmells, hotspots } = this.classifyIssues(report);
+    const { bugs, vulnerabilities, codeSmells, hotspots } = this.classifyIssues(
+      report,
+      buildRuleIssueTypeMap(rules),
+    );
 
     // Calculate technical debt using centralized calculator
     const debtMinutes = calculateDebtMinutes(codeSmells, bugs, vulnerabilities);
@@ -166,7 +163,10 @@ export class MetricsAggregator {
    * Classify issues into bugs, vulnerabilities, code smells, and hotspots
    * Uses the issueType metadata from rule definitions for accurate classification
    */
-  private static classifyIssues(report: LintReport): {
+  private static classifyIssues(
+    report: LintReport,
+    ruleIssueTypes: Map<string, IssueType>,
+  ): {
     bugs: number;
     vulnerabilities: number;
     codeSmells: number;
@@ -179,7 +179,7 @@ export class MetricsAggregator {
 
     for (const file of report.files) {
       for (const issue of file.issues) {
-        const issueType = getIssueTypeForRule(issue.ruleId);
+        const issueType = ruleIssueTypes.get(issue.ruleId) ?? 'code-smell';
 
         switch (issueType) {
           case 'bug':

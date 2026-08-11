@@ -19,7 +19,7 @@ export class DuplicateTransformLogicRule extends BaseRule {
     'Duplicate DataWeave transform blocks should be extracted into reusable .dwl modules';
   severity = 'info' as const;
   category = 'dataweave' as const;
-  issueType: IssueType = 'code-smell';
+  override issueType: IssueType = 'code-smell';
 
   /** Minimum length of transform content to consider for duplication check */
   private readonly MIN_CONTENT_LENGTH = 20;
@@ -65,10 +65,10 @@ export class DuplicateTransformLogicRule extends BaseRule {
     for (const [, nodes] of contentMap) {
       if (nodes.length > 1) {
         // Only flag the second and subsequent occurrences
-        for (let i = 1; i < nodes.length; i++) {
+        for (const duplicateNode of nodes.slice(1)) {
           issues.push(
             this.createIssue(
-              nodes[i],
+              duplicateNode,
               `Duplicate DataWeave transform logic found (${nodes.length} identical blocks in file)`,
               {
                 suggestion:

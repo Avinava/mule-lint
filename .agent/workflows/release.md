@@ -25,7 +25,7 @@ The release is fully automated. Just push a version tag!
    ```
 
 3. **Done!** GitHub Actions will:
-   - Run tests
+   - Run formatting, lint, type, coverage, package, and production-audit checks on Node 20 and 22
    - Publish to npm
    - Create GitHub Release with auto-generated notes
 
@@ -55,5 +55,5 @@ git push origin v1.4.0
 
 | Workflow      | Trigger       | Action                                      |
 | ------------- | ------------- | ------------------------------------------- |
-| `ci.yml`      | Push/PR       | Test on Node 18/20/22                       |
-| `publish.yml` | Push tag `v*` | Build, test, publish to npm, create release |
+| `ci.yml`      | Push/PR       | Verify on Node 20/22                        |
+| `publish.yml` | Push tag `v*` | Verify, publish to npm, then create release |

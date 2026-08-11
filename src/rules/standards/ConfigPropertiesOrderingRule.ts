@@ -52,26 +52,30 @@ export class ConfigPropertiesOrderingRule extends BaseRule {
     let globalIndex = -1;
     let envIndex = -1;
 
-    for (let i = 0; i < configProps.length; i++) {
-      const file = this.getAttribute(configProps[i], 'file') ?? '';
+    for (const [index, configProperty] of configProps.entries()) {
+      const file = this.getAttribute(configProperty, 'file') ?? '';
       const fileLower = file.toLowerCase();
 
       if (this.isGlobalFile(fileLower)) {
-        globalIndex = i;
+        globalIndex = index;
       }
 
       if (this.isEnvSpecificFile(file)) {
         if (envIndex === -1) {
-          envIndex = i; // Track the first env-specific file
+          envIndex = index; // Track the first env-specific file
         }
       }
     }
 
     // Flag if env-specific appears before global defaults
     if (globalIndex >= 0 && envIndex >= 0 && envIndex < globalIndex) {
+      const environmentProperty = configProps[envIndex];
+      if (!environmentProperty) {
+        return issues;
+      }
       issues.push(
         this.createIssue(
-          configProps[envIndex],
+          environmentProperty,
           'Environment-specific properties file is loaded before global defaults',
           {
             suggestion:

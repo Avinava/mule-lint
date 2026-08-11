@@ -1,5 +1,6 @@
 import { ValidationContext, Issue } from '../../types';
 import { BaseRule } from '../base/BaseRule';
+import { ProjectRule } from '../base/ProjectRule';
 import * as fs from 'fs';
 
 /**
@@ -21,7 +22,7 @@ export class FlowRefDepthRule extends BaseRule {
     const flows = this.select('//mule:flow | //mule:sub-flow', doc);
 
     for (const flow of flows) {
-      const flowRefs = this.select('.//mule:flow-ref', flow as Document);
+      const flowRefs = this.select('.//mule:flow-ref', flow);
 
       if (flowRefs.length > maxDepth) {
         const name = this.getNameAttribute(flow) ?? 'unnamed';
@@ -86,23 +87,23 @@ export class ConnectorConfigNamingRule extends BaseRule {
  *
  * Check for MUnit test files.
  */
-export class MUnitCoverageRule extends BaseRule {
+export class MUnitCoverageRule extends ProjectRule {
   id = 'EXP-003';
   name = 'MUnit Coverage';
   description = 'Flows should have corresponding MUnit tests';
   severity = 'info' as const;
   category = 'experimental' as const;
 
-  validate(doc: Document, context: ValidationContext): Issue[] {
+  protected validateProject(context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
-    const flows = this.select('//mule:flow', doc);
+    const flowCount = context.allFlowNames?.size ?? 0;
     const munitDir = `${context.projectRoot}/src/test/munit`;
 
     if (!fs.existsSync(munitDir)) {
-      if (flows.length > 0) {
+      if (flowCount > 0) {
         issues.push(
-          this.createFileIssue(`Project has ${flows.length} flows but no MUnit tests`, {
+          this.createProjectIssue(`Project has ${flowCount} flows but no MUnit tests`, {
             suggestion: 'Create src/test/munit/ directory with test files',
           }),
         );

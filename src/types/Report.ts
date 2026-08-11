@@ -13,7 +13,7 @@ export interface FileResult {
   /** Whether the file was successfully parsed */
   parsed: boolean;
   /** Parse error message if parsing failed */
-  parseError?: string;
+  parseError?: string | undefined;
 }
 
 /**
@@ -92,7 +92,7 @@ export interface ProjectMetrics {
     /** Average complexity per flow */
     average: number;
     /** Highest complexity flow */
-    highest?: { flow: string; value: number };
+    highest?: { flow: string; value: number } | undefined;
     /** Overall rating based on complexity */
     rating: 'A' | 'B' | 'C' | 'D' | 'E';
   };
@@ -161,5 +161,5 @@ export interface LintReport {
   /** Summary statistics */
   summary: LintSummary;
   /** Project metrics (optional for backward compatibility) */
-  metrics?: ProjectMetrics;
+  metrics?: ProjectMetrics | undefined;
 }

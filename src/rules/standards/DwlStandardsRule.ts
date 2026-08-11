@@ -1,5 +1,5 @@
 import { ValidationContext, Issue } from '../../types';
-import { BaseRule } from '../base/BaseRule';
+import { ProjectRule } from '../base/ProjectRule';
 import { fileExists } from '../../core/FileScanner';
 import * as path from 'path';
 
@@ -9,23 +9,15 @@ import * as path from 'path';
  * Project should have standard DataWeave files for common operations
  * like error responses, transformations, etc.
  */
-export class DwlStandardsRule extends BaseRule {
+export class DwlStandardsRule extends ProjectRule {
   id = 'MULE-010';
   name = 'DWL Standards File';
   description = 'Project should have standard DataWeave files for consistent error responses';
   severity = 'info' as const;
   category = 'standards' as const;
 
-  // Track if we've already checked (to avoid duplicate warnings)
-  private static checkedProjects = new Set<string>();
-
-  validate(doc: Document, context: ValidationContext): Issue[] {
+  protected validateProject(context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
-
-    // Only check once per project
-    if (DwlStandardsRule.checkedProjects.has(context.projectRoot)) {
-      return issues;
-    }
 
     // Get expected DWL files from config
     const expectedFiles = this.getOption(context, 'expectedFiles', [
@@ -43,11 +35,8 @@ export class DwlStandardsRule extends BaseRule {
     }
 
     if (missingFiles.length > 0) {
-      // Mark as checked to avoid duplicate warnings
-      DwlStandardsRule.checkedProjects.add(context.projectRoot);
-
       issues.push(
-        this.createFileIssue(
+        this.createProjectIssue(
           `Recommended DataWeave standards files not found: ${missingFiles.join(', ')}`,
           {
             suggestion:
@@ -58,12 +47,5 @@ export class DwlStandardsRule extends BaseRule {
     }
 
     return issues;
-  }
-
-  /**
-   * Reset the checked projects cache (for testing)
-   */
-  public static reset(): void {
-    DwlStandardsRule.checkedProjects.clear();
   }
 }

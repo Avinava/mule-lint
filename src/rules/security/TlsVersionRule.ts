@@ -13,7 +13,7 @@ export class TlsVersionRule extends BaseRule {
   description = 'Detect use of deprecated TLS versions (< 1.2)';
   severity = 'error' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   private readonly deprecatedProtocols = ['TLSv1', 'TLSv1.0', 'TLSv1.1', 'SSLv3', 'SSLv2'];
 
@@ -56,7 +56,7 @@ export class TlsVersionRule extends BaseRule {
 
     for (const protocol of protocolElements) {
       const element = protocol as Element;
-      const value = element.textContent?.trim() || '';
+      const value = element.textContent.trim();
 
       if (this.deprecatedProtocols.some((dp) => value.toUpperCase() === dp.toUpperCase())) {
         issues.push(

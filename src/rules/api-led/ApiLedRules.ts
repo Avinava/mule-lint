@@ -25,8 +25,8 @@ export class ExperienceLayerRule extends BaseRule {
       if (name.includes('-exp-') || name.includes('-experience-')) {
         // Experience APIs should have HTTP listener
         const hasListener =
-          this.select('.//http:listener', flow as Document).length > 0 ||
-          this.select('.//*[local-name()="listener"]', flow as Document).length > 0;
+          this.select('.//http:listener', flow).length > 0 ||
+          this.select('.//*[local-name()="listener"]', flow).length > 0;
 
         if (!hasListener) {
           issues.push(
@@ -65,9 +65,8 @@ export class ProcessLayerRule extends BaseRule {
       // Check if it's a process layer API
       if (name.includes('-proc-') || name.includes('-process-')) {
         // Process layer should have flow-refs or HTTP requests
-        const hasFlowRef = this.select('.//mule:flow-ref', flow as Document).length > 0;
-        const hasHttpRequest =
-          this.select('.//*[local-name()="request"]', flow as Document).length > 0;
+        const hasFlowRef = this.select('.//mule:flow-ref', flow).length > 0;
+        const hasHttpRequest = this.select('.//*[local-name()="request"]', flow).length > 0;
 
         if (!hasFlowRef && !hasHttpRequest) {
           issues.push(
@@ -109,10 +108,9 @@ export class SystemLayerRule extends BaseRule {
         const hasDbOp =
           this.select(
             './/*[local-name()="select" or local-name()="insert" or local-name()="update" or local-name()="delete"]',
-            flow as Document,
+            flow,
           ).length > 0;
-        const hasHttpRequest =
-          this.select('.//*[local-name()="request"]', flow as Document).length > 0;
+        const hasHttpRequest = this.select('.//*[local-name()="request"]', flow).length > 0;
 
         if (!hasDbOp && !hasHttpRequest) {
           issues.push(

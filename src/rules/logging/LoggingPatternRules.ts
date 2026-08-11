@@ -32,10 +32,11 @@ export class StructuredLoggingRule extends BaseRule {
     const standardLoggers = this.select('//*[local-name()="logger"]', doc);
 
     // If using standard loggers but no JSON logger configured
-    if (standardLoggers.length > 0 && jsonLoggerConfig.length === 0) {
+    const firstLogger = standardLoggers[0];
+    if (firstLogger && jsonLoggerConfig.length === 0) {
       issues.push(
         this.createIssue(
-          standardLoggers[0],
+          firstLogger,
           'Project uses standard logger instead of JSON structured logging',
           {
             suggestion:

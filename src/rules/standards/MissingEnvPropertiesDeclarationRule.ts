@@ -20,7 +20,7 @@ export class MissingEnvPropertiesDeclarationRule extends ProjectRule {
     'Projects with environment-parameterized configs must have dev and prod property files';
   severity = 'warning' as const;
   category = 'standards' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   /** Required environments */
   private readonly REQUIRED_ENVS = ['dev', 'prod'];

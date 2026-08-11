@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ValidationContext, Issue } from '../../types';
 import { BaseRule } from '../base/BaseRule';
+import { ProjectRule } from '../base/ProjectRule';
 
 /**
  * MULE-802: Project Structure Validation
@@ -14,7 +15,7 @@ import { BaseRule } from '../base/BaseRule';
  * rather than bundling it locally — requiring that directory would produce false
  * positives on valid projects.
  */
-export class ProjectStructureRule extends BaseRule {
+export class ProjectStructureRule extends ProjectRule {
   id = 'MULE-802';
   name = 'Project Structure';
   description = 'Validate standard MuleSoft project folder structure';
@@ -26,7 +27,7 @@ export class ProjectStructureRule extends BaseRule {
   /** Default recommended dirs (api/ excluded — see class JSDoc) */
   private readonly DEFAULT_RECOMMENDED_DIRS = ['src/main/resources/dwl', 'src/test/munit'];
 
-  validate(_doc: Document, context: ValidationContext): Issue[] {
+  protected validateProject(context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
     const projectRoot = context.projectRoot;
 
@@ -73,14 +74,14 @@ export class ProjectStructureRule extends BaseRule {
  *
  * Project should have global configuration file.
  */
-export class GlobalConfigRule extends BaseRule {
+export class GlobalConfigRule extends ProjectRule {
   id = 'MULE-803';
   name = 'Global Config File';
   description = 'Project should have global.xml with shared configurations';
   severity = 'warning' as const;
   category = 'structure' as const;
 
-  validate(_doc: Document, context: ValidationContext): Issue[] {
+  protected validateProject(context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
     const muleDir = path.join(context.projectRoot, 'src/main/mule');
 

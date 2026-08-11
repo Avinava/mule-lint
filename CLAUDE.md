@@ -1,15 +1,15 @@
 # mule-lint
 
-MuleSoft static analysis tool — 82 lint rules across 16 categories, TypeScript strict mode.
+MuleSoft static analysis tool — 82 lint rules across 15 runtime categories, TypeScript strict mode.
 
 ## Quick Commands
 
 ```bash
 npm run build          # Compile TypeScript → dist/
-npm test              # Run vitest (442 tests)
+npm test              # Run vitest (457 tests)
 npm run lint          # ESLint
 npm run lint:unused   # knip (dead code detection)
-npx tsc --noEmit     # Type-check only
+npm run check         # Complete local CI and package verification
 ```
 
 ## Architecture
@@ -21,7 +21,7 @@ src/
 │   ├── base/BaseRule.ts       # Abstract base for per-file rules
 │   ├── base/ProjectRule.ts    # Abstract base for project-level rules (run once)
 │   ├── index.ts               # ALL_RULES registry + getRuleById/getRulesByCategory
-│   └── {category}/           # 16 category directories
+│   └── {category}/           # Domain-oriented rule directories
 ├── core/                      # XmlParser, XPathHelper, FileScanner, MetricsAggregator
 ├── formatters/                # Output: table, json, sarif, html, csv
 ├── mcp/                       # Model Context Protocol server
@@ -76,7 +76,7 @@ MULE-prefixed ranges: 001-099=error-handling, 100-199=naming, 200-299=security, 
 - Conventional Commits (enforced via commitlint)
 - Prettier: singleQuote, 100 printWidth, 2 tabWidth
 - ESLint: TypeScript strict checked
-- Path aliases: `@core/*`, `@rules/*`, `@engine/*`, `@formatters/*`, `@types/*`
+- Imports use relative paths so compiled CommonJS resolves without alias tooling
 - Pre-commit: lefthook runs prettier on staged files
 
 ## Configuration

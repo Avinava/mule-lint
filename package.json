@@ -1,9 +1,10 @@
 {
   "name": "@sfdxy/mule-lint",
-  "version": "1.24.0",
+  "version": "1.24.1",
   "description": "Static analysis tool for MuleSoft applications - supports humans, AI agents, and CI/CD pipelines",
   "author": "Avinava",
   "license": "MIT",
+  "type": "commonjs",
   "keywords": [
     "mulesoft",
     "mule",
@@ -17,8 +18,8 @@
     "mule-lint": "./dist/bin/mule-lint.js",
     "mule-lint-mcp": "./dist/bin/mule-lint-mcp.js"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "files": [
     "dist",
     "README.md",
@@ -26,19 +27,28 @@
     "docs"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run clean && tsc",
     "build:watch": "tsc --watch",
     "typecheck": "tsc --noEmit",
+    "typecheck:tests": "tsc -p tests/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint 'src/**/*.ts'",
+    "lint": "npm run lint:source && npm run lint:app && npm run lint:tests",
+    "lint:source": "eslint src/core src/engine src/rules src/types src/quality --max-warnings=0",
+    "lint:app": "eslint src/formatter src/formatters src/mcp bin commitlint.config.ts vitest.config.ts --max-warnings=0",
+    "lint:tests": "eslint tests --max-warnings=0",
+    "lint:fix": "eslint src/core src/engine src/rules src/types src/quality --fix && eslint src/formatter src/formatters src/mcp bin commitlint.config.ts vitest.config.ts --fix && eslint tests --fix",
     "lint:unused": "knip",
-    "format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
-    "prettier:check": "prettier --check '**/*.{ts,js,json,md,yml}'",
-    "prettier:fix": "prettier --write '**/*.{ts,js,json,md,yml}'",
+    "format": "prettier --write '**/*.{ts,js,mjs,cjs,json,md,yml,yaml}'",
+    "format:check": "prettier --check '**/*.{ts,js,mjs,cjs,json,md,yml,yaml}'",
+    "prettier:check": "npm run format:check",
+    "prettier:fix": "npm run format",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run clean && npm run build && npm test",
+    "package:check": "npm run build && publint && node scripts/package-smoke.mjs",
+    "audit:prod": "npm audit --omit=dev --audit-level=moderate",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run typecheck:tests && npm run lint:unused && npm run test:coverage && npm run package:check && npm run audit:prod",
+    "prepublishOnly": "npm run check",
     "release": "git tag v$(node -p 'require(\"./package.json\").version') && git push origin v$(node -p 'require(\"./package.json\").version')",
     "prepare": "lefthook install"
   },
@@ -46,14 +56,14 @@
     "*.{ts,tsx,js,jsx,mjs,cjs,json,md,css,html,yml,yaml}": "prettier --write"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@prettier/plugin-xml": "^3.4.2",
-    "@xmldom/xmldom": "^0.8.10",
+    "@xmldom/xmldom": "^0.8.13",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "fast-glob": "^3.3.2",
-    "js-yaml": "^4.1.1",
-    "prettier": "^3.8.1",
+    "js-yaml": "^4.3.1",
+    "prettier": "^3.9.0",
     "xpath": "^0.0.34",
     "zod": "^3.25.0"
   },
@@ -61,23 +71,25 @@
     "@commitlint/cli": "^19.0.0",
     "@commitlint/config-conventional": "^19.0.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.19.27",
-    "eslint": "^9.0.0",
+    "@commitlint/types": "^19.8.1",
+    "@types/node": "^20.19.43",
+    "@vitest/coverage-v8": "^3.2.7",
+    "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.0.0",
     "knip": "^5.0.0",
     "lefthook": "^1.10.0",
     "lint-staged": "^15.0.0",
-    "publint": "^0.3.0",
+    "publint": "^0.3.23",
     "typescript": "^5.7.0",
-    "typescript-eslint": "^8.0.0",
-    "vitest": "^3.0.0"
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^3.2.7"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Avinava/mule-lint.git"
+    "url": "git+https://github.com/Avinava/mule-lint.git"
   },
   "bugs": {
     "url": "https://github.com/Avinava/mule-lint/issues"

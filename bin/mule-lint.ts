@@ -7,6 +7,9 @@ import { LintEngine } from '../src/engine/LintEngine';
 import { ALL_RULES } from '../src/rules';
 import { format, getExitCode } from '../src/formatters';
 import { FormatterType, LintConfig } from '../src/types/Config';
+import { DEFAULT_CONFIG } from '../src/types/Config';
+import { parseLintConfig } from '../src/core/ConfigLoader';
+import { filterReportBySeverity } from '../src/core/ReportFilter';
 import {
   evaluateQualityGate,
   formatQualityGateResult,
@@ -14,7 +17,7 @@ import {
 } from '../src/core/QualityGateEvaluator';
 import { DEFAULT_QUALITY_GATE, STRICT_QUALITY_GATE, QualityGate } from '../src/types/QualityGate';
 
-const packageJson = require('../package.json') as { version: string };
+import packageJson from '../package.json';
 
 const program = new Command();
 
@@ -23,7 +26,7 @@ program
   .description('Static analysis tool for MuleSoft applications')
   .version(packageJson.version)
   .argument('[path]', 'Path to scan (directory or file)')
-  .option('-f, --format <type>', 'Output format: table, json, sarif, html, csv', 'table')
+  .option('-f, --format <type>', 'Output format: table, json, sarif, html, csv')
   .option('-o, --output <file>', 'Write output to file instead of stdout')
   .option('-c, --config <file>', 'Path to configuration file')
   .option('-q, --quiet', 'Show only errors (suppress warnings and info)')
@@ -31,7 +34,7 @@ program
   .option('-e, --experimental', 'Enable experimental rules (opt-in)')
   .option('-g, --quality-gate <name>', 'Apply quality gate: default, strict, or from config')
   .option('-v, --verbose', 'Show verbose output')
-  .action(async (targetPath: string | undefined, options) => {
+  .action(async (targetPath: string | undefined, options: CliOptions) => {
     if (!targetPath) {
       program.help();
       return;
@@ -67,7 +70,7 @@ program
     '--xml-quote-attributes <style>',
     'Attribute quote style: preserve, single, double (default: preserve)',
   )
-  .action(async (targetPath: string, opts) => {
+  .action(async (targetPath: string, opts: FormatCliOptions) => {
     try {
       await runFormat(targetPath, opts);
     } catch (error) {
@@ -78,7 +81,7 @@ program
   });
 
 interface CliOptions {
-  format: string;
+  format?: string;
   output?: string;
   config?: string;
   quiet?: boolean;
@@ -104,7 +107,11 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
       throw new Error(`Config file not found: ${configPath}`);
     }
     const configContent = fs.readFileSync(configPath, 'utf-8');
-    config = JSON.parse(configContent);
+    const parsedConfig = parseLintConfig(JSON.parse(configContent) as unknown);
+    config = parsedConfig.config;
+    for (const warning of parsedConfig.warnings) {
+      console.error(`Config warning: ${warning}`);
+    }
   }
 
   // Filter rules based on keys (experimental is opt-in)
@@ -126,30 +133,18 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
   });
 
   // Run scan
-  const report = await engine.scan(absolutePath);
+  let report = await engine.scan(absolutePath);
+  const formatterType = (options.format ??
+    config.defaultFormatter ??
+    DEFAULT_CONFIG.defaultFormatter) as FormatterType;
+  const failOnWarning = options.failOnWarning === true || config.failOnWarning === true;
 
   // Filter if quiet mode
   if (options.quiet) {
-    for (const file of report.files) {
-      file.issues = file.issues.filter((issue) => issue.severity === 'error');
-    }
-    // Rebuild summary from filtered files to keep byRule and filesWithIssues accurate
-    const byRule: Record<string, number> = {};
-    let filesWithIssues = 0;
-    report.summary.bySeverity.warning = 0;
-    report.summary.bySeverity.info = 0;
-    for (const file of report.files) {
-      if (file.issues.length > 0) filesWithIssues++;
-      for (const issue of file.issues) {
-        byRule[issue.ruleId] = (byRule[issue.ruleId] ?? 0) + 1;
-      }
-    }
-    report.summary.byRule = byRule;
-    report.summary.filesWithIssues = filesWithIssues;
+    report = filterReportBySeverity(report, new Set(['error']), effectiveRules);
   }
 
   // Format output
-  const formatterType = options.format as FormatterType;
   const output = format(report, formatterType);
 
   // Write output
@@ -177,10 +172,10 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
     console.log(formatQualityGateResult(gateResult));
 
     // Exit code based on quality gate
-    exitCode = getQualityGateExitCode(gateResult.status, options.failOnWarning);
+    exitCode = getQualityGateExitCode(gateResult.status, failOnWarning);
   } else {
     // Legacy exit code based on issue count
-    exitCode = getExitCode(report, options.failOnWarning);
+    exitCode = getExitCode(report, failOnWarning);
   }
 
   process.exit(exitCode);

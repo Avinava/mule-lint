@@ -1,10 +1,7 @@
 import { LoggerCategoryRule } from '../../src/rules/logging/LoggerCategoryRule';
 import { LoggerPayloadRule } from '../../src/rules/logging/LoggerPayloadRule';
 import { LoggerInUntilSuccessfulRule } from '../../src/rules/logging/LoggerInUntilSuccessfulRule';
-import {
-  StructuredLoggingRule,
-  SensitiveDataLoggingRule,
-} from '../../src/rules/logging/LoggingPatternRules';
+import { SensitiveDataLoggingRule } from '../../src/rules/logging/LoggingPatternRules';
 import { parseXml } from '../../src/core/XmlParser';
 import { ValidationContext } from '../../src/types';
 

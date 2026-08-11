@@ -10,11 +10,11 @@ export type FormatterType = 'table' | 'json' | 'sarif' | 'html' | 'csv';
  * Main configuration for mule-lint
  */
 export interface LintConfig {
-  /** Base configuration to extend */
+  /** Reserved for a future version; currently has no runtime effect. */
   extends?: string | string[];
 
   /** Rule configurations keyed by rule ID */
-  rules: Record<string, RuleConfig | boolean>;
+  rules: Partial<Record<string, RuleConfig | boolean>>;
 
   /** Glob patterns for files to include */
   include: string[];
@@ -22,7 +22,7 @@ export interface LintConfig {
   /** Glob patterns for files to exclude */
   exclude: string[];
 
-  /** Path to custom rules directory */
+  /** Reserved for a future version; use EngineOptions.rules for custom rules. */
   customRulesPath?: string;
 
   /** Default formatter for output */
@@ -31,7 +31,7 @@ export interface LintConfig {
   /** Fail on warnings (for CI/CD) */
   failOnWarning: boolean;
 
-  /** Maximum number of issues before stopping */
+  /** Reserved for a future version; currently has no runtime effect. */
   maxIssues?: number;
 
   /** Quality gate configuration */

@@ -13,7 +13,7 @@ export class HardcodedHttpRule extends BaseRule {
   description = 'HTTP/HTTPS URLs should use property placeholders instead of hardcoded values';
   severity = 'error' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   // URL patterns to detect
   private readonly URL_PATTERN = /^https?:\/\//i;
@@ -28,21 +28,16 @@ export class HardcodedHttpRule extends BaseRule {
   // Attributes that should be ignored (not user-configurable URLs)
   private readonly IGNORED_ATTRIBUTES = ['xmlns', 'xsi:schemaLocation', 'schemaLocation'];
 
-  // Attributes to check for URLs
-  private readonly URL_ATTRIBUTES = ['url', 'host', 'path', 'value', 'uri', 'address', 'endpoint'];
-
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
     // Get all elements and check their attributes
     const allElements = doc.getElementsByTagName('*');
 
-    for (let i = 0; i < allElements.length; i++) {
-      const element = allElements[i];
+    for (const element of Array.from(allElements)) {
       const attrs = element.attributes;
 
-      for (let j = 0; j < attrs.length; j++) {
-        const attr = attrs[j];
+      for (const attr of Array.from(attrs)) {
         const attrName = attr.name;
         const value = attr.value;
 

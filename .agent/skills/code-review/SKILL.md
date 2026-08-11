@@ -141,7 +141,7 @@ Create a task checklist (`task.md`) with `[ ]` items reflecting the user's appro
 2. **Build** — `npm run build` (or equivalent) — must pass before moving on
 3. **Test** — `npm test` — no regressions
 4. **Lint** — `npm run lint` — no new errors
-5. **Format** — `npm run format:check` → fix with `--write` if needed
+5. **Format** — `npm run format:check` → fix with `npm run format` if needed
 
 > [!CAUTION]
 > If incremental edits compound errors in a file (cascading fixes that each break something new), stop and rewrite the file cleanly. Don't keep patching a broken state.
@@ -223,7 +223,7 @@ if (e instanceof AxiosError && e.response) {
 ### Full Check Suite
 
 ```bash
-npm run build && npm test && npm run lint && npm run format:check
+npm run check
 ```
 
 ### Fresh-Eyes Pass
@@ -245,35 +245,6 @@ Create a walkthrough summarizing:
 - Verification results (build, test, lint, format)
 - Items deferred (with rationale for each)
 - Any follow-up recommendations
-
----
-
-## Project-Specific: Error Handling Patterns
-
-When reviewing error handling in this codebase, apply these conventions:
-
-### Permanent Errors (Do NOT Retry)
-
-The following errors are treated as permanent in `QueryExecutor` and skip retries:
-
-- `INVALID_TYPE`: Object doesn't exist (e.g., CPQ objects on non-CPQ org)
-- `INVALID_FIELD`: Field doesn't exist on object
-- `sObject type 'X' is not supported`
-- `no such column`, `doesn't exist`
-
-### Graceful Degradation
-
-- `STORAGE_LIMIT_EXCEEDED`: Returns empty results instead of crashing. Analysis continues with available data.
-- Runners should catch individual query failures and continue with other queries.
-
-### Structured Errors
-
-Use `AnalyzerError` hierarchy from `@metadata-analyzer/types`:
-
-```typescript
-import { QueryError, ErrorCode } from '@metadata-analyzer/types';
-throw new QueryError(ErrorCode.QUERY_FAILED, 'Query failed', { queryName });
-```
 
 ---
 

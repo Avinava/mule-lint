@@ -64,7 +64,7 @@ _Goal: Allow an agent to see what rules exist and run a scan._
 > [!NOTE]
 > **Status**: Completed.
 
-*Goal: Allow the agent to understand *why* things failed.*
+_Goal: Allow the agent to understand *why* things failed._
 
 - [x] Implement `get_rule_details` tool.
 - [x] Expose internal documentation of rules via MCP.

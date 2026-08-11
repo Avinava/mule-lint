@@ -13,19 +13,30 @@ export class AutoDiscoveryRule extends BaseRule {
   severity = 'info' as const;
   category = 'standards' as const;
 
-  validate(doc: Document, _context: ValidationContext): Issue[] {
+  validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
     // Check if this is an API (has APIKit router or HTTP listener)
-    const hasApiKitRouter = this.exists('//*[local-name()="router"]', doc);
-    const hasHttpListener = this.exists('//*[local-name()="listener"]', doc);
+    const hasApiKitRouter =
+      context.projectContext?.hasApikitRouter ??
+      this.exists(
+        '//*[local-name()="router" and (contains(namespace-uri(), "/mule/apikit") or starts-with(name(), "apikit:"))]',
+        doc,
+      );
+    const hasHttpListener =
+      context.projectContext?.hasHttpListener ??
+      this.exists('//*[local-name()="listener" and contains(namespace-uri(), "/mule/http")]', doc);
 
     if (!hasApiKitRouter && !hasHttpListener) {
       return issues; // Not an API, skip
     }
 
     // Check for auto-discovery configuration
-    const hasAutoDiscovery = this.exists('//*[local-name()="api-autodiscovery"]', doc);
+    const hasAutoDiscoveryInDocument = this.exists(
+      '//*[local-name()="api-autodiscovery" or local-name()="autodiscovery"]',
+      doc,
+    );
+    const hasAutoDiscovery = context.projectContext?.hasAutoDiscovery ?? hasAutoDiscoveryInDocument;
 
     if (!hasAutoDiscovery && hasApiKitRouter) {
       issues.push(
@@ -36,8 +47,11 @@ export class AutoDiscoveryRule extends BaseRule {
     }
 
     // If auto-discovery exists, check it uses placeholders
-    if (hasAutoDiscovery) {
-      const autodiscoveryNodes = this.select('//*[local-name()="api-autodiscovery"]', doc);
+    if (hasAutoDiscoveryInDocument) {
+      const autodiscoveryNodes = this.select(
+        '//*[local-name()="api-autodiscovery" or local-name()="autodiscovery"]',
+        doc,
+      );
       for (const node of autodiscoveryNodes) {
         const apiId = this.getAttribute(node, 'apiId');
         if (apiId && !apiId.includes('${')) {

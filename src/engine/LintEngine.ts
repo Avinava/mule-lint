@@ -26,9 +26,9 @@ export interface EngineOptions {
   /** Rules to use for linting */
   rules: Rule[];
   /** Configuration (optional, uses defaults) */
-  config?: Partial<LintConfig>;
+  config?: Partial<LintConfig> | undefined;
   /** Verbose logging */
-  verbose?: boolean;
+  verbose?: boolean | undefined;
 }
 
 /**
@@ -126,7 +126,12 @@ export class LintEngine {
 
     // Run Project Rules (only once per scan, if not standalone)
     if (!isStandalone) {
-      const projectIssues = this.runProjectRules(projectRoot);
+      const projectIssues = this.runProjectRules(
+        projectRoot,
+        allFlowRefs,
+        allFlowNames,
+        projectContext,
+      );
       if (projectIssues.length > 0) {
         // Add a virtual file result for project-level issues
         fileResults.push({
@@ -149,8 +154,9 @@ export class LintEngine {
         // Extract environment name from filename (e.g., "dev.yaml" -> "dev", "local-secure.yaml" -> "local")
         const basename = path.basename(file, path.extname(file));
         const envMatch = basename.match(/^(dev|local|prod|qa|staging|uat|test|sandbox)/i);
-        if (envMatch) {
-          const env = envMatch[1].toLowerCase();
+        const environmentName = envMatch?.[1];
+        if (environmentName) {
+          const env = environmentName.toLowerCase();
           if (!metricsAggregator.environments.includes(env)) {
             metricsAggregator.environments.push(env);
           }
@@ -160,7 +166,7 @@ export class LintEngine {
 
     // Build report
     const durationMs = Date.now() - startTime;
-    const summary = this.buildSummary(fileResults);
+    const summary = this.buildSummary(fileResults, files.length);
 
     this.log(`Scan complete in ${durationMs}ms`);
     this.log(`Found ${summary.bySeverity.error} errors, ${summary.bySeverity.warning} warnings`);
@@ -179,7 +185,7 @@ export class LintEngine {
     };
 
     // Aggregate enhanced metrics (A-E ratings, debt calculation)
-    const enhancedMetrics = MetricsAggregator.aggregateMetrics(baseReport);
+    const enhancedMetrics = MetricsAggregator.aggregateMetrics(baseReport, this.rules);
 
     return {
       ...baseReport,
@@ -360,6 +366,7 @@ export class LintEngine {
         issues.push(...ruleIssues);
       } catch (error) {
         const message = getErrorMessage(error);
+        // eslint-disable-next-line no-console -- isolate rule failures without hiding diagnostics.
         console.error(`Error in rule ${rule.id}: ${message}`);
         // Don't fail the whole scan for a single rule error
       }
@@ -389,7 +396,7 @@ export class LintEngine {
   /**
    * Build summary statistics from file results
    */
-  private buildSummary(files: FileResult[]): LintSummary {
+  private buildSummary(files: FileResult[], scannedFileCount: number): LintSummary {
     const bySeverity: Record<Severity, number> = {
       error: 0,
       warning: 0,
@@ -399,11 +406,12 @@ export class LintEngine {
     let filesWithIssues = 0;
     let parseErrors = 0;
 
-    for (const file of files) {
-      if (!file.parsed) {
+    for (const [index, file] of files.entries()) {
+      const isScannedFile = index < scannedFileCount;
+      if (isScannedFile && !file.parsed) {
         parseErrors++;
       }
-      if (file.issues.length > 0) {
+      if (isScannedFile && file.issues.length > 0) {
         filesWithIssues++;
       }
       for (const issue of file.issues) {
@@ -413,7 +421,7 @@ export class LintEngine {
     }
 
     return {
-      totalFiles: files.length,
+      totalFiles: scannedFileCount,
       filesWithIssues,
       parseErrors,
       bySeverity,
@@ -424,30 +432,42 @@ export class LintEngine {
   /**
    * Run project-level rules that don't depend on specific files
    */
-  private runProjectRules(projectRoot: string): Issue[] {
+  private runProjectRules(
+    projectRoot: string,
+    allFlowRefs?: Set<string>,
+    allFlowNames?: Set<string>,
+    projectContext?: ProjectContext,
+  ): Issue[] {
     const issues: Issue[] = [];
 
     const projectRules = this.getEnabledRules().filter(
-      (r): r is InstanceType<typeof ProjectRule> => r instanceof ProjectRule,
+      (rule): rule is Rule & Required<Pick<Rule, 'runProject'>> =>
+        typeof rule.runProject === 'function',
     );
 
     for (const rule of projectRules) {
       try {
-        rule.reset();
-
-        // Create a basic context for project validation
         const context: ValidationContext = {
           filePath: path.join(projectRoot, 'pom.xml'), // Pseudo-file
           relativePath: 'Project Root',
           projectRoot,
           config: this.getRuleConfig(rule.id),
+          allFlowRefs,
+          allFlowNames,
+          projectContext,
         };
 
-        // Pass empty document since project rules don't use it
-        const ruleIssues = rule.validate({} as Document, context);
+        const ruleIssues = rule.runProject(context);
+        const configSeverity = context.config.severity;
+        if (configSeverity) {
+          for (const issue of ruleIssues) {
+            issue.severity = configSeverity;
+          }
+        }
         issues.push(...ruleIssues);
       } catch (error) {
         const message = getErrorMessage(error);
+        // eslint-disable-next-line no-console -- isolate project-rule failures without hiding diagnostics.
         console.error(`Error in project rule ${rule.id}: ${message}`);
       }
     }
@@ -496,6 +516,8 @@ export class LintEngine {
     const projectContext: ProjectContext = {
       hasHttpListener: false,
       hasApikitRouter: false,
+      hasApiKitConfig: false,
+      hasAutoDiscovery: false,
     };
 
     // Clear the cache at the start of each scan
@@ -522,9 +544,8 @@ export class LintEngine {
 
         // Collect flow-ref targets
         const allElements = doc.getElementsByTagName('*');
-        for (let i = 0; i < allElements.length; i++) {
-          const el = allElements[i];
-          const localName = el.localName ?? el.nodeName.split(':').pop() ?? '';
+        for (const el of Array.from(allElements)) {
+          const localName = el.localName;
 
           if (localName === 'flow-ref') {
             const name = el.getAttribute('name');
@@ -541,18 +562,24 @@ export class LintEngine {
             }
           }
 
-          // Detect HTTP listener
-          if (localName === 'listener') {
+          const namespace = el.namespaceURI ?? '';
+          const prefix = el.prefix ?? el.nodeName.split(':')[0] ?? '';
+
+          // Detect an HTTP listener, not an arbitrary connector listener.
+          if (localName === 'listener' && (prefix === 'http' || namespace.endsWith('/mule/http'))) {
             projectContext.hasHttpListener = true;
           }
 
           // Detect APIkit router or console
-          if (localName === 'router' || localName === 'console') {
-            // Check namespace to be sure it's apikit
-            const nodeName = el.nodeName;
-            if (nodeName.includes('apikit:')) {
-              projectContext.hasApikitRouter = true;
-            }
+          const isApiKit = prefix === 'apikit' || namespace.endsWith('/mule/apikit');
+          if (isApiKit && (localName === 'router' || localName === 'console')) {
+            projectContext.hasApikitRouter = true;
+          }
+          if (isApiKit && localName === 'config') {
+            projectContext.hasApiKitConfig = true;
+          }
+          if (localName === 'autodiscovery' || localName === 'api-autodiscovery') {
+            projectContext.hasAutoDiscovery = true;
           }
         }
       } catch {
@@ -582,10 +609,10 @@ export class LintEngine {
     projectContext: ProjectContext,
   ): ProjectLayer {
     // Check project directory name
-    const projectDir =
-      files.length > 0
-        ? path.basename(path.resolve(files[0].absolutePath, '..', '..', '..', '..'))
-        : '';
+    const firstFile = files[0];
+    const projectDir = firstFile
+      ? path.basename(path.resolve(firstFile.absolutePath, '..', '..', '..', '..'))
+      : '';
     const dirLower = projectDir.toLowerCase();
 
     if (dirLower.includes('-sapi') || dirLower.includes('_sapi') || dirLower.endsWith('sapi')) {

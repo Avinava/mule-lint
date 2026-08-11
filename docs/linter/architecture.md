@@ -341,7 +341,7 @@ src/
 1. Create class extending `BaseRule`
 2. Implement `validate()` method
 3. Register in `src/rules/index.ts`
-4. Add documentation to `docs/rules-catalog.md`
+4. Add documentation to `docs/best-practices/rules-catalog.md`
 
 ### Adding Formatters
 
