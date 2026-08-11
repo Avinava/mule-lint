@@ -13,6 +13,25 @@ export function registerResources(server: McpServer): void {
   registerDocsResource(server);
 }
 
+/** Locate a bundled documentation file in development and installed packages. */
+export function resolveDocumentationPath(relativePath: string): string | undefined {
+  const cwdCandidate = path.resolve(process.cwd(), relativePath);
+  if (fs.existsSync(cwdCandidate)) {
+    return cwdCandidate;
+  }
+
+  let current = __dirname;
+  const filesystemRoot = path.parse(current).root;
+  while (current !== filesystemRoot) {
+    const candidate = path.resolve(current, relativePath);
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+    current = path.dirname(current);
+  }
+  return undefined;
+}
+
 /**
  * Resource: mule-lint://rules
  * Comprehensive catalog of all available linting rules
@@ -244,13 +263,9 @@ function registerDocsResource(server: McpServer): void {
       }
 
       try {
-        // Try relative to CWD first (local dev), then relative to package root
-        let docPath = path.resolve(process.cwd(), relativePath);
-        if (!fs.existsSync(docPath)) {
-          docPath = path.resolve(__dirname, '../../../', relativePath);
-        }
+        const docPath = resolveDocumentationPath(relativePath);
 
-        if (fs.existsSync(docPath)) {
+        if (docPath) {
           const content = fs.readFileSync(docPath, 'utf-8');
           return {
             contents: [
@@ -266,7 +281,7 @@ function registerDocsResource(server: McpServer): void {
             contents: [
               {
                 uri: uri.href,
-                text: `Document file not found at: ${docPath}`,
+                text: `Document file not found: ${relativePath}`,
                 mimeType: 'text/plain',
               },
             ],

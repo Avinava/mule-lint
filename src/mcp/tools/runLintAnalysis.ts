@@ -4,19 +4,27 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getErrorMessage } from '../../core/errors';
 import { LintEngine } from '../../engine/LintEngine';
 import { getRuleById } from '../../rules';
+import { registerTool } from '../register';
+
+interface RunLintAnalysisInput {
+  projectPath: string;
+}
 
 /**
  * Register the run_lint_analysis tool on the MCP server
  */
 export function registerRunLintAnalysis(server: McpServer, engine: LintEngine): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
-  (server as any).tool(
+  registerTool<RunLintAnalysisInput>(
+    server,
     'run_lint_analysis',
-    'USE THIS TOOL FIRST to analyze a MuleSoft project. It scans the codebase for best practice violations, security issues (secure:: properties), and potential runtime errors. Returns a comprehensive report needed to identify what needs fixing.',
     {
-      projectPath: z.string().describe('Absolute path to the MuleSoft project directory to scan'),
+      description:
+        'USE THIS TOOL FIRST to analyze a MuleSoft project. It scans the codebase for best practice violations, security issues (secure:: properties), and potential runtime errors. Returns a comprehensive report needed to identify what needs fixing.',
+      inputSchema: {
+        projectPath: z.string().describe('Absolute path to the MuleSoft project directory to scan'),
+      },
     },
-    async ({ projectPath }: { projectPath: string }) => {
+    async ({ projectPath }) => {
       try {
         const report = await engine.scan(projectPath);
 

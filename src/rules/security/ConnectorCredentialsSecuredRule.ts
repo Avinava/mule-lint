@@ -24,7 +24,7 @@ export class ConnectorCredentialsSecuredRule extends BaseRule {
   description = 'Connector credentials must use ${secure::} property placeholders';
   severity = 'error' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   /**
    * Map of element local-name patterns to their sensitive attributes.
@@ -67,8 +67,7 @@ export class ConnectorCredentialsSecuredRule extends BaseRule {
     const issues: Issue[] = [];
     const allElements = doc.getElementsByTagName('*');
 
-    for (let i = 0; i < allElements.length; i++) {
-      const element = allElements[i];
+    for (const element of Array.from(allElements)) {
       const localName = element.localName;
 
       const sensitiveAttrs = this.findSensitiveAttrs(localName);
@@ -139,6 +138,6 @@ export class ConnectorCredentialsSecuredRule extends BaseRule {
 
   private extractPropertyName(placeholder: string): string {
     const match = /\$\{([^}]+)\}/.exec(placeholder);
-    return match ? match[1] : placeholder;
+    return match?.[1] ?? placeholder;
   }
 }

@@ -2,6 +2,11 @@ import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { getRuleById } from '../../rules';
+import { registerTool } from '../register';
+
+interface GetRuleDetailsInput {
+  ruleId: string;
+}
 
 /**
  * Mapping from rule category to the best-practice doc slug.
@@ -31,14 +36,17 @@ const categoryToDocSlug: Record<string, string> = {
  * Register the get_rule_details tool on the MCP server
  */
 export function registerGetRuleDetails(server: McpServer): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
-  (server as any).tool(
+  registerTool<GetRuleDetailsInput>(
+    server,
     'get_rule_details',
-    'Retrieve detailed documentation for a specific linting rule ID (e.g., MULE-001). Use this to understand WHY a rule failed and HOW to fix it properly according to best practices. Returns rule metadata, the relevant best-practice guide slug, and related rules.',
     {
-      ruleId: z.string().describe('The ID of the rule to retrieve (e.g., "MULE-001", "DW-004")'),
+      description:
+        'Retrieve detailed documentation for a specific linting rule ID (e.g., MULE-001). Use this to understand WHY a rule failed and HOW to fix it properly according to best practices. Returns rule metadata, the relevant best-practice guide slug, and related rules.',
+      inputSchema: {
+        ruleId: z.string().describe('The ID of the rule to retrieve (e.g., "MULE-001", "DW-004")'),
+      },
     },
-    ({ ruleId }: { ruleId: string }) => {
+    ({ ruleId }) => {
       const rule = getRuleById(ruleId);
       if (!rule) {
         return {

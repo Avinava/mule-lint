@@ -18,7 +18,7 @@ export class SecurePropertiesEncryptionRule extends BaseRule {
   description = 'Secure properties must use strong encryption algorithms';
   severity = 'warning' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   private readonly WEAK_ALGORITHMS = ['DES', 'DESede', 'RC2', 'RC4'];
   private readonly STRONG_ALGORITHMS = ['AES', 'Blowfish'];
@@ -35,7 +35,7 @@ export class SecurePropertiesEncryptionRule extends BaseRule {
 
     for (const config of secureConfigs) {
       // Check for encrypt element presence
-      const encryptElements = this.select('.//*[local-name()="encrypt"]', config as Document);
+      const encryptElements = this.select('.//*[local-name()="encrypt"]', config);
 
       if (encryptElements.length === 0) {
         const docName = this.getDocName(config) ?? 'Secure Properties Config';

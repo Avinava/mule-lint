@@ -11,9 +11,9 @@ export interface ScanOptions {
   /** Glob patterns for files to exclude */
   exclude: string[];
   /** Maximum depth to traverse */
-  maxDepth?: number;
+  maxDepth?: number | undefined;
   /** Follow symbolic links */
-  followSymlinks?: boolean;
+  followSymlinks?: boolean | undefined;
 }
 
 /**
@@ -74,9 +74,9 @@ export async function scanDirectory(
     cwd: absoluteRoot,
     absolute: true,
     ignore: opts.exclude,
-    followSymbolicLinks: opts.followSymlinks,
+    followSymbolicLinks: opts.followSymlinks ?? false,
     onlyFiles: true,
-    deep: opts.maxDepth,
+    ...(opts.maxDepth === undefined ? {} : { deep: opts.maxDepth }),
   });
 
   return files.map((filePath) => ({
@@ -119,9 +119,9 @@ export function scanDirectorySync(
     cwd: absoluteRoot,
     absolute: true,
     ignore: opts.exclude,
-    followSymbolicLinks: opts.followSymlinks,
+    followSymbolicLinks: opts.followSymlinks ?? false,
     onlyFiles: true,
-    deep: opts.maxDepth,
+    ...(opts.maxDepth === undefined ? {} : { deep: opts.maxDepth }),
   });
 
   return files.map((filePath) => ({

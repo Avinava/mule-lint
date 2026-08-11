@@ -18,7 +18,7 @@ export class GenericErrorRule extends BaseRule {
   description = 'Avoid catching type="ANY" - be specific about error types';
   severity = 'warning' as const;
   category = 'error-handling' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   // Generic types to flag
   private readonly GENERIC_TYPES = ['ANY', 'MULE:ANY'];
@@ -91,11 +91,10 @@ export class GenericErrorRule extends BaseRule {
     const siblings = parent.childNodes;
     let lastOnError: Node | null = null;
 
-    for (let i = 0; i < siblings.length; i++) {
-      const sibling = siblings[i];
+    for (const sibling of Array.from(siblings)) {
       if (sibling.nodeType === 1 /* ELEMENT_NODE */) {
         const el = sibling as Element;
-        const localName = el.localName ?? el.tagName ?? '';
+        const localName = el.localName;
         if (localName === 'on-error-continue' || localName === 'on-error-propagate') {
           lastOnError = sibling;
         }

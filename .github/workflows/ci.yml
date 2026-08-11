@@ -27,16 +27,52 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
-
       - name: Run tests
         run: npm test
 
-      - name: Run linter
-        run: npm run lint || true
+      - name: Build
+        run: npm run build
 
-      - name: Test CLI
+      - name: Test CLI exit codes
+        shell: bash
         run: |
           node dist/bin/mule-lint.js tests/fixtures/valid/proper-flow.xml
-          node dist/bin/mule-lint.js tests/fixtures/invalid/comprehensive-bad.xml || true
+          set +e
+          node dist/bin/mule-lint.js tests/fixtures/invalid/comprehensive-bad.xml
+          status=$?
+          set -e
+          test "$status" -eq 1
+
+      - name: Test CLI configuration and precedence
+        shell: bash
+        run: |
+          json_output="$(node dist/bin/mule-lint.js tests/fixtures/valid/proper-flow.xml -c tests/fixtures/config-json.json)"
+          node -e 'JSON.parse(process.argv[1])' "$json_output"
+
+          table_output="$(node dist/bin/mule-lint.js tests/fixtures/valid/proper-flow.xml -c tests/fixtures/config-json.json -f table)"
+          grep -q 'Mule-Lint Report' <<< "$table_output"
+
+          set +e
+          node dist/bin/mule-lint.js tests/fixtures/valid/proper-flow.xml -c tests/fixtures/config-invalid.json
+          status=$?
+          set -e
+          test "$status" -eq 2
+
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run all quality, coverage, audit, and package checks
+        run: npm run check

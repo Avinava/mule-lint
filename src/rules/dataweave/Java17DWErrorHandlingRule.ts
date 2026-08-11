@@ -38,21 +38,21 @@ export class Java17DWErrorHandlingRule extends BaseRule {
     },
   ];
 
-  validate(doc: Document, context: ValidationContext): Issue[] {
+  validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
+    this.checkInlineScripts(doc, issues);
+    return issues;
+  }
 
-    // 1. Check external DWL files
+  /** Scan external scripts once per project; inline scripts remain per XML file. */
+  runProject(context: ValidationContext): Issue[] {
+    const issues: Issue[] = [];
     const dwlDir = path.join(context.projectRoot, 'src/main/resources');
     if (fs.existsSync(dwlDir)) {
-      const dwlFiles = this.findDwlFiles(dwlDir);
-      for (const file of dwlFiles) {
+      for (const file of this.findDwlFiles(dwlDir)) {
         this.checkFile(file, issues);
       }
     }
-
-    // 2. Check inline DataWeave in XML
-    this.checkInlineScripts(doc, issues);
-
     return issues;
   }
 
@@ -60,7 +60,7 @@ export class Java17DWErrorHandlingRule extends BaseRule {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
       this.checkContent(content, issues, filePath);
-    } catch (e) {
+    } catch {
       // Ignore read errors
     }
   }

@@ -26,6 +26,9 @@ npm run lint:fix
 
 # Build and test
 npm run build && npm test
+
+# Run the complete CI-equivalent verification
+npm run check
 ```
 
 ## Project Structure
@@ -36,7 +39,7 @@ mule-lint/
 │   ├── types/          # TypeScript interfaces
 │   ├── core/           # XPath, XML parsing, file scanning
 │   ├── engine/         # LintEngine orchestration
-│   ├── rules/          # All lint rules (56 total)
+│   ├── rules/          # All lint rules (82 total)
 │   │   ├── base/       # BaseRule abstract class
 │   │   ├── api-led/
 │   │   ├── complexity/
@@ -69,7 +72,7 @@ mule-lint/
 3. **Extend BaseRule**: Use the provided utilities for XPath queries
 4. **Register the Rule**: Add to `src/rules/index.ts`
 5. **Write Tests**: Create test file in `tests/unit/`
-6. **Update Documentation**: Add to `docs/rules-catalog.md`
+6. **Update Documentation**: Add to `docs/best-practices/rules-catalog.md`
 
 ### Rule Template
 

@@ -20,7 +20,7 @@ export class ScatterGatherRoutesRule extends BaseRule {
     const scatterGathers = this.select('//mule:scatter-gather', doc);
 
     for (const sg of scatterGathers) {
-      const routes = this.select('./mule:route', sg as Document);
+      const routes = this.select('./mule:route', sg);
 
       if (routes.length > maxRoutes) {
         issues.push(

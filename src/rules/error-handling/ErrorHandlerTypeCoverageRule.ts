@@ -18,7 +18,7 @@ export class ErrorHandlerTypeCoverageRule extends BaseRule {
   description = 'Error handlers in APIKit projects should cover standard APIKit error types';
   severity = 'warning' as const;
   category = 'error-handling' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   /**
    * Minimum set of APIKit error types that a well-structured SAPI should handle.
@@ -51,8 +51,8 @@ export class ErrorHandlerTypeCoverageRule extends BaseRule {
       const handledTypes = new Set<string>();
 
       const onErrorBlocks = [
-        ...this.select('.//mule:on-error-continue[@type]', handler as Document),
-        ...this.select('.//mule:on-error-propagate[@type]', handler as Document),
+        ...this.select('.//mule:on-error-continue[@type]', handler),
+        ...this.select('.//mule:on-error-propagate[@type]', handler),
       ];
 
       for (const block of onErrorBlocks) {

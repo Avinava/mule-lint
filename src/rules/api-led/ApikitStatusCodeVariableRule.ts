@@ -18,7 +18,7 @@ export class ApikitStatusCodeVariableRule extends BaseRule {
     'APIKit implementation flows should set httpStatus variable for correct response codes';
   severity = 'info' as const;
   category = 'api-led' as const;
-  issueType: IssueType = 'code-smell';
+  override issueType: IssueType = 'code-smell';
 
   /** Pattern that matches APIKit-generated flow names like get:\resource:config */
   private readonly APIKIT_FLOW_PATTERN = /^(get|post|put|patch|delete|head|options):\\/;
@@ -44,7 +44,7 @@ export class ApikitStatusCodeVariableRule extends BaseRule {
 
       if (!setsHttpStatus) {
         // Determine expected status code from HTTP method
-        const method = flowName.split(':')[0].toUpperCase();
+        const method = (flowName.split(':')[0] ?? '').toUpperCase();
         const expectedCode = this.getExpectedStatusCode(method);
 
         issues.push(

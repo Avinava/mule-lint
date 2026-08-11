@@ -18,7 +18,7 @@ export class FlowRefTargetExistsRule extends BaseRule {
   description = 'Every flow-ref must reference an existing flow or sub-flow';
   severity = 'error' as const;
   category = 'operations' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];

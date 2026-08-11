@@ -1,8 +1,8 @@
 # Rules Catalog
 
-> **Version:** 1.21.0
-> **Total Rules:** 82 implemented across 16 categories
-> **Last Updated:** April 2026
+> **Version:** 1.24.1
+> **Total Rules:** 82 implemented across 15 runtime categories
+> **Last Updated:** August 2026
 
 ---
 
@@ -30,6 +30,9 @@
 ---
 
 ## Rule Categories
+
+The catalog uses documentation families for navigation; several families share the same runtime
+`RuleCategory` value.
 
 | Family         | Prefix                                                       | Count | Description                                    |
 | -------------- | ------------------------------------------------------------ | ----- | ---------------------------------------------- |
@@ -1087,18 +1090,19 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 **Description:** Flow cyclomatic complexity should not exceed threshold.
 
 **Decision Points Tracked:**
-| Element | Description |
-|---------|-------------|
-| `<choice>/<when>` | Each when clause adds 1 |
-| `<until-successful>` | Retry logic |
-| `<foreach>` | Iteration |
-| `<parallel-foreach>` | Parallel iteration |
-| `<scatter-gather>` | Parallel execution |
-| `<async>` | Parallel execution path |
-| `<try>` | Exception handling |
-| `<first-successful>` | Fallback routing |
-| `<round-robin>` | Load balancing |
-| `<on-error-*>` | Error handlers |
+
+| Element              | Description             |
+| -------------------- | ----------------------- |
+| `<choice>/<when>`    | Each when clause adds 1 |
+| `<until-successful>` | Retry logic             |
+| `<foreach>`          | Iteration               |
+| `<parallel-foreach>` | Parallel iteration      |
+| `<scatter-gather>`   | Parallel execution      |
+| `<async>`            | Parallel execution path |
+| `<try>`              | Exception handling      |
+| `<first-successful>` | Fallback routing        |
+| `<round-robin>`      | Load balancing          |
+| `<on-error-*>`       | Error handlers          |
 
 **Configuration:**
 
@@ -1248,7 +1252,7 @@ ApiTimeout: 30000
 db.password: mySecretPassword
 
 # ✅ Good - encrypted
-db.password: "![encryptedValue]"
+db.password: '![encryptedValue]'
 ```
 
 ---

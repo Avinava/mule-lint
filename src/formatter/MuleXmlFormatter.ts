@@ -25,15 +25,15 @@ export const MULE_XML_DEFAULTS = {
  */
 export interface FormatOptions {
   /** Spaces per indentation level (default: 4 — Anypoint Studio standard) */
-  tabWidth?: number;
+  tabWidth?: number | undefined;
   /** Max line width before wrapping (default: 140) */
-  printWidth?: number;
+  printWidth?: number | undefined;
   /** Attribute quote handling: 'preserve' (default), 'single', or 'double' */
-  xmlQuoteAttributes?: 'preserve' | 'single' | 'double';
+  xmlQuoteAttributes?: 'preserve' | 'single' | 'double' | undefined;
   /** Sort attributes alphabetically (default: false) */
-  xmlSortAttributesByKey?: boolean;
+  xmlSortAttributesByKey?: boolean | undefined;
   /** Dry-run mode — report changes without writing files */
-  check?: boolean;
+  check?: boolean | undefined;
 }
 
 /**
@@ -42,7 +42,7 @@ export interface FormatOptions {
 export interface FormatResult {
   filePath: string;
   changed: boolean;
-  error?: string;
+  error?: string | undefined;
 }
 
 /**
@@ -159,5 +159,5 @@ function buildPrettierOptions(options?: FormatOptions): prettier.Options {
       options?.xmlSortAttributesByKey ?? MULE_XML_DEFAULTS.xmlSortAttributesByKey,
     xmlSelfClosingSpace: MULE_XML_DEFAULTS.xmlSelfClosingSpace,
     xmlWhitespaceSensitivity: MULE_XML_DEFAULTS.xmlWhitespaceSensitivity,
-  } as prettier.Options;
+  };
 }

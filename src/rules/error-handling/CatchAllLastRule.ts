@@ -18,7 +18,7 @@ export class CatchAllLastRule extends BaseRule {
     'type="ANY" or implicit catch-all must be the last on-error block in an error handler';
   severity = 'error' as const;
   category = 'error-handling' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   private readonly CATCH_ALL_TYPES = ['ANY', 'MULE:ANY'];
 
@@ -31,7 +31,7 @@ export class CatchAllLastRule extends BaseRule {
       // Collect all on-error-* children in document order
       const children = this.select(
         './*[local-name()="on-error-continue" or local-name()="on-error-propagate"]',
-        handler as Document,
+        handler,
       );
 
       if (children.length <= 1) {
@@ -39,13 +39,11 @@ export class CatchAllLastRule extends BaseRule {
       }
 
       // Check each child except the last
-      for (let i = 0; i < children.length - 1; i++) {
-        const child = children[i];
+      for (const child of children.slice(0, -1)) {
         const typeAttr = this.getAttribute(child, 'type');
 
         const isCatchAll =
           typeAttr === null ||
-          typeAttr === undefined ||
           typeAttr.trim() === '' ||
           this.CATCH_ALL_TYPES.includes(typeAttr.trim().toUpperCase());
 

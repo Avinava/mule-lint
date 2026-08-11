@@ -13,7 +13,7 @@ export class InputValidationRule extends BaseRule {
   description = 'Incoming payloads should be validated with schema validation';
   severity = 'warning' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];

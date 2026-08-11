@@ -6,7 +6,7 @@ async function main() {
   await server.start();
 }
 
-main().catch((error) => {
+main().catch((error: unknown) => {
   console.error('Fatal error in MCP server:', error);
   process.exit(1);
 });

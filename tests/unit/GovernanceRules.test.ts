@@ -54,7 +54,9 @@ describe('Governance Rules', () => {
         return true;
       });
       (fs.readdirSync as ReturnType<typeof vi.fn>).mockReturnValue(['test.xml']);
-      (fs.readFileSync as ReturnType<typeof vi.fn>).mockReturnValue('<project>mule-maven-plugin</project>');
+      (fs.readFileSync as ReturnType<typeof vi.fn>).mockReturnValue(
+        '<project>mule-maven-plugin</project>',
+      );
 
       const issues = rule.validateProject(createContext(mockRoot));
 

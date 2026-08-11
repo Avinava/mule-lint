@@ -22,22 +22,28 @@ export abstract class ProjectRule extends BaseRule {
    */
   readonly isProjectRule = true;
 
-  /**
-   * Track if this rule has already run during this scan
-   * Reset by LintEngine at the start of each scan
-   */
   private hasRun = false;
 
   /**
-   * Override validate to implement run-once semantics
+   * Preserve direct validation compatibility for consumers and unit tests.
+   * The engine guarantees once-per-scan execution through runProject().
    */
-  validate(doc: Document, context: ValidationContext): Issue[] {
-    // Only run once per scan
+  validate(_doc: Document, context: ValidationContext): Issue[] {
     if (this.hasRun) {
       return [];
     }
     this.hasRun = true;
+    return this.validateProject(context);
+  }
 
+  /**
+   * Execute this rule through the engine's project phase without requiring a
+   * synthetic XML document. The state reset preserves repeatable scans when a
+   * LintEngine instance is reused.
+   */
+  runProject(context: ValidationContext): Issue[] {
+    this.reset();
+    this.hasRun = true;
     return this.validateProject(context);
   }
 

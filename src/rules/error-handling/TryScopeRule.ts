@@ -17,7 +17,7 @@ export class TryScopeRule extends BaseRule {
   description = 'Complex operations should use Try scope for error isolation';
   severity = 'info' as const;
   category = 'error-handling' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];

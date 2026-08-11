@@ -115,7 +115,7 @@ export class YamlParser {
 
     // Get the last segment of the key (after the last .)
     const segments = lowerKey.split('.');
-    const lastSegment = segments[segments.length - 1];
+    const lastSegment = segments.at(-1) ?? '';
 
     // Check if the last segment matches any secret pattern
     return secretKeyEndings.some(

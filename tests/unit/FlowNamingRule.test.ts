@@ -1,6 +1,6 @@
 import { FlowNamingRule } from '../../src/rules/naming/FlowNamingRule';
 import { parseXml } from '../../src/core/XmlParser';
-import { ValidationContext, RuleConfig } from '../../src/types';
+import { ValidationContext } from '../../src/types';
 
 describe('FlowNamingRule', () => {
   const rule = new FlowNamingRule();

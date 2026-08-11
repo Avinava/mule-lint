@@ -30,6 +30,8 @@ function getMetricValue(metric: QualityMetric, report: LintReport): number {
       return report.metrics?.coverage?.percentage ?? 0;
     case 'duplications':
       return report.metrics?.duplications?.percentage ?? 0;
+    case 'security_vulnerabilities':
+      return report.metrics?.security?.vulnerabilities ?? 0;
     case 'security_hotspots':
       return report.metrics?.security?.hotspots ?? 0;
     case 'technical_debt_ratio':
@@ -71,7 +73,6 @@ export function evaluateQualityGate(
   gate: QualityGate = DEFAULT_QUALITY_GATE,
 ): QualityGateResult {
   const conditionResults: ConditionResult[] = [];
-  let overallStatus: QualityGateStatus = 'passed';
   const failedConditions: string[] = [];
   const warnConditions: string[] = [];
 
@@ -90,14 +91,15 @@ export function evaluateQualityGate(
       const conditionStr = `${condition.metric} ${condition.operator} ${condition.threshold} (actual: ${actualValue})`;
 
       if (condition.status === 'fail') {
-        overallStatus = 'failed';
         failedConditions.push(conditionStr);
-      } else if (condition.status === 'warn' && overallStatus !== 'failed') {
-        overallStatus = 'warning';
+      } else {
         warnConditions.push(conditionStr);
       }
     }
   }
+
+  const overallStatus: QualityGateStatus =
+    failedConditions.length > 0 ? 'failed' : warnConditions.length > 0 ? 'warning' : 'passed';
 
   // Build message
   let message: string;

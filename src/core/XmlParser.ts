@@ -7,13 +7,13 @@ export interface ParseResult {
   /** Whether parsing was successful */
   success: boolean;
   /** The parsed document (if successful) */
-  document?: Document;
+  document?: Document | undefined;
   /** Parse error message (if failed) */
-  error?: string;
+  error?: string | undefined;
   /** Line number of parse error (if available) */
-  errorLine?: number;
+  errorLine?: number | undefined;
   /** Column number of parse error (if available) */
-  errorColumn?: number;
+  errorColumn?: number | undefined;
 }
 
 /**
@@ -21,8 +21,8 @@ export interface ParseResult {
  */
 interface ParserError {
   message: string;
-  line?: number;
-  column?: number;
+  line?: number | undefined;
+  column?: number | undefined;
 }
 
 /**
@@ -56,8 +56,8 @@ export function parseXml(content: string, filePath?: string): ParseResult {
     const document = parser.parseFromString(content, 'application/xml');
 
     // Check for critical errors
-    if (errors.length > 0) {
-      const firstError = errors[0];
+    const firstError = errors[0];
+    if (firstError) {
       return {
         success: false,
         error: formatParseError(firstError, filePath),
@@ -67,6 +67,8 @@ export function parseXml(content: string, filePath?: string): ParseResult {
     }
 
     // Verify document has a root element
+    // xmldom can return a document without a root despite lib.dom declaring it non-null.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!document.documentElement) {
       return {
         success: false,
@@ -99,8 +101,8 @@ function parseErrorLocation(message: string): ParserError {
 
   return {
     message,
-    line: lineMatch ? parseInt(lineMatch[1], 10) : undefined,
-    column: colMatch ? parseInt(colMatch[1], 10) : undefined,
+    line: lineMatch?.[1] ? parseInt(lineMatch[1], 10) : undefined,
+    column: colMatch?.[1] ? parseInt(colMatch[1], 10) : undefined,
   };
 }
 
@@ -146,9 +148,9 @@ export function looksLikeXml(content: string): boolean {
  * Extract XML declaration info
  */
 export interface XmlDeclaration {
-  version?: string;
-  encoding?: string;
-  standalone?: string;
+  version?: string | undefined;
+  encoding?: string | undefined;
+  standalone?: string | undefined;
 }
 
 export function getXmlDeclaration(content: string): XmlDeclaration | null {
@@ -159,19 +161,22 @@ export function getXmlDeclaration(content: string): XmlDeclaration | null {
 
   const declaration: XmlDeclaration = {};
   const attrs = match[1];
+  if (!attrs) {
+    return declaration;
+  }
 
   const versionMatch = attrs.match(/version\s*=\s*["']([^"']+)["']/);
-  if (versionMatch) {
+  if (versionMatch?.[1]) {
     declaration.version = versionMatch[1];
   }
 
   const encodingMatch = attrs.match(/encoding\s*=\s*["']([^"']+)["']/);
-  if (encodingMatch) {
+  if (encodingMatch?.[1]) {
     declaration.encoding = encodingMatch[1];
   }
 
   const standaloneMatch = attrs.match(/standalone\s*=\s*["']([^"']+)["']/);
-  if (standaloneMatch) {
+  if (standaloneMatch?.[1]) {
     declaration.standalone = standaloneMatch[1];
   }
 

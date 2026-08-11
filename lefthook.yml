@@ -1,18 +1,18 @@
 pre-commit:
-  parallel: true
+  parallel: false
   jobs:
     - name: prettier
       run: npx lint-staged
-
-    - name: lint-unused
-      run: npx knip
 
     - name: lint
       glob: '*.{ts,tsx}'
       run: npx eslint {staged_files}
 
     - name: typecheck
-      run: npx tsc --noEmit
+      run: npm run typecheck && npm run typecheck:tests
+
+    - name: lint-unused
+      run: npm run lint:unused
 
     - name: test-related
       glob: 'src/**/*.ts'

@@ -23,7 +23,7 @@ export class GlobalErrorHandlerRule extends ProjectRule {
     'Project should have a global error handler configuration for consistent error handling';
   severity = 'warning' as const;
   category = 'error-handling' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   protected validateProject(context: ValidationContext): Issue[] {
     // Get configurable expected file path

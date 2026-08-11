@@ -21,8 +21,7 @@ export class AsyncErrorHandlerRule extends BaseRule {
     for (const async of asyncScopes) {
       // Check if async has error-handler or try scope
       const hasErrorHandling =
-        this.exists('./mule:error-handler', async as Document) ||
-        this.exists('./mule:try', async as Document);
+        this.exists('./mule:error-handler', async) || this.exists('./mule:try', async);
 
       if (!hasErrorHandling) {
         const docName = this.getDocName(async) ?? 'Async scope';

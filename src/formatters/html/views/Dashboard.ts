@@ -8,9 +8,7 @@ import { icons } from '../components/Icons';
 import { renderQualityRatingsSection } from '../sections/QualityRatings';
 import { renderLintSummarySection, LintSummaryProps } from '../sections/LintSummary';
 
-export interface DashboardViewProps extends LintSummaryProps {
-  // LintSummaryProps includes: errors, warnings, info, filesScanned
-}
+export type DashboardViewProps = LintSummaryProps;
 
 export function renderDashboardView(props: DashboardViewProps): string {
   return `

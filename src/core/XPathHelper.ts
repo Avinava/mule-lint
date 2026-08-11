@@ -133,6 +133,7 @@ export class XPathHelper {
       }
       return [];
     } catch (error) {
+      // eslint-disable-next-line no-console -- XPath diagnostics must remain visible to API consumers.
       console.error(`XPath error for expression "${expression}":`, error);
       return [];
     }
@@ -146,7 +147,7 @@ export class XPathHelper {
    */
   public selectNode(expression: string, context: Document | Node): Node | null {
     const nodes = this.selectNodes(expression, context);
-    return nodes.length > 0 ? nodes[0] : null;
+    return nodes[0] ?? null;
   }
 
   /**
@@ -190,12 +191,7 @@ export class XPathHelper {
  */
 export function getAttribute(node: Node, attrName: string): string | null {
   const element = node as Element;
-  if (element.getAttribute) {
-    const value = element.getAttribute(attrName);
-
-    return value || null;
-  }
-  return null;
+  return element.getAttribute(attrName) || null;
 }
 
 /**
@@ -217,7 +213,7 @@ export function getColumnNumber(node: Node): number | undefined {
  */
 export function hasAttribute(node: Node, attrName: string): boolean {
   const element = node as Element;
-  return element.hasAttribute?.(attrName) ?? false;
+  return element.hasAttribute(attrName);
 }
 
 /**

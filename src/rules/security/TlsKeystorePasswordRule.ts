@@ -18,7 +18,7 @@ export class TlsKeystorePasswordRule extends BaseRule {
   description = 'TLS keystore/truststore passwords must use ${secure::} placeholders';
   severity = 'error' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   private readonly PASSWORD_ATTRS = ['password', 'keyPassword'];
 
@@ -76,6 +76,6 @@ export class TlsKeystorePasswordRule extends BaseRule {
 
   private extractPropName(placeholder: string): string {
     const match = /\$\{([^}]+)\}/.exec(placeholder);
-    return match ? match[1] : placeholder;
+    return match?.[1] ?? placeholder;
   }
 }

@@ -52,14 +52,14 @@ function enrichFiles(report: LintReport): Array<{
     message: string;
     ruleId: string;
     severity: string;
-    suggestion?: string;
-    codeSnippet?: string;
-    column?: number;
+    suggestion?: string | undefined;
+    codeSnippet?: string | undefined;
+    column?: number | undefined;
   }>;
   filePath: string;
   relativePath: string;
   parsed: boolean;
-  parseError?: string;
+  parseError?: string | undefined;
 }> {
   return report.files.map((file) => ({
     ...file,
@@ -80,7 +80,7 @@ function enrichFiles(report: LintReport): Array<{
 /**
  * Build client-side data payload
  */
- 
+
 function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof enrichFiles>) {
   const projectName = report.projectRoot.split('/').filter(Boolean).pop() ?? 'MuleSoft Project';
 
@@ -91,7 +91,7 @@ function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof en
       timestamp: report.timestamp,
       version: packageJson.version,
       filesScanned: report.files.length,
-      duration: report.durationMs ?? 0,
+      duration: report.durationMs,
     },
     summary: report.summary,
     files: enrichedFiles,

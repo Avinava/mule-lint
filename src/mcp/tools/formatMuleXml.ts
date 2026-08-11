@@ -2,49 +2,51 @@ import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { getErrorMessage } from '../../core/errors';
+import { registerTool } from '../register';
+
+interface FormatMuleXmlInput {
+  projectPath?: string;
+  filePath?: string;
+  content?: string;
+  check?: boolean;
+  tabWidth?: number;
+  printWidth?: number;
+}
 
 /**
  * Register the format_mule_xml tool on the MCP server
  */
 export function registerFormatMuleXml(server: McpServer): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK generic type inference exceeds TS depth limits (TS2589)
-  (server as any).tool(
+  registerTool<FormatMuleXmlInput>(
+    server,
     'format_mule_xml',
-    'Format Mule XML files using Prettier with Anypoint Studio-compatible defaults (4-space indent, 140 width, single-quote safe). Accepts a project path to format all XML files, a single file path, or raw XML content for inline formatting.',
     {
-      projectPath: z
-        .string()
-        .optional()
-        .describe(
-          'Absolute path to a MuleSoft project directory — formats all XML in src/main/mule/',
-        ),
-      filePath: z.string().optional().describe('Absolute path to a single Mule XML file to format'),
-      content: z
-        .string()
-        .optional()
-        .describe('Raw XML string to format inline (returns formatted text)'),
-      check: z
-        .boolean()
-        .optional()
-        .describe('Dry-run mode: report which files need formatting without writing changes'),
-      tabWidth: z.number().optional().describe('Spaces per indent level (default: 4)'),
-      printWidth: z.number().optional().describe('Max line width before wrapping (default: 140)'),
+      description:
+        'Format Mule XML files using Prettier with Anypoint Studio-compatible defaults (4-space indent, 140 width, single-quote safe). Accepts a project path to format all XML files, a single file path, or raw XML content for inline formatting.',
+      inputSchema: {
+        projectPath: z
+          .string()
+          .optional()
+          .describe(
+            'Absolute path to a MuleSoft project directory — formats all XML in src/main/mule/',
+          ),
+        filePath: z
+          .string()
+          .optional()
+          .describe('Absolute path to a single Mule XML file to format'),
+        content: z
+          .string()
+          .optional()
+          .describe('Raw XML string to format inline (returns formatted text)'),
+        check: z
+          .boolean()
+          .optional()
+          .describe('Dry-run mode: report which files need formatting without writing changes'),
+        tabWidth: z.number().optional().describe('Spaces per indent level (default: 4)'),
+        printWidth: z.number().optional().describe('Max line width before wrapping (default: 140)'),
+      },
     },
-    async ({
-      projectPath,
-      filePath: singleFilePath,
-      content,
-      check,
-      tabWidth,
-      printWidth,
-    }: {
-      projectPath?: string;
-      filePath?: string;
-      content?: string;
-      check?: boolean;
-      tabWidth?: number;
-      printWidth?: number;
-    }) => {
+    async ({ projectPath, filePath: singleFilePath, content, check, tabWidth, printWidth }) => {
       try {
         const { formatXmlContent, formatFile, formatProject } =
           await import('../../formatter/MuleXmlFormatter');

@@ -20,7 +20,7 @@ export class ApikitRouteVariableConsistencyRule extends BaseRule {
     'APIKit implementation flows should follow consistent patterns for response variables';
   severity = 'info' as const;
   category = 'standards' as const;
-  issueType: IssueType = 'code-smell';
+  override issueType: IssueType = 'code-smell';
 
   /** Pattern for APIKit-generated flow names */
   private readonly APIKIT_FLOW_PATTERN = /^(get|post|put|patch|delete|head|options):\\/;

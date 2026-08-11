@@ -106,8 +106,8 @@ All rules should extend `BaseRule` for common utilities:
 
 ```typescript
 import { Document, Node } from '@xmldom/xmldom';
-import { Rule, Issue, Severity, RuleCategory, ValidationContext } from '@types';
-import { XPathHelper } from '@core/XPathHelper';
+import { Issue, Rule, RuleCategory, Severity, ValidationContext } from '../../types';
+import { XPathHelper } from '../../core/XPathHelper';
 
 export abstract class BaseRule implements Rule {
   abstract id: string;
@@ -442,7 +442,6 @@ flowchart TD
 
 ```json
 {
-  "$schema": "./node_modules/mule-lint/config-schema.json",
   "rules": {
     "MULE-001": { "enabled": true, "severity": "error" },
     "MULE-002": { "enabled": true, "severity": "warning" },
@@ -455,12 +454,13 @@ flowchart TD
   },
   "include": ["src/main/mule/**/*.xml"],
   "exclude": ["**/test/**", "**/*.munit.xml"],
-  "formatters": {
-    "default": "table",
-    "ci": "sarif"
-  }
+  "defaultFormatter": "table",
+  "failOnWarning": false
 }
 ```
+
+Load the file explicitly with `mule-lint <path> -c .mulelintrc.json`. Supported top-level keys are
+`rules`, `include`, `exclude`, `defaultFormatter`, `failOnWarning`, and `qualityGate`.
 
 ### Rule-Specific Options
 

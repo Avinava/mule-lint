@@ -35,7 +35,7 @@ interface SarifRule {
   name: string;
   shortDescription: SarifMessage;
   fullDescription?: SarifMessage;
-  helpUri?: string;
+  helpUri?: string | undefined;
   defaultConfiguration?: {
     level: SarifLevel;
   };
@@ -70,7 +70,7 @@ interface SarifArtifactLocation {
 
 interface SarifRegion {
   startLine: number;
-  startColumn?: number;
+  startColumn?: number | undefined;
   endLine?: number;
   endColumn?: number;
 }
@@ -110,7 +110,7 @@ function toSarifRule(rule: Rule): SarifRule {
     name: rule.name,
     shortDescription: { text: rule.name },
     fullDescription: { text: rule.description },
-    helpUri: rule.docsUrl,
+    ...(rule.docsUrl ? { helpUri: rule.docsUrl } : {}),
     defaultConfiguration: {
       level: toSarifLevel(rule.severity),
     },
@@ -137,7 +137,7 @@ function toSarifResult(issue: Issue, relativePath: string): SarifResult {
           },
           region: {
             startLine: issue.line,
-            startColumn: issue.column,
+            ...(issue.column === undefined ? {} : { startColumn: issue.column }),
           },
         },
       },
@@ -184,12 +184,16 @@ export function formatSarif(report: LintReport, rules: Rule[] = ALL_RULES): stri
       },
     ],
   };
+  const run = sarifLog.runs[0];
+  if (!run) {
+    throw new Error('SARIF report must contain one run');
+  }
 
   // Add results from all files
   for (const file of report.files) {
     // Add parse errors
     if (!file.parsed) {
-      sarifLog.runs[0].results.push({
+      run.results.push({
         ruleId: 'PARSE-ERROR',
         level: 'error',
         message: { text: file.parseError ?? 'Failed to parse file' },
@@ -209,7 +213,7 @@ export function formatSarif(report: LintReport, rules: Rule[] = ALL_RULES): stri
 
     // Add issues
     for (const issue of file.issues) {
-      sarifLog.runs[0].results.push(toSarifResult(issue, file.relativePath));
+      run.results.push(toSarifResult(issue, file.relativePath));
     }
   }
 

@@ -51,7 +51,7 @@ export class LoggerPayloadRule extends BaseRule {
       // Check all text content in set-payload / set-variable / message elements
       const payloadSetters = this.select(
         './/*[local-name()="set-payload" or local-name()="set-variable"]',
-        transform as Document,
+        transform,
       );
       for (const setter of payloadSetters) {
         const content = setter.textContent ?? '';

@@ -19,7 +19,7 @@ export class ErrorResponseStructureRule extends BaseRule {
   description = 'Error responses should include correlationId and message fields';
   severity = 'info' as const;
   category = 'error-handling' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];

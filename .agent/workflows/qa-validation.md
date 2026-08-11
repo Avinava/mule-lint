@@ -27,7 +27,7 @@ npm run build
 // turbo
 
 ```bash
-npx ts-node bin/mule-lint.ts <PROJECT_PATH> -f json -e -o /tmp/mule-lint-results.json
+node dist/bin/mule-lint.js <PROJECT_PATH> -f json -e -o /tmp/mule-lint-results.json
 ```
 
 Replace `<PROJECT_PATH>` with the path to your MuleSoft project.
@@ -37,7 +37,7 @@ Replace `<PROJECT_PATH>` with the path to your MuleSoft project.
 // turbo
 
 ```bash
-cat /tmp/mule-lint-results.json | jq 'group_by(.ruleId) | map({ruleId: .[0].ruleId, count: length, severity: .[0].severity}) | sort_by(.count) | reverse'
+jq '[.files[] | .issues[]] | group_by(.ruleId) | map({ruleId: .[0].ruleId, count: length, severity: .[0].severity}) | sort_by(.count) | reverse' /tmp/mule-lint-results.json
 ```
 
 ### 4. Extract Unique Examples per Rule
@@ -45,7 +45,7 @@ cat /tmp/mule-lint-results.json | jq 'group_by(.ruleId) | map({ruleId: .[0].rule
 // turbo
 
 ```bash
-cat /tmp/mule-lint-results.json | jq 'group_by(.ruleId) | map(.[0])' > /tmp/unique-rules.json
+jq '[.files[] | .issues[]] | group_by(.ruleId) | map(.[0])' /tmp/mule-lint-results.json > /tmp/unique-rules.json
 cat /tmp/unique-rules.json
 ```
 
@@ -83,14 +83,14 @@ For each false positive:
 // turbo
 
 ```bash
-npx ts-node bin/mule-lint.ts <PROJECT_PATH> -f json -e -o /tmp/mule-lint-results-fixed.json
+node dist/bin/mule-lint.js <PROJECT_PATH> -f json -e -o /tmp/mule-lint-results-fixed.json
 ```
 
 // turbo
 
 ```bash
-echo "BEFORE:" && cat /tmp/mule-lint-results.json | jq length
-echo "AFTER:" && cat /tmp/mule-lint-results-fixed.json | jq length
+echo "BEFORE:" && jq '[.files[].issues[]] | length' /tmp/mule-lint-results.json
+echo "AFTER:" && jq '[.files[].issues[]] | length' /tmp/mule-lint-results-fixed.json
 ```
 
 ### 9. Commit Fixes

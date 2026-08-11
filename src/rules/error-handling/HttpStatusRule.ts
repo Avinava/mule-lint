@@ -18,7 +18,7 @@ export class HttpStatusRule extends BaseRule {
   description = 'Error handlers should set httpStatus variable for proper API response codes';
   severity = 'warning' as const;
   category = 'error-handling' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];

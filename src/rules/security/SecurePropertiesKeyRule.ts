@@ -18,7 +18,7 @@ export class SecurePropertiesKeyRule extends BaseRule {
   description = 'Secure properties encryption key must not be hardcoded';
   severity = 'error' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];

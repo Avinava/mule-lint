@@ -21,7 +21,7 @@ export class UnusedVariableRule extends BaseRule {
   description = 'Variables set in a flow should be referenced within the same flow';
   severity = 'info' as const;
   category = 'operations' as const;
-  issueType: IssueType = 'code-smell';
+  override issueType: IssueType = 'code-smell';
 
   /** Well-known variables that are always considered "used" (consumed by connectors/listeners) */
   private readonly WELL_KNOWN_VARS = new Set([
@@ -99,17 +99,13 @@ export class UnusedVariableRule extends BaseRule {
     } else if (node.nodeType === 1 /* ELEMENT_NODE */) {
       // Include attribute values (expressions live in attributes)
       const element = node as unknown as Element;
-      if (element.attributes) {
-        for (let i = 0; i < element.attributes.length; i++) {
-          parts.push(element.attributes[i].value);
-        }
+      for (const attribute of Array.from(element.attributes)) {
+        parts.push(attribute.value);
       }
       // Recurse into children
       const children = node.childNodes;
-      if (children) {
-        for (let i = 0; i < children.length; i++) {
-          this.collectTextContent(children[i], parts);
-        }
+      for (const child of Array.from(children)) {
+        this.collectTextContent(child, parts);
       }
     }
   }

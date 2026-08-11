@@ -23,7 +23,7 @@ export class CorrelationIdRule extends BaseRule {
   description = 'Error handlers should reference correlationId for distributed tracing';
   severity = 'warning' as const;
   category = 'error-handling' as const;
-  issueType: IssueType = 'bug';
+  override issueType: IssueType = 'bug';
 
   // Patterns that indicate correlation ID is being used
   private readonly CORRELATION_PATTERNS = [
@@ -107,7 +107,7 @@ export class CorrelationIdRule extends BaseRule {
     projectRoot: string,
   ): 'found' | 'unresolvable' | 'not-found' {
     // Look for any element with a resource= attribute (covers ee:set-payload, ee:set-variable, etc.)
-    const elementsWithResource = this.select('.//*[@resource]', handler as Document);
+    const elementsWithResource = this.select('.//*[@resource]', handler);
 
     if (elementsWithResource.length === 0) {
       return 'not-found';
@@ -153,13 +153,11 @@ export class CorrelationIdRule extends BaseRule {
 
     // Also check attributes
     const element = node as Element;
-    if (element.attributes) {
-      for (let i = 0; i < element.attributes.length; i++) {
-        const attrValue = element.attributes[i].value.toLowerCase();
-        for (const pattern of this.CORRELATION_PATTERNS) {
-          if (attrValue.includes(pattern.toLowerCase())) {
-            return true;
-          }
+    for (const attribute of Array.from(element.attributes)) {
+      const attrValue = attribute.value.toLowerCase();
+      for (const pattern of this.CORRELATION_PATTERNS) {
+        if (attrValue.includes(pattern.toLowerCase())) {
+          return true;
         }
       }
     }

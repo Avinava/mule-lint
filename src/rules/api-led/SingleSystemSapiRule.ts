@@ -8,7 +8,7 @@ import { parseXml } from '../../core/XmlParser';
  * Known external system connector patterns
  * Maps connector namespace prefix to a human-readable system name
  */
-const EXTERNAL_SYSTEM_CONNECTORS: Record<string, string> = {
+const EXTERNAL_SYSTEM_CONNECTORS: Partial<Record<string, string>> = {
   netsuite: 'NetSuite',
   'netsuite-restlet': 'NetSuite Restlet',
   salesforce: 'Salesforce',
@@ -121,7 +121,7 @@ export class SingleSystemSapiRule extends ProjectRule {
       const systemList = Array.from(detectedSystems.keys()).sort();
       const details = systemList
         .map((sys) => {
-          const files = detectedSystems.get(sys)!;
+          const files = detectedSystems.get(sys) ?? [];
           return `${sys} (${files.join(', ')})`;
         })
         .join(', ');
@@ -175,6 +175,9 @@ export class SingleSystemSapiRule extends ProjectRule {
 
     while ((match = namespacePattern.exec(content)) !== null) {
       const prefix = match[1];
+      if (!prefix) {
+        continue;
+      }
 
       // Skip ignored connectors
       if (IGNORED_CONNECTORS.has(prefix)) {
@@ -182,16 +185,16 @@ export class SingleSystemSapiRule extends ProjectRule {
       }
 
       // Check if this is a known external system
-      if (EXTERNAL_SYSTEM_CONNECTORS[prefix]) {
+      const externalSystem = EXTERNAL_SYSTEM_CONNECTORS[prefix];
+      if (externalSystem) {
         // Normalize NetSuite variants
         if (prefix === 'netsuite' || prefix === 'netsuite-restlet') {
           if (!systems.includes('NetSuite')) {
             systems.push('NetSuite');
           }
         } else {
-          const systemName = EXTERNAL_SYSTEM_CONNECTORS[prefix];
-          if (!systems.includes(systemName)) {
-            systems.push(systemName);
+          if (!systems.includes(externalSystem)) {
+            systems.push(externalSystem);
           }
         }
       }
@@ -201,7 +204,10 @@ export class SingleSystemSapiRule extends ProjectRule {
     // by looking at the config names (common pattern: *-api, *-service)
     const httpConfigPattern = /http:request-config[^>]*name="([^"]+)"/g;
     while ((match = httpConfigPattern.exec(content)) !== null) {
-      const configName = match[1].toLowerCase();
+      const configName = match[1]?.toLowerCase();
+      if (!configName) {
+        continue;
+      }
       // Skip internal/listener configs
       if (configName.includes('listener')) {
         continue;
@@ -209,7 +215,7 @@ export class SingleSystemSapiRule extends ProjectRule {
 
       // Check for known external service patterns
       for (const [key, systemName] of Object.entries(EXTERNAL_SYSTEM_CONNECTORS)) {
-        if (configName.includes(key)) {
+        if (systemName && configName.includes(key)) {
           if (!systems.includes(systemName)) {
             systems.push(systemName);
           }

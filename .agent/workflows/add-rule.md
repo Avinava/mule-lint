@@ -159,7 +159,7 @@ describe('MyNewRule', () => {
 
 ## 6. Update Documentation
 
-Add the rule to `docs/rules-catalog.md`:
+Add the rule to `docs/best-practices/rules-catalog.md`:
 
 ```markdown
 ### MULE-XXX: My New Rule

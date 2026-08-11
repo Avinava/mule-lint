@@ -55,7 +55,7 @@ export class HttpUserAgentRule extends BaseRule {
   }
 
   private hasUserAgentHeader(request: Node): boolean {
-    const headers = this.select('.//*[local-name()="header"]', request as Document);
+    const headers = this.select('.//*[local-name()="header"]', request);
     for (const header of headers) {
       const headerName = this.getAttribute(header, 'headerName') ?? '';
       if (headerName.toLowerCase() === 'user-agent') {

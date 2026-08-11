@@ -20,7 +20,7 @@ export class LargeChoiceBlockRule extends BaseRule {
     const choices = this.select('//mule:choice', doc);
 
     for (const choice of choices) {
-      const whenClauses = this.select('./mule:when', choice as Document);
+      const whenClauses = this.select('./mule:when', choice);
 
       if (whenClauses.length > maxWhenClauses) {
         issues.push(

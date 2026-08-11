@@ -4,6 +4,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { LintEngine } from '../engine/LintEngine';
 import { LintConfig } from '../types';
 import { ALL_RULES } from '../rules';
+import packageJson from '../../package.json';
 
 import { registerRunLintAnalysis } from './tools/runLintAnalysis';
 import { registerGetRuleDetails } from './tools/getRuleDetails';
@@ -21,8 +22,6 @@ export class MuleLintMcpServer {
   private engine: LintEngine;
 
   constructor() {
-     
-    const packageJson = require('../../package.json') as { version: string };
     this.server = new McpServer({
       name: 'mule-lint',
       version: packageJson.version,
@@ -47,7 +46,7 @@ export class MuleLintMcpServer {
   private setupTools(): void {
     registerRunLintAnalysis(this.server, this.engine);
     registerGetRuleDetails(this.server);
-    registerValidateSnippet(this.server);
+    registerValidateSnippet(this.server, this.engine);
     registerFormatMuleXml(this.server);
   }
 
@@ -62,6 +61,7 @@ export class MuleLintMcpServer {
   public async start(): Promise<void> {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
+    // eslint-disable-next-line no-console -- stdout is reserved for MCP protocol traffic.
     console.error('Mule Lint MCP Server running on stdio');
   }
 }

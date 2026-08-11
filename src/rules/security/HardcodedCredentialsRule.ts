@@ -16,7 +16,7 @@ export class HardcodedCredentialsRule extends BaseRule {
   description = 'Passwords and secrets should use secure property placeholders ${secure::}';
   severity = 'error' as const;
   category = 'security' as const;
-  issueType: IssueType = 'vulnerability';
+  override issueType: IssueType = 'vulnerability';
 
   private readonly SENSITIVE_ATTRS = [
     'password',
@@ -45,12 +45,10 @@ export class HardcodedCredentialsRule extends BaseRule {
     const issues: Issue[] = [];
     const allElements = doc.getElementsByTagName('*');
 
-    for (let i = 0; i < allElements.length; i++) {
-      const element = allElements[i];
+    for (const element of Array.from(allElements)) {
       const attrs = element.attributes;
 
-      for (let j = 0; j < attrs.length; j++) {
-        const attr = attrs[j];
+      for (const attr of Array.from(attrs)) {
         const attrName = attr.name.toLowerCase();
         const value = attr.value;
 

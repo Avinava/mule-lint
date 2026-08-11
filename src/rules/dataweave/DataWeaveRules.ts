@@ -24,7 +24,7 @@ export class ExternalDwlRule extends BaseRule {
     const transforms = this.select('//*[local-name()="transform"]', doc);
 
     for (const transform of transforms) {
-      const setPayload = this.select('.//*[local-name()="set-payload"]', transform as Document);
+      const setPayload = this.select('.//*[local-name()="set-payload"]', transform);
 
       for (const payload of setPayload) {
         const content = payload.textContent ?? '';

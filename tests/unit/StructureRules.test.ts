@@ -19,6 +19,10 @@ describe('Structure Rules', () => {
   describe('ProjectStructureRule (MULE-802)', () => {
     const rule = new ProjectStructureRule();
 
+    beforeEach(() => {
+      rule.reset();
+    });
+
     /** Convenience: create the minimum required structure */
     const createRequiredDirs = (base: string): void => {
       fs.mkdirSync(path.join(base, 'src', 'main', 'mule'), { recursive: true });
