@@ -47,6 +47,16 @@ Comprehensive guidelines for building maintainable, secure, and performant Mule 
 
 ---
 
+## ⚙️ Using mule-lint
+
+| Document                            | Description                                                  |
+| ----------------------------------- | ------------------------------------------------------------ |
+| [Configuration](configuration.md)   | `.mulelintrc.json` keys, precedence, per-rule options        |
+| [Output formats](output-formats.md) | Table, JSON, SARIF, HTML, CSV, and what each exit code means |
+| [Quality gates](quality-gates.md)   | Built-in and custom gates, plus the A–E rating formulas      |
+
+---
+
 ## 🔧 Linter Technical Documentation
 
 For contributors and those extending mule-lint.
