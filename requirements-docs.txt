@@ -1,0 +1,2 @@
+# Documentation site only. The linter itself has no Python dependency.
+mkdocs-material==9.7.7

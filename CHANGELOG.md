@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.25.0] - 2026-08-18
+
+Documentation release. No rule, engine, or CLI behavior changed.
+
+### Added
+
+- **A published documentation site** at <https://avinava.github.io/mule-lint/>, built with MkDocs
+  Material from the existing `docs/` tree and deployed by GitHub Actions. `docs/` remains the single
+  source and still reads correctly on GitHub. CI builds it with `--strict`, so a broken cross-link or
+  a page missing from the navigation now fails a pull request.
+- **MCP setup for every host.** Only Claude Desktop and `.vscode/mcp.json` were documented; Claude
+  Code, Codex, Copilot CLI, and Gemini were not, even though the same command works for all of them.
+- **A continuous-integration section** with a SARIF upload example and the exit-code table, which
+  previously existed only in `docs/README.md`.
+- **A troubleshooting section** covering the failure modes that look like bugs but are not: scanning
+  the wrong path, exit code 2 versus 3, configuration precedence, and cross-file rules needing the
+  whole project.
+- An ecosystem page and README section placing `mule-lint` alongside `mule-build`,
+  `anypoint-connect`, and `mule-skills`.
+
+### Fixed
+
+- **A four-backtick code fence in the rules catalog was closed with three**, so everything from
+  `ERR-004` through `MULE-002` — including the `Naming Rules` heading — rendered as one code block on
+  GitHub. Caught by the strict site build.
+- **The rule-family table in `docs/README.md` was wrong**: 13 families summing to 75 against a stated
+  total of 82, with `PERF` and `DOC` missing entirely and three counts understated. Replaced with all
+  18 identifier prefixes, counted from the registry.
+- Backfilled the missing 1.22.0, 1.23.0, and 1.24.0 entries below; all three were tagged and
+  published with no changelog record.
+- `CLAUDE.md` listed 16 rule prefixes; `OPS` and `RES` were absent.
+- `CONTRIBUTING.md` pointed at `docs/naming-conventions.md`, which does not exist.
+- README rule groups were labeled with the release that introduced them and had stopped being true
+  three releases ago. They are grouped by theme now, with the changelog as the release record.
+- Removed a stale `Version: 1.0.0` stamp from the rule-engine document and a leftover HTML comment
+  from the README.
+
+### Changed
+
+- `package.json` homepage points at the documentation site.
+- CI actions moved off Node 20, which is deprecated: `actions/checkout` and `actions/setup-node` to
+  `v7`.
+
 ## [1.24.1] - 2026-08-11
 
 ### Fixed
@@ -28,6 +71,43 @@ All notable changes to this project will be documented in this file.
   implemented behavior.
 
 **Total: 457 tests across 37 test files.**
+
+## [1.24.0] - 2026-05-29
+
+### Fixed
+
+- Removed a duplicate no-op XPath expression in `ApikitStatusCodeVariableRule`.
+- `--quiet` now rebuilds `byRule` and `filesWithIssues` rather than only zeroing `bySeverity`, so
+  summary counts match the filtered report.
+- HTML reports escape untrusted values at every `innerHTML` sink — dashboard pills and the Tabulator
+  formatters for file path, message, and suggestion — closing an XSS vector when a report is opened
+  from an untrusted project.
+
+## [1.23.0] - 2026-05-02
+
+### Added
+
+- `CLAUDE.md` for AI-agent onboarding.
+- `FlowCasingRule` convention is configurable: `kebab-case`, `camelCase`, or `any`.
+- Rule-authoring guidance covering every rule prefix and the `BaseRule` versus `ProjectRule` choice.
+
+### Fixed
+
+- Missing `HTTP`, `SF`, `CFG`, and `STD` prefixes added to the naming-conventions reference.
+- Renamed `NewLoggingRules.ts` to `LoggingPatternRules.ts`; a file named for its novelty stops being
+  accurate on the next release.
+
+## [1.22.0] - 2026-04-16
+
+### Added
+
+- Advanced integration-pattern coverage in the best-practice guides, restructured for agent
+  consumption, with the MCP resource list expanded to match.
+
+### Changed
+
+- The `review-best-practices` prompt points at the advanced patterns, and batch-project reviews
+  recommend the event-driven and performance guides.
 
 ## [1.21.0] - 2026-04-15
 
