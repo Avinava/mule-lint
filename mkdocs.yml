@@ -73,6 +73,10 @@ markdown_extensions:
 
 nav:
   - Home: README.md
+  - Using it:
+      - Configuration: configuration.md
+      - Output formats: output-formats.md
+      - Quality gates: quality-gates.md
   - Best practices:
       - Index: best-practices/mulesoft-best-practices.md
       - Error handling: best-practices/error-handling.md
