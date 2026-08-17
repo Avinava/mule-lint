@@ -1,3 +1,5 @@
+<img src="assets/logo.svg" alt="Mule-Lint" width="600" />
+
 # Mule-Lint Documentation
 
 Welcome to the Mule-Lint documentation. This documentation is organized into two sections: **MuleSoft Best Practices** (for integration developers and AI agents) and **Linter Technical Documentation** (for mule-lint contributors).

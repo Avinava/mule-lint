@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Mule-Lint" width="600" />
+  <img src="docs/assets/logo.svg" alt="Mule-Lint" width="600" />
 </p>
 
 <p align="center">
