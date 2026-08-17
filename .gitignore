@@ -4,6 +4,9 @@ node_modules/
 # Build output
 dist/
 
+# mkdocs build output
+.site/
+
 # Coverage
 coverage/
 .nyc_output/

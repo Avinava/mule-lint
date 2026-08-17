@@ -1,7 +1,8 @@
 # Rule Engine Documentation
 
-> **Version:** 1.0.0  
-> **Purpose:** Comprehensive guide to the mule-lint rule engine internals, extensibility, and best practices.
+> **Purpose:** Comprehensive guide to the mule-lint rule engine internals, extensibility, and best practices.  
+> **Rule inventory:** see the [rules catalog](../best-practices/rules-catalog.md), which is the single
+> source for rule identifiers and counts.
 
 ---
 

@@ -139,7 +139,7 @@ docs: update rules catalog with new examples
 ## Code Style
 
 - Use TypeScript strict mode
-- Follow existing naming conventions (see `docs/naming-conventions.md`)
+- Follow existing naming conventions (see `docs/linter/naming-conventions.md`)
 - Add JSDoc comments for public APIs
 - Keep functions focused and small
 

@@ -1,0 +1,108 @@
+site_name: mule-lint
+site_description: Static analysis for MuleSoft Mule 4 applications, for humans, AI agents, and CI pipelines.
+site_url: https://avinava.github.io/mule-lint/
+site_author: Avi
+copyright: MIT licensed
+
+repo_url: https://github.com/Avinava/mule-lint
+repo_name: Avinava/mule-lint
+edit_uri: edit/master/docs/
+
+docs_dir: docs
+site_dir: .site
+
+# macOS cruft and an empty placeholder directory would otherwise be copied into
+# the published site.
+exclude_docs: |
+  .DS_Store
+  next-gen/
+
+# With `mkdocs build --strict` in CI, these turn a broken cross-link, a missing
+# anchor, or a page left out of the nav into a failed build rather than a warning
+# nobody reads.
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+theme:
+  name: material
+  icon:
+    logo: material/magnify-scan
+    repo: fontawesome/brands/github
+  features:
+    - content.action.edit
+    - content.code.copy
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: README.md
+  - Best practices:
+      - Index: best-practices/mulesoft-best-practices.md
+      - Error handling: best-practices/error-handling.md
+      - Variable contracts: best-practices/variable-contracts.md
+      - Logging: best-practices/logging.md
+      - Security: best-practices/security.md
+      - Performance: best-practices/performance.md
+      - Event-driven patterns: best-practices/event-driven-patterns.md
+      - Connector patterns: best-practices/connector-patterns.md
+      - DataWeave patterns: best-practices/dataweave-patterns.md
+      - Folder structure: best-practices/folder-structure.md
+      - Documentation standards: best-practices/documentation-standards.md
+      - Testing with MUnit: best-practices/testing.md
+      - CI/CD integration: best-practices/ci-cd.md
+      - Deployment and modernization: best-practices/deployment-2026.md
+      - Rules catalog: best-practices/rules-catalog.md
+  - Linter internals:
+      - Architecture: linter/architecture.md
+      - Rule engine: linter/rule-engine.md
+      - Extending: linter/extending.md
+      - Folder structure: linter/folder-structure.md
+      - Naming conventions: linter/naming-conventions.md
+      - MCP design: mcp-design.md
+  - Ecosystem: ecosystem.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Avinava/mule-lint
+      name: mule-lint on GitHub
+    - icon: fontawesome/brands/npm
+      link: https://www.npmjs.com/package/@sfdxy/mule-lint
+      name: '@sfdxy/mule-lint on npm'

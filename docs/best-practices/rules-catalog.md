@@ -23,7 +23,7 @@
 - [DataWeave Rules](#dataweave-rules)
 - [API-Led Rules](#api-led-rules)
 - [Connector Rules](#connector-rules)
-- [Operations & Hygiene Rules](#operations--hygiene-rules)
+- [Operations and Hygiene Rules](#operations-and-hygiene-rules)
 - [Governance Rules](#governance-rules)
 - [Experimental Rules](#experimental-rules)
 
@@ -277,7 +277,7 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 **Example:**
 
-````xml
+```xml
 <!-- ❌ Bad - ANY shadows subsequent handlers -->
 <error-handler>
     <on-error-propagate type="ANY">...</on-error-propagate>
@@ -317,7 +317,7 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 <!-- ❌ Bad -->
 <flow name="processOrder">
 <sub-flow name="validateInput">
-````
+```
 
 **Options:**
 
@@ -1491,7 +1491,7 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 
 ---
 
-## Operations & Hygiene Rules
+## Operations and Hygiene Rules
 
 ### HYG-002: Commented Code Detection
 

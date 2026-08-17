@@ -103,23 +103,32 @@ mule-lint ./src/main/mule --fail-on-warning
 
 ## Rule Families
 
-| Family          | Prefix                    | Count | Description                                  |
-| --------------- | ------------------------- | ----- | -------------------------------------------- |
-| Core MuleSoft   | MULE-XXX                  | 29    | Core Mule 4 XML validation                   |
-| Error Handling  | ERR-XXX                   | 4     | Advanced error handler rules                 |
-| Security        | SEC-XXX                   | 5     | Security best practices (TLS, rate limiting) |
-| Logging         | LOG-XXX, HYG-001          | 3     | Structured logging and sensitive data        |
-| HTTP            | HTTP-XXX                  | 1     | HTTP connector configuration                 |
-| Operations      | OPS-XXX, RES-XXX, HYG-XXX | 8     | Reconnection, auto-discovery, hygiene        |
-| YAML Properties | YAML-XXX                  | 3     | YAML configuration validation                |
-| DataWeave       | DW-XXX                    | 5     | DataWeave file validation                    |
-| API-Led         | API-XXX                   | 7     | API-Led connectivity patterns                |
-| Connectors      | SF-XXX                    | 2     | Salesforce and event connector rules         |
-| Standards       | CFG-XXX, STD-XXX          | 3     | Config and API standards                     |
-| Governance      | PROJ-XXX                  | 2     | POM and Git hygiene                          |
-| Experimental    | EXP-XXX                   | 3     | Beta rules for evaluation                    |
+Counts are per identifier prefix, taken from the rule registry.
 
-**Total: 82 rules**
+| Prefix   | Count | Covers                                             |
+| -------- | ----- | -------------------------------------------------- |
+| MULE-XXX | 29    | Core Mule 4 XML validation                         |
+| SEC-XXX  | 8     | Secure properties, TLS, credentials, rate limiting |
+| API-XXX  | 8     | API-Led and APIKit patterns                        |
+| DW-XXX   | 5     | DataWeave file validation                          |
+| HYG-XXX  | 5     | Code hygiene, unused flows and variables           |
+| ERR-XXX  | 4     | Error handler structure and coverage               |
+| YAML-XXX | 3     | YAML property configuration                        |
+| OPS-XXX  | 3     | Auto-discovery, ports, externalized schedules      |
+| EXP-XXX  | 3     | Experimental rules for evaluation                  |
+| LOG-XXX  | 2     | Structured logging and sensitive data              |
+| RES-XXX  | 2     | Reconnection and listener resilience               |
+| CFG-XXX  | 2     | Configuration properties and environment parity    |
+| PROJ-XXX | 2     | POM and Git hygiene                                |
+| SF-XXX   | 2     | Salesforce and event connector rules               |
+| HTTP-XXX | 1     | HTTP connector configuration                       |
+| PERF-XXX | 1     | Connection pooling                                 |
+| DOC-XXX  | 1     | Display names and documentation                    |
+| STD-XXX  | 1     | Coding and API standards                           |
+
+**Total: 82 rules** across 18 prefixes and 15 runtime categories. A prefix groups identifiers; a
+category is the `category` field a rule reports, which is what configuration and quality gates filter
+on. The two do not map one to one.
 
 ---
 

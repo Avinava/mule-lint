@@ -53,6 +53,7 @@ See `.agent/workflows/add-rule.md` for the full template. Summary:
 | PERF   | Performance          | CFG    | Configuration    |
 | DW     | DataWeave            | STD    | Coding standards |
 | SF     | Salesforce connector | EXP    | Experimental     |
+| OPS    | Operations           | RES    | Resilience       |
 
 MULE-prefixed ranges: 001-099=error-handling, 100-199=naming, 200-299=security, 300-399=logging, 400-499=http, 500-599=performance, 600-699=documentation, 700-799=standards, 800-899=complexity/structure.
 

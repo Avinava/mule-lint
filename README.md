@@ -14,11 +14,13 @@
 </p>
 
 <p align="center">
+  <a href="https://avinava.github.io/mule-lint/">Documentation</a> •
   <a href="#installation">Installation</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#rules">Rules</a> •
   <a href="#output-formats">Output</a> •
   <a href="#configuration">Configuration</a> •
+  <a href="#ai-agent-integration-mcp">MCP</a> •
   <a href="#extending">Extending</a>
 </p>
 
@@ -29,7 +31,7 @@
 **Mule-Lint** is a TypeScript-based linting tool designed to enforce best practices and standards for MuleSoft applications. It provides:
 
 - **82 Built-in Rules** covering error handling, security, naming, logging, performance, API-led, connectors, and more
-- **Multiple Output Formats** - Table, JSON, SARIF, HTML, CSV <!-- id: 4 -->
+- **Multiple Output Formats** - Table, JSON, SARIF, HTML, CSV
 - **CI/CD Ready** - Exit codes and machine-readable output
 - **457 Unit Tests** - Comprehensive test coverage for reliability
 - **TypeScript** - Fully typed for VS Code extension integration
@@ -349,7 +351,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | YAML-003 | Property Naming   | Info     | Standards    | Property key format               |
 | YAML-004 | Plaintext Secrets | Error    | Security     | Encrypt sensitive YAML properties |
 
-### 2025-2026 Best Practices Rules (NEW)
+### Modern Best-Practice Rules
 
 | ID       | Name                   | Severity | Category       | Description                               |
 | -------- | ---------------------- | -------- | -------------- | ----------------------------------------- |
@@ -361,7 +363,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | ERR-001  | Try Scope              | Info     | Error Handling | Complex operations should use Try scope   |
 | PERF-002 | Connection Pooling     | Warning  | Performance    | DB/HTTP should configure connection pools |
 
-### Security & Integrity Rules (v1.21)
+### Security and Integrity Rules
 
 | ID      | Name                         | Severity | Category  | Description                                             |
 | ------- | ---------------------------- | -------- | --------- | ------------------------------------------------------- |
@@ -371,7 +373,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | SEC-010 | Secure Properties Encryption | Warning  | Security  | Secure properties must use strong encryption algorithm  |
 | HYG-004 | Flow-Ref Target Exists       | Error    | Standards | Flow-ref must point to an existing flow/sub-flow        |
 
-### Error Handling & Resilience Rules (v1.21)
+### Error Handling and Resilience Rules
 
 | ID      | Name                       | Severity | Category       | Description                                                 |
 | ------- | -------------------------- | -------- | -------------- | ----------------------------------------------------------- |
@@ -381,7 +383,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | RES-002 | Listener Reconnect Forever | Warning  | Performance    | Listener connectors should use reconnect-forever strategy   |
 | CFG-001 | Config Properties Ordering | Info     | Standards      | Config properties should follow a consistent ordering       |
 
-### API-Led & Connector Rules (v1.21)
+### API-Led and Connector Rules
 
 | ID       | Name                    | Severity | Category  | Description                                             |
 | -------- | ----------------------- | -------- | --------- | ------------------------------------------------------- |
@@ -391,7 +393,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | SF-001   | Replay Channel Config   | Warning  | Connector | Salesforce replay channel should have proper config     |
 | HTTP-004 | Connection Idle Timeout | Warning  | HTTP      | HTTP request configs should set connection idle timeout |
 
-### Code Hygiene Rules (v1.21)
+### Code Hygiene Rules
 
 | ID      | Name                         | Severity | Category  | Description                                                |
 | ------- | ---------------------------- | -------- | --------- | ---------------------------------------------------------- |
@@ -401,7 +403,7 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | STD-001 | APIKit Route Var Consistency | Info     | Standards | APIKit route variable names should be consistent           |
 | SF-002  | Event Listener Null Guard    | Warning  | Connector | Event listeners should guard against null payloads         |
 
-### Operations & Resilience Rules
+### Operations and Resilience Rules
 
 | ID      | Name                   | Severity | Category      | Description                                          |
 | ------- | ---------------------- | -------- | ------------- | ---------------------------------------------------- |
@@ -423,9 +425,12 @@ npx @sfdxy/mule-lint src/main/mule -f sarif -o results.sarif
 | PROJ-001 | POM Validation | Error    | Structure | Validates pom.xml existence and plugins    |
 | PROJ-002 | Git Hygiene    | Warning  | Structure | Validates .gitignore existence and entries |
 
-**Total: 82 rules** across 15 runtime categories.
+**Total: 82 rules** across 15 runtime categories and 18 identifier prefixes.
 
-See [Rules Catalog](docs/best-practices/rules-catalog.md) for detailed documentation.
+The [rules catalog](docs/best-practices/rules-catalog.md) is the source of truth for identifiers,
+options, and examples; a test asserts it matches the registry exactly, so the tables above are a
+summary rather than a second authority. Rules are grouped here by theme, not by the release that
+introduced them — check the [changelog](CHANGELOG.md) for that.
 
 ---
 
@@ -593,9 +598,20 @@ This tool exposes a **Model Context Protocol (MCP)** server, allowing AI agents 
 - **Resources**: `mule-lint://rules` (list all available rules), `mule-lint://docs/{slug}` (best practices documentation).
 - **Prompts**: `analyze-project`, `explain-rule`, `fix-issue`.
 
-### Setup for Claude Desktop
+### Setup by host
 
-Add the following to your `claude_desktop_config.json`:
+The server needs no credentials. Every host runs the same command, so only the file and the wrapping
+key differ.
+
+| Host                                   | Where it goes                                   | Wrapping key                      |
+| -------------------------------------- | ----------------------------------------------- | --------------------------------- |
+| Claude Code                            | `.mcp.json` in the project, or `claude mcp add` | `mcpServers`                      |
+| Claude Desktop                         | `claude_desktop_config.json`                    | `mcpServers`                      |
+| Codex                                  | `.codex/config.toml`                            | `[mcp_servers.mule-lint]`         |
+| VS Code, Copilot Chat                  | `.vscode/mcp.json`                              | `servers`, plus `"type": "stdio"` |
+| Copilot CLI, Gemini, other MCP clients | `.mcp.json`                                     | `mcpServers`                      |
+
+The `mcpServers` form, used by Claude Code, Claude Desktop, Copilot CLI, and Gemini:
 
 ```json
 {
@@ -608,14 +624,13 @@ Add the following to your `claude_desktop_config.json`:
 }
 ```
 
-### Setup for VS Code / Gemini Code Assist
-
-Create a `.vscode/mcp.json` file in your project root:
+VS Code wraps the same entry in `servers` and wants an explicit transport:
 
 ```json
 {
   "servers": {
     "mule-lint": {
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@sfdxy/mule-lint", "mcp"]
     }
@@ -623,7 +638,44 @@ Create a `.vscode/mcp.json` file in your project root:
 }
 ```
 
-The agent will now be able to "see" your MuleSoft project structure and offer linting actions autonomously.
+Codex uses TOML:
+
+```toml
+[mcp_servers.mule-lint]
+command = "npx"
+args = ["-y", "@sfdxy/mule-lint", "mcp"]
+```
+
+Pin the version in shared configuration — `@sfdxy/mule-lint@1.25.0` — so every machine and CI run
+gets the same rule set. Verify with `codex mcp list`, `copilot mcp list`, `/mcp` in Claude Code, or a
+window reload in VS Code. The first start downloads the package, so expect one slow launch.
+
+The agent can then see your project structure and offer linting actions autonomously.
+
+### Continuous integration
+
+`mule-lint` is designed to run unattended: it returns a distinct exit code per outcome, and SARIF
+uploads render as annotations on a pull request.
+
+```yaml
+- name: Lint Mule sources
+  run: npx -y @sfdxy/mule-lint@1.25.0 ./src/main/mule -f sarif -o mule-lint.sarif
+
+- name: Upload SARIF
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: mule-lint.sarif
+```
+
+| Exit code | Meaning                      |
+| --------- | ---------------------------- |
+| 0         | Success, no errors           |
+| 1         | Errors found                 |
+| 2         | CLI or configuration error   |
+| 3         | Parse errors (malformed XML) |
+
+Add `--fail-on-warning` to treat warnings as build failures, or use a
+[quality gate](#quality-gates) to fail on a rating rather than a raw count.
 
 ---
 
@@ -675,6 +727,8 @@ While the original project uses Groovy and a custom DSL, this TypeScript impleme
 
 ## Documentation
 
+Everything below is published at **<https://avinava.github.io/mule-lint/>** with search.
+
 | Document                                                         | Description                     |
 | ---------------------------------------------------------------- | ------------------------------- |
 | [Architecture](docs/linter/architecture.md)                      | System design and data flow     |
@@ -682,6 +736,33 @@ While the original project uses Groovy and a custom DSL, this TypeScript impleme
 | [Best Practices](docs/best-practices/mulesoft-best-practices.md) | MuleSoft development guidelines |
 | [Extending](docs/linter/extending.md)                            | How to add custom rules         |
 | [Naming Conventions](docs/linter/naming-conventions.md)          | Code style guide                |
+
+## Troubleshooting
+
+| Symptom                                            | Cause and fix                                                                                                                        |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| No issues reported on a project you expect to fail | The path argument points at the wrong directory. Pass the folder holding Mule XML, usually `./src/main/mule`                         |
+| Exit code 2                                        | Configuration error, not a lint failure. The config file is invalid JSON or has an unknown key; the message names the offending file |
+| Exit code 3                                        | A file could not be parsed. Malformed XML is reported rather than silently skipped                                                   |
+| A rule you disabled still fires                    | Configuration precedence: an explicit `-c` file wins over a discovered `.mulelintrc.json`. Confirm which file was loaded             |
+| Cross-file rules report nothing                    | Rules such as unused-flow detection need the whole project. Scanning a single file cannot see references from elsewhere              |
+| MCP server does not appear in the host             | The host did not reload, or the config uses the wrong wrapping key. See [setup by host](#setup-by-host)                              |
+| MCP first call seems to hang                       | `npx` is downloading the package on a cold start. It is cached afterwards                                                            |
+
+## Ecosystem
+
+`mule-lint` is one of four MuleSoft tools that work together, and each is useful alone.
+
+| Project                                                           | Role                                                                |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `mule-lint`                                                       | Static analysis of Mule XML, DataWeave, YAML, and project structure |
+| [`mule-build`](https://github.com/Avinava/mule-build)             | Validate, test, package, run locally, and release                   |
+| [`anypoint-connect`](https://github.com/Avinava/anypoint-connect) | Authorized Anypoint runtime evidence and lifecycle                  |
+| [`mule-skills`](https://github.com/Avinava/mule-skills)           | Agent workflows that drive all three                                |
+
+Installing [`mule-skills`](https://avinava.github.io/mule-skills/) gives you `mule-lint`
+preconfigured as a pinned MCP server, so you do not have to set it up twice. Details on the
+[ecosystem page](docs/ecosystem.md).
 
 ---
 
@@ -726,4 +807,4 @@ Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md)
 
 ## License
 
-MIT © 2024
+[MIT](LICENSE) © 2024–2026 Avi
