@@ -16,6 +16,7 @@ import {
   getQualityGateExitCode,
 } from '../src/core/QualityGateEvaluator';
 import { DEFAULT_QUALITY_GATE, STRICT_QUALITY_GATE, QualityGate } from '../src/types/QualityGate';
+import { normalizeRuleProfile, toRuleProfileReference } from '../src/catalog';
 
 import packageJson from '../package.json';
 
@@ -32,6 +33,7 @@ program
   .option('-q, --quiet', 'Show only errors (suppress warnings and info)')
   .option('--fail-on-warning', 'Exit with error code if warnings found')
   .option('-e, --experimental', 'Enable experimental rules (opt-in)')
+  .option('-p, --profile <name>', 'Rule profile: baseline, recommended, or strict')
   .option('-g, --quality-gate <name>', 'Apply quality gate: default, strict, or from config')
   .option('-v, --verbose', 'Show verbose output')
   .action(async (targetPath: string | undefined, options: CliOptions) => {
@@ -88,6 +90,7 @@ interface CliOptions {
   failOnWarning?: boolean;
   experimental?: boolean;
   qualityGate?: string;
+  profile?: string;
   verbose?: boolean;
 }
 
@@ -114,10 +117,21 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
     }
   }
 
+  if (options.profile) {
+    config.extends = toRuleProfileReference(normalizeRuleProfile(options.profile));
+  }
+
   // Filter rules based on keys (experimental is opt-in)
   const effectiveRules = options.experimental
     ? ALL_RULES
     : ALL_RULES.filter((rule) => rule.category !== 'experimental');
+
+  if (options.experimental) {
+    config.rules = { ...config.rules };
+    for (const rule of ALL_RULES.filter((candidate) => candidate.category === 'experimental')) {
+      config.rules[rule.id] = true;
+    }
+  }
 
   if (options.verbose) {
     console.log(

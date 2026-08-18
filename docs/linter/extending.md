@@ -86,9 +86,10 @@ const engine = new LintEngine({
 });
 ```
 
-The CLI configuration supports `rules`, `include`, `exclude`, `defaultFormatter`,
-`failOnWarning`, and `qualityGate`. It does not dynamically import custom rule files. The reserved
-keys `extends`, `customRulesPath`, and `maxIssues` currently warn and have no runtime effect.
+The CLI configuration supports `extends`, `rules`, `include`, `exclude`, `defaultFormatter`,
+`failOnWarning`, and `qualityGate`. `extends` selects one built-in rule profile; explicit per-rule
+configuration still wins. The CLI does not dynamically import custom rule files. The reserved keys
+`customRulesPath` and `maxIssues` currently warn and have no runtime effect.
 
 ## Test the Rule
 

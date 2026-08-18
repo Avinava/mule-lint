@@ -41,9 +41,10 @@ Comprehensive guidelines for building maintainable, secure, and performant Mule 
 
 ### Reference
 
-| Document                                         | Description                                            |
-| ------------------------------------------------ | ------------------------------------------------------ |
-| [Rules Catalog](best-practices/rules-catalog.md) | Complete reference for all 82 lint rules with examples |
+| Document                                                 | Description                                            |
+| -------------------------------------------------------- | ------------------------------------------------------ |
+| [Rules Catalog](best-practices/rules-catalog.md)         | Complete reference for all 82 lint rules with examples |
+| [Standards Catalog](best-practices/standards-catalog.md) | Canonical outcomes, classifications, and sources       |
 
 ---
 
@@ -52,6 +53,7 @@ Comprehensive guidelines for building maintainable, secure, and performant Mule 
 | Document                            | Description                                                  |
 | ----------------------------------- | ------------------------------------------------------------ |
 | [Configuration](configuration.md)   | `.mulelintrc.json` keys, precedence, per-rule options        |
+| [Rule profiles](profiles.md)        | Stable rule sets and compatibility contract                  |
 | [Output formats](output-formats.md) | Table, JSON, SARIF, HTML, CSV, and what each exit code means |
 | [Quality gates](quality-gates.md)   | Built-in and custom gates, plus the A–E rating formulas      |
 
@@ -152,6 +154,9 @@ All best practice guides are available via the MuleSoft Lint MCP server:
 
 ```
 mule-lint://rules                          → JSON catalog of all 82 rules
+mule-lint://rules/{id}                     → Structured metadata for one rule
+mule-lint://standards                      → Canonical engineering standards
+mule-lint://standards/{id}                 → One standard with classification and sources
 mule-lint://docs/best-practices            → Master index and quick reference
 mule-lint://docs/error-handling            → Error handling patterns
 mule-lint://docs/event-driven              → Event-driven architecture

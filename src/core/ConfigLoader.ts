@@ -3,6 +3,14 @@ import { LintConfig } from '../types/Config';
 
 const severitySchema = z.enum(['error', 'warning', 'info']);
 const formatterSchema = z.enum(['table', 'json', 'sarif', 'html', 'csv']);
+const profileSchema = z.enum([
+  'baseline',
+  'recommended',
+  'strict',
+  'mule-lint:baseline',
+  'mule-lint:recommended',
+  'mule-lint:strict',
+]);
 const qualityMetricSchema = z.enum([
   'errors',
   'warnings',
@@ -38,7 +46,7 @@ const qualityGateSchema = z.object({
 const lintConfigSchema = z
   .object({
     $schema: z.string().optional(),
-    extends: z.union([z.string(), z.array(z.string())]).optional(),
+    extends: z.union([profileSchema, z.array(profileSchema).length(1)]).optional(),
     rules: z.record(z.union([z.boolean(), ruleConfigSchema])).optional(),
     include: z.array(z.string()).optional(),
     exclude: z.array(z.string()).optional(),
@@ -52,6 +60,7 @@ const lintConfigSchema = z
 
 const SUPPORTED_KEYS = new Set([
   '$schema',
+  'extends',
   'rules',
   'include',
   'exclude',
@@ -60,7 +69,7 @@ const SUPPORTED_KEYS = new Set([
   'qualityGate',
 ]);
 
-const RESERVED_KEYS = new Set(['extends', 'customRulesPath', 'maxIssues']);
+const RESERVED_KEYS = new Set(['customRulesPath', 'maxIssues']);
 
 export interface ParsedLintConfig {
   config: Partial<LintConfig>;

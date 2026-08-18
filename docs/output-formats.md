@@ -62,7 +62,7 @@ mule-lint ./src/main/mule -f sarif -o report.sarif
   "version": "2.1.0",
   "runs": [
     {
-      "tool": { "driver": { "name": "@sfdxy/mule-lint", "version": "1.25.0" } },
+      "tool": { "driver": { "name": "@sfdxy/mule-lint", "version": "1.26.0" } },
       "results": []
     }
   ]

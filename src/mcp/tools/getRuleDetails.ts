@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { getRuleById } from '../../rules';
+import { getRuleDefinition, getStandardById } from '../../catalog';
 import { registerTool } from '../register';
 
 interface GetRuleDetailsInput {
@@ -61,6 +62,10 @@ export function registerGetRuleDetails(server: McpServer): void {
       }
 
       const docSlug = categoryToDocSlug[rule.category] || 'best-practices';
+      const definition = getRuleDefinition(rule.id);
+      const standards = definition?.standardIds
+        .map((id) => getStandardById(id))
+        .filter((standard) => standard !== undefined);
 
       return {
         content: [
@@ -74,7 +79,10 @@ export function registerGetRuleDetails(server: McpServer): void {
                 category: rule.category,
                 severity: rule.severity,
                 issueType: rule.issueType ?? 'code-smell',
-                docsUrl: rule.docsUrl,
+                docsUrl: definition?.docsUrl ?? rule.docsUrl,
+                profiles: definition?.profiles ?? [],
+                standards,
+                resourceUri: definition?.resourceUri,
                 bestPracticeGuide: {
                   slug: docSlug,
                   uri: `mule-lint://docs/${docSlug}`,

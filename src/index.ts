@@ -18,5 +18,8 @@ export * from './formatters';
 // Quality scoring
 export * from './quality';
 
+// Standards, rule catalog, and profiles
+export * from './catalog';
+
 // XML Formatter
 export * from './formatter';

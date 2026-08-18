@@ -1,14 +1,12 @@
 # Ecosystem
 
-`mule-lint` is one of four MuleSoft tools that work together. Each is independent — use one, or all
-of them.
+`mule-lint` is one of four independently versioned MuleSoft tools. The canonical package matrix,
+supported combinations, host setup, and end-to-end agent workflows live in the
+[mule-skills ecosystem hub](https://avinava.github.io/mule-skills/ecosystem/).
 
-| Project                                                           | Role                                                                                           | Credentials    | Documentation                                                        |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------- |
-| [`mule-lint`](https://github.com/Avinava/mule-lint)               | Static analysis of Mule XML, DataWeave, YAML, and project structure                            | None           | this site                                                            |
-| [`mule-build`](https://github.com/Avinava/mule-build)             | Validate, test, package, run locally, and release a Mule application                           | None           | [mule-build docs](https://avinava.github.io/mule-build/)             |
-| [`anypoint-connect`](https://github.com/Avinava/anypoint-connect) | Authorized Anypoint Platform evidence and lifecycle operations                                 | Anypoint login | [anypoint-connect docs](https://avinava.github.io/anypoint-connect/) |
-| [`mule-skills`](https://github.com/Avinava/mule-skills)           | Agent workflows for documentation, development, troubleshooting, operations, review, and build | None           | [mule-skills docs](https://avinava.github.io/mule-skills/)           |
+This page explains only the boundary of `mule-lint`: it owns the standards catalog, executable lint
+rules, rule profiles, and the MCP resources that expose them. `mule-skills` composes those resources
+with build and Anypoint Platform workflows; it does not copy or redefine the standards.
 
 ## How they fit
 

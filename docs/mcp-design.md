@@ -19,21 +19,24 @@ We should implement the MCP server directly in the `mule-lint` repository, likel
 
 Tools allow the agent to perform actions.
 
-| Tool Name           | Arguments                         | Description                                                                                                             |
-| :------------------ | :-------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
-| `run_lint_analysis` | `projectPath` (string)            | Runs the scanning engine on a specified directory. Returns a JSON summary of errors, warnings, and code references.     |
-| `validate_snippet`  | `code` (string), `type` (xml/dwl) | quickly validates a small chunk of code without a full project structure. Useful for agents generating code on the fly. |
-| `get_rule_details`  | `ruleId` (string)                 | Returns the full documentation, examples, and rationale for a specific rule (e.g., `MULE-001`).                         |
+| Tool Name           | Arguments                                               | Description                                                                                     |
+| :------------------ | :------------------------------------------------------ | :---------------------------------------------------------------------------------------------- |
+| `run_lint_analysis` | `projectPath` (string), `profile` (optional)            | Runs the scanning engine with a stable rule profile and returns structured findings.            |
+| `validate_snippet`  | `code` (string), `type` (xml/dwl), `profile` (optional) | Validates generated code without a full project structure.                                      |
+| `get_rule_details`  | `ruleId` (string)                                       | Returns the full documentation, examples, and rationale for a specific rule (e.g., `MULE-001`). |
 
 ### 2. Resources
 
 Resources allow the agent to read context.
 
-| Resource URI                | Description                                                                       |
-| :-------------------------- | :-------------------------------------------------------------------------------- |
-| `mule-lint://rules`         | A JSON list of all registered rules, their categories, and severity levels.       |
-| `mule-lint://config/schema` | The JSON schema for `.mule-lintrc` to help agents author valid configurations.    |
-| `mule-lint://docs/{slug}`   | Access internal documentation (e.g., `best-practices`, `architecture`, `naming`). |
+| Resource URI                 | Description                                                                  |
+| :--------------------------- | :--------------------------------------------------------------------------- |
+| `mule-lint://rules`          | All rules with status, standard mappings, profiles, and documentation links. |
+| `mule-lint://rules/{id}`     | Structured metadata for one rule.                                            |
+| `mule-lint://standards`      | Canonical engineering outcomes, classification, applicability, and sources.  |
+| `mule-lint://standards/{id}` | One standard and its source references.                                      |
+| `mule-lint://config/schema`  | The JSON schema for `.mule-lintrc`.                                          |
+| `mule-lint://docs/{slug}`    | Focused best-practice and contributor guides.                                |
 
 ### 3. Prompts
 
@@ -88,7 +91,7 @@ _Goal: Allow the agent to automatically fix issues._
 
 ## Agent Workflow Example
 
-1.  **Discovery**: Agent connects and reads `mule-lint://rules` to know what it is looking for.
+1.  **Discovery**: Agent reads `mule-lint://standards`, then `mule-lint://rules` for enforceable checks.
 2.  **Action**: User asks "Check my code". Agent calls `run_lint_analysis(cwd)`.
 3.  **Context**: Agent sees error `DW-004`. Agent calls `get_rule_details("DW-004")` to read the "Java 17 DataWeave" docs.
 4.  **Result**: Agent explains the error to the user with specific context from the official rule definitions.
