@@ -63,3 +63,27 @@ jobs:
             See [CHANGELOG.md](https://github.com/Avinava/mule-lint/blob/master/CHANGELOG.md) for details.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify the mule-skills compatibility hub
+        continue-on-error: true
+        env:
+          DISPATCH_TOKEN: ${{ secrets.MULE_SKILLS_DISPATCH_TOKEN }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          if [ -z "$DISPATCH_TOKEN" ]; then
+            echo "::warning::MULE_SKILLS_DISPATCH_TOKEN is not configured; run the mule-skills update workflow manually."
+            exit 0
+          fi
+          payload=$(jq -n \
+            --arg package "mule-lint" \
+            --arg version "$VERSION" \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg tag "$GITHUB_REF_NAME" \
+            '{event_type:"tool_release",client_payload:{package:$package,version:$version,repository:$repository,tag:$tag}}')
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $DISPATCH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2026-03-10" \
+            https://api.github.com/repos/Avinava/mule-skills/dispatches \
+            --data "$payload"

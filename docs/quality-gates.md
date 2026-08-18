@@ -114,7 +114,7 @@ and input validation (`SEC-004`). Hotspots are reserved for externally enriched 
 ## In a pipeline
 
 ```yaml
-- run: npx -y @sfdxy/mule-lint@1.25.0 ./src/main/mule -g strict -f sarif -o mule-lint.sarif
+- run: npx -y @sfdxy/mule-lint@1.26.0 ./src/main/mule -g strict -f sarif -o mule-lint.sarif
 - uses: github/codeql-action/upload-sarif@v3
   with:
     sarif_file: mule-lint.sarif

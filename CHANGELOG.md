@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.26.0] - 2026-08-18
+
+### Added
+
+- A typed standards catalog maps every rule category to a stable standard ID, classification,
+  applicability, source references, guide, and verification date.
+- `baseline`, `recommended`, and `strict` rule profiles are selectable through `--profile`, config
+  `extends`, and MCP lint calls. Explicit rule configuration remains the final override.
+- MCP resources now expose structured standards and per-ID rule and standard records for agents.
+- SARIF rule metadata links to the maintained rule documentation.
+
+### Changed
+
+- `mule-lint` is the canonical home for cross-project Mule standards, guides, executable checks, and
+  rule profiles. The `mule-skills` site owns the ecosystem compatibility and setup hub.
+- MCP scans default to `recommended`; direct library use without a configured profile keeps its
+  historical all-registered-rules behavior.
+
 ## [1.25.0] - 2026-08-18
 
 Documentation release. No rule, engine, or CLI behavior changed.

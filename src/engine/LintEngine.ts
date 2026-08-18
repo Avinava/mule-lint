@@ -18,6 +18,7 @@ import { MetricsAggregator } from '../core/MetricsAggregator';
 import { collectFileMetrics as collectMetrics } from '../core/MetricsCollector';
 import { getErrorMessage } from '../core/errors';
 import { ProjectRule } from '../rules/base/ProjectRule';
+import { isRuleEnabledInProfile, resolveRuleProfile, type RuleProfileName } from '../catalog';
 
 /**
  * Engine options
@@ -38,6 +39,7 @@ export class LintEngine {
   private rules: Rule[];
   private config: LintConfig;
   private verbose: boolean;
+  private profile: RuleProfileName | undefined;
 
   /**
    * Cache of parsed XML documents keyed by absolute file path.
@@ -50,6 +52,7 @@ export class LintEngine {
     this.rules = options.rules;
     this.config = { ...DEFAULT_CONFIG, ...options.config };
     this.verbose = options.verbose ?? false;
+    this.profile = options.config?.extends ? resolveRuleProfile(options.config.extends) : undefined;
   }
 
   /**
@@ -382,8 +385,10 @@ export class LintEngine {
     const config = this.config.rules[ruleId];
 
     if (config === undefined) {
-      // Default: enabled with rule's default severity
-      return { enabled: true };
+      const rule = this.rules.find((candidate) => candidate.id === ruleId);
+      return {
+        enabled: rule && this.profile ? isRuleEnabledInProfile(rule, this.profile) : true,
+      };
     }
 
     if (typeof config === 'boolean') {

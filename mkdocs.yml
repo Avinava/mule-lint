@@ -75,10 +75,12 @@ nav:
   - Home: README.md
   - Using it:
       - Configuration: configuration.md
+      - Rule profiles: profiles.md
       - Output formats: output-formats.md
       - Quality gates: quality-gates.md
   - Best practices:
       - Index: best-practices/mulesoft-best-practices.md
+      - Standards catalog: best-practices/standards-catalog.md
       - Error handling: best-practices/error-handling.md
       - Variable contracts: best-practices/variable-contracts.md
       - Logging: best-practices/logging.md

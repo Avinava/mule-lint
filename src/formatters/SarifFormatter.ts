@@ -1,6 +1,7 @@
 import { LintReport } from '../types/Report';
 import { Issue, Severity, Rule } from '../types/Rule';
 import { ALL_RULES } from '../rules';
+import { getRuleDefinition } from '../catalog';
 import packageJson from '../../package.json';
 
 /**
@@ -105,12 +106,13 @@ function toSarifLevel(severity: Severity): SarifLevel {
  * Convert Rule to SARIF rule definition
  */
 function toSarifRule(rule: Rule): SarifRule {
+  const helpUri = rule.docsUrl ?? getRuleDefinition(rule.id)?.docsUrl;
   return {
     id: rule.id,
     name: rule.name,
     shortDescription: { text: rule.name },
     fullDescription: { text: rule.description },
-    ...(rule.docsUrl ? { helpUri: rule.docsUrl } : {}),
+    ...(helpUri ? { helpUri } : {}),
     defaultConfiguration: {
       level: toSarifLevel(rule.severity),
     },

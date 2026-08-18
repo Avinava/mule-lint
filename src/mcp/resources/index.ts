@@ -1,7 +1,7 @@
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { getErrorMessage } from '../../core/errors';
-import { ALL_RULES } from '../../rules';
+import { RULE_CATALOG, STANDARD_CATALOG, getRuleDefinition, getStandardById } from '../../catalog';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -10,6 +10,8 @@ import * as fs from 'fs';
  */
 export function registerResources(server: McpServer): void {
   registerRulesResource(server);
+  registerRuleDetailsResource(server);
+  registerStandardsResources(server);
   registerDocsResource(server);
 }
 
@@ -46,21 +48,99 @@ function registerRulesResource(server: McpServer): void {
       mimeType: 'application/json',
     },
     (uri) => {
-      const rulesList = ALL_RULES.map((r) => ({
-        id: r.id,
-        name: r.name,
-        category: r.category,
-        severity: r.severity,
-        issueType: r.issueType ?? 'code-smell',
-        description: r.description,
-      }));
-
       return {
         contents: [
           {
             uri: uri.href,
-            text: JSON.stringify(rulesList, null, 2),
+            text: JSON.stringify(RULE_CATALOG, null, 2),
             mimeType: 'application/json',
+          },
+        ],
+      };
+    },
+  );
+}
+
+/** Resource: mule-lint://rules/{id}. */
+function registerRuleDetailsResource(server: McpServer): void {
+  server.registerResource(
+    'rule-details',
+    new ResourceTemplate('mule-lint://rules/{id}', {
+      list: () => ({
+        resources: RULE_CATALOG.map((rule) => ({
+          uri: rule.resourceUri,
+          name: `${rule.id}: ${rule.name}`,
+          description: rule.description,
+          mimeType: 'application/json',
+        })),
+      }),
+    }),
+    {
+      description: 'Structured metadata for one mule-lint rule.',
+      mimeType: 'application/json',
+    },
+    (uri, variables) => {
+      const id = String(variables.id).toUpperCase();
+      const rule = getRuleDefinition(id);
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            text: rule ? JSON.stringify(rule, null, 2) : `Rule not found: ${id}`,
+            mimeType: rule ? 'application/json' : 'text/plain',
+          },
+        ],
+      };
+    },
+  );
+}
+
+/** Resources: mule-lint://standards and mule-lint://standards/{id}. */
+function registerStandardsResources(server: McpServer): void {
+  server.registerResource(
+    'standards',
+    'mule-lint://standards',
+    {
+      description:
+        'Canonical Mule engineering standards, including classification, applicability, sources, and related guide resources.',
+      mimeType: 'application/json',
+    },
+    (uri) => ({
+      contents: [
+        {
+          uri: uri.href,
+          text: JSON.stringify(STANDARD_CATALOG, null, 2),
+          mimeType: 'application/json',
+        },
+      ],
+    }),
+  );
+
+  server.registerResource(
+    'standard-details',
+    new ResourceTemplate('mule-lint://standards/{id}', {
+      list: () => ({
+        resources: STANDARD_CATALOG.map((standard) => ({
+          uri: `mule-lint://standards/${standard.id}`,
+          name: `${standard.id}: ${standard.title}`,
+          description: standard.summary,
+          mimeType: 'application/json',
+        })),
+      }),
+    }),
+    {
+      description: 'Structured metadata and source references for one Mule standard.',
+      mimeType: 'application/json',
+    },
+    (uri, variables) => {
+      const id = String(variables.id).toUpperCase();
+      const standard = getStandardById(id);
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            text: standard ? JSON.stringify(standard, null, 2) : `Standard not found: ${id}`,
+            mimeType: standard ? 'application/json' : 'text/plain',
           },
         ],
       };

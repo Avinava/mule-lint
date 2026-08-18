@@ -29,6 +29,7 @@ export class MuleLintMcpServer {
 
     // Initialize engine with partial config - let LintEngine apply DEFAULT_CONFIG for include/exclude
     const defaultConfig: Partial<LintConfig> = {
+      extends: 'mule-lint:recommended',
       rules: {},
       defaultFormatter: 'json',
       failOnWarning: false,

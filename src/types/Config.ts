@@ -10,7 +10,7 @@ export type FormatterType = 'table' | 'json' | 'sarif' | 'html' | 'csv';
  * Main configuration for mule-lint
  */
 export interface LintConfig {
-  /** Reserved for a future version; currently has no runtime effect. */
+  /** Built-in rule profile, for example "mule-lint:baseline". */
   extends?: string | string[];
 
   /** Rule configurations keyed by rule ID */

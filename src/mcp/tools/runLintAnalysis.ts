@@ -4,10 +4,13 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getErrorMessage } from '../../core/errors';
 import { LintEngine } from '../../engine/LintEngine';
 import { getRuleById } from '../../rules';
+import { ALL_RULES } from '../../rules';
+import { normalizeRuleProfile, toRuleProfileReference, type RuleProfileName } from '../../catalog';
 import { registerTool } from '../register';
 
 interface RunLintAnalysisInput {
   projectPath: string;
+  profile?: RuleProfileName;
 }
 
 /**
@@ -22,11 +25,23 @@ export function registerRunLintAnalysis(server: McpServer, engine: LintEngine): 
         'USE THIS TOOL FIRST to analyze a MuleSoft project. It scans the codebase for best practice violations, security issues (secure:: properties), and potential runtime errors. Returns a comprehensive report needed to identify what needs fixing.',
       inputSchema: {
         projectPath: z.string().describe('Absolute path to the MuleSoft project directory to scan'),
+        profile: z
+          .enum(['baseline', 'recommended', 'strict'])
+          .optional()
+          .describe('Optional built-in rule profile; defaults to recommended'),
       },
     },
-    async ({ projectPath }) => {
+    async ({ projectPath, profile }) => {
       try {
-        const report = await engine.scan(projectPath);
+        const selectedEngine = profile
+          ? new LintEngine({
+              rules: ALL_RULES,
+              config: {
+                extends: toRuleProfileReference(normalizeRuleProfile(profile)),
+              },
+            })
+          : engine;
+        const report = await selectedEngine.scan(projectPath);
 
         const summary = {
           totalFiles: report.summary.totalFiles,
@@ -36,6 +51,7 @@ export function registerRunLintAnalysis(server: McpServer, engine: LintEngine): 
             report.summary.bySeverity.info,
           errors: report.summary.bySeverity.error,
           warnings: report.summary.bySeverity.warning,
+          profile: profile ?? 'recommended',
           // Include quality metrics if available
           qualityMetrics: report.metrics
             ? {

@@ -90,6 +90,7 @@ Summary:
 | `-f, --format <type>`       | `table`, `json`, `sarif`, `html`, `csv`. Default `table` |
 | `-o, --output <file>`       | Write to a file instead of stdout                        |
 | `-c, --config <file>`       | Path to a configuration file. Not discovered implicitly  |
+| `-p, --profile <name>`      | `baseline`, `recommended`, or `strict`                   |
 | `-q, --quiet`               | Errors only                                              |
 | `-e, --experimental`        | Enable experimental rules. Opt-in                        |
 | `-g, --quality-gate <name>` | `default`, `strict`, or `config`                         |
@@ -126,9 +127,11 @@ as "your code has issues". Details in
 | `DOC`  | 1     | Display names and documentation                    |
 | `STD`  | 1     | Coding and API standards                           |
 
-The **[rules catalog](https://avinava.github.io/mule-lint/best-practices/rules-catalog/)** documents
-every rule with severity, options, and before-and-after examples. It is the single source of truth —
-a test asserts it matches the registry exactly, so it cannot drift from the code.
+The **[standards catalog](https://avinava.github.io/mule-lint/best-practices/standards-catalog/)** owns
+the reviewed engineering outcomes and source classification. The
+**[rules catalog](https://avinava.github.io/mule-lint/best-practices/rules-catalog/)** documents the
+executable checks. Their machine-readable mappings and profile membership come from the same source
+used by the library and MCP server.
 
 ## Quality gates
 
@@ -146,7 +149,8 @@ conditions, the rating formulas, and pipeline examples are in
 
 ## Configuration
 
-Optional. Every rule runs at its declared severity without it.
+Optional. Every registered rule runs at its declared severity without it. Select a stable rule set
+with `--profile recommended` or `"extends": "mule-lint:recommended"`.
 
 ```json
 {
@@ -155,7 +159,11 @@ Optional. Every rule runs at its declared severity without it.
       "enabled": true,
       "options": { "flowSuffix": "-flow", "excludePatterns": ["*-api-main"] }
     },
-    "MULE-006": { "severity": "error", "options": { "requiredPrefix": "com.myorg" } }
+    "MULE-006": {
+      "enabled": true,
+      "severity": "error",
+      "options": { "requiredPrefix": "com.myorg" }
+    }
   },
   "include": ["src/main/mule/**/*.xml"],
   "exclude": ["**/test/**", "**/*.munit.xml"]
@@ -170,7 +178,7 @@ in [configuration](https://avinava.github.io/mule-lint/configuration/).
 
 ```yaml
 - name: Lint Mule sources
-  run: npx -y @sfdxy/mule-lint@1.25.0 ./src/main/mule -g strict -f sarif -o mule-lint.sarif
+  run: npx -y @sfdxy/mule-lint@1.26.0 ./src/main/mule -g strict -f sarif -o mule-lint.sarif
 
 - name: Upload SARIF
   uses: github/codeql-action/upload-sarif@v3
@@ -189,7 +197,8 @@ npx -y @sfdxy/mule-lint mcp
 ```
 
 - **Tools:** `run_lint_analysis`, `get_rule_details`, `validate_snippet`
-- **Resources:** `mule-lint://rules`, and every best-practice guide under `mule-lint://docs/{slug}`
+- **Resources:** standards and rule catalogs (including per-ID resources), plus every best-practice
+  guide under `mule-lint://docs/{slug}`
 - **Prompts:** `analyze-project`, `explain-rule`, `fix-issue`
 
 ### Setup by host
@@ -209,7 +218,7 @@ Every host runs the same command; only the file and the wrapping key differ.
   "mcpServers": {
     "mule-lint": {
       "command": "npx",
-      "args": ["-y", "@sfdxy/mule-lint@1.25.0", "mcp"]
+      "args": ["-y", "@sfdxy/mule-lint@1.26.0", "mcp"]
     }
   }
 }
@@ -247,6 +256,8 @@ Published at **<https://avinava.github.io/mule-lint/>** with search.
 | Page                                                             | Contents                                           |
 | ---------------------------------------------------------------- | -------------------------------------------------- |
 | [Rules catalog](docs/best-practices/rules-catalog.md)            | All 82 rules with options and examples             |
+| [Standards catalog](docs/best-practices/standards-catalog.md)    | Canonical outcomes, classifications, and sources   |
+| [Rule profiles](docs/profiles.md)                                | Stable rule sets and compatibility contract        |
 | [Quality gates](docs/quality-gates.md)                           | Gates, custom conditions, A–E ratings              |
 | [Configuration](docs/configuration.md)                           | `.mulelintrc.json` keys and precedence             |
 | [Output formats](docs/output-formats.md)                         | Table, JSON, SARIF, HTML, CSV, exit codes          |
@@ -269,17 +280,9 @@ Published at **<https://avinava.github.io/mule-lint/>** with search.
 
 ## Ecosystem
 
-One of four MuleSoft tools that work together, and each is useful alone.
-
-| Project                                                           | Role                                                                |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `mule-lint`                                                       | Static analysis of Mule XML, DataWeave, YAML, and project structure |
-| [`mule-build`](https://github.com/Avinava/mule-build)             | Validate, test, package, run locally, and release                   |
-| [`anypoint-connect`](https://github.com/Avinava/anypoint-connect) | Authorized Anypoint runtime evidence and lifecycle operations       |
-| [`mule-skills`](https://github.com/Avinava/mule-skills)           | Agent workflows that drive all three                                |
-
-Installing [`mule-skills`](https://avinava.github.io/mule-skills/) gives you `mule-lint` preconfigured
-as a pinned MCP server. Details on the [ecosystem page](docs/ecosystem.md).
+The canonical package matrix, supported combinations, and end-to-end agent setup live in the
+[`mule-skills` ecosystem hub](https://avinava.github.io/mule-skills/ecosystem/). This repository owns
+the standards, lint rules, profiles, and their MCP interface; the other tools consume that contract.
 
 ## Development
 

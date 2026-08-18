@@ -21,14 +21,25 @@ describe('parseLintConfig', () => {
     );
   });
 
-  it('preserves compatibility while warning for reserved and unknown keys', () => {
-    const result = parseLintConfig({ extends: 'team-config', futureOption: true });
-    expect(result.config.extends).toBe('team-config');
+  it('accepts built-in profiles while warning for reserved and unknown keys', () => {
+    const result = parseLintConfig({
+      extends: 'mule-lint:recommended',
+      customRulesPath: './rules',
+      futureOption: true,
+    });
+    expect(result.config.extends).toBe('mule-lint:recommended');
     expect(result.config).not.toHaveProperty('futureOption');
     expect(result.warnings).toEqual([
-      'Configuration key "extends" is reserved and has no effect in mule-lint 1.x.',
+      'Configuration key "customRulesPath" is reserved and has no effect in mule-lint 1.x.',
       'Unknown configuration key "futureOption" was ignored.',
     ]);
+  });
+
+  it('rejects unknown or multiple profiles', () => {
+    expect(() => parseLintConfig({ extends: 'team-config' })).toThrow(/extends/);
+    expect(() => parseLintConfig({ extends: ['mule-lint:baseline', 'mule-lint:strict'] })).toThrow(
+      /extends/,
+    );
   });
 
   it('warns when a quality condition requests unsupported new-code analysis', () => {

@@ -15,6 +15,7 @@ deliberate: a scan should do the same thing wherever it is invoked from.
 
 ```json
 {
+  "extends": "mule-lint:recommended",
   "rules": {
     "MULE-001": { "enabled": true },
     "MULE-002": {
@@ -44,6 +45,7 @@ deliberate: a scan should do the same thing wherever it is invoked from.
 
 | Key                | Effect                                                                      |
 | ------------------ | --------------------------------------------------------------------------- |
+| `extends`          | Built-in rule profile: `mule-lint:baseline`, `recommended`, or `strict`     |
 | `rules`            | Per-rule `enabled`, `severity`, and rule-specific `options`                 |
 | `include`          | Glob patterns to scan                                                       |
 | `exclude`          | Glob patterns to skip, such as MUnit tests                                  |
@@ -54,20 +56,26 @@ deliberate: a scan should do the same thing wherever it is invoked from.
 Anything else is rejected. An unknown key exits with code `2` rather than being ignored, because a typo
 in a rule identifier that silently does nothing is worse than a failed run.
 
-Three keys are accepted for backward compatibility but have no runtime effect, and warn when used:
-`extends`, `customRulesPath`, and `maxIssues`.
+Two keys are accepted for backward compatibility but have no runtime effect, and warn when used:
+`customRulesPath` and `maxIssues`.
+
+`extends` accepts exactly one built-in profile, using either the full reference such as
+`mule-lint:recommended` or the short name `recommended`. See [Rule profiles](profiles.md) for the
+membership and compatibility contract.
 
 ## Precedence
 
-| Priority | Source                                                     |
-| -------- | ---------------------------------------------------------- |
-| 1        | An explicit `-c` file                                      |
-| 2        | Command-line flags such as `-f`, `-q`, `--fail-on-warning` |
-| 3        | `defaultFormatter` and `failOnWarning` from the config     |
-| 4        | Built-in rule defaults                                     |
+| Priority | Source                                                    |
+| -------- | --------------------------------------------------------- |
+| 1        | Explicit per-rule settings in an explicit `-c` file       |
+| 2        | Command-line flags, including `--profile`, `-f`, and `-q` |
+| 3        | The config's `extends` profile                            |
+| 4        | `defaultFormatter` and `failOnWarning` from the config    |
+| 5        | Built-in rule defaults                                    |
 
-A flag beats the config for the same setting, so `-f table` overrides `defaultFormatter` for one run
-without editing anything.
+A flag beats the config for the same setting, so `--profile strict` overrides `extends` and `-f table`
+overrides `defaultFormatter` for one run without editing anything. An explicit rule entry overrides
+profile membership; this supports deliberate exceptions without forking a profile.
 
 ## Per-rule options
 
