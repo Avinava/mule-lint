@@ -240,7 +240,7 @@ function registerDocsResource(server: McpServer): void {
               uri: 'mule-lint://docs/testing',
               name: 'Testing (MUnit)',
               description:
-                'MUnit test structure, error scenario testing, event-driven testing, coverage goals',
+                'Behavior-led MUnit planning, event fidelity, boundary mocking, outcome assertions, error and state testing, and coverage interpretation',
               mimeType: 'text/markdown',
             },
             {

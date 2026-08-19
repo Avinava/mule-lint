@@ -21,6 +21,7 @@ export type RuleCategory =
   | 'api-led'
   | 'governance'
   | 'operations'
+  | 'testing'
   | 'experimental';
 
 /**

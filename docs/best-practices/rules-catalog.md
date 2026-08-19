@@ -1,7 +1,7 @@
 # Rules Catalog
 
 > **Version:** 1.26.0
-> **Total Rules:** 82 implemented across 15 runtime categories
+> **Total Rules:** 82 implemented across 16 runtime categories
 > **Last Updated:** August 2026
 
 ---
@@ -1620,7 +1620,7 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 
 ---
 
-### EXP-003: MUnit Coverage
+### EXP-003: MUnit Executable Test Presence
 
 | Property     | Value        |
 | ------------ | ------------ |
@@ -1628,7 +1628,9 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 | **Category** | Experimental |
 | **Fixable**  | No           |
 
-**Description:** Flows should have corresponding MUnit tests in `src/test/munit`.
+**Description:** Projects with production flows should contain at least one executable,
+non-ignored MUnit test in `src/test/munit`. Empty directories, malformed suites, wrong XML
+namespaces, and ignored-only suites do not satisfy the check.
 
 ---
 

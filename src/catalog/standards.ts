@@ -1,7 +1,7 @@
 import type { RuleCategory } from '../types/Rule';
 import type { StandardDefinition } from './types';
 
-const verified = '2026-08-18';
+const verified = '2026-08-19';
 
 export const STANDARD_CATALOG = [
   {
@@ -220,6 +220,24 @@ export const STANDARD_CATALOG = [
       {
         title: 'Deploy applications to CloudHub 2.0',
         url: 'https://docs.mulesoft.com/cloudhub-2/ch2-deploy',
+      },
+    ],
+    lastVerified: verified,
+  },
+  {
+    id: 'MSTD-TEST-001',
+    title: 'Behavior-focused Mule testing',
+    category: 'testing',
+    classification: 'recommended-practice',
+    status: 'stable',
+    summary:
+      'Test observable Mule behavior with representative events, bounded mocks, and explicit outcomes.',
+    appliesTo: ['Mule 4', 'MUnit'],
+    guideSlug: 'testing',
+    sources: [
+      {
+        title: 'MUnit documentation',
+        url: 'https://docs.mulesoft.com/munit/latest/',
       },
     ],
     lastVerified: verified,

@@ -140,7 +140,7 @@ Counts are per identifier prefix, taken from the rule registry.
 | DOC-XXX  | 1     | Display names and documentation                    |
 | STD-XXX  | 1     | Coding and API standards                           |
 
-**Total: 82 rules** across 18 prefixes and 15 runtime categories. A prefix groups identifiers; a
+**Total: 82 rules** across 18 prefixes and 16 runtime categories. A prefix groups identifiers; a
 category is the `category` field a rule reports, which is what configuration and quality gates filter
 on. The two do not map one to one.
 
