@@ -1,0 +1,22 @@
+openapi: 3.0.3
+info:
+  title: Inventory API
+  description: Manages neutral inventory.
+  version: 1.0.0
+servers:
+  - url: http://api.example.test/v1
+paths:
+  /items:
+    get:
+      operationId: listItems
+      description: Lists items.
+      responses:
+        '200':
+          description: Items were returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example: [item-1]

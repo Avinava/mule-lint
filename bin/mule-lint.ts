@@ -17,10 +17,20 @@ import {
 } from '../src/core/QualityGateEvaluator';
 import { DEFAULT_QUALITY_GATE, STRICT_QUALITY_GATE, QualityGate } from '../src/types/QualityGate';
 import { normalizeRuleProfile, toRuleProfileReference } from '../src/catalog';
+import {
+  formatApiContractReport,
+  validateApiContract,
+  type ApiContractOutputFormat,
+} from '../src/api-contract';
 
 import packageJson from '../package.json';
 
 const program = new Command();
+program.enablePositionalOptions();
+
+function collect(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
 
 program
   .name('mule-lint')
@@ -49,6 +59,57 @@ program
       process.exit(2);
     }
   });
+
+const api = program.command('api').description('Validate RAML and OpenAPI contracts');
+
+api
+  .command('validate')
+  .description('Parse and validate a local RAML or OpenAPI project')
+  .argument('<path>', 'API project directory')
+  .option('--main <file>', 'Main contract file, relative to the project')
+  .option(
+    '--ruleset <file>',
+    'Local AMF Validation Profile; repeat for multiple rulesets',
+    collect,
+    [],
+  )
+  .option(
+    '--dependency-root <path>',
+    'Allowed local dependency root; repeat as needed',
+    collect,
+    [],
+  )
+  .option('--format <type>', 'Output format: table, json, sarif', 'table')
+  .action(async (targetPath: string, options: ApiValidateCliOptions) => {
+    try {
+      if (!['table', 'json', 'sarif'].includes(options.format)) {
+        throw new Error(`Unsupported API report format: ${options.format}`);
+      }
+      const report = await validateApiContract({
+        projectPath: path.resolve(targetPath),
+        ...(options.main ? { mainFile: options.main } : {}),
+        ...(options.ruleset.length > 0 ? { rulesetPaths: options.ruleset } : {}),
+        ...(options.dependencyRoot.length > 0 ? { dependencyRoots: options.dependencyRoot } : {}),
+      });
+      console.log(formatApiContractReport(report, options.format as ApiContractOutputFormat));
+      const hasFindings =
+        report.findings.length > 0 ||
+        !report.functionalConforms ||
+        report.governanceConforms === false;
+      process.exit(hasFindings ? 1 : 0);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`Error: ${message}`);
+      process.exit(2);
+    }
+  });
+
+interface ApiValidateCliOptions {
+  main?: string;
+  ruleset: string[];
+  dependencyRoot: string[];
+  format: string;
+}
 
 // MCP subcommand — starts the Model Context Protocol server over stdio
 program

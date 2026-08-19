@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.28.0] - 2026-08-20
+
+### Added
+
+- Separate AMF-backed RAML and OpenAPI contract validation API, CLI command, and MCP tool.
+- Local-only dependency loading, deterministic main-file detection, JSON/SARIF reports, and the `MSTD-API-002` standard.
+- An optional, portable AMF governance baseline ruleset.
+
 All notable changes to this project will be documented in this file.
 
 ## [1.27.0] - 2026-08-19

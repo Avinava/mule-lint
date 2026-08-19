@@ -23,3 +23,6 @@ export * from './catalog';
 
 // XML Formatter
 export * from './formatter';
+
+// RAML and OpenAPI contract validation
+export * from './api-contract';

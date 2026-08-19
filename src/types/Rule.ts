@@ -19,6 +19,7 @@ export type RuleCategory =
   | 'dataweave'
   | 'structure'
   | 'api-led'
+  | 'api-design'
   | 'governance'
   | 'operations'
   | 'testing'

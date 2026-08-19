@@ -81,6 +81,7 @@ nav:
   - Best practices:
       - Index: best-practices/mulesoft-best-practices.md
       - Standards catalog: best-practices/standards-catalog.md
+      - API contract validation: best-practices/api-contracts.md
       - Error handling: best-practices/error-handling.md
       - Variable contracts: best-practices/variable-contracts.md
       - Logging: best-practices/logging.md

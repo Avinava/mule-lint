@@ -67,6 +67,9 @@ mule-lint ./src/main/mule -f sarif -o report.sarif
 
 # an interactive HTML report
 mule-lint ./src/main/mule -f html -o report.html
+
+# validate a RAML or OpenAPI contract with the bundled governance baseline
+mule-lint api validate ./api --ruleset ./node_modules/@sfdxy/mule-lint/rulesets/mule-http-api-baseline.yaml
 ```
 
 ```text
@@ -101,6 +104,12 @@ Exit codes: `0` clean, `1` errors or a failed gate, `2` CLI or configuration err
 The last two are deliberately distinct from `1` — "I could not read your code" is not the same finding
 as "your code has issues". Details in
 [output formats](https://avinava.github.io/mule-lint/output-formats/).
+
+### RAML and OpenAPI contracts
+
+`mule-lint api validate <path>` is a separate AMF-backed validation path for RAML 0.8/1.0 and OpenAPI 2.0/3.0. Use `--main <file>` when a project has multiple roots, repeat `--ruleset <file>` for local AMF Validation Profiles, and repeat `--dependency-root <path>` for approved local dependencies. Contract validation never fetches HTTP references.
+
+Contract output supports `table`, `json`, and `sarif`. Its exit codes are `0` conformant, `1` findings, and `2` configuration or execution failure. See [API contract validation](docs/best-practices/api-contracts.md).
 
 ## Rules
 
@@ -257,6 +266,7 @@ Published at **<https://avinava.github.io/mule-lint/>** with search.
 | ---------------------------------------------------------------- | -------------------------------------------------- |
 | [Rules catalog](docs/best-practices/rules-catalog.md)            | All 82 rules with options and examples             |
 | [Standards catalog](docs/best-practices/standards-catalog.md)    | Canonical outcomes, classifications, and sources   |
+| [API contract validation](docs/best-practices/api-contracts.md)  | RAML/OpenAPI parsing and local governance rulesets |
 | [Rule profiles](docs/profiles.md)                                | Stable rule sets and compatibility contract        |
 | [Quality gates](docs/quality-gates.md)                           | Gates, custom conditions, A–E ratings              |
 | [Configuration](docs/configuration.md)                           | `.mulelintrc.json` keys and precedence             |

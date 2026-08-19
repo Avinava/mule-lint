@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Inventory API
+  description: Manages a neutral inventory used only by automated tests.
+  version: 1.0.0
+servers:
+  - url: https://api.example.test/v1
+paths:
+  /items:
+    get:
+      operationId: listItems
+      description: Lists available items.
+      responses:
+        '200':
+          description: Items were returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+              example:
+                - id: item-1
+components:
+  schemas:
+    Item:
+      type: object
+      description: A neutral inventory item.
+      required: [id]
+      properties:
+        id:
+          type: string

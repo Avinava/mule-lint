@@ -7,6 +7,6 @@
     "noUncheckedIndexedAccess": false,
     "exactOptionalPropertyTypes": false
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "../src/**/*.d.ts"],
   "exclude": []
 }
