@@ -20,6 +20,7 @@ should read these records instead of embedding a separate copy of the guidance.
 | `MSTD-API-001`    | Consistent API-led implementation         | Recommended practice   | `api-led`        | [Best-practices index](mulesoft-best-practices.md)    |
 | `MSTD-GOV-001`    | Reproducible project governance           | Recommended practice   | `governance`     | [CI/CD](ci-cd.md)                                     |
 | `MSTD-OPS-001`    | Operationally safe Mule applications      | Recommended practice   | `operations`     | [Deployment](deployment-2026.md)                      |
+| `MSTD-TEST-001`   | Behavior-focused Mule testing             | Recommended practice   | `testing`        | [Testing](testing.md)                                 |
 | `MSTD-EXP-001`    | Experimental quality heuristics           | Opinionated convention | `experimental`   | [Rules catalog](rules-catalog.md)                     |
 
 ## Classification

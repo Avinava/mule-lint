@@ -35,6 +35,7 @@ describe('rule registry invariants', () => {
         'api-led',
         'governance',
         'operations',
+        'testing',
         'experimental',
       ]).toContain(rule.category);
     }
@@ -50,7 +51,7 @@ describe('rule registry invariants', () => {
 
   it('publishes one structured definition and standard mapping per registered rule', () => {
     expect(RULE_CATALOG.map((rule) => rule.id)).toEqual(ALL_RULES.map((rule) => rule.id));
-    expect(new Set(STANDARD_CATALOG.map((standard) => standard.category)).size).toBe(15);
+    expect(new Set(STANDARD_CATALOG.map((standard) => standard.category)).size).toBe(16);
 
     for (const rule of ALL_RULES) {
       const definition = getRuleDefinition(rule.id);

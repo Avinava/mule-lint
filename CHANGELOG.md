@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.27.0] - 2026-08-19
+
+### Added
+
+- `MSTD-TEST-001` defines behavior-focused Mule testing through caller-faithful events, boundary
+  mocks, observable outcomes, error and state evidence, and risk-based scenarios rather than a
+  universal coverage percentage.
+
+### Changed
+
+- The testing guide served through `mule-lint://docs/testing` now uses the same behavior-ledger,
+  fidelity, mock, assertion, failure-classification, and privacy model as the standard.
+
+### Fixed
+
+- `EXP-003` now detects at least one non-ignored `munit:test` in the exact MUnit namespace under
+  `src/test/munit`. Empty, malformed, wrong-namespace, ignored-only, and missing suites no longer
+  satisfy the rule merely because a coverage-report setting exists.
+
 ## [1.26.0] - 2026-08-18
 
 ### Added

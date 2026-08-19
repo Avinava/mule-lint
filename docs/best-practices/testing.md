@@ -1,190 +1,89 @@
-# Testing with MUnit
+# Behavior-Focused Testing with MUnit
 
-> **Applies to:** All  
-> **Related Rules:** `EXP-003`  
-> **Last Updated:** April 2026
+> **Standard:** `MSTD-TEST-001` · **Related rule:** `EXP-003`
 
-## When to Read This
+Use MUnit to demonstrate externally meaningful Mule behavior, not merely to execute processors. A
+useful test explains what enters the flow, which boundary conditions are controlled, and what a
+caller, source, dependency, or state store can observe afterward.
 
-Read this when writing MUnit tests, setting up test infrastructure, or testing event-driven flows.
+## Start with a behavior ledger
 
----
+Before writing XML, record the material contract for each case:
 
-## Test Coverage Goals
+| Concern            | Evidence to capture                                                   |
+| ------------------ | --------------------------------------------------------------------- |
+| Entry event        | Payload, attributes, variables, media type, and source semantics      |
+| Dependencies       | Responses or errors controlled at external boundaries                 |
+| Outcome            | Payload, attributes, variables, error type, or caller/source response |
+| Interactions       | Calls that are themselves part of the contract                        |
+| State and delivery | Writes, idempotency, acknowledgement, redelivery, or recovery         |
+| Observability      | Correlation, safe logs, metrics, or operational status                |
 
-| Test Type            | Coverage Target    | Purpose                        |
-| -------------------- | ------------------ | ------------------------------ |
-| Unit Tests           | 80%+ flow coverage | Validate individual flow logic |
-| Integration Tests    | All critical paths | Validate end-to-end scenarios  |
-| Error Scenario Tests | All error handlers | Validate error responses       |
+Choose cases from actual behavior: success, meaningful alternatives, invalid input, dependency
+failure, terminal error disposition, retry exhaustion, state/replay behavior, and source delivery
+semantics where those paths exist. A separate test for every flow is not inherently useful.
 
----
+## Build a faithful Mule event
 
-## Patterns
+Set the payload, attributes, variables, and media type expected at the real entry boundary. A JSON
+string is not equivalent to an object, and an HTTP request, queue message, scheduler event, or
+connector callback can expose different attributes and acknowledgement behavior. Keep fixtures
+synthetic, minimal, and representative of the current project contract.
 
-### Pattern 1: Standard MUnit Test Structure
+## Mock boundaries deliberately
 
-```xml
-<munit:test name="create-order-success-test"
-            description="Validates successful order creation">
+Mock external or nondeterministic boundaries when isolation is required. Prefer the narrowest
+selector that identifies the intended operation without depending on incidental implementation
+detail. Do not mock every processor: doing so can replace the behavior under test with the test's own
+assumptions.
 
-    <!-- Mock external dependencies -->
-    <munit:behavior>
-        <munit-tools:mock-when processor="http:request">
-            <munit-tools:with-attributes>
-                <munit-tools:with-attribute attributeName="config-ref"
-                                            whereValue="API_HTTP_Config"/>
-            </munit-tools:with-attributes>
-            <munit-tools:then-return>
-                <munit-tools:payload value='{"orderId": "12345"}'/>
-            </munit-tools:then-return>
-        </munit-tools:mock-when>
-    </munit:behavior>
+Use interaction verification when the call itself matters—for example, preventing a duplicate write
+or proving a terminal notification. Otherwise assert the observable outcome and allow internal
+refactoring.
 
-    <!-- Execute the flow -->
-    <munit:execution>
-        <flow-ref name="create-order-flow"/>
-    </munit:execution>
+## Assert outcomes and failure disposition
 
-    <!-- Assert results -->
-    <munit:validation>
-        <munit-tools:assert-that expression="#[payload.orderId]"
-                                  is="#[MunitTools::notNullValue()]"/>
-    </munit:validation>
-</munit:test>
-```
+Assert the complete material outcome: value shape and media type, propagated variables or
+attributes, classified Mule error, caller/source result, side effects, and state transitions. For
+error paths, distinguish propagation from continuation and verify retry, acknowledgement,
+redelivery, quarantine, or manual-recovery behavior rather than merely expecting an exception.
 
-### Pattern 2: Testing Error Handlers
+Stateful and source-driven paths may require explicit setup and cleanup. Keep tests independent;
+never rely on suite order or state left by another test.
 
-```xml
-<munit:test name="error-handler-400-test"
-            description="Validates 400 Bad Request error handling"
-            expectedErrorType="APIKIT:BAD_REQUEST">
+## Focused and full execution
 
-    <munit:behavior>
-        <munit-tools:mock-when processor="apikit:router">
-            <munit-tools:then-call exception="APIKIT:BAD_REQUEST"/>
-        </munit-tools:mock-when>
-    </munit:behavior>
+Run the smallest relevant suite or test while iterating, then run the repository-required full suite
+before release. Treat failures according to evidence:
 
-    <munit:execution>
-        <flow-ref name="api-main"/>
-    </munit:execution>
+- **Product regression:** the implemented behavior violates the current contract.
+- **Stale expectation:** the contract changed intentionally but the test did not.
+- **Selector mismatch:** a mock or verification no longer targets the intended boundary.
+- **Fixture mismatch:** the event shape, type, media type, or attributes are inaccurate.
+- **Environment/tooling failure:** Maven, licensing, dependency resolution, or runtime setup failed.
+- **Flaky/shared state:** timing, ordering, ports, files, or persistent state leak across tests.
 
-    <munit:validation>
-        <munit-tools:assert-that expression="#[vars.httpStatus]"
-                                  is="#[MunitTools::equalTo(400)]"/>
-        <munit-tools:assert-that expression="#[payload.error]"
-                                  is="#[MunitTools::equalTo('InvalidInput')]"/>
-    </munit:validation>
-</munit:test>
-```
+Never disable, weaken, or skip a required test merely to obtain a passing build.
 
-### Pattern 3: Testing Event-Driven Flows
+## Coverage and Test Recorder
 
-For PAPI-style flows driven by Platform Events, mock the event payload and downstream SAPI calls:
+Coverage shows which executable structures were reached; it does not prove that results, failure
+disposition, delivery semantics, or state transitions were correct. Use uncovered paths to guide
+investigation, not as a universal quality score.
 
-```xml
-<munit:test name="account-event-processing-test"
-            description="Validates Account event → NS Customer sync">
+Test Recorder output is a starting point. Review generated fixtures, selectors, assertions, secret
+handling, environment assumptions, and state cleanup before treating a recorded test as durable.
 
-    <munit:behavior>
-        <!-- Mock the SAPI HTTP call -->
-        <munit-tools:mock-when processor="http:request">
-            <munit-tools:with-attributes>
-                <munit-tools:with-attribute attributeName="config-ref"
-                    whereValue="SAPI_HTTP_Config"/>
-            </munit-tools:with-attributes>
-            <munit-tools:then-return>
-                <munit-tools:payload value='{"status":"success","internalId":"123"}'/>
-            </munit-tools:then-return>
-        </munit-tools:mock-when>
+## Review checklist
 
-        <!-- Mock the writeback SAPI call -->
-        <munit-tools:mock-when processor="http:request">
-            <munit-tools:with-attributes>
-                <munit-tools:with-attribute attributeName="doc:name"
-                    whereValue="Writeback Request"/>
-            </munit-tools:with-attributes>
-            <munit-tools:then-return>
-                <munit-tools:payload value='{"success":true}'/>
-            </munit-tools:then-return>
-        </munit-tools:mock-when>
-    </munit:behavior>
+- [ ] The test names a behavior and meaningful scenario.
+- [ ] The input event matches the real boundary, including type and media type.
+- [ ] Mocks control only necessary boundaries with stable selectors.
+- [ ] Assertions prove observable outcomes; verifications prove contractually relevant calls.
+- [ ] Error, retry, state, acknowledgement, and recovery behavior is tested where material.
+- [ ] Fixtures are synthetic and contain no secret or prior-project data.
+- [ ] Tests are independent and leave no shared state behind.
+- [ ] Focused and required full-suite commands and results are reported.
 
-    <munit:execution>
-        <!-- Set variables as the event listener would -->
-        <set-variable variableName="correlationId" value="test-uuid-123"/>
-        <set-variable variableName="logCategory" value="com.myorg.papi"/>
-        <set-variable variableName="salesforceId" value="001XXXXX"/>
-        <set-payload value='#[readUrl("classpath://test-data/account-event.json", "application/json")]'/>
-        <flow-ref name="account-process-subflow"/>
-    </munit:execution>
-
-    <munit:validation>
-        <munit-tools:assert-that expression="#[payload.status]"
-                                  is="#[MunitTools::equalTo('success')]"/>
-    </munit:validation>
-</munit:test>
-```
-
-### Pattern 4: Test Organization
-
-```
-src/test/
-├── munit/
-│   ├── salesforce-upsert-test.xml       # Operation-specific tests
-│   ├── salesforce-create-test.xml
-│   ├── salesforce-query-test.xml
-│   ├── salesforce-delete-test.xml
-│   ├── salesforce-process-subflow-test.xml  # Routing tests
-│   ├── error-handling-test.xml          # Error scenario tests
-│   └── common-test-resources.xml        # Shared mocks
-└── resources/
-    ├── log4j2-test.xml                  # Console-only, noise-suppressed
-    └── test-data/                       # Test payloads
-        ├── account-event.json
-        └── order-request.json
-```
-
----
-
-## Key Principles
-
-1. **Mock all external dependencies** — never call real systems in unit tests
-2. **Test all error handler branches** — verify each HTTP status code / error type
-3. **Use descriptive test names** — names should describe the scenario being tested
-4. **Isolate tests** — each test should be independent (no shared state)
-5. **Separate test log config** — use `log4j2-test.xml` with console appender and suppressed noise
-
----
-
-## Running Tests
-
-```bash
-# Full test suite
-mvn clean test -Dmule.env=dev -Dsecure.key=test
-
-# Specific test suite
-mvn test -Dmule.env=dev -Dsecure.key=test -Dtest=salesforce-upsert-test
-
-# Package (skip tests)
-mvn clean package -DskipTests
-```
-
-> **Note:** MUnit requires MuleSoft Enterprise Edition license. If the `licm` check fails in your dev environment, verify with `mvn process-classes` (schema validation passes without EE license).
-
----
-
-## Checklist
-
-- [ ] 80%+ flow coverage with MUnit
-- [ ] All error handler branches tested
-- [ ] External dependencies mocked (HTTP, connectors, databases)
-- [ ] Test names clearly describe the scenario
-- [ ] `log4j2-test.xml` configured for test environment
-- [ ] Test data externalized to `test-data/` directory
-
----
-
-**See also:** [Error Handling](error-handling.md) · [CI/CD Integration](ci-cd.md)
+**See also:** [Error Handling](error-handling.md) · [CI/CD](ci-cd.md) ·
+[Rules Catalog](rules-catalog.md)

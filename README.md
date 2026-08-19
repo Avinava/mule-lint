@@ -104,7 +104,7 @@ as "your code has issues". Details in
 
 ## Rules
 
-82 rules across 15 runtime categories and 18 identifier prefixes.
+82 rules across 16 runtime categories and 18 identifier prefixes.
 
 | Prefix | Count | Covers                                             |
 | ------ | ----- | -------------------------------------------------- |

@@ -2,6 +2,9 @@ import { ValidationContext, Issue } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 import { ProjectRule } from '../base/ProjectRule';
 import * as fs from 'fs';
+import * as path from 'path';
+import fg from 'fast-glob';
+import { parseXml } from '../../core/XmlParser';
 
 /**
  * EXP-001: Flow Reference Depth
@@ -83,33 +86,65 @@ export class ConnectorConfigNamingRule extends BaseRule {
 }
 
 /**
- * EXP-003: MUnit Test Coverage
+ * EXP-003: MUnit Executable Test Presence
  *
- * Check for MUnit test files.
+ * Check that projects with flows contain at least one executable MUnit test.
  */
 export class MUnitCoverageRule extends ProjectRule {
   id = 'EXP-003';
-  name = 'MUnit Coverage';
-  description = 'Flows should have corresponding MUnit tests';
+  name = 'MUnit Executable Test Presence';
+  description = 'Projects with flows should contain at least one executable MUnit test';
   severity = 'info' as const;
   category = 'experimental' as const;
 
   protected validateProject(context: ValidationContext): Issue[] {
-    const issues: Issue[] = [];
-
     const flowCount = context.allFlowNames?.size ?? 0;
-    const munitDir = `${context.projectRoot}/src/test/munit`;
+    if (flowCount === 0) {
+      return [];
+    }
 
-    if (!fs.existsSync(munitDir)) {
-      if (flowCount > 0) {
-        issues.push(
-          this.createProjectIssue(`Project has ${flowCount} flows but no MUnit tests`, {
-            suggestion: 'Create src/test/munit/ directory with test files',
-          }),
-        );
+    const munitDir = path.join(context.projectRoot, 'src', 'test', 'munit');
+    const usableMunitDir = fs.existsSync(munitDir) && !fs.lstatSync(munitDir).isSymbolicLink();
+    const suites = usableMunitDir
+      ? fg.sync('**/*.xml', {
+          cwd: munitDir,
+          absolute: true,
+          onlyFiles: true,
+          followSymbolicLinks: false,
+        })
+      : [];
+
+    let executableTests = 0;
+    for (const suite of suites) {
+      let content: string;
+      try {
+        content = fs.readFileSync(suite, 'utf8');
+      } catch {
+        continue;
+      }
+      const parsed = parseXml(content, path.relative(context.projectRoot, suite));
+      if (!parsed.success || !parsed.document) {
+        continue;
+      }
+      const tests = parsed.document.getElementsByTagNameNS(
+        'http://www.mulesoft.org/schema/mule/munit',
+        'test',
+      );
+      for (let index = 0; index < tests.length; index += 1) {
+        const test = tests.item(index);
+        if (test && (test.getAttribute('ignore') ?? '').trim().toLowerCase() !== 'true') {
+          executableTests += 1;
+        }
       }
     }
 
-    return issues;
+    return executableTests > 0
+      ? []
+      : [
+          this.createProjectIssue(`Project has ${flowCount} flows but no executable MUnit tests`, {
+            suggestion:
+              'Add at least one non-ignored munit:test under src/test/munit for project behavior',
+          }),
+        ];
   }
 }
