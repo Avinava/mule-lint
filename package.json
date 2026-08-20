@@ -61,7 +61,7 @@
     "@aml-org/amf-custom-validator": "1.7.7",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@prettier/plugin-xml": "^3.4.2",
-    "@xmldom/xmldom": "^0.8.13",
+    "@xmldom/xmldom": "^0.9.11",
     "amf-client-js": "5.12.0",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
