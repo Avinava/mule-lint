@@ -1,0 +1,64 @@
+#%Validation Profile 1.0
+
+profile: Mule HTTP API Baseline
+
+violation:
+  - servers-must-use-https
+  - api-must-have-description
+  - operations-must-have-identifiers
+  - operations-must-have-descriptions
+  - responses-must-have-descriptions
+  - payloads-must-use-schemas
+
+warning:
+  - payload-schemas-should-have-examples
+
+validations:
+  servers-must-use-https:
+    message: Use HTTPS for every declared server URL.
+    targetClass: apiContract.Server
+    propertyConstraints:
+      core.urlTemplate:
+        pattern: '^https://'
+
+  api-must-have-description:
+    message: Describe the API for its consumers.
+    targetClass: apiContract.WebAPI
+    propertyConstraints:
+      core.description:
+        minCount: 1
+
+  operations-must-have-identifiers:
+    message: Give every operation a stable identifier.
+    targetClass: apiContract.Operation
+    propertyConstraints:
+      core.name:
+        minCount: 1
+
+  operations-must-have-descriptions:
+    message: Describe every operation's consumer-visible behavior.
+    targetClass: apiContract.Operation
+    propertyConstraints:
+      core.description:
+        minCount: 1
+
+  responses-must-have-descriptions:
+    message: Describe every response outcome.
+    targetClass: apiContract.Response
+    propertyConstraints:
+      core.description:
+        minCount: 1
+
+  payloads-must-use-schemas:
+    message: Define a schema for every request and response payload.
+    targetClass: apiContract.Payload
+    propertyConstraints:
+      shapes.schema:
+        minCount: 1
+
+  payload-schemas-should-have-examples:
+    message: Provide representative examples for payload schemas.
+    targetClass: apiContract.Payload
+    propertyConstraints:
+      shapes.schema / apiContract.examples:
+        minCount: 1

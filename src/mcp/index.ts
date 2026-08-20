@@ -10,6 +10,7 @@ import { registerRunLintAnalysis } from './tools/runLintAnalysis';
 import { registerGetRuleDetails } from './tools/getRuleDetails';
 import { registerValidateSnippet } from './tools/validateSnippet';
 import { registerFormatMuleXml } from './tools/formatMuleXml';
+import { registerValidateApiContract } from './tools/validateApiContract';
 import { registerResources } from './resources';
 import { registerPrompts } from './prompts';
 
@@ -49,6 +50,7 @@ export class MuleLintMcpServer {
     registerGetRuleDetails(this.server);
     registerValidateSnippet(this.server, this.engine);
     registerFormatMuleXml(this.server);
+    registerValidateApiContract(this.server);
   }
 
   private setupResources(): void {

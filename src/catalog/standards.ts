@@ -196,6 +196,28 @@ export const STANDARD_CATALOG = [
     lastVerified: verified,
   },
   {
+    id: 'MSTD-API-002',
+    title: 'Consumer-centered API contracts',
+    category: 'api-design',
+    classification: 'recommended-practice',
+    status: 'stable',
+    summary:
+      'Design, validate, and govern RAML or OpenAPI contracts as explicit consumer-facing interfaces.',
+    appliesTo: ['RAML 0.8/1.0', 'OpenAPI 2.0/3.0', 'HTTP APIs'],
+    guideSlug: 'api-contracts',
+    sources: [
+      {
+        title: 'AMF supported specifications',
+        url: 'https://a.ml/docs/amf/amf_support',
+      },
+      {
+        title: 'API Designer',
+        url: 'https://docs.mulesoft.com/design-center/design-create-publish-api-specs',
+      },
+    ],
+    lastVerified: verified,
+  },
+  {
     id: 'MSTD-GOV-001',
     title: 'Reproducible project governance',
     category: 'governance',

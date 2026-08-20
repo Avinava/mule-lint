@@ -15,6 +15,7 @@ Comprehensive guidelines for building maintainable, secure, and performant Mule 
 | Document                                                          | Description                                                                                         |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | [Best Practices Index](best-practices/mulesoft-best-practices.md) | Master index with quick reference card and API-Led overview                                         |
+| [API Contract Validation](best-practices/api-contracts.md)        | RAML/OpenAPI validation, local rulesets, and automation behavior                                    |
 | [Error Handling](best-practices/error-handling.md)                | Global error handlers, HTTP vs. event-driven patterns, connector error types, CRM error log objects |
 | [Variable Contracts](best-practices/variable-contracts.md)        | Standard variables, correlation IDs, array mirroring, action routing                                |
 | [Logging](best-practices/logging.md)                              | Categories, structured JSON logging, MDC/tracing, PII prevention                                    |

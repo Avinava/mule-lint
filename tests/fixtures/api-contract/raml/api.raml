@@ -1,0 +1,18 @@
+#%RAML 1.0
+title: Inventory API
+description: Manages a neutral inventory used only by automated tests.
+baseUri: https://api.example.test/v1
+types:
+  Item: !include types/item.raml
+/items:
+  get:
+    displayName: listItems
+    description: Lists available items.
+    responses:
+      200:
+        description: Items were returned.
+        body:
+          application/json:
+            type: Item[]
+            example:
+              - id: item-1
