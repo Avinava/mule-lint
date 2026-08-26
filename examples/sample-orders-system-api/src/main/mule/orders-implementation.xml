@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mule
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+                          http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd"
+>
+    <sub-flow name="fetch-orders-subflow" doc:name="Fetch Orders" doc:description="Calls the example backend for an order collection">
+        <http:request
+            method="GET"
+            config-ref="orders-backend-request-config"
+            path="/orders"
+            responseTimeout="${orders.backend.responseTimeout}"
+            doc:name="Request Orders"
+        >
+            <http:header headerName="User-Agent" value="sample-orders-system-api/1.0" />
+            <http:headers
+            ><![CDATA[#[{
+                "Accept": "application/json",
+                "X-Correlation-ID": correlationId
+            }]]]></http:headers>
+            <http:query-params
+            ><![CDATA[#[{
+                customerId: vars.customerId
+            } filterObject ((value) -> value != null)]]]></http:query-params>
+        </http:request>
+    </sub-flow>
+
+    <sub-flow name="fetch-order-by-id-subflow" doc:name="Fetch Order by ID" doc:description="Calls the example backend for one order">
+        <http:request
+            method="GET"
+            config-ref="orders-backend-request-config"
+            path="/orders/$(vars.orderId)"
+            responseTimeout="${orders.backend.responseTimeout}"
+            doc:name="Request Order"
+        >
+            <http:header headerName="User-Agent" value="sample-orders-system-api/1.0" />
+            <http:headers
+            ><![CDATA[#[{
+                "Accept": "application/json",
+                "X-Correlation-ID": correlationId
+            }]]]></http:headers>
+        </http:request>
+    </sub-flow>
+</mule>

@@ -102,7 +102,7 @@ This enables better log parsing with tools like Splunk, ELK, and Anypoint Monito
 
 ---
 
-## MDC / Tracing Module (2026+)
+## MDC and tracing
 
 For distributed tracing, use the Mule Tracing module or Mapped Diagnostic Context (MDC):
 

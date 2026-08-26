@@ -29,7 +29,8 @@ export const tabulatorStyles = `
 .tabulator-row {
     background: var(--bg-primary) !important;
     border-bottom: 1px solid var(--bg-tertiary) !important;
-    min-height: 40px !important;
+    min-height: 52px !important;
+    cursor: pointer;
 }
 .tabulator-row:hover { 
     background: var(--bg-secondary) !important; 
@@ -38,8 +39,9 @@ export const tabulatorStyles = `
     background: #eff6ff !important; 
 }
 .tabulator-cell {
-    padding: 8px 12px !important;
+    padding: 10px 12px !important;
     border-right: none !important;
+    white-space: normal !important;
 }
 .tabulator-header-filter { 
     padding: 4px 8px 8px 8px !important; 

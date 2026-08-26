@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.29.0] - 2026-08-26
+
+### Added
+
+- A task-oriented documentation experience for MuleSoft developers who do not routinely use
+  Node.js, with a guided first scan, recipes, CLI and library references, troubleshooting, and
+  clearer configuration, profile, output, quality-gate, formatting, and MCP guidance.
+- A sample Mule project with copyable commands, representative lint findings, and
+  screenshots of the generated HTML dashboard and issue workflow.
+- Canonical repository guidance for contributors and coding agents.
+
+### Changed
+
+- The HTML report now uses a cleaner MuleSoft-focused visual system, clearer summary language,
+  more readable issue tables, and a row detail panel that exposes the complete finding and
+  suggestion.
+- The root README, contributor guide, agent workflows, and best-practice pages are shorter,
+  task-oriented, and explicit about what commands read or write.
+
+### Fixed
+
+- HTML report project names are escaped in document chrome.
+- Source-file totals no longer include synthetic report rows, connector icons use the configured
+  Exchange base URL, and Tabulator row selection uses the supported event API.
+
 ## [1.28.0] - 2026-08-20
 
 ### Added

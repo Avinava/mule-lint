@@ -1,131 +1,64 @@
 ---
-description: How to run QA validation on mule-lint rules using a real MuleSoft project
+description: Validate rule accuracy without leaking private Mule project data
 ---
 
-# Mule-Lint QA Validation Workflow
+# QA validation
 
-This workflow validates that mule-lint rules are working correctly by running the linter against a real MuleSoft project and manually verifying each flagged issue.
+## Preferred source
 
-## Prerequisites
+Use repository fixtures and `examples/sample-orders-system-api` first. A private project may be inspected locally only when the owner has placed it in scope and the task requires it.
 
-- A MuleSoft project to test against (e.g., `<MULE_PROJECT_PATH>`)
-- mule-lint project built (`npm run build`)
+Never commit or paste private project names, paths, endpoints, IDs, payloads, credentials, comments, business logic, or generated reports. Reduce a confirmed behavior to a new synthetic fixture.
 
-## Steps
-
-### 1. Build the Project
-
-// turbo
+## 1. Build and establish a baseline
 
 ```bash
-cd <PROJECT_ROOT>
 npm run build
+node dist/bin/mule-lint.js examples/sample-orders-system-api --profile recommended
 ```
 
-### 2. Run the Linter with All Rules
+The sample’s expected summary is documented in its README.
 
-// turbo
+## 2. Capture machine-readable findings
+
+JSON output is a flat array:
 
 ```bash
-node dist/bin/mule-lint.js <PROJECT_PATH> -f json -e -o /tmp/mule-lint-results.json
+node dist/bin/mule-lint.js <PROJECT_PATH> \
+  --profile recommended \
+  --format json \
+  --output /tmp/mule-lint-results.json
 ```
 
-Replace `<PROJECT_PATH>` with the path to your MuleSoft project.
+The command may exit `1` when it finds errors; that does not mean report generation failed.
 
-### 3. Summarize Results by Rule
-
-// turbo
+Summarize without printing sensitive messages or paths:
 
 ```bash
-jq '[.files[] | .issues[]] | group_by(.ruleId) | map({ruleId: .[0].ruleId, count: length, severity: .[0].severity}) | sort_by(.count) | reverse' /tmp/mule-lint-results.json
+jq 'group_by(.ruleId) | map({ruleId: .[0].ruleId, count: length, severity: .[0].severity})' \
+  /tmp/mule-lint-results.json
 ```
 
-### 4. Extract Unique Examples per Rule
+## 3. Review representative findings locally
 
-// turbo
+For each affected rule, classify a small sample as:
 
-```bash
-jq '[.files[] | .issues[]] | group_by(.ruleId) | map(.[0])' /tmp/mule-lint-results.json > /tmp/unique-rules.json
-cat /tmp/unique-rules.json
-```
+- true positive;
+- false positive;
+- uncertain without design/runtime context.
 
-### 5. Manual Verification for Each Rule
+Record only rule ID, counts, classification, and a generic reason. Do not put raw private file content in issues or commits.
 
-For each rule in the output:
+## 4. Reproduce synthetically
 
-1. **Read the flagged file**: Use `cat` to view the XML/YAML file mentioned in `filePath`
-2. **Verify the issue**: Check if the rule correctly identified a problem
-3. **Classify the result**:
-   - **True Positive**: Rule correctly flagged a real issue
-   - **False Positive**: Rule incorrectly flagged valid code
-   - **Partially Correct**: Rule is right in some cases but wrong in others
+For every confirmed false positive or missed finding:
 
-### 6. Document Findings
+1. create the smallest made-up XML/YAML/DWL input that reproduces the behavior;
+2. use neutral names and `.invalid` endpoints;
+3. add the focused regression test;
+4. fix the rule;
+5. run the focused and registry/parity tests.
 
-Create a table documenting each rule:
+## 5. Compare safely
 
-| Rule ID  | Count | Severity | Status            | Notes                                           |
-| -------- | ----- | -------- | ----------------- | ----------------------------------------------- |
-| MULE-001 | 1     | error    | ✅ TRUE POSITIVE  | Correctly detected missing global error handler |
-| YAML-001 | 60    | warning  | ❌ FALSE POSITIVE | Files exist in properties/ folder               |
-
-### 7. Fix False Positives
-
-For each false positive:
-
-1. **View the rule implementation**: `src/rules/<category>/<RuleName>.ts`
-2. **Identify the root cause**: Usually a regex pattern, path assumption, or missing exclusion
-3. **Fix the issue**: Update the rule logic
-4. **Rebuild**: `npm run build`
-
-### 8. Re-run and Compare
-
-// turbo
-
-```bash
-node dist/bin/mule-lint.js <PROJECT_PATH> -f json -e -o /tmp/mule-lint-results-fixed.json
-```
-
-// turbo
-
-```bash
-echo "BEFORE:" && jq '[.files[].issues[]] | length' /tmp/mule-lint-results.json
-echo "AFTER:" && jq '[.files[].issues[]] | length' /tmp/mule-lint-results-fixed.json
-```
-
-### 9. Commit Fixes
-
-```bash
-git add -A
-git commit -m "fix: resolve false positive issues identified in QA validation"
-```
-
-## Common False Positive Patterns
-
-### Path Assumptions
-
-- Rules assume files are in specific directories
-- Fix: Add additional search paths
-
-### Regex Too Strict
-
-- Patterns reject valid naming conventions (e.g., camelCase)
-- Fix: Relax regex to accept valid variations
-
-### Missing Context Awareness
-
-- Rules don't check parent elements (e.g., raise-error in until-successful)
-- Fix: Add ancestor checks with XPath
-
-### Auto-Generated Code
-
-- Rules flag framework-generated names (e.g., APIKit flows)
-- Fix: Add exclusion patterns for known frameworks
-
-## Expected Accuracy Targets
-
-| Metric              | Target                     |
-| ------------------- | -------------------------- |
-| True Positive Rate  | > 95%                      |
-| False Positive Rate | < 5%                       |
-| Coverage            | All rule categories tested |
+Re-run the same command and compare aggregate counts by rule. Delete temporary reports after the review. Do not add an automatic `git add` or commit step; the human/primary task decides what belongs in source control.

@@ -15,7 +15,7 @@ export function renderHeader(props: HeaderProps): string {
         <header class="app-header bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm flex items-center px-5 gap-5">
             <!-- Logo + Brand (clickable to dashboard) -->
             <a href="#" onclick="router.navigate('dashboard'); return false;" class="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
-                <div class="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+                <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center text-white shadow-sm">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 </div>
                 <div>
@@ -27,9 +27,9 @@ export function renderHeader(props: HeaderProps): string {
             <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
 
             <!-- PROJECT NAME (Prominent) -->
-            <div class="flex items-center gap-3">
-                <h1 class="text-lg font-semibold text-slate-800 dark:text-white tracking-tight">${props.projectName}</h1>
-                <span class="text-xs text-slate-400 dark:text-slate-500 font-mono">v${props.version}</span>
+            <div class="flex items-center gap-3 min-w-0">
+                <h1 class="text-lg font-semibold text-slate-800 dark:text-white tracking-tight truncate max-w-[340px]" title="${props.projectName}">${props.projectName}</h1>
+                <span class="text-2xs text-slate-500 dark:text-slate-400 font-mono bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full">report v${props.version}</span>
             </div>
 
             <div class="flex-1"></div>
@@ -52,7 +52,7 @@ export function renderHeader(props: HeaderProps): string {
             <!-- Search -->
             <div class="relative w-52 hidden md:block">
                 <input type="text" id="global-search" placeholder="Search issues..." 
-                    class="w-full pl-9 pr-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    class="w-full pl-9 pr-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </div>
 

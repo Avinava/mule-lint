@@ -131,9 +131,9 @@ For APIs using APIKit with RAML, schema validation is handled by the APIKit rout
 
 ---
 
-## Zero-Trust API Architecture (2026+)
+## Layered API security
 
-Modern MuleSoft deployments follow Zero-Trust principles:
+Apply controls at multiple layers; no single connector or policy covers the full threat model:
 
 | Layer             | Control                              | Implementation                           |
 | ----------------- | ------------------------------------ | ---------------------------------------- |

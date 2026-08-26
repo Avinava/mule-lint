@@ -35,8 +35,8 @@ export const themeVariables = `
     --text-muted: #94a3b8;
     
     /* Accent */
-    --accent-primary: #0ea5e9;
-    --accent-primary-hover: #0284c7;
+    --accent-primary: #10b981;
+    --accent-primary-hover: #059669;
     
     /* Spacing */
     --spacing-xs: 4px;
@@ -77,8 +77,8 @@ export const themeVariables = `
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
     
-    --accent-primary: #38bdf8;
-    --accent-primary-hover: #7dd3fc;
+    --accent-primary: #34d399;
+    --accent-primary-hover: #6ee7b7;
 }
 `;
 

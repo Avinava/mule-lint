@@ -13,14 +13,15 @@ export type DashboardViewProps = LintSummaryProps;
 export function renderDashboardView(props: DashboardViewProps): string {
   return `
             <!-- ===== DASHBOARD VIEW ===== -->
-            <div id="view-dashboard" class="h-full overflow-y-auto p-6">
+            <div id="view-dashboard" class="h-full overflow-y-auto px-7 py-6">
                 <!-- Header -->
                 <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">mule-lint dashboard</h2>
+                    <div class="inline-flex items-center gap-2 px-2.5 py-1 mb-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-2xs font-semibold uppercase tracking-wider">Local static analysis</div>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Project health at a glance</h2>
                     <p class="text-base text-slate-500 dark:text-slate-400 mt-2">
                         Scanned <strong class="text-slate-700 dark:text-slate-200">${props.filesScanned} files</strong> • Found <strong class="text-rose-600 dark:text-rose-400">${props.errors} errors</strong>, 
                         <strong class="text-amber-600 dark:text-amber-400">${props.warnings} warnings</strong>, and 
-                        <strong class="text-sky-600 dark:text-sky-400">${props.info} suggestions</strong>
+                        <strong class="text-cyan-600 dark:text-cyan-400">${props.info} info findings</strong>
                     </p>
                 </div>
 
@@ -52,9 +53,9 @@ export function renderDashboardView(props: DashboardViewProps): string {
                         })}
                         ${renderMetricCard({
                           id: 'metric-services',
-                          label: 'Services',
+                          label: 'Listeners',
                           value: '-',
-                          sublabel: 'HTTP endpoints',
+                          sublabel: 'HTTP entry points',
                           color: 'cyan',
                           icon: icons.service,
                         })}

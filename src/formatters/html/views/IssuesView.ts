@@ -13,9 +13,12 @@ export function renderIssuesView(props: IssuesViewProps): string {
             <div id="view-issues" class="hidden h-full flex flex-col">
                 <!-- Toolbar -->
                 <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-5 py-3 flex items-center gap-4 shrink-0">
-                    <span class="text-sm text-slate-500 dark:text-slate-400">
-                        Showing <strong id="filtered-count" class="text-slate-700 dark:text-slate-200">${props.totalIssues}</strong> of ${props.totalIssues} issues
-                    </span>
+                    <div>
+                        <div class="text-sm text-slate-500 dark:text-slate-400">
+                            Showing <strong id="filtered-count" class="text-slate-700 dark:text-slate-200">${props.totalIssues}</strong> of ${props.totalIssues} issues
+                        </div>
+                        <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Select a row to see the complete message, location, and suggested fix.</div>
+                    </div>
                     <button id="clear-filters-btn" onclick="router.clearAllFilters()" class="hidden text-sm text-sky-600 hover:text-sky-700 dark:text-sky-400 font-medium">
                         Clear filters
                     </button>

@@ -307,7 +307,7 @@ output application/json
     entity: vars.entity default "",
     salesforceId: vars.salesforceId default "",
     errorType: error.errorType.identifier default "UNKNOWN",
-    message: error.detailedDescription default error.description default "",
+    message: error.detailedDescription default "",
     environment: p('mule.env')
 }
 ```
@@ -316,7 +316,7 @@ output application/json
 
 ## Java 17 DataWeave Considerations
 
-Since Mule 4.9+ mandates Java 17:
+When targeting a Mule runtime that requires Java 17, review these patterns and verify them against the selected runtime:
 
 - `try()` requires explicit import: `import try from dw::Runtime`
 - `error.errorType.identifier` — use `.identifier`, not `.asString` (doesn't exist)

@@ -16,13 +16,13 @@ export const severityColors = {
  * Category chart colors (cycling palette)
  */
 export const categoryColors = [
-  '#0ea5e9', // sky-500
-  '#8b5cf6', // violet-500
   '#10b981', // emerald-500
+  '#06b6d4', // cyan-500
+  '#8b5cf6', // violet-500
   '#f59e0b', // amber-500
   '#ef4444', // rose-500
   '#ec4899', // pink-500
-  '#06b6d4', // cyan-500
+  '#0ea5e9', // sky-500
   '#84cc16', // lime-500
   '#f97316', // orange-500
   '#6366f1', // indigo-500
@@ -143,4 +143,4 @@ export const chartBarSettings = {
 /**
  * Accent color for primary chart elements
  */
-export const accentColor = '#0ea5e9'; // sky-500
+export const accentColor = '#10b981'; // emerald-500

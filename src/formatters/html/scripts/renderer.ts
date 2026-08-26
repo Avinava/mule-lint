@@ -292,7 +292,11 @@ export function generateRendererScript(config: {
                             const meta = connectorMeta[type.toLowerCase()] || { name: type, icon: null, doc: null };
                             const docUrl = meta.doc ? 'https://docs.mulesoft.com/' + meta.doc + '/latest/' : null;
                             const pillClass = 'inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors';
-                            const iconHtml = meta.icon ? '<img src="' + meta.icon + '" alt="" class="w-3.5 h-3.5 rounded-sm" onerror="this.style.display=\\'none\\'">' : '<span class="w-3.5 h-3.5 rounded-sm bg-slate-300 dark:bg-slate-600 flex items-center justify-center text-2xs">⚙</span>';
+                            const iconUrl = meta.icon ? exchangeBase + meta.icon : null;
+                            const fallbackIcon = '<span class="w-3.5 h-3.5 rounded-sm bg-slate-300 dark:bg-slate-600 inline-flex items-center justify-center text-2xs" aria-hidden="true">⚙</span>';
+                            const iconHtml = iconUrl
+                                ? '<img src="' + escapeHtml(iconUrl) + '" alt="" class="w-3.5 h-3.5 rounded-sm" onerror="this.style.display=\\'none\\'; this.nextElementSibling.style.display=\\'inline-flex\\'"><span class="w-3.5 h-3.5 rounded-sm bg-slate-300 dark:bg-slate-600 items-center justify-center text-2xs" style="display:none" aria-hidden="true">⚙</span>'
+                                : fallbackIcon;
                             if (docUrl) {
                                 return '<a href="' + docUrl + '" target="_blank" rel="noopener" class="' + pillClass + '" title="View ' + escapeHtml(meta.name) + ' docs">' + iconHtml + '<span>' + escapeHtml(meta.name) + '</span></a>';
                             }
@@ -431,7 +435,7 @@ export function generateRendererScript(config: {
                 const severities = [
                     { key: 'error', label: 'Errors', count: report.summary.bySeverity.error, color: 'bg-rose-500' },
                     { key: 'warning', label: 'Warnings', count: report.summary.bySeverity.warning, color: 'bg-amber-500' },
-                    { key: 'info', label: 'Info', count: report.summary.bySeverity.info, color: 'bg-sky-500' }
+                    { key: 'info', label: 'Info', count: report.summary.bySeverity.info, color: 'bg-cyan-500' }
                 ];
                 severityNav.innerHTML = severities.filter(s => s.count > 0).map(s => \`
                     <a href="#" onclick="router.toggleSeverity('\${s.key}'); return false;" 
@@ -634,7 +638,7 @@ export function generateRendererScript(config: {
                                 const styles = {
                                     error: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400',
                                     warning: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
-                                    info: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-400'
+                                    info: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-400'
                                 };
                                 return \`<span class="inline-flex px-2 py-0.5 text-2xs font-medium uppercase rounded-md \${styles[val]}">\${val}</span>\`;
                             }
@@ -681,9 +685,9 @@ export function generateRendererScript(config: {
                         {
                             title: 'File',
                             field: 'fileName',
-                            minWidth: 180,
+                            minWidth: 210,
                             headerFilter: 'input',
-                            headerFilterPlaceholder: 'Filter...',
+                            headerFilterPlaceholder: 'Filter path...',
                             formatter: (cell) => {
                                 const row = cell.getRow().getData();
                                 const path = row.fileName;
@@ -695,13 +699,15 @@ export function generateRendererScript(config: {
                             title: 'Message',
                             field: 'message',
                             widthGrow: 2,
+                            minWidth: 320,
+                            variableHeight: true,
                             headerFilter: 'input',
-                            headerFilterPlaceholder: 'Filter...',
+                            headerFilterPlaceholder: 'Filter message...',
                             formatter: (cell) => {
                                 const row = cell.getRow().getData();
                                 let html = \`<div class="text-slate-700 dark:text-slate-300">\${escapeHtml(cell.getValue())}</div>\`;
                                 if (row.suggestion) {
-                                    html += \`<div class="text-xs text-slate-400 mt-0.5 truncate" title="\${escapeHtml(row.suggestion)}">💡 \${escapeHtml(row.suggestion)}</div>\`;
+                                    html += \`<div class="text-xs text-slate-400 mt-1 leading-relaxed">Suggested fix: \${escapeHtml(row.suggestion)}</div>\`;
                                 }
                                 return html;
                             }
@@ -709,6 +715,23 @@ export function generateRendererScript(config: {
                     ],
                     
                     initialSort: [{ column: 'severity', dir: 'asc' }]
+                });
+
+                tableInstance.on('rowClick', (_event, row) => {
+                        const issue = row.getData();
+                        const location = escapeHtml(issue.fileName) + ':' + issue.line + (issue.column ? ':' + issue.column : '');
+                        const suggestion = issue.suggestion
+                            ? '<div class="mt-5"><div class="text-2xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">Suggested fix</div><p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">' + escapeHtml(issue.suggestion) + '</p></div>'
+                            : '';
+                        const snippet = issue.codeSnippet
+                            ? '<div class="mt-5"><div class="text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Code</div><pre class="p-3 rounded-lg bg-slate-100 dark:bg-slate-900 overflow-x-auto text-xs"><code>' + escapeHtml(issue.codeSnippet) + '</code></pre></div>'
+                            : '';
+                        sidepanel.open(issue.ruleId + ' · ' + issue.ruleName,
+                            '<div class="flex items-center gap-2 mb-4"><span class="text-2xs font-semibold uppercase rounded-md px-2 py-1 bg-slate-100 dark:bg-slate-700">' + escapeHtml(issue.severity) + '</span><span class="text-2xs text-slate-500 capitalize">' + escapeHtml(issue.category) + '</span></div>' +
+                            '<p class="text-sm leading-relaxed text-slate-800 dark:text-slate-200">' + escapeHtml(issue.message) + '</p>' +
+                            '<div class="mt-5"><div class="text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Location</div><code class="text-xs text-cyan-700 dark:text-cyan-300 break-all">' + location + '</code></div>' +
+                            suggestion + snippet
+                        );
                 });
                 
                 // Global search

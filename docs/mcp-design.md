@@ -1,97 +1,113 @@
-# Mule Lint MCP Server Design
+# MCP server for coding agents
 
-## Executive Summary
+The MCP server gives a coding agent controlled access to mule-lint’s project scan, rule catalog, XML formatter, and API contract validator. It runs locally over standard input/output and requires no credentials.
 
-This document outlines the strategy for exposing `mule-lint` capabilities via the Model Context Protocol (MCP). By wrapping the linter in an MCP server, we enable AI agents (like Claude, IDE assistants, etc.) to autonomously discover linting rules, validate MuleSoft projects, and retrieve detailed rule documentation without needing to shell out or parse CLI text output.
+## Before configuring a host
 
-## Architecture Decision: Monorepo vs. Separate Repo
+Run this once in a terminal:
 
-**Recommendation: Same Repo (Monorepo)**
+```bash
+npx -y @sfdxy/mule-lint@1.29.0 mcp
+```
 
-We should implement the MCP server directly in the `mule-lint` repository, likely under `src/mcp` or as a separate package if this was a workspace.
+The process waits silently for an MCP client. That means startup succeeded; stop it with Ctrl+C. The first run can take longer while npm downloads the pinned package.
 
-- **Pros**: Direct access to `src/core`, `src/rules`, and types without publishing/installing packages. Easier to keep rule definitions and agent-exposed descriptions in sync.
-- **Cons**: Adds a dependency on `@modelcontextprotocol/sdk` to the main repo (or requires a build split).
+Pin the version in shared configuration. Otherwise different developers may receive different rule sets after a release.
 
-## Features & Capabilities
+## Codex
 
-### 1. Tools
+Add the server with the Codex CLI:
 
-Tools allow the agent to perform actions.
+```bash
+codex mcp add mule-lint -- npx -y @sfdxy/mule-lint@1.29.0 mcp
+codex mcp list
+```
 
-| Tool Name           | Arguments                                               | Description                                                                                     |
-| :------------------ | :------------------------------------------------------ | :---------------------------------------------------------------------------------------------- |
-| `run_lint_analysis` | `projectPath` (string), `profile` (optional)            | Runs the scanning engine with a stable rule profile and returns structured findings.            |
-| `validate_snippet`  | `code` (string), `type` (xml/dwl), `profile` (optional) | Validates generated code without a full project structure.                                      |
-| `get_rule_details`  | `ruleId` (string)                                       | Returns the full documentation, examples, and rationale for a specific rule (e.g., `MULE-001`). |
+Restart Codex after changing MCP configuration. Codex configuration is documented in the [official Codex documentation](https://developers.openai.com/codex/).
 
-### 2. Resources
+## Claude Code or Claude Desktop
 
-Resources allow the agent to read context.
+Use this server entry under the host’s `mcpServers` key:
 
-| Resource URI                 | Description                                                                  |
-| :--------------------------- | :--------------------------------------------------------------------------- |
-| `mule-lint://rules`          | All rules with status, standard mappings, profiles, and documentation links. |
-| `mule-lint://rules/{id}`     | Structured metadata for one rule.                                            |
-| `mule-lint://standards`      | Canonical engineering outcomes, classification, applicability, and sources.  |
-| `mule-lint://standards/{id}` | One standard and its source references.                                      |
-| `mule-lint://config/schema`  | The JSON schema for `.mule-lintrc`.                                          |
-| `mule-lint://docs/{slug}`    | Focused best-practice and contributor guides.                                |
+```json
+{
+  "mcpServers": {
+    "mule-lint": {
+      "command": "npx",
+      "args": ["-y", "@sfdxy/mule-lint@1.29.0", "mcp"]
+    }
+  }
+}
+```
 
-### 3. Prompts
+For Claude Code, a CLI alternative is:
 
-Pre-defined prompts to help users interacting with the agent.
+```bash
+claude mcp add mule-lint -- npx -y @sfdxy/mule-lint@1.29.0 mcp
+```
 
-| Prompt Name               | Description                                                                                                      |
-| :------------------------ | :--------------------------------------------------------------------------------------------------------------- |
-| `analyze_current_project` | "Run a comprehensive analysis on this project and summarize the top 3 critical issues."                          |
-| `explain_violation`       | "Here is an error I found: {{ErrorString}}. Explain why this is bad and how to fix it using `get_rule_details`." |
+Reload the host, then use its MCP status view to confirm that `mule-lint` connected.
 
-## Implementation Phases
+## VS Code
 
-### Phase 1: Foundation (The "Reader" Agent)
+In `.vscode/mcp.json`, VS Code uses a `servers` key and an explicit stdio type:
 
-> [!NOTE]
-> **Status**: Completed. Available on NPM as `@sfdxy/mule-lint`.
+```json
+{
+  "servers": {
+    "mule-lint": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@sfdxy/mule-lint@1.29.0", "mcp"]
+    }
+  }
+}
+```
 
-_Goal: Allow an agent to see what rules exist and run a scan._
+Reload the VS Code window after saving the file.
 
-- [x] Install `@modelcontextprotocol/sdk`.
-- [x] Create `McpServer` class in `src/mcp/index.ts`.
-- [x] Implement `mule-lint://rules` resource.
-- [x] Implement `run_lint_analysis` tool (wrapping `LintEngine`).
-- [x] Add `stdio` transport for local running.
+## Available tools
 
-### Phase 2: Interactive Context (The "Helper" Agent)
+| Tool                    | Use it for                                    | Important behavior                                           |
+| ----------------------- | --------------------------------------------- | ------------------------------------------------------------ |
+| `run_lint_analysis`     | Scan a complete Mule project                  | Requires an absolute project path; defaults to `recommended` |
+| `validate_snippet`      | Check generated Mule XML before suggesting it | XML only; no project-wide context                            |
+| `get_rule_details`      | Explain a rule ID and related standard        | Read-only catalog lookup                                     |
+| `format_mule_xml`       | Format a project, file, or XML string         | File/project mode writes unless `check: true`                |
+| `validate_api_contract` | Validate a local RAML/OpenAPI project         | Remote references are never fetched                          |
 
-> [!NOTE]
-> **Status**: Completed.
+The server also exposes standards, rules, and practice guides as MCP resources, plus prompts for project analysis, rule explanation, and fixing an issue.
 
-_Goal: Allow the agent to understand *why* things failed._
+## A good agent request
 
-- [x] Implement `get_rule_details` tool.
-- [x] Expose internal documentation of rules via MCP.
-- [x] Add `validate_snippet` for real-time code generation checks.
+```text
+Scan this Mule project with the recommended profile. Group the result by rule,
+explain the errors first, and propose changes without editing files yet.
+```
 
-### Phase 3: Remediation (The "Fixer" Agent)
+For an implementation request:
 
-> [!NOTE]
-> **Status**: Partially Completed. `apply_fix` deferred. Enhanced reporting added.
+```text
+Scan this Mule project, fix only MULE-003 findings, validate the changed XML,
+then run the project scan again. Do not change unrelated formatting.
+```
 
-_Goal: Allow the agent to automatically fix issues._
+## Safety and scope
 
-- [ ] Implement `apply_fix` tool (Deferred: requires AST write support).
-- [x] Enhanced error reporting with precise range/location data (Added column/suggestion).
+- Give the agent the project directory you intend it to inspect.
+- Lint and catalog tools are read-only.
+- Formatting can write XML; ask for `check: true` when you only want a preview.
+- Review agent changes as a normal source-control diff.
+- Do not place customer reports, credentials, or raw production payloads in prompts or committed fixtures.
 
-## Libraries & Dependencies
+## Troubleshooting
 
-- **Core**: `@modelcontextprotocol/sdk`
-- **Transport**: Stdio (standard input/output) for local CLI integration.
-- **Runtime**: Node.js (uses existing project runtime).
+If the server does not appear:
 
-## Agent Workflow Example
+1. run the pinned `npx ... mcp` command directly;
+2. confirm the host uses `mcpServers` or `servers` as shown above;
+3. make sure the project path supplied to scan tools is absolute;
+4. restart or reload the host;
+5. check the host’s MCP logs for npm/PATH errors.
 
-1.  **Discovery**: Agent reads `mule-lint://standards`, then `mule-lint://rules` for enforceable checks.
-2.  **Action**: User asks "Check my code". Agent calls `run_lint_analysis(cwd)`.
-3.  **Context**: Agent sees error `DW-004`. Agent calls `get_rule_details("DW-004")` to read the "Java 17 DataWeave" docs.
-4.  **Result**: Agent explains the error to the user with specific context from the official rule definitions.
+See [general troubleshooting](troubleshooting.md#the-mcp-server-appears-to-hang-on-first-use) for installation issues.

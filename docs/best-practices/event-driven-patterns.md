@@ -17,7 +17,7 @@ Read this when building Mule applications triggered by Salesforce Platform Event
 | **Trigger**        | `http:listener` + `apikit:router`      | `salesforce:replay-channel-listener`, `anypoint-mq:subscriber`, etc. |
 | **Error response** | JSON → HTTP response with `httpStatus` | Writeback to source system + notification dispatch                   |
 | **Correlation ID** | From `x-correlation-id` header         | From event metadata (e.g., `EventUuid`)                              |
-| **RAML/AsyncAPI**  | RAML 1.0 or OAS 3.0                    | AsyncAPI 2.6 (recommended for 2026+)                                 |
+| **Contract**       | RAML or OpenAPI request/response model | An event contract appropriate to the broker and organization         |
 | **Retry**          | Client retries (HTTP 5xx)              | Platform replay / redelivery policies                                |
 | **Rate limiting**  | API Manager policies                   | Consumer `maxConcurrency` + back-pressure                            |
 

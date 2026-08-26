@@ -1,0 +1,8 @@
+http:
+  host: '0.0.0.0'
+  port: '${HTTP_PORT}'
+orders:
+  backend:
+    host: '${ORDERS_BACKEND_HOST}'
+    port: '443'
+    responseTimeout: '10000'

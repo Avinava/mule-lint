@@ -35,6 +35,7 @@ theme:
     - content.action.edit
     - content.code.copy
     - navigation.instant
+    - navigation.indexes
     - navigation.sections
     - navigation.top
     - navigation.tracking
@@ -44,15 +45,15 @@ theme:
   palette:
     - media: '(prefers-color-scheme: light)'
       scheme: default
-      primary: black
-      accent: indigo
+      primary: teal
+      accent: green
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
     - media: '(prefers-color-scheme: dark)'
       scheme: slate
-      primary: black
-      accent: indigo
+      primary: teal
+      accent: green
       toggle:
         icon: material/weather-sunny
         name: Switch to light mode
@@ -71,17 +72,28 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
 
+extra_css:
+  - stylesheets/extra.css
+
 nav:
-  - Home: README.md
-  - Using it:
-      - Configuration: configuration.md
+  - Home: index.md
+  - Start:
+      - Getting started: getting-started.md
+      - Common recipes: recipes.md
+      - Troubleshooting: troubleshooting.md
+  - Use mule-lint:
+      - CLI reference: cli-reference.md
       - Rule profiles: profiles.md
+      - Configuration: configuration.md
       - Output formats: output-formats.md
       - Quality gates: quality-gates.md
-  - Best practices:
-      - Index: best-practices/mulesoft-best-practices.md
-      - Standards catalog: best-practices/standards-catalog.md
+      - XML formatting: formatting.md
       - API contract validation: best-practices/api-contracts.md
+      - CI/CD integration: best-practices/ci-cd.md
+  - Rules and Mule practices:
+      - Handbook: best-practices/mulesoft-best-practices.md
+      - Standards catalog: best-practices/standards-catalog.md
+      - Rules catalog: best-practices/rules-catalog.md
       - Error handling: best-practices/error-handling.md
       - Variable contracts: best-practices/variable-contracts.md
       - Logging: best-practices/logging.md
@@ -93,16 +105,16 @@ nav:
       - Folder structure: best-practices/folder-structure.md
       - Documentation standards: best-practices/documentation-standards.md
       - Testing with MUnit: best-practices/testing.md
-      - CI/CD integration: best-practices/ci-cd.md
       - Deployment and modernization: best-practices/deployment-2026.md
-      - Rules catalog: best-practices/rules-catalog.md
-  - Linter internals:
+  - AI and automation:
+      - MCP server: mcp-design.md
+      - Library API: library.md
+  - Contributor reference:
       - Architecture: linter/architecture.md
       - Rule engine: linter/rule-engine.md
       - Extending: linter/extending.md
-      - Folder structure: linter/folder-structure.md
+      - Repository structure: linter/folder-structure.md
       - Naming conventions: linter/naming-conventions.md
-      - MCP design: mcp-design.md
   - Ecosystem: ecosystem.md
 
 extra:

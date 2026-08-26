@@ -1,0 +1,5 @@
+mule-lint-report.html
+target/
+.project
+.classpath
+.tooling-project

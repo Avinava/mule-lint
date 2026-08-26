@@ -41,15 +41,15 @@ export function renderLintSummarySection(props: LintSummaryProps): string {
                 <div class="text-xl font-bold text-amber-600 dark:text-amber-400">${props.warnings}</div>
                 <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Best practice violations</div>
             </div>
-            <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-sky-300 dark:hover:border-sky-600 transition-all" onclick="router.toggleSeverity('info')">
+            <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-cyan-300 dark:hover:border-cyan-600 transition-all" onclick="router.toggleSeverity('info')">
                 <div class="flex items-center justify-between mb-1">
-                    <span class="text-2xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">Info</span>
-                    <div class="w-6 h-6 rounded bg-sky-100 dark:bg-sky-500/20 flex items-center justify-center">
-                        <svg class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <span class="text-2xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">Info</span>
+                    <div class="w-6 h-6 rounded bg-cyan-100 dark:bg-cyan-500/20 flex items-center justify-center">
+                        <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
                     </div>
                 </div>
-                <div class="text-xl font-bold text-sky-600 dark:text-sky-400">${props.info}</div>
-                <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Suggestions</div>
+                <div class="text-xl font-bold text-cyan-600 dark:text-cyan-400">${props.info}</div>
+                <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Advisory findings</div>
             </div>
             <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
                 <div class="flex items-center justify-between mb-1">

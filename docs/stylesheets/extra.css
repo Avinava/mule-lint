@@ -1,0 +1,80 @@
+:root {
+  --md-primary-fg-color: #0f766e;
+  --md-accent-fg-color: #059669;
+}
+
+.md-grid {
+  max-width: 78rem;
+}
+
+.hero {
+  margin: 0 0 2rem;
+  padding: clamp(2rem, 5vw, 4rem);
+  border: 1px solid color-mix(in srgb, var(--md-primary-fg-color) 30%, transparent);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 90% 10%, rgb(34 211 238 / 18%), transparent 34%),
+    radial-gradient(circle at 10% 100%, rgb(52 211 153 / 18%), transparent 38%),
+    linear-gradient(145deg, rgb(15 118 110 / 8%), transparent 65%);
+}
+
+.hero h1 {
+  max-width: 14ch;
+  margin: 0.25rem 0 1rem;
+  font-size: clamp(2.25rem, 6vw, 4.25rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.hero p {
+  max-width: 46rem;
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+
+.hero__eyebrow {
+  color: var(--md-accent-fg-color);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin: 2rem 0 2.5rem;
+}
+
+.role-card {
+  padding: 1.25rem 1.3rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.9rem;
+  background: var(--md-default-bg-color);
+  box-shadow: 0 10px 30px rgb(15 23 42 / 5%);
+}
+
+.role-card h3 {
+  margin-top: 0;
+}
+
+.md-typeset code {
+  border-radius: 0.3rem;
+}
+
+.md-typeset table:not([class]) {
+  border-radius: 0.65rem;
+  overflow: hidden;
+}
+
+[data-md-color-scheme='slate'] .role-card {
+  box-shadow: none;
+}

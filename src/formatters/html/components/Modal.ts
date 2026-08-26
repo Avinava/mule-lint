@@ -114,9 +114,9 @@ export const modalContent: Record<string, ModalContent> = {
                 <li><strong>Flows:</strong> Main entry points (HTTP listeners, schedulers) that handle requests</li>
                 <li><strong>Sub-flows:</strong> Reusable flow fragments for modularity</li>
                 <li><strong>Connectors:</strong> External system integrations (HTTP, Database, Salesforce, etc.)</li>
-                <li><strong>Endpoints:</strong> API routes exposed by the application</li>
+                <li><strong>Listeners:</strong> HTTP entry points exposed by the application</li>
                 <li><strong>Schedulers:</strong> Cron or fixed-frequency job triggers</li>
-                <li><strong>Services:</strong> External HTTP request configurations</li>
+                <li><strong>External services:</strong> Outbound HTTP request destinations</li>
             </ul>
             <h4 style="margin-top: 16px;">Why it matters</h4>
             <p>These metrics help estimate project size, complexity, and integration footprint for capacity planning and maintenance.</p>

@@ -1,59 +1,47 @@
-# Release Workflow
+# Release workflow
 
-This document describes how to release new versions of mule-lint.
+Releases are triggered by a pushed `v*` tag. The publish workflow uses Node.js 22, runs `npm run check`, verifies the tag matches `package.json`, publishes with npm provenance, creates a GitHub release, and then notifies the mule-skills compatibility hub on a best-effort basis.
 
-## Automatic Release Process
+## 1. Prepare
 
-The release is fully automated. Just push a version tag!
+- Confirm the intended semantic version.
+- Update `package.json` and `package-lock.json` together.
+- Update `CHANGELOG.md` and versioned docs/examples when public behavior changed.
+- Review profile membership, rule IDs, output/exit codes, library exports, MCP contracts, and screenshots.
+- Run `npm run check` locally.
+- Confirm the working tree and branch are ready for release.
 
-### Steps
+## 2. Create the version commit and tag
 
-1. **Update version in package.json**
-
-   ```bash
-   npm version patch   # 1.3.1 -> 1.3.2
-   # or
-   npm version minor   # 1.3.1 -> 1.4.0
-   # or
-   npm version major   # 1.3.1 -> 2.0.0
-   ```
-
-2. **Push with tags**
-
-   ```bash
-   git push origin master --tags
-   ```
-
-3. **Done!** GitHub Actions will:
-   - Run formatting, lint, type, coverage, package, and production-audit checks on Node 20 and 22
-   - Publish to npm
-   - Create GitHub Release with auto-generated notes
-
-## Manual Release (if needed)
+Use the repository’s normal versioning process. Ensure the final tag exactly matches the package version:
 
 ```bash
-# 1. Update version
-npm version minor -m "chore: bump to %s"
-
-# 2. Push tag
-git push origin master --tags
-
-# Or push tag only
-git tag v1.4.0
-git push origin v1.4.0
+node -p 'require("./package.json").version'
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
-## Versioning Guide
+Do not push a tag until the version commit is already on the intended release branch.
 
-| Change Type     | Command             | Example       |
-| --------------- | ------------------- | ------------- |
-| Bug fix         | `npm version patch` | 1.3.1 → 1.3.2 |
-| New feature     | `npm version minor` | 1.3.1 → 1.4.0 |
-| Breaking change | `npm version major` | 1.3.1 → 2.0.0 |
+## 3. Verify automation
 
-## CI/CD Workflows
+In `.github/workflows/publish.yml`, the tag run should:
 
-| Workflow      | Trigger       | Action                                      |
-| ------------- | ------------- | ------------------------------------------- |
-| `ci.yml`      | Push/PR       | Verify on Node 20/22                        |
-| `publish.yml` | Push tag `v*` | Verify, publish to npm, then create release |
+1. install with `npm ci` on Node 22;
+2. pass `npm run check`;
+3. verify `vX.Y.Z` equals `package.json` version;
+4. publish `@sfdxy/mule-lint` publicly with provenance;
+5. create generated GitHub release notes;
+6. dispatch `tool_release` to the compatibility hub when its token is configured.
+
+The compatibility notification is `continue-on-error`; a missing token warns and requires a manual hub update, but it does not roll back an npm release.
+
+## 4. Post-release checks
+
+```bash
+npm view @sfdxy/mule-lint version
+npx -y @sfdxy/mule-lint@X.Y.Z --version
+npx -y @sfdxy/mule-lint@X.Y.Z mcp
+```
+
+Confirm the GitHub release exists, the package smoke command works, and the compatibility hub received or manually recorded the new version.

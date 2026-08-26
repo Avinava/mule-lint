@@ -38,6 +38,15 @@ import {
   exchangeBaseUrl,
 } from './html';
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Enrich files with rule metadata
  */
@@ -90,7 +99,7 @@ function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof en
       projectRoot: report.projectRoot,
       timestamp: report.timestamp,
       version: packageJson.version,
-      filesScanned: report.files.length,
+      filesScanned: report.summary.totalFiles,
       duration: report.durationMs,
     },
     summary: report.summary,
@@ -136,6 +145,7 @@ export function formatHtml(report: LintReport): string {
 
   // 3. Calculate summary values
   const projectName = clientData.metadata.projectName;
+  const escapedProjectName = escapeHtml(projectName);
   const totalIssues =
     report.summary.bySeverity.error +
     report.summary.bySeverity.warning +
@@ -155,7 +165,7 @@ export function formatHtml(report: LintReport): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mule-Lint Report • ${projectName}</title>
+    <title>mule-lint report · ${escapedProjectName}</title>
     <meta name="description" content="Static analysis report for MuleSoft applications">
     
     <!-- Fonts: Inter + JetBrains Mono -->
@@ -205,7 +215,7 @@ export function formatHtml(report: LintReport): string {
 
     <div class="app-layout">
         <!-- ===== HEADER ===== -->
-        ${renderHeader({ projectName, version: packageJson.version, totalIssues })}
+        ${renderHeader({ projectName: escapedProjectName, version: packageJson.version, totalIssues })}
 
         <!-- ===== SIDEBAR ===== -->
         ${renderSidebar({ totalIssues })}
@@ -213,7 +223,7 @@ export function formatHtml(report: LintReport): string {
         <!-- ===== MAIN CONTENT ===== -->
         <main class="app-main overflow-hidden bg-slate-50 dark:bg-slate-900">
             ${renderDashboardView({
-              filesScanned: report.files.length,
+              filesScanned: report.summary.totalFiles,
               errors: report.summary.bySeverity.error,
               warnings: report.summary.bySeverity.warning,
               info: report.summary.bySeverity.info,

@@ -31,4 +31,4 @@ version, so you do not need to set it up separately. The `mule-development`, `mu
 `mule-build` skills call it for static analysis. See
 [the mule-skills MCP server reference](https://avinava.github.io/mule-skills/mcp-servers/).
 
-To use `mule-lint` on its own, follow [the installation instructions](README.md#quick-start).
+To use `mule-lint` on its own, follow [the getting-started guide](getting-started.md).

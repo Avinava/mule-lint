@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mule
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+                          http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+                          http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd"
+>
+    <flow name="list-orders-flow" doc:name="List Orders" doc:description="Returns a filtered list of orders from the example backend">
+        <http:listener config-ref="http-listener-config" path="/api/orders" allowedMethods="GET" doc:name="GET /orders" />
+        <set-variable variableName="customerId" value="#[attributes.queryParams.customerId default null]" doc:name="Read Customer ID" />
+        <logger
+            level="DEBUG"
+            category="com.example.orders.request"
+            message='#[%dw 2.0 output application/json --- {customerId: vars.customerId}]'
+            doc:name="Log Request Filter"
+        />
+        <flow-ref name="fetch-orders-subflow" doc:name="Fetch Orders" />
+        <ee:transform doc:name="Build List Response">
+            <ee:message>
+                <ee:set-payload resource="dwl/order-response.dwl" />
+            </ee:message>
+        </ee:transform>
+        <error-handler ref="global-error-handler" />
+    </flow>
+
+    <!-- Intentionally incomplete so the sample produces a useful error and an info finding. -->
+    <flow name="get-order-by-id-flow" doc:name="Get Order by ID">
+        <http:listener
+            config-ref="http-listener-config"
+            path="/api/orders/{orderId}"
+            allowedMethods="GET"
+            doc:name="GET /orders/{orderId}"
+        />
+        <set-variable variableName="orderId" value="#[attributes.uriParams.orderId]" doc:name="Read Order ID" />
+        <logger
+            level="DEBUG"
+            category="com.example.orders.request"
+            message='#[%dw 2.0 output application/json --- {orderId: vars.orderId}]'
+            doc:name="Log Order Lookup"
+        />
+        <flow-ref name="fetch-order-by-id-subflow" doc:name="Fetch Order" />
+        <ee:transform doc:name="Build Order Response">
+            <ee:message>
+                <ee:set-payload resource="dwl/order-response.dwl" />
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>

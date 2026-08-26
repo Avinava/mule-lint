@@ -72,6 +72,10 @@ describe('Formatters', () => {
       expect(output).toContain('issues-table');
       expect(output).toContain('global-search');
       expect(output).toContain('chart-severity');
+      expect(output).toContain('Project health at a glance');
+      expect(output).toContain('Select a row to see the complete message');
+      expect(output).toContain('exchangeBase + meta.icon');
+      expect(output).toContain("tableInstance.on('rowClick'");
     });
 
     it('should include parse error files in the report data', () => {
@@ -81,6 +85,34 @@ describe('Formatters', () => {
       expect(output).toContain('file3.xml');
       // The report still includes files even with parse errors
       expect(output).toContain('totalFiles');
+    });
+
+    it('should escape the project name in document chrome', () => {
+      const output = formatHtml({
+        ...mockReport,
+        projectRoot: '/test/<img onerror=alert(1)>',
+      });
+
+      expect(output).toContain('&lt;img onerror=alert(1)&gt;');
+      expect(output).not.toContain('title="<img onerror=alert(1)>"');
+    });
+
+    it('should use the summary source-file count instead of pseudo report files', () => {
+      const output = formatHtml({
+        ...mockReport,
+        files: [
+          ...mockReport.files,
+          {
+            filePath: '/test/Project Structure',
+            relativePath: 'Project Structure',
+            parsed: true,
+            issues: [],
+          },
+        ],
+      });
+
+      expect(output).toContain('"filesScanned":3');
+      expect(output).toContain('>3 files</strong>');
     });
   });
 

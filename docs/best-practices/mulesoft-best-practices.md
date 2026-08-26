@@ -1,111 +1,68 @@
-# MuleSoft Development Best Practices
+# MuleSoft practices handbook
 
-> **Purpose:** Comprehensive index to MuleSoft development best practices for building maintainable, secure, and performant Mule 4 applications. Each topic links to a focused guide optimized for both human reading and AI/MCP consumption.
->
-> **Version:** April 2026 · **Runtime:** Mule 4.10+ · **Java:** 17
+Use this handbook to understand the engineering intent behind a lint finding. It is broader than the executable rule set: mule-lint can identify code patterns, but it cannot decide whether an integration design fits your business, operations, or data-governance needs.
 
----
+## Start with the outcome you need
 
-## Quick Navigation
+| If you are working on…                     | Read                                               | Typical lint coverage                                   |
+| ------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------- |
+| Flow failures and API error responses      | [Error handling](error-handling.md)                | `MULE-001`, `MULE-003`, `MULE-005`, `MULE-007`, `ERR-*` |
+| Flow/variable contracts and naming         | [Variable contracts](variable-contracts.md)        | `MULE-002`, `MULE-102`, `STD-001`                       |
+| Traceable, safe logs                       | [Logging](logging.md)                              | `MULE-006`, `MULE-301`, `LOG-*`                         |
+| Secrets, TLS, and exposed endpoints        | [Security](security.md)                            | `MULE-004`, `MULE-201`, `MULE-202`, `SEC-*`, `YAML-004` |
+| Timeouts, retries, pooling, and complexity | [Performance](performance.md)                      | `MULE-501–503`, `PERF-002`, `RES-*`, `MULE-801`         |
+| RAML/OpenAPI quality                       | [API contracts](api-contracts.md)                  | Separate `api validate` command                         |
+| DataWeave organization                     | [DataWeave patterns](dataweave-patterns.md)        | `DW-*`                                                  |
+| Connector-specific resilience              | [Connector patterns](connector-patterns.md)        | `SEC-007`, `PERF-002`, `RES-001`                        |
+| Events, queues, and replay behavior        | [Event-driven patterns](event-driven-patterns.md)  | `SF-*` and selected connector rules                     |
+| Maven and source layout                    | [Folder structure](folder-structure.md)            | `MULE-802–804`, `PROJ-*`                                |
+| MUnit strategy                             | [Testing](testing.md)                              | Limited static coverage; human review is essential      |
+| Pipeline adoption                          | [CI/CD](ci-cd.md)                                  | Profiles, output, gates, and exit codes                 |
+| Runtime/deployment planning                | [Deployment and modernization](deployment-2026.md) | Selected project/operations rules                       |
 
-### Core Development
+For exact options and examples for every check, use the [rules catalog](rules-catalog.md). For the reviewed outcome-to-rule mapping and source classification, use the [standards catalog](standards-catalog.md).
 
-| Guide                                       | Description                                                                  | Related Rules                       |
-| ------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------- |
-| [Error Handling](error-handling.md)         | Global error handlers, HTTP vs. event-driven patterns, connector error types | `MULE-001` `MULE-003` `ERR-001–004` |
-| [Naming & Variables](variable-contracts.md) | Standard variable contracts, correlation IDs, naming conventions             | `MULE-002` `MULE-102` `STD-001`     |
-| [Logging](logging.md)                       | Categories, structured logging, MDC/tracing, PII prevention                  | `MULE-006` `MULE-301` `LOG-001`     |
-| [Security](security.md)                     | Secure properties, TLS, credential management, zero-trust                    | `MULE-004` `MULE-201` `SEC-002–010` |
-| [Performance](performance.md)               | Timeouts, connection pooling, async patterns, streaming                      | `MULE-501–503` `PERF-002` `RES-001` |
+## The working model
 
-### Architecture & Patterns
+Each guide separates three questions:
 
-| Guide                                             | Description                                                  | Related Rules                  |
-| ------------------------------------------------- | ------------------------------------------------------------ | ------------------------------ |
-| [Event-Driven Patterns](event-driven-patterns.md) | Platform events, Anypoint MQ, AsyncAPI, deduplication        | `SF-001` `SF-002`              |
-| [Connector Patterns](connector-patterns.md)       | Entity config, SF/NS connector gotchas, protocol negotiation | `SEC-007` `PERF-002` `RES-001` |
-| [DataWeave Patterns](dataweave-patterns.md)       | Modules, type coercion, lookups, import paths                | `DW-001–005`                   |
+1. **What outcome do we want?** Example: every API failure returns a predictable status and correlation ID.
+2. **What can static analysis verify?** Example: an error handler exists and references `httpStatus`.
+3. **What still needs a human?** Example: whether the selected HTTP status and retry policy are correct for the consumer contract.
 
-### Project & Operations
+Do not treat a clean lint report as deployment approval. Combine it with contract review, MUnit/integration tests, security controls, environment validation, and operational readiness.
 
-| Guide                                                 | Description                                           | Related Rules                   |
-| ----------------------------------------------------- | ----------------------------------------------------- | ------------------------------- |
-| [Folder Structure](folder-structure.md)               | Standard Maven layout, file organization              | `MULE-802–804`                  |
-| [Documentation Standards](documentation-standards.md) | Flow docs, README templates, commit messages          | `MULE-601` `MULE-604` `DOC-001` |
-| [Testing](testing.md)                                 | MUnit best practices, event-driven testing, coverage  | `EXP-003`                       |
-| [CI/CD Integration](ci-cd.md)                         | Pipeline stages, mule-lint integration, quality gates | `PROJ-001` `PROJ-002`           |
-| [Deployment & Modernization](deployment-2026.md)      | CloudHub 2.0, Java 17, ACB, API governance            | `OPS-001`                       |
-| [Rules Catalog](rules-catalog.md)                     | Complete reference for all 82 lint rules              | All                             |
+## API-led layers in plain language
 
----
+| Layer      | Main responsibility                               | Review carefully for                                     |
+| ---------- | ------------------------------------------------- | -------------------------------------------------------- |
+| Experience | Shape data and behavior for a channel or consumer | Consumer-specific contracts leaking into lower layers    |
+| Process    | Orchestrate systems and business process steps    | Direct system coupling and overly complex flows          |
+| System     | Provide stable access to a backend capability     | Business orchestration or aggregation that belongs above |
 
-## Quick Reference Card
+mule-lint infers a likely layer from project naming and structure for selected rules. That inference is a hint, not architecture truth; use configuration when a project intentionally differs.
 
-| Practice           | Do ✅                                     | Don't ❌                                     |
-| ------------------ | ----------------------------------------- | -------------------------------------------- |
-| **Error Handling** | Use global handler, set `httpStatus`      | Catch `type="ANY"` first, ignore errors      |
-| **Logging**        | Use categories, log specific fields       | Log `#[payload]`, log in retry loops         |
-| **Security**       | Use `${secure::...}`, encrypt secrets     | Hardcode URLs, passwords, keys               |
-| **Performance**    | Set timeouts, handle async errors         | Unlimited retries, huge choice blocks        |
-| **Naming**         | kebab-case flows, camelCase vars          | Inconsistent casing, no suffixes             |
-| **Structure**      | Separate files by domain                  | Monolithic XML files                         |
-| **Config**         | Environment-specific YAML                 | Hardcoded values                             |
-| **DataWeave**      | External `.dwl` files, reusable modules   | Large inline transforms                      |
-| **Connectors**     | Entity config YAML, full DWL import paths | Hardcoded entity details, short import paths |
+## A practical review order
 
----
+1. Security and credential findings
+2. Parse failures and missing error handling
+3. Contract and cross-file correctness
+4. Resilience: timeouts, reconnection, and pooling
+5. Logging and observability
+6. Maintainability, naming, and documentation
 
-## API-Led Connectivity
+The `recommended` profile is a good starting point for this review. Add a gate only after the team agrees on the baseline.
 
-MuleSoft's API-Led Connectivity approach organizes APIs into three layers:
+## For coding agents
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Experience Layer                      │
-│   Channel-specific: Web, Mobile, Partner APIs           │
-│   Naming: *-exp-*, *-experience-*                       │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────┐
-│                     Process Layer                        │
-│   Orchestration, Business Logic, Event Processing       │
-│   Naming: *-proc-*, *-process-*, *-papi                 │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────┐
-│                     System Layer                         │
-│   Backend Connectivity: Salesforce, NetSuite, Databases │
-│   Naming: *-sys-*, *-system-*, *-sapi                   │
-└─────────────────────────────────────────────────────────┘
+The same handbook is exposed as MCP resources such as:
+
+```text
+mule-lint://docs/error-handling
+mule-lint://docs/security
+mule-lint://docs/dataweave
+mule-lint://docs/ci-cd
+mule-lint://docs/rules-catalog
 ```
 
-| Layer          | Should Have                                        | Should NOT Have                                |
-| -------------- | -------------------------------------------------- | ---------------------------------------------- |
-| **Experience** | HTTP listeners, channel-specific transforms        | Direct database access, complex business logic |
-| **Process**    | Flow-refs to SAPIs, orchestration, event listeners | Direct system connections                      |
-| **System**     | Connector operations, entity CRUD                  | Business logic, data aggregation               |
-
----
-
-## For AI Agents (MCP)
-
-These best practice guides are exposed via the MuleSoft Lint MCP server as individual resources. AI agents can request specific topics:
-
-```
-mule-lint://docs/error-handling        → Error handling guidance
-mule-lint://docs/event-driven          → Event-driven patterns
-mule-lint://docs/connectors            → Connector configuration
-mule-lint://docs/variables             → Variable contracts
-mule-lint://docs/dataweave             → DataWeave patterns
-mule-lint://docs/security              → Security best practices
-mule-lint://docs/logging               → Logging standards
-mule-lint://docs/performance           → Performance optimization
-mule-lint://docs/testing               → MUnit testing
-mule-lint://docs/deployment            → Deployment & modernization
-mule-lint://docs/ci-cd                 → CI/CD integration
-mule-lint://docs/folder-structure      → Project structure
-mule-lint://docs/documentation-standards → Documentation standards
-mule-lint://docs/rules-catalog         → Complete rules reference
-```
-
-For linter rule details, see the [Rules Catalog](rules-catalog.md).
+Ask an agent to cite the rule ID, explain applicability, and validate the project again after a change. See [MCP setup](../mcp-design.md).

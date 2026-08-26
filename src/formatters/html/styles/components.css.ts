@@ -18,14 +18,14 @@ export const componentStyles = `
 }
 .sidebar-link.active {
     border-left-color: var(--accent-primary);
-    background: linear-gradient(90deg, rgba(14, 165, 233, 0.08) 0%, transparent 100%);
-    color: #0284c7;
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.09) 0%, transparent 100%);
+    color: #047857;
     font-weight: 600;
 }
 .dark .sidebar-link.active {
-    border-left-color: #38bdf8;
-    background: linear-gradient(90deg, rgba(56, 189, 248, 0.1) 0%, transparent 100%);
-    color: #38bdf8;
+    border-left-color: #34d399;
+    background: linear-gradient(90deg, rgba(52, 211, 153, 0.11) 0%, transparent 100%);
+    color: #34d399;
 }
 
 /* ===== Header Navigation Tabs ===== */
@@ -44,17 +44,17 @@ export const componentStyles = `
     transition: var(--transition-fast);
 }
 .nav-tab.active {
-    color: #0284c7;
+    color: #047857;
     font-weight: 600;
 }
 .nav-tab.active::after {
     background: var(--accent-primary);
 }
 .dark .nav-tab.active {
-    color: #38bdf8;
+    color: #34d399;
 }
 .dark .nav-tab.active::after {
-    background: #38bdf8;
+    background: #34d399;
 }
 
 /* ===== Modal ===== */

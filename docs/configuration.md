@@ -1,23 +1,21 @@
 # Configuration
 
-Configuration is optional. Without it every registered rule runs at its declared severity, which is a
-reasonable default for a first scan.
+You do not need a config file for the first scan. Add one when the team has reviewed the `recommended` profile and wants shared exceptions or a custom quality gate.
+
+## Load the file explicitly
 
 ```bash
-mule-lint ./src/main/mule -c .mulelintrc.json
+mule-lint . --config .mulelintrc.json
 ```
 
-**Pass the file explicitly.** The CLI does not search for `.mulelintrc.json` implicitly, so a config
-sitting in the project root has no effect until `-c` names it. This surprises people, and it is
-deliberate: a scan should do the same thing wherever it is invoked from.
+mule-lint does not search for `.mulelintrc.json` automatically. A file in the project root has no effect until `--config` or `-c` names it.
 
-## Example
+## A practical starting config
 
 ```json
 {
   "extends": "mule-lint:recommended",
   "rules": {
-    "MULE-001": { "enabled": true },
     "MULE-002": {
       "enabled": true,
       "options": {
@@ -27,15 +25,12 @@ deliberate: a scan should do the same thing wherever it is invoked from.
       }
     },
     "MULE-006": {
-      "enabled": true,
-      "severity": "error",
-      "options": {
-        "requiredPrefix": "com.myorg"
-      }
+      "severity": "info",
+      "options": { "requiredPrefix": "com.example" }
     }
   },
   "include": ["src/main/mule/**/*.xml"],
-  "exclude": ["**/test/**", "**/*.munit.xml"],
+  "exclude": ["**/*.munit.xml"],
   "defaultFormatter": "table",
   "failOnWarning": false
 }
@@ -43,63 +38,47 @@ deliberate: a scan should do the same thing wherever it is invoked from.
 
 ## Supported keys
 
-| Key                | Effect                                                                      |
-| ------------------ | --------------------------------------------------------------------------- |
-| `extends`          | Built-in rule profile: `mule-lint:baseline`, `recommended`, or `strict`     |
-| `rules`            | Per-rule `enabled`, `severity`, and rule-specific `options`                 |
-| `include`          | Glob patterns to scan                                                       |
-| `exclude`          | Glob patterns to skip, such as MUnit tests                                  |
-| `defaultFormatter` | Format used when `-f` is absent                                             |
-| `failOnWarning`    | Treat warnings as failures                                                  |
-| `qualityGate`      | Custom gate conditions — see [Quality gates](quality-gates.md#custom-gates) |
+| Key                | What it controls                                                                  |
+| ------------------ | --------------------------------------------------------------------------------- |
+| `extends`          | One profile: `mule-lint:baseline`, `mule-lint:recommended`, or `mule-lint:strict` |
+| `rules`            | Per-rule `enabled`, `severity`, and rule-specific `options`                       |
+| `include`          | File globs to include                                                             |
+| `exclude`          | File globs to skip                                                                |
+| `defaultFormatter` | Format used when `--format` is absent                                             |
+| `failOnWarning`    | Whether warnings exit non-zero                                                    |
+| `qualityGate`      | Conditions used with `--quality-gate config`                                      |
 
-Anything else is rejected. An unknown key exits with code `2` rather than being ignored, because a typo
-in a rule identifier that silently does nothing is worse than a failed run.
+Unknown keys produce a warning and are ignored. Treat that warning as a configuration defect: a misspelled setting did not take effect.
 
-Two keys are accepted for backward compatibility but have no runtime effect, and warn when used:
-`customRulesPath` and `maxIssues`.
+`customRulesPath` and `maxIssues` are accepted for backward compatibility but have no runtime effect and produce warnings.
 
-`extends` accepts exactly one built-in profile, using either the full reference such as
-`mule-lint:recommended` or the short name `recommended`. See [Rule profiles](profiles.md) for the
-membership and compatibility contract.
-
-## Precedence
-
-| Priority | Source                                                    |
-| -------- | --------------------------------------------------------- |
-| 1        | Explicit per-rule settings in an explicit `-c` file       |
-| 2        | Command-line flags, including `--profile`, `-f`, and `-q` |
-| 3        | The config's `extends` profile                            |
-| 4        | `defaultFormatter` and `failOnWarning` from the config    |
-| 5        | Built-in rule defaults                                    |
-
-A flag beats the config for the same setting, so `--profile strict` overrides `extends` and `-f table`
-overrides `defaultFormatter` for one run without editing anything. An explicit rule entry overrides
-profile membership; this supports deliberate exceptions without forking a profile.
-
-## Per-rule options
-
-Options are rule-specific and documented per rule in the
-[rules catalog](best-practices/rules-catalog.md). Two common shapes:
+## Override one rule
 
 ```json
 {
+  "extends": "mule-lint:recommended",
   "rules": {
-    "MULE-002": { "options": { "flowSuffix": "-flow", "excludePatterns": ["*-api-main"] } },
-    "MULE-102": { "options": { "convention": "camelCase" } }
+    "MULE-006": { "severity": "info" },
+    "SEC-003": { "enabled": false }
   }
 }
 ```
 
-`excludePatterns` is the right tool for generated or framework-imposed names — an APIKit main flow will
-never match your naming convention, and disabling the whole rule to accommodate it costs you the check
-everywhere else.
+Use a narrow exception and leave a code-review note explaining why it is appropriate. Prefer changing a finding to `info` over disabling it; the team can still see and revisit it.
 
-## Tuning versus disabling
+Rule-specific options are listed in the [rules catalog](best-practices/rules-catalog.md).
 
-Prefer lowering a severity to disabling a rule. `{ "severity": "info" }` keeps the finding visible and
-out of your gate; `{ "enabled": false }` removes it from the report entirely, and nobody revisits it.
+## Which setting wins?
 
-Configuration only tunes rules already registered with the engine. The CLI does not load custom rule
-modules — adding your own rules means using the library, which is covered in
-[Extending](linter/extending.md).
+In practical terms:
+
+1. explicit settings for a rule are most specific;
+2. command-line flags override the corresponding config choice for that run;
+3. the config’s `extends` profile supplies rule membership;
+4. built-in defaults fill anything not configured.
+
+For example, `--profile strict` replaces the config’s selected profile for one run, while an explicit `MULE-006` entry still tunes that rule.
+
+## Configuration is not a gate
+
+A profile/config decides what runs and at what severity. A quality gate decides whether the result passes. See [profiles](profiles.md) and [quality gates](quality-gates.md) before enabling CI enforcement.
