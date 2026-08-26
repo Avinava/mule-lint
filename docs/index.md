@@ -8,6 +8,20 @@
   </div>
 </div>
 
+## Let your coding agent set it up
+
+Paste this into Codex, Claude Code, GitHub Copilot, Gemini, Cursor, or another coding agent:
+
+```text
+Fetch and follow https://raw.githubusercontent.com/Avinava/mule-lint/master/docs/agent-setup.md
+to set up or update mule-lint in this Mule repository. Detect the agent host and existing
+configuration, run a read-only baseline scan, preview any proposed changes, preserve customized
+files, and do not modify Mule source or commit unless I approve it.
+```
+
+The [agent setup runbook](agent-setup.md) covers a first scan, safe host detection, MCP, shared
+configuration, CI, and validation. It does not ask the agent to change Mule source during setup.
+
 ```bash
 npm install -g @sfdxy/mule-lint
 cd path/to/your-mule-project

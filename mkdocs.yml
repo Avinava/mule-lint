@@ -79,6 +79,7 @@ nav:
   - Home: index.md
   - Start:
       - Getting started: getting-started.md
+      - Let your AI agent set it up: agent-setup.md
       - Common recipes: recipes.md
       - Troubleshooting: troubleshooting.md
   - Use mule-lint:

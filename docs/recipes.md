@@ -89,7 +89,7 @@ See [XML formatting](formatting.md) for safe usage.
 ## Run without installing globally
 
 ```bash
-npx -y @sfdxy/mule-lint@1.29.0 . --profile recommended
+npx -y @sfdxy/mule-lint@1.29.1 . --profile recommended
 ```
 
 Pinning the version makes results repeatable across developers and CI.

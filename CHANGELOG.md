@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.29.1] - 2026-08-26
+
+### Added
+
+- A host-neutral setup runbook and one copyable prompt for Codex, Claude Code, GitHub Copilot,
+  Gemini, Cursor, and similar coding agents. The workflow detects existing configuration, runs a
+  read-only baseline, previews changes, preserves customized files, and adds only the integration
+  the user selects.
+
+### Changed
+
+- Agent onboarding coordinates with Mule Skills when it is already installed and distinguishes
+  local MCP configuration from GitHub-hosted agents.
+
 ## [1.29.0] - 2026-08-26
 
 ### Added

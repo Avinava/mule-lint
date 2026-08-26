@@ -14,7 +14,7 @@ npm --version
 The global npm command directory is not on your `PATH`, or the install did not finish. The quickest workaround is:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.29.0 . --profile recommended
+npx -y @sfdxy/mule-lint@1.29.1 . --profile recommended
 ```
 
 You can also locate npm’s global prefix with `npm prefix -g` and ask your workstation administrator to add its executable directory to `PATH`.
@@ -72,7 +72,7 @@ The report loads Tailwind CSS, Chart.js, Tabulator, and fonts from public CDNs. 
 When a host runs `npx`, npm may download the pinned package before the server starts. Run the exact command once in a terminal to confirm it starts, then stop it with Ctrl+C:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.29.0 mcp
+npx -y @sfdxy/mule-lint@1.29.1 mcp
 ```
 
 If the host still cannot see it, restart the host and verify its MCP configuration key in the [MCP guide](mcp-design.md).

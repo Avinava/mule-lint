@@ -33,7 +33,7 @@ mule-lint --version
 If your company does not allow global npm installs, skip installation and use:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.29.0 . --profile recommended
+npx -y @sfdxy/mule-lint@1.29.1 . --profile recommended
 ```
 
 ## 3. Open the Mule project root

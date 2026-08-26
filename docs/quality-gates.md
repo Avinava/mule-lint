@@ -67,7 +67,7 @@ The formulas and thresholds are implemented in `src/quality/`. Because averages 
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@1.29.0 . --profile recommended --quality-gate default
+  run: npx -y @sfdxy/mule-lint@1.29.1 . --profile recommended --quality-gate default
 ```
 
 Generate SARIF as a separate or combined step when you also want inline annotations. See [CI/CD integration](best-practices/ci-cd.md).

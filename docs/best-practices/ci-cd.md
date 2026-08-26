@@ -16,7 +16,7 @@ Every pull request gets the same scan as local development, the pipeline makes a
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@1.29.0 . --profile recommended --fail-on-warning
+  run: npx -y @sfdxy/mule-lint@1.29.1 . --profile recommended --fail-on-warning
 ```
 
 This is enough when terminal logs are the desired output.
@@ -50,7 +50,7 @@ jobs:
       - name: Generate SARIF
         continue-on-error: true
         run: >-
-          npx -y @sfdxy/mule-lint@1.29.0 .
+          npx -y @sfdxy/mule-lint@1.29.1 .
           --profile recommended
           --format sarif
           --output mule-lint.sarif
@@ -62,7 +62,7 @@ jobs:
 
       - name: Enforce quality gate
         run: >-
-          npx -y @sfdxy/mule-lint@1.29.0 .
+          npx -y @sfdxy/mule-lint@1.29.1 .
           --profile recommended
           --quality-gate default
 ```

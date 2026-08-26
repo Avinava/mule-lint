@@ -7,7 +7,7 @@ The MCP server gives a coding agent controlled access to mule-lint’s project s
 Run this once in a terminal:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.29.0 mcp
+npx -y @sfdxy/mule-lint@1.29.1 mcp
 ```
 
 The process waits silently for an MCP client. That means startup succeeded; stop it with Ctrl+C. The first run can take longer while npm downloads the pinned package.
@@ -19,7 +19,7 @@ Pin the version in shared configuration. Otherwise different developers may rece
 Add the server with the Codex CLI:
 
 ```bash
-codex mcp add mule-lint -- npx -y @sfdxy/mule-lint@1.29.0 mcp
+codex mcp add mule-lint -- npx -y @sfdxy/mule-lint@1.29.1 mcp
 codex mcp list
 ```
 
@@ -34,7 +34,7 @@ Use this server entry under the host’s `mcpServers` key:
   "mcpServers": {
     "mule-lint": {
       "command": "npx",
-      "args": ["-y", "@sfdxy/mule-lint@1.29.0", "mcp"]
+      "args": ["-y", "@sfdxy/mule-lint@1.29.1", "mcp"]
     }
   }
 }
@@ -43,7 +43,7 @@ Use this server entry under the host’s `mcpServers` key:
 For Claude Code, a CLI alternative is:
 
 ```bash
-claude mcp add mule-lint -- npx -y @sfdxy/mule-lint@1.29.0 mcp
+claude mcp add mule-lint -- npx -y @sfdxy/mule-lint@1.29.1 mcp
 ```
 
 Reload the host, then use its MCP status view to confirm that `mule-lint` connected.
@@ -58,7 +58,7 @@ In `.vscode/mcp.json`, VS Code uses a `servers` key and an explicit stdio type:
     "mule-lint": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@sfdxy/mule-lint@1.29.0", "mcp"]
+      "args": ["-y", "@sfdxy/mule-lint@1.29.1", "mcp"]
     }
   }
 }

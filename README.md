@@ -12,6 +12,21 @@
 
 mule-lint scans Mule XML, DataWeave, YAML properties, and project structure. It needs no Anypoint credentials and does not connect to your MuleSoft environments. You need Node.js to run the tool, but you do not need to know JavaScript or Node development.
 
+## Tell your AI agent
+
+**Codex / Claude Code / GitHub Copilot / Gemini / Cursor:**
+
+```text
+Fetch and follow https://raw.githubusercontent.com/Avinava/mule-lint/master/docs/agent-setup.md
+to set up or update mule-lint in this Mule repository. Detect the agent host and existing
+configuration, run a read-only baseline scan, preview any proposed changes, preserve customized
+files, and do not modify Mule source or commit unless I approve it.
+```
+
+That is enough for the agent to check Node.js, run the pinned CLI, explain the result, and offer only
+the MCP, shared policy, or CI integration you need. Prefer the manual first run below when you want
+to perform the setup yourself.
+
 ## First run
 
 1. Install [Node.js 20 or newer](https://nodejs.org/en/download).
@@ -101,7 +116,7 @@ Pin the package version so local and CI scans use the same rules:
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@1.29.0 . --profile recommended --fail-on-warning
+  run: npx -y @sfdxy/mule-lint@1.29.1 . --profile recommended --fail-on-warning
 ```
 
 For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integration](docs/best-practices/ci-cd.md).
@@ -111,7 +126,7 @@ For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integrat
 mule-lint includes a local MCP server with tools for full-project analysis, snippet validation, rule explanations, XML formatting, and API contract validation:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.29.0 mcp
+npx -y @sfdxy/mule-lint@1.29.1 mcp
 ```
 
 It uses standard input/output and needs no credentials. Host-specific setup is in the [MCP guide](docs/mcp-design.md).
