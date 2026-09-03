@@ -9,6 +9,8 @@ import { format, getExitCode } from '../src/formatters';
 import { FormatterType, LintConfig } from '../src/types/Config';
 import { DEFAULT_CONFIG } from '../src/types/Config';
 import { parseLintConfig } from '../src/core/ConfigLoader';
+import { loadCustomXPathRules } from '../src/core/CustomRuleLoader';
+import { Rule } from '../src/types';
 import { filterReportBySeverity } from '../src/core/ReportFilter';
 import {
   evaluateQualityGate,
@@ -165,6 +167,7 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
 
   // Load configuration if specified
   let config: Partial<LintConfig> = {};
+  let customRules: Rule[] = [];
   if (options.config) {
     const configPath = path.resolve(options.config);
     if (!fs.existsSync(configPath)) {
@@ -176,6 +179,18 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
     for (const warning of parsedConfig.warnings) {
       console.error(`Config warning: ${warning}`);
     }
+
+    // Custom rule paths resolve relative to the configuration file, not the cwd.
+    if (config.customRulesPath) {
+      const customRulesPath = path.resolve(path.dirname(configPath), config.customRulesPath);
+      customRules = loadCustomXPathRules(
+        customRulesPath,
+        ALL_RULES.map((rule) => rule.id),
+      );
+      if (options.verbose) {
+        console.log(`Loaded ${customRules.length} custom rules from ${customRulesPath}`);
+      }
+    }
   }
 
   if (options.profile) {
@@ -183,9 +198,10 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
   }
 
   // Filter rules based on keys (experimental is opt-in)
-  const effectiveRules = options.experimental
+  const builtInRules = options.experimental
     ? ALL_RULES
     : ALL_RULES.filter((rule) => rule.category !== 'experimental');
+  const effectiveRules = [...builtInRules, ...customRules];
 
   if (options.experimental) {
     config.rules = { ...config.rules };
@@ -216,11 +232,16 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
 
   // Filter if quiet mode
   if (options.quiet) {
-    report = filterReportBySeverity(report, new Set(['error']), effectiveRules);
+    report = filterReportBySeverity(
+      report,
+      new Set(['error']),
+      effectiveRules,
+      new Set(customRules.map((rule) => rule.id)),
+    );
   }
 
   // Format output
-  const output = format(report, formatterType);
+  const output = format(report, formatterType, effectiveRules);
 
   // Write output
   if (options.output) {

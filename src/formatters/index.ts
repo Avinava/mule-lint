@@ -12,20 +12,21 @@ import { formatJson } from './JsonFormatter';
 import { formatSarif } from './SarifFormatter';
 import { formatHtml } from './HtmlFormatter';
 import { formatCsv } from './CsvFormatter';
+import type { Rule } from '../types';
 
 /**
  * Format a lint report using the specified formatter
  */
-export function format(report: LintReport, type: FormatterType): string {
+export function format(report: LintReport, type: FormatterType, rules: Rule[] = ALL_RULES): string {
   switch (type) {
     case 'table':
       return formatTable(report);
     case 'json':
       return formatJson(report);
     case 'sarif':
-      return formatSarif(report, ALL_RULES);
+      return formatSarif(report, rules);
     case 'html':
-      return formatHtml(report);
+      return formatHtml(report, rules);
     case 'csv':
       return formatCsv(report);
     default: {

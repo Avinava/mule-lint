@@ -47,7 +47,7 @@ Do not update only one representation of a public rule. Registry, catalog metada
 - Config is loaded only with `--config`; unknown keys warn and are ignored.
 - Lint is read-only. `format` writes by default; `format --check` is read-only.
 - MCP scans default to `recommended` and its documented tool names/inputs are public.
-- All 82 registered rule headings must remain in the rules catalog; parity tests enforce this.
+- All 98 registered rule headings must remain in the rules catalog; parity tests enforce this.
 - Existing documentation and MCP resource paths should remain stable when possible.
 
 ## Safe change workflow

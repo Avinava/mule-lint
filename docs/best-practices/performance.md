@@ -268,6 +268,13 @@ var resolvedProject = (vars.lookupMaps.projects[payload.projectId] default [])[0
 - [ ] Reconnection strategies on all outbound connectors
 - [ ] Pre-batch bulk lookup used for foreach with 10+ records needing related lookups (Pattern 7)
 
+## Batch and flow size (v1.30)
+
+- `PERF-003` reports a `batch:job` declaring neither `blockSize` nor `maxConcurrency`, which leaves it
+  on runtime defaults rather than a shape chosen for the record size and downstream capacity.
+- `MULE-805` reports an oversized top-level processor sequence. It complements `MULE-801`: a 25-step
+  straight-line flow scores a cyclomatic complexity of 1 but is still hard to read and test.
+
 ---
 
 **See also:** [Connector Patterns](connector-patterns.md) · [Error Handling](error-handling.md)

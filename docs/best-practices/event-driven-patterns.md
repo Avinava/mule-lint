@@ -419,6 +419,14 @@ Validate your AsyncAPI spec against organizational rulesets in API Governance be
 - [ ] Deferred task polling uses structured result `{ status, taskId, attempts, data }` (Pattern 8)
 - [ ] Orphan cleanup scheduler exists for deferred tasks (Pattern 8)
 
+## Scheduling and duplicate delivery (v1.30)
+
+- `OPS-004` reports a fixed-frequency scheduler where project policy prefers CRON. Fixed frequency is
+  right for polling; the rule reports a policy deviation, not an invalid configuration.
+- `RES-003` reports messaging usage with no Object Store or idempotent-message-validator evidence.
+  Queue delivery is at-least-once, so a retry becomes a duplicate side effect unless the consumer
+  deduplicates.
+
 ---
 
 **See also:** [Error Handling](error-handling.md) · [Connector Patterns](connector-patterns.md) · [Variable Contracts](variable-contracts.md)

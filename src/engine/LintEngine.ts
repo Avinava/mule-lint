@@ -18,6 +18,55 @@ import { MetricsAggregator } from '../core/MetricsAggregator';
 import { collectFileMetrics as collectMetrics } from '../core/MetricsCollector';
 import { getErrorMessage } from '../core/errors';
 import { ProjectRule } from '../rules/base/ProjectRule';
+import { getLineNumber } from '../core/XPathHelper';
+
+/**
+ * Element local-names that count as *inbound* authentication evidence.
+ *
+ * Matched as whole local-names rather than substrings: an outbound connector
+ * such as `oauth-jwt-connection` authenticates a call this application makes,
+ * and must not be mistaken for a control protecting an inbound listener.
+ */
+const INBOUND_AUTH_ELEMENTS = new Set([
+  'client-id-enforcement-policy',
+  'basic-security-filter',
+  'authentication-filter',
+  'authorization-filter',
+  'http-basic-authentication-filter',
+  'jwt-validation',
+  'validate-token',
+  'openid-connect',
+  'oauth2-provider',
+  'token-validation',
+  'authorization-code-grant-type',
+  'secret-key-encryption',
+  'spring-security-filter',
+  'spring-authorization-filter',
+  'security-manager',
+]);
+
+/**
+ * Local-name fragments that identify an inbound authentication component whose
+ * exact element name varies by connector version.
+ */
+const INBOUND_AUTH_PATTERNS = ['jwt-valid', 'client-id-enforcement', 'oauth2-provider'];
+
+/** POM artifactId fragments indicating the Secure Configuration Properties module. */
+const SECURE_PROPERTIES_ARTIFACTS = ['secure-configuration-property', 'secure-properties'];
+
+/**
+ * Messaging elements that *receive* a message.
+ *
+ * A dependency on a messaging connector, or a publish operation, says nothing
+ * about consuming, so neither is treated as consumer evidence.
+ */
+const MESSAGING_CONSUMER_ELEMENTS = new Set([
+  'listener',
+  'subscriber',
+  'consume',
+  'on-new-message',
+  'message-listener',
+]);
 import { isRuleEnabledInProfile, resolveRuleProfile, type RuleProfileName } from '../catalog';
 
 /**
@@ -92,7 +141,7 @@ export class LintEngine {
     // Pre-scan: collect cross-file context before rule execution
     const { allFlowRefs, allFlowNames, projectContext } = isStandalone
       ? { allFlowRefs: undefined, allFlowNames: undefined, projectContext: undefined }
-      : this.preScanFiles(files);
+      : this.preScanFiles(files, projectRoot);
 
     // Process each file and collect metrics
     const fileResults: FileResult[] = [];
@@ -135,15 +184,7 @@ export class LintEngine {
         allFlowNames,
         projectContext,
       );
-      if (projectIssues.length > 0) {
-        // Add a virtual file result for project-level issues
-        fileResults.push({
-          filePath: path.join(projectRoot, 'mule-artifact.json'), // Virtual target
-          relativePath: 'Project Structure',
-          issues: projectIssues,
-          parsed: true,
-        });
-      }
+      fileResults.push(...this.groupProjectIssues(projectIssues, projectRoot));
     }
 
     // Detect environment configurations from property files
@@ -188,7 +229,11 @@ export class LintEngine {
     };
 
     // Aggregate enhanced metrics (A-E ratings, debt calculation)
-    const enhancedMetrics = MetricsAggregator.aggregateMetrics(baseReport, this.rules);
+    const enhancedMetrics = MetricsAggregator.aggregateMetrics(
+      baseReport,
+      this.rules,
+      this.getCustomRuleIds(),
+    );
 
     return {
       ...baseReport,
@@ -435,6 +480,308 @@ export class LintEngine {
   }
 
   /**
+   * IDs of declaratively defined rules, which are reported but excluded from
+   * quality ratings because their issue types are author-declared.
+   */
+  private getCustomRuleIds(): ReadonlySet<string> {
+    return new Set(
+      this.rules
+        .filter((rule) => (rule as { isCustomRule?: boolean }).isCustomRule === true)
+        .map((rule) => rule.id),
+    );
+  }
+
+  /**
+   * Turn project-rule issues into file results.
+   *
+   * Issues carrying a relativePath (a project rule reporting against a real
+   * resource, such as a `.properties` file) get their own file result so
+   * formatters and SARIF point at the responsible file. Everything else keeps
+   * the synthetic project entry. Groups are sorted so output does not depend on
+   * filesystem enumeration order.
+   */
+  private groupProjectIssues(issues: Issue[], projectRoot: string): FileResult[] {
+    if (issues.length === 0) {
+      return [];
+    }
+
+    const located = new Map<string, Issue[]>();
+    const unlocated: Issue[] = [];
+
+    for (const issue of issues) {
+      const relativePath = issue.relativePath;
+      if (relativePath) {
+        const bucket = located.get(relativePath);
+        if (bucket) {
+          bucket.push(issue);
+        } else {
+          located.set(relativePath, [issue]);
+        }
+      } else {
+        unlocated.push(issue);
+      }
+    }
+
+    const results: FileResult[] = [];
+
+    if (unlocated.length > 0) {
+      results.push({
+        filePath: path.join(projectRoot, 'mule-artifact.json'), // Virtual target
+        relativePath: 'Project Structure',
+        issues: unlocated,
+        parsed: true,
+      });
+    }
+
+    for (const relativePath of [...located.keys()].sort()) {
+      const fileIssues = located.get(relativePath) ?? [];
+      fileIssues.sort((a, b) => a.line - b.line || a.ruleId.localeCompare(b.ruleId));
+      results.push({
+        filePath: path.join(projectRoot, relativePath),
+        relativePath,
+        issues: fileIssues,
+        parsed: true,
+      });
+    }
+
+    return results;
+  }
+
+  /**
+   * Record inventory facts about one element during the pre-scan walk.
+   *
+   * Called for every element of every cached document, so it stays cheap:
+   * local-name comparisons only, no XPath and no re-parsing.
+   */
+  private collectInventory(
+    el: Element,
+    localName: string,
+    prefix: string,
+    namespace: string,
+    relativePath: string,
+    projectContext: ProjectContext,
+  ): void {
+    const isHttp = prefix === 'http' || namespace.endsWith('/mule/http');
+
+    // HTTP listeners and their global configs, for path and versioning analysis
+    if (localName === 'listener' && isHttp) {
+      projectContext.listenerEndpoints?.push({
+        relativePath,
+        line: getLineNumber(el),
+        flowName: this.findEnclosingFlowName(el),
+        configRef: el.getAttribute('config-ref') ?? undefined,
+        path: el.getAttribute('path') ?? undefined,
+        allowedMethods: el.getAttribute('allowedMethods') ?? undefined,
+      });
+    }
+    if (localName === 'listener-config' && isHttp) {
+      const name = el.getAttribute('name');
+      if (name) {
+        projectContext.listenerConfigs?.push({
+          name,
+          basePath: el.getAttribute('basePath') ?? undefined,
+        });
+      }
+    }
+
+    // Secure Configuration Properties module
+    if (
+      localName === 'secure-configuration-properties' ||
+      (localName === 'config' && namespace.includes('secure-properties'))
+    ) {
+      projectContext.hasSecurePropertiesConfig = true;
+    }
+
+    // Object Store usage
+    if (prefix === 'os' || namespace.endsWith('/mule/os')) {
+      projectContext.hasObjectStoreUsage = true;
+    }
+    if (localName === 'private-object-store' || localName === 'object-store') {
+      projectContext.hasObjectStoreUsage = true;
+    }
+
+    // Messaging *consumers*. A publisher, or a bare connector configuration,
+    // receives nothing and so cannot process a duplicate; RES-003 is about the
+    // consuming side, so only inbound elements count.
+    const isMessagingNamespace =
+      prefix === 'jms' ||
+      prefix === 'anypoint-mq' ||
+      namespace.endsWith('/mule/jms') ||
+      namespace.endsWith('/mule/anypoint-mq');
+    if (isMessagingNamespace && MESSAGING_CONSUMER_ELEMENTS.has(localName)) {
+      projectContext.hasMessagingUsage = true;
+    }
+
+    if (localName === 'idempotent-message-validator') {
+      projectContext.hasIdempotencyEvidence = true;
+    }
+
+    if (localName === 'cors' || localName.startsWith('cors-')) {
+      projectContext.hasCorsConfig = true;
+    }
+
+    if (localName === 'job' && (prefix === 'batch' || namespace.endsWith('/mule/batch'))) {
+      projectContext.hasBatchJob = true;
+    }
+
+    // Inbound authentication evidence. An outbound connector element such as
+    // oauth-jwt-connection authenticates a call this application makes and is
+    // deliberately excluded, so it cannot suppress SEC-016.
+    if (!this.isOutboundConnectionElement(localName)) {
+      if (
+        INBOUND_AUTH_ELEMENTS.has(localName) ||
+        INBOUND_AUTH_PATTERNS.some((pattern) => localName.includes(pattern))
+      ) {
+        projectContext.hasAuthEvidence = true;
+      }
+    }
+
+    // APIKit OPTIONS flow, the CORS applicability signal
+    if (localName === 'flow') {
+      const flowName = el.getAttribute('name') ?? '';
+      if (/\boptions\b/i.test(flowName.replace(/[:\\/]/g, ' '))) {
+        projectContext.hasOptionsFlow = true;
+      }
+    }
+  }
+
+  /**
+   * True for connector elements that configure an outbound connection.
+   *
+   * These carry credentials this application presents to someone else, which is
+   * the opposite of a control protecting an inbound listener.
+   */
+  private isOutboundConnectionElement(localName: string): boolean {
+    return (
+      localName.endsWith('-connection') ||
+      localName.endsWith('-config') ||
+      localName.endsWith('-grant-type') ||
+      localName === 'authentication' ||
+      localName === 'request'
+    );
+  }
+
+  /**
+   * Walk up from a node to the name of the flow or sub-flow containing it.
+   */
+  private findEnclosingFlowName(node: Node): string | undefined {
+    let current: Node | null = node.parentNode;
+    while (current) {
+      const localName = (current as Element).localName;
+      if (localName === 'flow' || localName === 'sub-flow') {
+        return (current as Element).getAttribute('name') ?? undefined;
+      }
+      current = current.parentNode;
+    }
+    return undefined;
+  }
+
+  /**
+   * Discover API specifications and POM dependencies once per project scan.
+   *
+   * An unreadable or malformed resource is skipped rather than aborting the
+   * scan; the rule depending on it simply sees no evidence.
+   */
+  private collectProjectResources(projectRoot: string, projectContext: ProjectContext): void {
+    const specFiles: string[] = [];
+    const resourcesPath = path.join(projectRoot, 'src/main/resources');
+
+    if (fs.existsSync(resourcesPath)) {
+      const candidates = fg.sync(['**/*.raml', '**/*.yaml', '**/*.yml', '**/*.json'], {
+        cwd: resourcesPath,
+        onlyFiles: true,
+        followSymbolicLinks: false,
+        ignore: ['**/target/**', '**/node_modules/**'],
+      });
+
+      for (const candidate of candidates.sort()) {
+        if (this.looksLikeApiSpec(path.join(resourcesPath, candidate))) {
+          specFiles.push(path.join('src/main/resources', candidate));
+        }
+      }
+    }
+
+    projectContext.apiSpecFiles = specFiles;
+    projectContext.hasApiSpec = specFiles.length > 0;
+    projectContext.dependencyArtifactIds = this.readPomArtifactIds(projectRoot);
+
+    if (
+      projectContext.dependencyArtifactIds.some((id) =>
+        SECURE_PROPERTIES_ARTIFACTS.some((artifact) => id.includes(artifact)),
+      )
+    ) {
+      projectContext.hasSecurePropertiesConfig = true;
+    }
+    if (projectContext.dependencyArtifactIds.some((id) => id.includes('objectstore'))) {
+      projectContext.hasObjectStoreUsage = true;
+    }
+  }
+
+  /**
+   * Identify a RAML or OpenAPI document by its content rather than its path.
+   *
+   * Only the head of the file is read, so a large specification is not loaded in
+   * full just to classify it.
+   */
+  private looksLikeApiSpec(absolutePath: string): boolean {
+    let head: string;
+    try {
+      head = fs.readFileSync(absolutePath, 'utf8').slice(0, 4096);
+    } catch {
+      return false;
+    }
+
+    const extension = path.extname(absolutePath).toLowerCase();
+
+    if (extension === '.raml') {
+      const firstMeaningfulLine = head
+        .split(/\r?\n/)
+        .find((line) => line.trim().length > 0)
+        ?.trim();
+      return firstMeaningfulLine?.startsWith('#%RAML') ?? false;
+    }
+
+    if (extension === '.json') {
+      return /"(openapi|swagger)"\s*:/.test(head);
+    }
+
+    // YAML: a top-level openapi/swagger key, i.e. at column zero
+    return /^(openapi|swagger)\s*:/m.test(head);
+  }
+
+  /**
+   * Read declared dependency artifactIds from pom.xml.
+   *
+   * Only `<dependency>` elements are read. Scanning every `<artifactId>` would
+   * also pick up the project's own coordinates and its build plugins, so a
+   * project merely *named* `orders-api` would look like it depends on an API
+   * contract.
+   */
+  private readPomArtifactIds(projectRoot: string): string[] {
+    const pomPath = path.join(projectRoot, 'pom.xml');
+    if (!fs.existsSync(pomPath)) {
+      return [];
+    }
+
+    try {
+      const content = fs.readFileSync(pomPath, 'utf8');
+      const ids: string[] = [];
+
+      for (const block of content.matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)) {
+        const body = block[1] ?? '';
+        const id = /<artifactId>\s*([^<\s]+)\s*<\/artifactId>/.exec(body)?.[1];
+        if (id) {
+          ids.push(id);
+        }
+      }
+
+      return [...new Set(ids)].sort();
+    } catch {
+      return [];
+    }
+  }
+
+  /**
    * Run project-level rules that don't depend on specific files
    */
   private runProjectRules(
@@ -511,7 +858,10 @@ export class LintEngine {
    * HYG-004 cross-file flow-ref target validation,
    * MULE-005 HTTP-only project detection).
    */
-  private preScanFiles(files: ScannedFile[]): {
+  private preScanFiles(
+    files: ScannedFile[],
+    projectRoot: string,
+  ): {
     allFlowRefs: Set<string>;
     allFlowNames: Set<string>;
     projectContext: ProjectContext;
@@ -523,6 +873,16 @@ export class LintEngine {
       hasApikitRouter: false,
       hasApiKitConfig: false,
       hasAutoDiscovery: false,
+      hasSecurePropertiesConfig: false,
+      hasObjectStoreUsage: false,
+      hasMessagingUsage: false,
+      hasIdempotencyEvidence: false,
+      hasCorsConfig: false,
+      hasOptionsFlow: false,
+      hasAuthEvidence: false,
+      hasBatchJob: false,
+      listenerEndpoints: [],
+      listenerConfigs: [],
     };
 
     // Clear the cache at the start of each scan
@@ -586,6 +946,15 @@ export class LintEngine {
           if (localName === 'autodiscovery' || localName === 'api-autodiscovery') {
             projectContext.hasAutoDiscovery = true;
           }
+
+          this.collectInventory(
+            el,
+            localName,
+            prefix,
+            namespace,
+            file.relativePath,
+            projectContext,
+          );
         }
       } catch {
         // Ignore unreadable files during pre-scan
@@ -593,6 +962,8 @@ export class LintEngine {
     }
 
     // Detect project layer from directory name, flow names, and content
+    this.collectProjectResources(projectRoot, projectContext);
+
     projectContext.projectLayer = this.detectProjectLayer(files, allFlowNames, projectContext);
 
     return { allFlowRefs, allFlowNames, projectContext };

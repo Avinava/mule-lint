@@ -12,6 +12,11 @@ import { getTextContent } from '../../core/XPathHelper';
  *
  * This rule checks that ee:set-payload elements inside error handlers
  * contain both correlationId and message in their DataWeave body.
+ *
+ * It also reports an error block that produces no payload at all, which in an
+ * HTTP application returns the inbound payload — or nothing — to the caller
+ * instead of a described error. That check applies only to HTTP-exposed
+ * projects, so non-HTTP handlers are not forced to build a response body.
  */
 export class ErrorResponseStructureRule extends BaseRule {
   id = 'ERR-003';
@@ -21,8 +26,11 @@ export class ErrorResponseStructureRule extends BaseRule {
   category = 'error-handling' as const;
   override issueType: IssueType = 'bug';
 
-  validate(doc: Document, _context: ValidationContext): Issue[] {
+  validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
+    // Only HTTP-exposed projects owe the caller a response body. When the
+    // project context is absent (a standalone scan) the check is skipped.
+    const isHttpProject = context.projectContext?.hasHttpListener ?? false;
 
     // Find on-error blocks that contain ee:set-payload (i.e., they build an error response)
     const onErrorBlocks = [
@@ -38,7 +46,16 @@ export class ErrorResponseStructureRule extends BaseRule {
       );
 
       if (setPayloads.length === 0) {
-        continue; // No payload transformation — skip (might be logging-only)
+        if (isHttpProject && !this.producesPayload(block)) {
+          issues.push(
+            this.createIssue(block, 'Error handler produces no response payload', {
+              severity: 'info',
+              suggestion:
+                'Add an ee:transform or set-payload building an error response with correlationId and message',
+            }),
+          );
+        }
+        continue; // No payload transformation to inspect further
       }
 
       for (const sp of setPayloads) {
@@ -93,5 +110,39 @@ export class ErrorResponseStructureRule extends BaseRule {
     }
 
     return issues;
+  }
+
+  /**
+   * Check whether an error block produces a payload by any means.
+   *
+   * Covers the core set-payload, a transform using an external DWL resource,
+   * and a raise-error that hands responsibility to an outer handler.
+   */
+  private producesPayload(block: Node): boolean {
+    // Components that set the payload directly, or hand the response to an
+    // outer handler.
+    const directProducers = [
+      'set-payload',
+      'raise-error',
+      'set-response',
+      'invoke',
+      'invoke-static',
+    ];
+    if (
+      directProducers.some((producer) => this.exists(`.//*[local-name()="${producer}"]`, block))
+    ) {
+      return true;
+    }
+
+    // A transform only produces a response if it actually assigns the payload.
+    // One that sets variables alone still returns the inbound payload, so it
+    // must not satisfy the check.
+    for (const transform of this.select('.//*[local-name()="transform"]', block)) {
+      if (this.exists('.//*[local-name()="set-payload"]', transform)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

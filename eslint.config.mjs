@@ -16,7 +16,7 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['commitlint.config.ts', 'vitest.config.ts'],
+          allowDefaultProject: ['commitlint.config.ts', 'vitest.config.mts'],
         },
         tsconfigRootDir: import.meta.dirname,
       },
@@ -50,7 +50,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['commitlint.config.ts', 'vitest.config.ts'],
+    files: ['commitlint.config.ts', 'vitest.config.mts'],
     rules: {
       '@typescript-eslint/no-deprecated': 'off',
     },

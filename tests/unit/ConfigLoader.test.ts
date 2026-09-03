@@ -16,23 +16,32 @@ describe('parseLintConfig', () => {
   });
 
   it('reports actionable validation errors', () => {
-    expect(() => parseLintConfig({ defaultFormatter: 'xml' })).toThrow(
-      /defaultFormatter.*Invalid enum value/,
-    );
+    // Assert the intent — the offending key is named and the accepted values are
+    // listed — rather than the validator's exact wording, which changes between
+    // its major versions.
+    expect(() => parseLintConfig({ defaultFormatter: 'xml' })).toThrow(/defaultFormatter/);
+    expect(() => parseLintConfig({ defaultFormatter: 'xml' })).toThrow(/table/);
+    expect(() => parseLintConfig({ defaultFormatter: 'xml' })).toThrow(/sarif/);
   });
 
   it('accepts built-in profiles while warning for reserved and unknown keys', () => {
     const result = parseLintConfig({
       extends: 'mule-lint:recommended',
-      customRulesPath: './rules',
+      maxIssues: 10,
       futureOption: true,
     });
     expect(result.config.extends).toBe('mule-lint:recommended');
     expect(result.config).not.toHaveProperty('futureOption');
     expect(result.warnings).toEqual([
-      'Configuration key "customRulesPath" is reserved and has no effect in mule-lint 1.x.',
+      'Configuration key "maxIssues" is reserved and has no effect in mule-lint 1.x.',
       'Unknown configuration key "futureOption" was ignored.',
     ]);
+  });
+
+  it('retains customRulesPath, which is now honoured rather than reserved', () => {
+    const result = parseLintConfig({ customRulesPath: '.mule-lint/custom-rules.yaml' });
+    expect(result.config.customRulesPath).toBe('.mule-lint/custom-rules.yaml');
+    expect(result.warnings).toEqual([]);
   });
 
   it('rejects unknown or multiple profiles', () => {

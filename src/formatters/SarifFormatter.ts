@@ -137,10 +137,17 @@ function toSarifResult(issue: Issue, relativePath: string): SarifResult {
             uri: relativePath,
             uriBaseId: '%SRCROOT%',
           },
-          region: {
-            startLine: issue.line,
-            ...(issue.column === undefined ? {} : { startColumn: issue.column }),
-          },
+          // SARIF requires startLine >= 1. Project-level findings use line 0 to
+          // mean "the project, not a line", so the region is omitted for them
+          // rather than emitting an invalid document an uploader would reject.
+          ...(issue.line > 0
+            ? {
+                region: {
+                  startLine: issue.line,
+                  ...(issue.column === undefined ? {} : { startColumn: issue.column }),
+                },
+              }
+            : {}),
         },
       },
     ],

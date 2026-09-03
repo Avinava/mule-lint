@@ -47,10 +47,66 @@ mule-lint does not search for `.mulelintrc.json` automatically. A file in the pr
 | `defaultFormatter` | Format used when `--format` is absent                                             |
 | `failOnWarning`    | Whether warnings exit non-zero                                                    |
 | `qualityGate`      | Conditions used with `--quality-gate config`                                      |
+| `customRulesPath`  | YAML file of custom XPath rules — see [Custom XPath rules](#custom-xpath-rules)   |
 
 Unknown keys produce a warning and are ignored. Treat that warning as a configuration defect: a misspelled setting did not take effect.
 
-`customRulesPath` and `maxIssues` are accepted for backward compatibility but have no runtime effect and produce warnings.
+`maxIssues` is accepted for backward compatibility but has no runtime effect and produces a warning.
+
+## Custom XPath rules
+
+`customRulesPath` points at a YAML file of rules defined declaratively, for checks specific to your
+organization that do not warrant writing TypeScript. The path resolves **relative to the
+configuration file**, not the working directory.
+
+```json
+{
+  "customRulesPath": ".mule-lint/custom-rules.yaml"
+}
+```
+
+```yaml
+namespaces:
+  acme: https://schemas.example.com/mule/acme
+rules:
+  - id: ACME-001
+    name: Standard flow error handler
+    description: Organization flows must declare an error handler.
+    category: error-handling
+    severity: warning
+    xpath: //mule:flow[not(mule:error-handler)]
+    message: 'Flow "{name}" does not declare an error handler.'
+    suggestion: Add an error-handler or an approved global error-handler reference.
+```
+
+`id`, `name`, `description`, `category`, `severity`, `xpath` and `message` are required;
+`suggestion` is optional. `category` must be one of the runtime categories, and `id` must look like
+`ACME-001` — an organization prefix keeps custom identifiers clear of the built-ins.
+
+Message placeholders are limited to `{name}`, `{nodeName}`, `{filePath}` and `{line}`. Anything else
+is left literal.
+
+Every namespace the linter registers is available automatically. The optional `namespaces` block
+adds prefixes; redefining a built-in prefix is an error, so a custom file cannot change how built-in
+rules resolve theirs.
+
+A custom rule is an XPath expression and a message — nothing executable. Only local files are read:
+URLs are rejected, no module is imported, and no environment variable is interpolated. Expressions
+compile when the configuration loads, so a bad expression or an unbound prefix fails the run with
+exit code `2` rather than silently matching nothing.
+
+Custom findings appear in every output format and honour `enabled` and `severity` overrides. They
+are excluded from quality-rating denominators, because their issue types are author-declared rather
+than modelled.
+
+Library consumers can load the same file directly:
+
+```typescript
+import { LintEngine, ALL_RULES, loadCustomXPathRules } from '@sfdxy/mule-lint';
+
+const customRules = loadCustomXPathRules('./custom-rules.yaml');
+const engine = new LintEngine({ rules: [...ALL_RULES, ...customRules] });
+```
 
 ## Override one rule
 
