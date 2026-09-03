@@ -1,4 +1,5 @@
 import * as xpath from 'xpath';
+import { DOMParser } from '@xmldom/xmldom';
 
 // DOM types from global lib.dom (used by @xmldom/xmldom)
 // Note: @xmldom/xmldom uses standard DOM interfaces
@@ -98,8 +99,8 @@ export class XPathHelper {
   private static instance: XPathHelper | undefined;
   private readonly select: xpath.XPathSelect;
 
-  private constructor() {
-    this.select = xpath.useNamespaces(MULE_NAMESPACES);
+  private constructor(namespaces: Record<string, string> = MULE_NAMESPACES) {
+    this.select = xpath.useNamespaces(namespaces);
   }
 
   /**
@@ -117,6 +118,45 @@ export class XPathHelper {
    */
   public static reset(): void {
     XPathHelper.instance = undefined;
+  }
+
+  /**
+   * Build a helper with extra namespace prefixes alongside the built-in ones.
+   *
+   * Returns a new instance rather than mutating the singleton, so a custom rule
+   * file can never change how built-in rules resolve their prefixes.
+   *
+   * @param extraNamespaces - Additional prefix to URI mappings
+   * @throws When a prefix would redefine a built-in mapping
+   */
+  public static withNamespaces(extraNamespaces: Record<string, string>): XPathHelper {
+    for (const prefix of Object.keys(extraNamespaces)) {
+      if (prefix in MULE_NAMESPACES) {
+        throw new Error(
+          `Namespace prefix "${prefix}" is built in and cannot be redefined by a custom rule file`,
+        );
+      }
+    }
+
+    // A fresh instance over the merged map; the singleton is untouched.
+    return new XPathHelper({ ...MULE_NAMESPACES, ...extraNamespaces });
+  }
+
+  /**
+   * Parse an XPath expression, throwing when it is not valid.
+   *
+   * Evaluated against a minimal document so a syntax error surfaces at
+   * configuration time rather than as a rule that silently matches nothing on
+   * every file. Uses the same namespace bindings this helper was built with,
+   * so an unbound prefix is also rejected here.
+   *
+   * @param expression - XPath expression to compile
+   * @throws When the expression cannot be parsed
+   */
+  public compile(expression: string): void {
+    const probeDocument = new DOMParser().parseFromString('<probe/>', 'text/xml');
+    // Errors propagate deliberately; selectNodes() would swallow them.
+    this.select(expression, probeDocument);
   }
 
   /**

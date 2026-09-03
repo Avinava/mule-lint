@@ -22,7 +22,11 @@ export interface LintConfig {
   /** Glob patterns for files to exclude */
   exclude: string[];
 
-  /** Reserved for a future version; use EngineOptions.rules for custom rules. */
+  /**
+   * Path to a YAML file of declarative XPath rules, resolved relative to this
+   * configuration file. Library consumers may instead pass Rule instances
+   * directly through EngineOptions.rules.
+   */
   customRulesPath?: string;
 
   /** Default formatter for output */

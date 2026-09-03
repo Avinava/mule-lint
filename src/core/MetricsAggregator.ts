@@ -101,6 +101,7 @@ export class MetricsAggregator {
   static aggregateMetrics(
     report: LintReport,
     rules: Rule[] = ALL_RULES,
+    excludedRuleIds: ReadonlySet<string> = new Set(),
   ): ProjectMetrics | undefined {
     if (!report.metrics) {
       return undefined;
@@ -121,6 +122,7 @@ export class MetricsAggregator {
     const { bugs, vulnerabilities, codeSmells, hotspots } = this.classifyIssues(
       report,
       buildRuleIssueTypeMap(rules),
+      excludedRuleIds,
     );
 
     // Calculate technical debt using centralized calculator
@@ -166,6 +168,7 @@ export class MetricsAggregator {
   private static classifyIssues(
     report: LintReport,
     ruleIssueTypes: Map<string, IssueType>,
+    excludedRuleIds: ReadonlySet<string> = new Set(),
   ): {
     bugs: number;
     vulnerabilities: number;
@@ -179,6 +182,10 @@ export class MetricsAggregator {
 
     for (const file of report.files) {
       for (const issue of file.issues) {
+        // Custom rules are reported but do not move the quality rating.
+        if (excludedRuleIds.has(issue.ruleId)) {
+          continue;
+        }
         const issueType = ruleIssueTypes.get(issue.ruleId) ?? 'code-smell';
 
         switch (issueType) {

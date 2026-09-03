@@ -200,7 +200,11 @@ export class LintEngine {
     };
 
     // Aggregate enhanced metrics (A-E ratings, debt calculation)
-    const enhancedMetrics = MetricsAggregator.aggregateMetrics(baseReport, this.rules);
+    const enhancedMetrics = MetricsAggregator.aggregateMetrics(
+      baseReport,
+      this.rules,
+      this.getCustomRuleIds(),
+    );
 
     return {
       ...baseReport,
@@ -652,6 +656,18 @@ export class LintEngine {
     } catch {
       return [];
     }
+  }
+
+  /**
+   * IDs of declaratively defined rules, which are reported but excluded from
+   * quality ratings because their issue types are author-declared.
+   */
+  private getCustomRuleIds(): ReadonlySet<string> {
+    return new Set(
+      this.rules
+        .filter((rule) => (rule as { isCustomRule?: boolean }).isCustomRule === true)
+        .map((rule) => rule.id),
+    );
   }
 
   /**
