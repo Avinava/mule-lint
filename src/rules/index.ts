@@ -41,6 +41,11 @@ import { ApiSpecificationPresentRule } from './api-led/ApiSpecificationPresentRu
 import { VersionedApiPathRule } from './api-led/VersionedApiPathRule';
 import { HealthEndpointRule } from './api-led/HealthEndpointRule';
 import { ListenerResponseContentTypeRule } from './http/ListenerResponseContentTypeRule';
+import { FlowLoggingRule } from './logging/FlowLoggingRule';
+import { BatchResourceConfigRule } from './performance/BatchResourceConfigRule';
+import { SchedulerModeRule } from './operations/SchedulerModeRule';
+import { MessagingIdempotencyRule } from './operations/MessagingIdempotencyRule';
+import { OversizedFlowRule } from './complexity/OversizedFlowRule';
 
 // Import all rules - Logging
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -166,6 +171,11 @@ export { ApiSpecificationPresentRule } from './api-led/ApiSpecificationPresentRu
 export { VersionedApiPathRule } from './api-led/VersionedApiPathRule';
 export { HealthEndpointRule } from './api-led/HealthEndpointRule';
 export { ListenerResponseContentTypeRule } from './http/ListenerResponseContentTypeRule';
+export { FlowLoggingRule } from './logging/FlowLoggingRule';
+export { BatchResourceConfigRule } from './performance/BatchResourceConfigRule';
+export { SchedulerModeRule } from './operations/SchedulerModeRule';
+export { MessagingIdempotencyRule } from './operations/MessagingIdempotencyRule';
+export { OversizedFlowRule } from './complexity/OversizedFlowRule';
 
 // Export individual rules - Logging
 export { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -355,6 +365,13 @@ export const ALL_RULES: Rule[] = [
   new VersionedApiPathRule(), // API-010: Versioned API Path
   new HealthEndpointRule(), // API-011: Health Endpoint Present
   new ListenerResponseContentTypeRule(), // HTTP-005: Listener Response Content Type
+
+  // Runtime practices (LOG-005, PERF-003, OPS-004, RES-003, MULE-805)
+  new FlowLoggingRule(), // LOG-005: Flow Logging Present
+  new BatchResourceConfigRule(), // PERF-003: Batch Resource Configuration
+  new SchedulerModeRule(), // OPS-004: Scheduler Mode
+  new MessagingIdempotencyRule(), // RES-003: Messaging Idempotency Evidence
+  new OversizedFlowRule(), // MULE-805: Oversized Sequential Flow
 
   // Code Hygiene Rules (HYG-001, HYG-002, HYG-003, HYG-004, HYG-005)
   new ExcessiveLoggersRule(),

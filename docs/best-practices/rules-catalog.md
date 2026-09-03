@@ -818,6 +818,27 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 ---
 
+### LOG-005: Flow Logging Present
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | Logging |
+| **Fixable**  | No      |
+
+**Description:** A flow with no logger leaves no trace in the log when it runs, which makes an incident hard to reconstruct. Both the core `logger` and JSON logger components count as evidence.
+
+**Options:**
+
+| Option            | Default | Description                                        |
+| ----------------- | ------- | -------------------------------------------------- |
+| `includeSubflows` | `false` | Also require a logger in sub-flows                 |
+| `excludePatterns` | `[]`    | Flow-name patterns to skip, `*` wildcard supported |
+
+**Why This Matters:** Sub-flows are excluded by default because they are reusable units — requiring a logger in each one produces noise rather than insight.
+
+---
+
 ## HTTP Rules
 
 > **Best Practice**: Configure explicit timeouts, include identifying headers, and handle all HTTP response codes appropriately.
@@ -992,6 +1013,20 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 | **Fixable**  | No          |
 
 **Description:** Listener connectors (HTTP Listener, JMS, AMQP, VM) should use `reconnect-forever` strategy rather than bounded reconnection. Listeners are critical entry points — if they stop reconnecting after N attempts, the application becomes unreachable.
+
+---
+
+### PERF-003: Batch Resource Configuration
+
+| Property     | Value       |
+| ------------ | ----------- |
+| **Severity** | Warning     |
+| **Category** | Performance |
+| **Fixable**  | No          |
+
+**Description:** A `batch:job` that declares neither `blockSize` nor `maxConcurrency` runs on runtime defaults, which is rarely the right shape for the record size and downstream capacity of a specific integration.
+
+**Check Logic:** Presence and basic validity only. Positive integer literals and property or DataWeave expressions both pass. Recommending particular numeric values is out of scope for static analysis.
 
 ---
 
@@ -1273,6 +1308,29 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
   }
 }
 ```
+
+---
+
+### MULE-805: Oversized Sequential Flow
+
+| Property     | Value      |
+| ------------ | ---------- |
+| **Severity** | Info       |
+| **Category** | Complexity |
+| **Fixable**  | No         |
+
+**Description:** A long straight-line flow is hard to read and to test even when its cyclomatic complexity is low. This rule counts the length of the top-level processor sequence.
+
+**Check Logic:** Only direct children are counted. The message source and `error-handler` are excluded, and processors nested inside a scope are not counted recursively — a scope counts once. The finding includes the observed count and the threshold.
+
+**Options:**
+
+| Option            | Default | Description                        |
+| ----------------- | ------- | ---------------------------------- |
+| `maxProcessors`   | `15`    | Maximum direct processors per flow |
+| `includeSubflows` | `false` | Also check sub-flows               |
+
+**Why This Matters:** This complements MULE-801 rather than duplicating it: a 25-step flow with no branching scores a cyclomatic complexity of 1. The suggestion recommends extracting cohesive behaviour, not mechanically splitting at the threshold.
 
 ---
 
@@ -1796,6 +1854,45 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 **Description:** Detects `set-variable` values that are never referenced elsewhere in the project (via `vars.variableName`, `#[vars.variableName]`, or `variableName` in DataWeave expressions).
 
 **Best Practice:** Remove unused variables to reduce clutter and improve maintainability.
+
+---
+
+### OPS-004: Scheduler Mode
+
+| Property     | Value      |
+| ------------ | ---------- |
+| **Severity** | Info       |
+| **Category** | Operations |
+| **Fixable**  | No         |
+
+**Description:** A fixed-frequency scheduler drifts relative to wall-clock time and restarts its interval on redeploy, so a job that must run at a particular time of day is usually better expressed as a CRON expression.
+
+**Options:**
+
+| Option            | Default  | Description                                       |
+| ----------------- | -------- | ------------------------------------------------- |
+| `preferredMode`   | `"cron"` | Set to `"any"` to disable the preference entirely |
+| `excludePatterns` | `[]`     | File path patterns to skip                        |
+| `excludeFlows`    | `[]`     | Flow-name patterns to skip                        |
+
+> **Note:** Fixed frequency is not intrinsically wrong — it is the right choice for polling. The finding reports a deviation from project policy and says so. OPS-003 separately requires that a CRON expression be externalized.
+
+---
+
+### RES-003: Messaging Idempotency Evidence
+
+| Property       | Value      |
+| -------------- | ---------- |
+| **Severity**   | Info       |
+| **Category**   | Operations |
+| **Issue Type** | Bug        |
+| **Fixable**    | No         |
+
+**Description:** Queue-based delivery is at-least-once, so a consumer can legitimately receive the same message twice. Without a deduplication mechanism, a retry becomes a duplicate side effect. Reported once per project.
+
+**Check Logic:** Messaging usage is detected from JMS or Anypoint MQ namespaces, elements, or POM dependencies. Object Store usage and Mule's `idempotent-message-validator` both count as idempotency evidence.
+
+**Why This Matters:** This stays an info finding because whether duplication matters depends on the operation — a read is naturally idempotent, an append is not.
 
 ---
 

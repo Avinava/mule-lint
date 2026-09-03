@@ -24,18 +24,37 @@ export class ExternalDwlRule extends BaseRule {
     const transforms = this.select('//*[local-name()="transform"]', doc);
 
     for (const transform of transforms) {
-      const setPayload = this.select('.//*[local-name()="set-payload"]', transform);
+      // Inline DataWeave appears both as a payload and as a variable body.
+      const bodies = this.select(
+        './/*[local-name()="set-payload" or local-name()="set-variable"]',
+        transform,
+      );
 
-      for (const payload of setPayload) {
-        const content = payload.textContent ?? '';
+      // One DataWeave body produces at most one finding, even when several
+      // oversized bodies share a transform.
+      const seen = new Set<Node>();
+
+      for (const body of bodies) {
+        if (seen.has(body)) {
+          continue;
+        }
+        seen.add(body);
+
+        // An external resource is already externalized.
+        if (this.getAttribute(body, 'resource')) {
+          continue;
+        }
+
+        const content = body.textContent ?? '';
         const lines = content.split('\n').filter((l) => l.trim().length > 0);
 
         if (lines.length > maxInlineLines) {
           const docName = this.getDocName(transform) ?? 'Transform';
+          const target = (body as Element).localName === 'set-variable' ? 'variable' : 'payload';
           issues.push(
             this.createIssue(
-              transform,
-              `Transform "${docName}" has ${lines.length} lines - externalize to .dwl file`,
+              body,
+              `Transform "${docName}" has an inline ${target} of ${lines.length} lines - externalize to .dwl file`,
               {
                 suggestion: `Move to src/main/resources/dwl/ and use: resource("dwl/transform-name.dwl")`,
               },
