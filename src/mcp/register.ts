@@ -37,7 +37,6 @@ interface StableMcpRegistration {
  */
 function stableRegistration(server: McpServer): StableMcpRegistration {
   // Avoid instantiating the SDK's recursive generic signatures during declaration emit.
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- the assertion prevents TS2589 during declaration emit
   return server as unknown as StableMcpRegistration;
 }
 

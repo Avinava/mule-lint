@@ -9,32 +9,32 @@ import { getErrorMessage } from './errors';
 /**
  * Categories a custom rule may declare.
  *
- * The guard below makes this a compile error if a new RuleCategory is added
- * without being listed here, so the loader cannot silently drift from the type.
+ * Declared as a `satisfies Record<RuleCategory, true>` so that adding a rule
+ * category without listing it here — or listing one that no longer exists — is
+ * a compile error rather than a loader that silently rejects valid
+ * configuration.
  */
-const RULE_CATEGORIES = [
-  'error-handling',
-  'naming',
-  'security',
-  'logging',
-  'http',
-  'performance',
-  'documentation',
-  'standards',
-  'complexity',
-  'dataweave',
-  'structure',
-  'api-led',
-  'api-design',
-  'governance',
-  'operations',
-  'testing',
-  'experimental',
-] as const;
+const ACCEPTED_CATEGORIES = {
+  'error-handling': true,
+  naming: true,
+  security: true,
+  logging: true,
+  http: true,
+  performance: true,
+  documentation: true,
+  standards: true,
+  complexity: true,
+  dataweave: true,
+  structure: true,
+  'api-led': true,
+  'api-design': true,
+  governance: true,
+  operations: true,
+  testing: true,
+  experimental: true,
+} satisfies Record<RuleCategory, true>;
 
-type UncoveredCategory = Exclude<RuleCategory, (typeof RULE_CATEGORIES)[number]>;
-const _everyCategoryIsAccepted: UncoveredCategory extends never ? true : never = true;
-void _everyCategoryIsAccepted;
+const RULE_CATEGORIES = Object.keys(ACCEPTED_CATEGORIES) as [RuleCategory, ...RuleCategory[]];
 
 /** Message placeholders a custom rule may use. */
 const SUPPORTED_PLACEHOLDERS = ['name', 'nodeName', 'filePath', 'line'] as const;

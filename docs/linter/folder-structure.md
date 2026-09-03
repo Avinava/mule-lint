@@ -27,7 +27,7 @@ mule-lint/
 ├── scripts/                     # Package smoke tests and maintenance scripts
 ├── eslint.config.mjs            # Typed ESLint flat configuration
 ├── tsconfig.json                # Production TypeScript build
-└── vitest.config.ts             # Tests and coverage thresholds
+└── vitest.config.mts            # Tests and coverage thresholds
 ```
 
 ## Design Boundaries

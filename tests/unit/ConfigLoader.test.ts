@@ -16,9 +16,12 @@ describe('parseLintConfig', () => {
   });
 
   it('reports actionable validation errors', () => {
-    expect(() => parseLintConfig({ defaultFormatter: 'xml' })).toThrow(
-      /defaultFormatter.*Invalid enum value/,
-    );
+    // Assert the intent — the offending key is named and the accepted values are
+    // listed — rather than the validator's exact wording, which changes between
+    // its major versions.
+    expect(() => parseLintConfig({ defaultFormatter: 'xml' })).toThrow(/defaultFormatter/);
+    expect(() => parseLintConfig({ defaultFormatter: 'xml' })).toThrow(/table/);
+    expect(() => parseLintConfig({ defaultFormatter: 'xml' })).toThrow(/sarif/);
   });
 
   it('accepts built-in profiles while warning for reserved and unknown keys', () => {
