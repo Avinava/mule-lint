@@ -5,7 +5,7 @@ import { ALL_RULES } from '../../src/rules';
 describe('rule registry invariants', () => {
   it('contains exactly 82 unique, well-formed rules', () => {
     const ids = ALL_RULES.map((rule) => rule.id);
-    expect(ids).toHaveLength(82);
+    expect(ids).toHaveLength(89);
     expect(new Set(ids).size).toBe(ids.length);
 
     for (const rule of ALL_RULES) {

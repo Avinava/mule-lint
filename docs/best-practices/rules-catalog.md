@@ -564,6 +564,133 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 ---
 
+### SEC-011: Secure Properties Module Required
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** A project that stores sensitive configuration keys needs the Secure Configuration Properties module to resolve them at runtime. Reported once per project. Encrypted `![...]` values still require the module, because Mule needs it to decrypt them.
+
+**Check Logic:** Scans `.properties`, `.yaml`, and `.yml` files under `src/main/resources` for sensitive key names. If any are found and no `secure-properties:config` element or secure-configuration-property dependency is present, the rule reports.
+
+**Best Practice:** Configure `<secure-properties:config>` with an externalized key and add the module to `pom.xml`.
+
+---
+
+### SEC-012: HTTPS Enforcement
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Error         |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Outbound HTTP request connections should use TLS. Reports literal plaintext transport — `protocol="HTTP"` or an absolute `http://` URL — on request configurations and requests.
+
+**Unknown values:** A dynamic protocol such as `${http.protocol}` cannot be resolved at lint time and passes by default. Loopback hosts pass. Private and organization-internal hosts are not assumed safe.
+
+**Options:**
+
+| Option                  | Default                                     | Description                                       |
+| ----------------------- | ------------------------------------------- | ------------------------------------------------- |
+| `allowedHttpHosts`      | `["localhost","127.0.0.1","::1","0.0.0.0"]` | Host patterns exempt from the check; `*` wildcard |
+| `reportUnknownProtocol` | `false`                                     | Emit an info finding for unresolvable protocols   |
+
+> **Note:** MULE-004 separately checks URL externalization, so one node may legitimately violate both rules.
+
+---
+
+### SEC-013: TLS Context Required
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** A listener or request connection declaring literal `HTTPS` should have a TLS context, either inline or referenced by name. An unrelated global TLS context elsewhere in the project does not satisfy the rule.
+
+**Options:**
+
+| Option                  | Default | Description                                               |
+| ----------------------- | ------- | --------------------------------------------------------- |
+| `reportUnknownProtocol` | `false` | Emit an info finding when the protocol cannot be resolved |
+
+> **Note:** Literal `HTTP` is SEC-012's concern. MULE-202 and SEC-002 continue to check insecure trust stores and obsolete TLS versions.
+
+---
+
+### SEC-014: Basic Authentication Usage
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Basic Authentication sends reusable credentials on every request. Where the target system supports it, a token-based scheme such as OAuth 2.0 limits the damage a leaked credential can do. Matches any element whose local name contains `basic-authentication` or `basic-auth`, independent of namespace prefix.
+
+**Options:**
+
+| Option              | Default | Description                                        |
+| ------------------- | ------- | -------------------------------------------------- |
+| `allowedConnectors` | `[]`    | Config names permitted to use Basic Authentication |
+| `excludePatterns`   | `[]`    | File path patterns to skip                         |
+
+**Why This Matters:** This is a warning, not an error — Basic Authentication is sometimes a deliberate compatibility choice for a legacy system.
+
+---
+
+### SEC-015: CORS Policy Evidence
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Info          |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** A browser-facing API needs a CORS policy. Reported once per project when no CORS element is visible.
+
+**Applicability:** The rule emits nothing unless `browserFacing` is `true` or an APIKit flow handling the OPTIONS method exists. Browser exposure cannot be inferred reliably, so applicability is explicit by design.
+
+**Options:**
+
+| Option                    | Default | Description                                                    |
+| ------------------------- | ------- | -------------------------------------------------------------- |
+| `browserFacing`           | `false` | Declare that this API is called from a browser                 |
+| `allowGatewayManagedCors` | `false` | Accept API auto-discovery as evidence of a gateway CORS policy |
+
+---
+
+### SEC-016: Inbound Authentication Evidence
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Reported once per project when inbound HTTP flows exist and no supported authentication component is visible in the repository. Recognized evidence includes OAuth, OpenID Connect, JWT validation, client-ID enforcement, Spring Security, and explicit authorization filters.
+
+**Options:**
+
+| Option                  | Default | Description                                                     |
+| ----------------------- | ------- | --------------------------------------------------------------- |
+| `acceptGatewayPolicies` | `false` | Accept an API auto-discovery element as authentication evidence |
+
+> **Note:** The finding states that no evidence was detected. It does not claim the API is unauthenticated — authentication is frequently applied as an API Manager policy that does not appear in source.
+
+---
+
 ## Logging Rules
 
 > **Best Practice**: Use structured logging with categories. Never log full payloads in production - they may contain PII or be excessively large.
@@ -1060,6 +1187,32 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 | **Fixable**  | No        |
 
 **Description:** Property placeholders referenced in XML files (`${property.name}`) should have corresponding entries in the project's YAML configuration files. Detects potential runtime failures from missing property definitions.
+
+---
+
+### CFG-003: Plaintext Secrets in Properties Files
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Error         |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Java `.properties` files under `src/main/resources` should not contain plaintext secret values. A secret committed to the repository is compromised regardless of how the application is deployed.
+
+**Check Logic:** Sensitive key names are matched on their final dot-separated segment, so `salesforce.password` is flagged while `password.policy.url` is not. Values that are property placeholders (`${...}`), DataWeave expressions (`#[...]`), Mule encrypted literals (`![...]`), or empty all pass. Commented entries are ignored.
+
+**Options:**
+
+| Option                    | Default        | Description                                    |
+| ------------------------- | -------------- | ---------------------------------------------- |
+| `secureFilePatterns`      | `["*secure*"]` | Filename patterns treated as already encrypted |
+| `additionalSensitiveKeys` | `[]`           | Extra key endings to treat as secrets          |
+
+**Why This Matters:** The finding names the key and the line but never the value, so a report can be shared without leaking the secret it found.
+
+> **Note:** `.yaml` and `.yml` files are owned by YAML-004; the same file is never reported by both rules.
 
 ---
 

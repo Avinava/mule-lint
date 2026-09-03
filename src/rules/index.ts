@@ -30,6 +30,13 @@ import { ConnectorCredentialsSecuredRule } from './security/ConnectorCredentials
 import { SecurePropertiesKeyRule } from './security/SecurePropertiesKeyRule';
 import { TlsKeystorePasswordRule } from './security/TlsKeystorePasswordRule';
 import { SecurePropertiesEncryptionRule } from './security/SecurePropertiesEncryptionRule';
+import { PlaintextPropertiesSecretsRule } from './standards/PlaintextPropertiesSecretsRule';
+import { SecurePropertiesModuleRule } from './security/SecurePropertiesModuleRule';
+import { HttpsEnforcementRule } from './security/HttpsEnforcementRule';
+import { TlsContextRequiredRule } from './security/TlsContextRequiredRule';
+import { BasicAuthenticationRule } from './security/BasicAuthenticationRule';
+import { CorsPolicyEvidenceRule } from './security/CorsPolicyEvidenceRule';
+import { InboundAuthenticationEvidenceRule } from './security/InboundAuthenticationEvidenceRule';
 
 // Import all rules - Logging
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -144,6 +151,13 @@ export { ConnectorCredentialsSecuredRule } from './security/ConnectorCredentials
 export { SecurePropertiesKeyRule } from './security/SecurePropertiesKeyRule';
 export { TlsKeystorePasswordRule } from './security/TlsKeystorePasswordRule';
 export { SecurePropertiesEncryptionRule } from './security/SecurePropertiesEncryptionRule';
+export { PlaintextPropertiesSecretsRule } from './standards/PlaintextPropertiesSecretsRule';
+export { SecurePropertiesModuleRule } from './security/SecurePropertiesModuleRule';
+export { HttpsEnforcementRule } from './security/HttpsEnforcementRule';
+export { TlsContextRequiredRule } from './security/TlsContextRequiredRule';
+export { BasicAuthenticationRule } from './security/BasicAuthenticationRule';
+export { CorsPolicyEvidenceRule } from './security/CorsPolicyEvidenceRule';
+export { InboundAuthenticationEvidenceRule } from './security/InboundAuthenticationEvidenceRule';
 
 // Export individual rules - Logging
 export { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -318,6 +332,15 @@ export const ALL_RULES: Rule[] = [
   new SecurePropertiesKeyRule(),
   new TlsKeystorePasswordRule(),
   new SecurePropertiesEncryptionRule(),
+
+  // Configuration and transport security (CFG-003, SEC-011..SEC-016)
+  new PlaintextPropertiesSecretsRule(), // CFG-003: Plaintext Secrets in Properties Files
+  new SecurePropertiesModuleRule(), // SEC-011: Secure Properties Module Required
+  new HttpsEnforcementRule(), // SEC-012: HTTPS Enforcement
+  new TlsContextRequiredRule(), // SEC-013: TLS Context Required
+  new BasicAuthenticationRule(), // SEC-014: Basic Authentication Usage
+  new CorsPolicyEvidenceRule(), // SEC-015: CORS Policy Evidence
+  new InboundAuthenticationEvidenceRule(), // SEC-016: Inbound Authentication Evidence
 
   // Code Hygiene Rules (HYG-001, HYG-002, HYG-003, HYG-004, HYG-005)
   new ExcessiveLoggersRule(),
