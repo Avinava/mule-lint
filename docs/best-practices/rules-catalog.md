@@ -564,6 +564,145 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 ---
 
+### SEC-011: Secure Properties Module Required
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** A project that stores sensitive configuration keys needs the Secure Configuration Properties module to resolve them at runtime. Reported once per project. Encrypted `![...]` values still require the module, because Mule needs it to decrypt them.
+
+**Check Logic:** Scans `.properties`, `.yaml`, and `.yml` files under `src/main/resources` for sensitive key names. If any are found and no `secure-properties:config` element or secure-configuration-property dependency is present, the rule reports.
+
+**Best Practice:** Configure `<secure-properties:config>` with an externalized key and add the module to `pom.xml`.
+
+---
+
+---
+
+### SEC-012: HTTPS Enforcement
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Error         |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Outbound HTTP request connections should use TLS. Reports literal plaintext transport — `protocol="HTTP"` or an absolute `http://` URL — on request configurations and requests.
+
+**Unknown values:** A dynamic protocol such as `${http.protocol}` cannot be resolved at lint time and passes by default. Loopback hosts pass. Private and organization-internal hosts are not assumed safe.
+
+**Options:**
+
+| Option                  | Default                                     | Description                                       |
+| ----------------------- | ------------------------------------------- | ------------------------------------------------- |
+| `allowedHttpHosts`      | `["localhost","127.0.0.1","::1","0.0.0.0"]` | Host patterns exempt from the check; `*` wildcard |
+| `reportUnknownProtocol` | `false`                                     | Emit an info finding for unresolvable protocols   |
+
+> **Note:** MULE-004 separately checks URL externalization, so one node may legitimately violate both rules.
+
+---
+
+---
+
+### SEC-013: TLS Context Required
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** A listener or request connection declaring literal `HTTPS` should have a TLS context, either inline or referenced by name. An unrelated global TLS context elsewhere in the project does not satisfy the rule.
+
+**Options:**
+
+| Option                  | Default | Description                                               |
+| ----------------------- | ------- | --------------------------------------------------------- |
+| `reportUnknownProtocol` | `false` | Emit an info finding when the protocol cannot be resolved |
+
+> **Note:** Literal `HTTP` is SEC-012's concern. MULE-202 and SEC-002 continue to check insecure trust stores and obsolete TLS versions.
+
+---
+
+---
+
+### SEC-014: Basic Authentication Usage
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Basic Authentication sends reusable credentials on every request. Where the target system supports it, a token-based scheme such as OAuth 2.0 limits the damage a leaked credential can do. Matches any element whose local name contains `basic-authentication` or `basic-auth`, independent of namespace prefix.
+
+**Options:**
+
+| Option              | Default | Description                                        |
+| ------------------- | ------- | -------------------------------------------------- |
+| `allowedConnectors` | `[]`    | Config names permitted to use Basic Authentication |
+| `excludePatterns`   | `[]`    | File path patterns to skip                         |
+
+**Why This Matters:** This is a warning, not an error — Basic Authentication is sometimes a deliberate compatibility choice for a legacy system.
+
+---
+
+---
+
+### SEC-015: CORS Policy Evidence
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Info          |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** A browser-facing API needs a CORS policy. Reported once per project when no CORS element is visible.
+
+**Applicability:** The rule emits nothing unless `browserFacing` is `true` or an APIKit flow handling the OPTIONS method exists. Browser exposure cannot be inferred reliably, so applicability is explicit by design.
+
+**Options:**
+
+| Option                    | Default | Description                                                    |
+| ------------------------- | ------- | -------------------------------------------------------------- |
+| `browserFacing`           | `false` | Declare that this API is called from a browser                 |
+| `allowGatewayManagedCors` | `false` | Accept API auto-discovery as evidence of a gateway CORS policy |
+
+---
+
+---
+
+### SEC-016: Inbound Authentication Evidence
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Reported once per project when inbound HTTP flows exist and no supported authentication component is visible in the repository. Recognized evidence includes OAuth, OpenID Connect, JWT validation, client-ID enforcement, Spring Security, and explicit authorization filters.
+
+**Options:**
+
+| Option                  | Default | Description                                                     |
+| ----------------------- | ------- | --------------------------------------------------------------- |
+| `acceptGatewayPolicies` | `false` | Accept an API auto-discovery element as authentication evidence |
+
+> **Note:** The finding states that no evidence was detected. It does not claim the API is unauthenticated — authentication is frequently applied as an API Manager policy that does not appear in source.
+
+---
+
+---
+
 ## Logging Rules
 
 > **Best Practice**: Use structured logging with categories. Never log full payloads in production - they may contain PII or be excessively large.
@@ -684,6 +823,29 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 ```
 
 **Best Practice:** Keep logger count per flow ≤ 5. Move detailed logging to DEBUG level.
+
+---
+
+### LOG-005: Flow Logging Present
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | Logging |
+| **Fixable**  | No      |
+
+**Description:** A flow with no logger leaves no trace in the log when it runs, which makes an incident hard to reconstruct. Both the core `logger` and JSON logger components count as evidence.
+
+**Options:**
+
+| Option            | Default                   | Description                                        |
+| ----------------- | ------------------------- | -------------------------------------------------- |
+| `includeSubflows` | `false`                   | Also require a logger in sub-flows                 |
+| `excludePatterns` | `["*-main", "*-console"]` | Flow-name patterns to skip, `*` wildcard supported |
+
+**Why This Matters:** Sub-flows are excluded by default because they are reusable units — requiring a logger in each one produces noise rather than insight. The default `excludePatterns` skip the APIKit-generated `*-main` and `*-console` router flows for the same reason MULE-002 and MULE-003 exclude them; they hold no business logic. APIKit **route** flows are still checked, because they do.
+
+---
 
 ---
 
@@ -861,6 +1023,22 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 | **Fixable**  | No          |
 
 **Description:** Listener connectors (HTTP Listener, JMS, AMQP, VM) should use `reconnect-forever` strategy rather than bounded reconnection. Listeners are critical entry points — if they stop reconnecting after N attempts, the application becomes unreachable.
+
+---
+
+### PERF-003: Batch Resource Configuration
+
+| Property     | Value       |
+| ------------ | ----------- |
+| **Severity** | Warning     |
+| **Category** | Performance |
+| **Fixable**  | No          |
+
+**Description:** A `batch:job` that declares neither `blockSize` nor `maxConcurrency` runs on runtime defaults, which is rarely the right shape for the record size and downstream capacity of a specific integration.
+
+**Check Logic:** Presence and basic validity only. Positive integer literals and property or DataWeave expressions both pass. Recommending particular numeric values is out of scope for static analysis.
+
+---
 
 ---
 
@@ -1075,6 +1253,34 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 
 ---
 
+### CFG-003: Plaintext Secrets in Properties Files
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Error         |
+| **Category**   | Security      |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** Java `.properties` files under `src/main/resources` should not contain plaintext secret values. A secret committed to the repository is compromised regardless of how the application is deployed.
+
+**Check Logic:** Sensitive key names are matched on their final dot-separated segment, so `salesforce.password` is flagged while `password.policy.url` is not. Values that are property placeholders (`${...}`), DataWeave expressions (`#[...]`), Mule encrypted literals (`![...]`), or empty all pass. Commented entries are ignored.
+
+**Options:**
+
+| Option                    | Default        | Description                                    |
+| ------------------------- | -------------- | ---------------------------------------------- |
+| `secureFilePatterns`      | `["*secure*"]` | Filename patterns treated as already encrypted |
+| `additionalSensitiveKeys` | `[]`           | Extra key endings to treat as secrets          |
+
+**Why This Matters:** The finding names the key and the line but never the value, so a report can be shared without leaking the secret it found.
+
+> **Note:** `.yaml` and `.yml` files are owned by YAML-004; the same file is never reported by both rules.
+
+---
+
+---
+
 ## Complexity Rules
 
 > **Best Practice**: Keep cyclomatic complexity below 10. Extract complex logic into sub-flows.
@@ -1116,6 +1322,31 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
   }
 }
 ```
+
+---
+
+### MULE-805: Oversized Sequential Flow
+
+| Property     | Value      |
+| ------------ | ---------- |
+| **Severity** | Info       |
+| **Category** | Complexity |
+| **Fixable**  | No         |
+
+**Description:** A long straight-line flow is hard to read and to test even when its cyclomatic complexity is low. This rule counts the length of the top-level processor sequence.
+
+**Check Logic:** Only direct children are counted. The message source and `error-handler` are excluded, and processors nested inside a scope are not counted recursively — a scope counts once. The finding includes the observed count and the threshold.
+
+**Options:**
+
+| Option            | Default | Description                        |
+| ----------------- | ------- | ---------------------------------- |
+| `maxProcessors`   | `15`    | Maximum direct processors per flow |
+| `includeSubflows` | `false` | Also check sub-flows               |
+
+**Why This Matters:** This complements MULE-801 rather than duplicating it: a 25-step flow with no branching scores a cyclomatic complexity of 1. The suggestion recommends extracting cohesive behaviour, not mechanically splitting at the threshold.
+
+---
 
 ---
 
@@ -1453,6 +1684,79 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 
 ---
 
+### API-009: API Specification Present
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | API-Led |
+| **Fixable**  | No      |
+
+**Description:** An HTTP-exposed project should include a RAML or OpenAPI document so the contract is versioned alongside the implementation. Reported once per project.
+
+**Check Logic:** Detection is by content, not location. A `.raml` file whose first meaningful line begins with `#%RAML`, or a `.yaml`, `.yml`, or `.json` file with a top-level `openapi` or `swagger` key, anywhere under `src/main/resources`. Generated output and `target` are excluded.
+
+**Options:**
+
+| Option                    | Default | Description                                               |
+| ------------------------- | ------- | --------------------------------------------------------- |
+| `allowExchangeDependency` | `false` | Accept a plausible API contract dependency from `pom.xml` |
+
+> **Note:** This rule detects and identifies a specification; it does not validate one. Contract validation is a separate concern.
+
+---
+
+---
+
+### API-010: Versioned API Path
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | API-Led |
+| **Fixable**  | No      |
+
+**Description:** An API path should carry a version segment so a breaking change can be released alongside the existing contract rather than replacing it.
+
+**Check Logic:** The effective path is the listener configuration's `basePath` joined with the listener's own `path`; either part may supply the version. Accepted forms are a literal `/v1`-style segment and a version placeholder such as `/${api.version}` or `/v${api.majorVersion}`.
+
+**Options:**
+
+| Option                 | Default         | Description                                   |
+| ---------------------- | --------------- | --------------------------------------------- |
+| `allowSemanticVersion` | `false`         | Also accept a semantic segment such as `/1.2` |
+| `excludeFlows`         | `["*-console"]` | Flow-name patterns to skip                    |
+
+The APIKit console is generated scaffolding rather than an API surface, so its flow is excluded by default. The generated `*-main` flow is still checked, because it carries the real API base path.
+
+> **Note:** A listener whose `config-ref` cannot be resolved produces no finding, because the effective path is unknown rather than unversioned.
+
+---
+
+---
+
+### API-011: Health Endpoint Present
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Info    |
+| **Category** | API-Led |
+| **Fixable**  | No      |
+
+**Description:** An HTTP-exposed application should offer a health endpoint so load balancers and monitoring can distinguish a running worker from a healthy one. Reported once per project.
+
+**Check Logic:** Evidence is a recognised indicator in either a literal listener path or a flow name, matched case-insensitively. Non-HTTP batch, library, and event-only projects are skipped.
+
+**Options:**
+
+| Option       | Default                                                                                  | Description                         |
+| ------------ | ---------------------------------------------------------------------------------------- | ----------------------------------- |
+| `indicators` | `["health","healthz","ping","status","heartbeat","ready","readiness","live","liveness"]` | Path or flow-name markers to accept |
+
+---
+
+---
+
 ## Connector Rules
 
 ### SF-001: Salesforce Replay Channel Config
@@ -1488,6 +1792,28 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 | **Fixable**  | No      |
 
 **Description:** HTTP request configurations should set `connectionIdleTimeout` to release idle connections and prevent resource exhaustion under load.
+
+---
+
+### HTTP-005: Listener Response Content Type
+
+| Property     | Value |
+| ------------ | ----- |
+| **Severity** | Info  |
+| **Category** | HTTP  |
+| **Fixable**  | No    |
+
+**Description:** An HTTP listener response should make its content type visible, through a header, a `mimeType` attribute, or a DataWeave `output` directive. A client that cannot tell JSON from text has to guess. Applies to both `http:response` and `http:error-response`.
+
+**Options:**
+
+| Option                 | Default | Description                                                            |
+| ---------------------- | ------- | ---------------------------------------------------------------------- |
+| `reportDynamicHeaders` | `true`  | Emit a "verify content type" finding when headers are expression-built |
+
+> **Note:** MULE-402 remains responsible for outbound request content type.
+
+---
 
 ---
 
@@ -1555,6 +1881,49 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 **Description:** Detects `set-variable` values that are never referenced elsewhere in the project (via `vars.variableName`, `#[vars.variableName]`, or `variableName` in DataWeave expressions).
 
 **Best Practice:** Remove unused variables to reduce clutter and improve maintainability.
+
+---
+
+### OPS-004: Scheduler Mode
+
+| Property     | Value      |
+| ------------ | ---------- |
+| **Severity** | Info       |
+| **Category** | Operations |
+| **Fixable**  | No         |
+
+**Description:** A fixed-frequency scheduler drifts relative to wall-clock time and restarts its interval on redeploy, so a job that must run at a particular time of day is usually better expressed as a CRON expression.
+
+**Options:**
+
+| Option            | Default  | Description                                       |
+| ----------------- | -------- | ------------------------------------------------- |
+| `preferredMode`   | `"cron"` | Set to `"any"` to disable the preference entirely |
+| `excludePatterns` | `[]`     | File path patterns to skip                        |
+| `excludeFlows`    | `[]`     | Flow-name patterns to skip                        |
+
+> **Note:** Fixed frequency is not intrinsically wrong — it is the right choice for polling. The finding reports a deviation from project policy and says so. OPS-003 separately requires that a CRON expression be externalized.
+
+---
+
+---
+
+### RES-003: Messaging Idempotency Evidence
+
+| Property       | Value      |
+| -------------- | ---------- |
+| **Severity**   | Info       |
+| **Category**   | Operations |
+| **Issue Type** | Bug        |
+| **Fixable**    | No         |
+
+**Description:** Queue-based delivery is at-least-once, so a consumer can legitimately receive the same message twice. Without a deduplication mechanism, a retry becomes a duplicate side effect. Reported once per project.
+
+**Check Logic:** Messaging usage is detected from JMS or Anypoint MQ namespaces, elements, or POM dependencies. Object Store usage and Mule's `idempotent-message-validator` both count as idempotency evidence.
+
+**Why This Matters:** This stays an info finding because whether duplication matters depends on the operation — a read is naturally idempotent, an append is not.
+
+---
 
 ---
 

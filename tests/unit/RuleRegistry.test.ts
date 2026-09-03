@@ -10,9 +10,9 @@ import {
 import { LintEngine } from '../../src/engine/LintEngine';
 
 describe('rule registry invariants', () => {
-  it('contains exactly 82 unique, well-formed rules', () => {
+  it('contains exactly 98 unique, well-formed rules', () => {
     const ids = ALL_RULES.map((rule) => rule.id);
-    expect(ids).toHaveLength(82);
+    expect(ids).toHaveLength(98);
     expect(new Set(ids).size).toBe(ids.length);
 
     for (const rule of ALL_RULES) {

@@ -30,6 +30,22 @@ import { ConnectorCredentialsSecuredRule } from './security/ConnectorCredentials
 import { SecurePropertiesKeyRule } from './security/SecurePropertiesKeyRule';
 import { TlsKeystorePasswordRule } from './security/TlsKeystorePasswordRule';
 import { SecurePropertiesEncryptionRule } from './security/SecurePropertiesEncryptionRule';
+import { PlaintextPropertiesSecretsRule } from './standards/PlaintextPropertiesSecretsRule';
+import { SecurePropertiesModuleRule } from './security/SecurePropertiesModuleRule';
+import { HttpsEnforcementRule } from './security/HttpsEnforcementRule';
+import { TlsContextRequiredRule } from './security/TlsContextRequiredRule';
+import { BasicAuthenticationRule } from './security/BasicAuthenticationRule';
+import { CorsPolicyEvidenceRule } from './security/CorsPolicyEvidenceRule';
+import { InboundAuthenticationEvidenceRule } from './security/InboundAuthenticationEvidenceRule';
+import { ApiSpecificationPresentRule } from './api-led/ApiSpecificationPresentRule';
+import { VersionedApiPathRule } from './api-led/VersionedApiPathRule';
+import { HealthEndpointRule } from './api-led/HealthEndpointRule';
+import { ListenerResponseContentTypeRule } from './http/ListenerResponseContentTypeRule';
+import { FlowLoggingRule } from './logging/FlowLoggingRule';
+import { BatchResourceConfigRule } from './performance/BatchResourceConfigRule';
+import { SchedulerModeRule } from './operations/SchedulerModeRule';
+import { MessagingIdempotencyRule } from './operations/MessagingIdempotencyRule';
+import { OversizedFlowRule } from './complexity/OversizedFlowRule';
 
 // Import all rules - Logging
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -144,6 +160,22 @@ export { ConnectorCredentialsSecuredRule } from './security/ConnectorCredentials
 export { SecurePropertiesKeyRule } from './security/SecurePropertiesKeyRule';
 export { TlsKeystorePasswordRule } from './security/TlsKeystorePasswordRule';
 export { SecurePropertiesEncryptionRule } from './security/SecurePropertiesEncryptionRule';
+export { PlaintextPropertiesSecretsRule } from './standards/PlaintextPropertiesSecretsRule';
+export { SecurePropertiesModuleRule } from './security/SecurePropertiesModuleRule';
+export { HttpsEnforcementRule } from './security/HttpsEnforcementRule';
+export { TlsContextRequiredRule } from './security/TlsContextRequiredRule';
+export { BasicAuthenticationRule } from './security/BasicAuthenticationRule';
+export { CorsPolicyEvidenceRule } from './security/CorsPolicyEvidenceRule';
+export { InboundAuthenticationEvidenceRule } from './security/InboundAuthenticationEvidenceRule';
+export { ApiSpecificationPresentRule } from './api-led/ApiSpecificationPresentRule';
+export { VersionedApiPathRule } from './api-led/VersionedApiPathRule';
+export { HealthEndpointRule } from './api-led/HealthEndpointRule';
+export { ListenerResponseContentTypeRule } from './http/ListenerResponseContentTypeRule';
+export { FlowLoggingRule } from './logging/FlowLoggingRule';
+export { BatchResourceConfigRule } from './performance/BatchResourceConfigRule';
+export { SchedulerModeRule } from './operations/SchedulerModeRule';
+export { MessagingIdempotencyRule } from './operations/MessagingIdempotencyRule';
+export { OversizedFlowRule } from './complexity/OversizedFlowRule';
 
 // Export individual rules - Logging
 export { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -340,6 +372,24 @@ export const ALL_RULES: Rule[] = [
   // Connector Rules (SF-001, SF-002)
   new ReplayChannelConfigRule(), // SF-001: Salesforce Replay Channel Config
   new EventListenerNullGuardRule(), // SF-002: Event Listener Null Guard
+  // Coverage expansion (CFG-003, SEC-011..016, API-009..011, HTTP-005,
+  // LOG-005, PERF-003, OPS-004, RES-003, MULE-805)
+  new PlaintextPropertiesSecretsRule(), // CFG-003: Plaintext Secrets in Properties Files
+  new SecurePropertiesModuleRule(), // SEC-011: Secure Properties Module Required
+  new HttpsEnforcementRule(), // SEC-012: HTTPS Enforcement
+  new TlsContextRequiredRule(), // SEC-013: TLS Context Required
+  new BasicAuthenticationRule(), // SEC-014: Basic Authentication Usage
+  new CorsPolicyEvidenceRule(), // SEC-015: CORS Policy Evidence
+  new InboundAuthenticationEvidenceRule(), // SEC-016: Inbound Authentication Evidence
+  new ApiSpecificationPresentRule(), // API-009: API Specification Present
+  new VersionedApiPathRule(), // API-010: Versioned API Path
+  new HealthEndpointRule(), // API-011: Health Endpoint Present
+  new ListenerResponseContentTypeRule(), // HTTP-005: Listener Response Content Type
+  new FlowLoggingRule(), // LOG-005: Flow Logging Present
+  new BatchResourceConfigRule(), // PERF-003: Batch Resource Configuration
+  new SchedulerModeRule(), // OPS-004: Scheduler Mode
+  new MessagingIdempotencyRule(), // RES-003: Messaging Idempotency Evidence
+  new OversizedFlowRule(), // MULE-805: Oversized Sequential Flow
 ];
 
 /**
