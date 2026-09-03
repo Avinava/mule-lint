@@ -153,6 +153,25 @@ docs: update rules catalog with new examples
 - Test both positive (should pass) and negative (should fail) cases
 - Test edge cases and configuration options
 
+## Dependency ceilings
+
+Some dependencies are deliberately held below their latest major. Each is a
+constraint, not neglect — please do not bump them without addressing the reason.
+
+| Package                         | Held at | Why                                                                                                                                                                                                                                           |
+| ------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `chalk`                         | 4       | Pure ESM from v5. This package is CommonJS, so v4 is the last usable release.                                                                                                                                                                 |
+| `commander`                     | 14      | v15 is pure ESM and requires Node 22.                                                                                                                                                                                                         |
+| `vitest`, `@vitest/coverage-v8` | 4       | v5 requires Node 22.12+, which would drop the Node 20 CI job.                                                                                                                                                                                 |
+| `@commitlint/*`                 | 20      | v21 requires Node 22.12+.                                                                                                                                                                                                                     |
+| `typescript`                    | 6       | No `typescript-eslint` release supports v7 — its peer range caps at `<6.1.0`.                                                                                                                                                                 |
+| `@types/node`                   | 20      | Should track the oldest supported Node, which `engines.node` sets to 20.                                                                                                                                                                      |
+| `@xmldom/xmldom`                | 0.8     | v0.9 ships its own `Document`/`Node` types that are incompatible with the `lib.dom` types the public `Rule.validate(doc: Document)` signature exposes. Moving would be a breaking API change. The 0.8 line still receives security backports. |
+
+Raising the Node floor to 22 would unlock `chalk`, `commander`, `vitest`, and
+`@commitlint/*` together. That is a breaking change for consumers and belongs in
+a major release, not a minor one.
+
 ## Releasing
 
 Maintainers follow semantic versioning:

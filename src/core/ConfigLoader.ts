@@ -19,7 +19,7 @@ const qualityMetricSchema = z.enum([
 const ruleConfigSchema = z.object({
   enabled: z.boolean(),
   severity: severitySchema.optional(),
-  options: z.record(z.unknown()).optional(),
+  options: z.record(z.string(), z.unknown()).optional(),
 });
 
 const qualityGateSchema = z.object({
@@ -28,27 +28,28 @@ const qualityGateSchema = z.object({
     z.object({
       metric: qualityMetricSchema,
       operator: z.enum(['<', '>', '<=', '>=', '=']),
-      threshold: z.number().finite(),
+      threshold: z.number(),
       status: z.enum(['fail', 'warn']),
       onNewCode: z.boolean().optional(),
     }),
   ),
 });
 
-const lintConfigSchema = z
-  .object({
-    $schema: z.string().optional(),
-    extends: z.union([z.string(), z.array(z.string())]).optional(),
-    rules: z.record(z.union([z.boolean(), ruleConfigSchema])).optional(),
-    include: z.array(z.string()).optional(),
-    exclude: z.array(z.string()).optional(),
-    customRulesPath: z.string().optional(),
-    defaultFormatter: formatterSchema.optional(),
-    failOnWarning: z.boolean().optional(),
-    maxIssues: z.number().int().positive().optional(),
-    qualityGate: qualityGateSchema.optional(),
-  })
-  .passthrough();
+// A loose object: unknown keys are retained rather than stripped, so a
+// configuration written for a newer version still parses and its extra keys can
+// be reported as warnings.
+const lintConfigSchema = z.looseObject({
+  $schema: z.string().optional(),
+  extends: z.union([z.string(), z.array(z.string())]).optional(),
+  rules: z.record(z.string(), z.union([z.boolean(), ruleConfigSchema])).optional(),
+  include: z.array(z.string()).optional(),
+  exclude: z.array(z.string()).optional(),
+  customRulesPath: z.string().optional(),
+  defaultFormatter: formatterSchema.optional(),
+  failOnWarning: z.boolean().optional(),
+  maxIssues: z.number().int().positive().optional(),
+  qualityGate: qualityGateSchema.optional(),
+});
 
 const SUPPORTED_KEYS = new Set([
   '$schema',

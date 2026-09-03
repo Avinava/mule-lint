@@ -79,6 +79,36 @@ listed below; a test asserts that reproduces the previous result.
   reads — inline XML is the actual pattern.
 - The rules catalog version stamp was two releases stale.
 
+### Dependencies
+
+Every dependency advisory is cleared: `npm audit` reports zero vulnerabilities for both the
+production and dev trees, where `npm run check` previously stopped at `audit:prod` on three.
+
+- **Security fixes, all within the ranges already declared** — `@xmldom/xmldom` 0.8.15 (which
+  backports the entity-reference and serializer fixes to the 0.8 line), `fast-uri` 3.1.7 and `qs`
+  6.16.0 through the MCP SDK, and `@humanfs/node` 0.16.8 through eslint. The `@xmldom/xmldom` range
+  tightened to `^0.8.15` so a fresh install cannot resolve a vulnerable 0.8.13 or 0.8.14.
+- **Major upgrades**, each verified against the full gate: TypeScript 5 → 6, ESLint 9 → 10,
+  `typescript-eslint` 8.69, zod 3 → 4, js-yaml 4 → 5, commander 11 → 14, vitest 3 → 4, knip 5 → 6,
+  lefthook 1 → 2, lint-staged 15 → 16, and commitlint 19 → 20.
+- `@types/js-yaml` was removed: js-yaml 5 ships its own types, so the separate package was both
+  redundant and pinned a major behind.
+- `vitest.config.ts` became `vitest.config.mts`. Vite warned that the config used ESM syntax in a
+  file loaded as CommonJS, which its next major will stop accepting.
+- Node support is unchanged at `>=20`, and CI still tests on 20 and 22. Several packages are
+  deliberately held below their latest major — `chalk` is ESM-only from v5, and `commander` 15,
+  `vitest` 5, and `@commitlint/*` 21 all require Node 22. The reasons are recorded under
+  **Dependency ceilings** in `CONTRIBUTING.md` so they are not re-litigated.
+
+### Changed (configuration validation)
+
+- Migrated the configuration schema to zod 4: `.passthrough()` became `z.looseObject()`, and
+  `z.record()` calls now pass an explicit key schema. Behaviour is unchanged — unknown keys are
+  still retained, reported as warnings, and dropped from the effective configuration.
+- The error for an invalid enum value now lists the accepted values, so
+  `defaultFormatter: "xml"` reports `expected one of "table"|"json"|"sarif"|"html"|"csv"` rather
+  than `Invalid enum value`.
+
 ### Quality
 
 - 634 tests across 45 test files, up from 457 across 37.
