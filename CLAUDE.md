@@ -6,7 +6,7 @@ MuleSoft static analysis tool — 98 lint rules across 15 runtime categories, Ty
 
 ```bash
 npm run build          # Compile TypeScript → dist/
-npm test              # Run vitest (457 tests)
+npm test              # Run vitest (634 tests)
 npm run lint          # ESLint
 npm run lint:unused   # knip (dead code detection)
 npm run check         # Complete local CI and package verification

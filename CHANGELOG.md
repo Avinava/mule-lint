@@ -2,6 +2,97 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.26.0] - 2026-09-03
+
+Rule coverage release. 82 rules become 98, two existing rules widen, and custom
+XPath rules become usable from the CLI. **Issue counts and quality scores will move on
+upgrade** — sixteen rules arrive enabled at once, and `ERR-003` and `DW-001` report cases they
+previously skipped. Measured against eight real Mule projects the increase was 96 findings against
+2488 existing, about 4%. To upgrade without any change in output, disable the sixteen new rule IDs
+listed below; a test asserts that reproduces the previous result.
+
+### Added
+
+- **Secrets in `.properties` files are now checked** (`CFG-003`). `YAML-004` covered `.yaml`, but
+  nothing read `.properties` at all — they were globbed only to guess an environment name from the
+  filename. The finding names the key and the line and never the value, so a report can be shared
+  without leaking what it found.
+- **Transport security rules.** `SEC-012` reports literal plaintext HTTP on outbound connections,
+  both `protocol="HTTP"` and absolute `http://` URLs; `SEC-013` requires a TLS context when a
+  connection declares HTTPS. Neither existed: `MULE-004` flagged hardcoded URLs as a _hardcoding_
+  problem and nothing looked at the transport. A dynamic protocol such as `${http.protocol}` is
+  unknown at lint time and passes rather than being reported as plaintext.
+- **`SEC-011`** reports a project holding sensitive configuration keys with no Secure Configuration
+  Properties module. Encrypted `![...]` values still require it, because Mule needs the module to
+  decrypt them.
+- **`SEC-014`** reports Basic Authentication as a warning, not an error — it is sometimes a
+  deliberate compatibility choice, and `allowedConnectors` records that decision.
+- **Evidence rules for controls that often live outside the repository** (`SEC-015` CORS,
+  `SEC-016` inbound authentication). Both report that no evidence was _detected_ and say the control
+  may be applied by a gateway policy; neither claims an API is insecure, because static analysis
+  cannot know. `SEC-015` stays silent unless `browserFacing` is set or an OPTIONS flow exists.
+- **API interface controls.** `API-009` (specification present, identified by content so a plain
+  configuration YAML is not mistaken for a contract), `API-010` (versioned path, resolving the
+  listener `basePath` and `path` together), `API-011` (health endpoint), and `HTTP-005` (listener
+  response content type, the inbound counterpart to `MULE-402`).
+- **Runtime practice rules.** `LOG-005` (flow contains a logger), `PERF-003` (batch job declares
+  `blockSize` or `maxConcurrency`), `OPS-004` (scheduler mode), `RES-003` (messaging idempotency
+  evidence), and `MULE-805` (oversized sequential flow). `MULE-805` complements `MULE-801` rather
+  than duplicating it: a 25-step straight-line flow scores a cyclomatic complexity of 1.
+- **`customRulesPath` now works.** It was accepted by the schema, warned about as reserved, and then
+  ignored. It loads a YAML file of declarative XPath rules, resolved relative to the configuration
+  file. A custom rule is an expression and a message template and nothing executable — no URLs, no
+  module imports, no environment interpolation. Expressions compile at load time, so a bad
+  expression or an unbound prefix fails the run with exit code `2` instead of silently matching
+  nothing. `loadCustomXPathRules` is exported for library consumers.
+- **Project rules can now report against the file responsible.** `Issue` gained optional
+  `filePath` and `relativePath`, and the engine groups project findings into real file results. A
+  secret in `config.properties` now points at that file and line in SARIF instead of at
+  `mule-artifact.json`.
+
+### Changed
+
+- **`ERR-003` also reports an error handler that produces no response payload**, which in an HTTP
+  application returns the inbound payload to the caller instead of a described error. Gated on
+  project HTTP context, so non-HTTP handlers are unaffected; blocks delegating through `raise-error`
+  or an external DWL resource still pass.
+- **`DW-001` now inspects inline `ee:set-variable` bodies**, not only `set-payload`, skips bodies
+  that already reference an external resource, and reports once per DataWeave body.
+- `XPathHelper.withNamespaces()` returns a new instance over the merged namespace map instead of
+  mutating the singleton, so a custom rule file cannot change how built-in rules resolve prefixes.
+- Secret-key classification moved into one shared `SensitiveKeys` module. `YamlParser` delegates to
+  it, so a key `YAML-004` flags is a key `CFG-003` flags.
+
+### Fixed
+
+- **The MCP `get_rule_details` category map pointed three categories at pages that do not exist**,
+  so it returned dead documentation slugs for every `api-led`, `naming`, and `dataweave` rule. It is
+  now typed by `RuleCategory`, making an unmapped category a compile error rather than a silent
+  fallback.
+- **The `ERR-003` catalog entry gave the wrong severity** and described `MULE-005`'s `httpStatus`
+  check rather than its own.
+- **The rule priority matrix had drifted**, claiming 14 errors while listing 16. It and the
+  per-family tables are now generated from the registry.
+- `configuration.md` claimed an unknown configuration key exits with code `2`; it warns and
+  continues.
+- `CONTRIBUTING.md` told contributors to put XML test data in `tests/fixtures/`, which no unit test
+  reads — inline XML is the actual pattern.
+- The rules catalog version stamp was two releases stale.
+
+### Quality
+
+- 634 tests across 45 test files, up from 457 across 37.
+- New rules were measured against eight real Mule projects before release. Two false-positive
+  classes were found and excluded by default: `LOG-005` flagged APIKit-generated `*-main` and
+  `*-console` router flows, and `API-010` flagged the generated `/console/*` path. APIKit **route**
+  flows remain checked, and correctly caught routes missing the logger their siblings have.
+- A compatibility suite asserts that disabling the new rules reproduces the previous result, that no
+  secret value reaches any of the five output formats, and that repeated scans are byte-identical.
+
+New rule IDs: `CFG-003`, `SEC-011`, `SEC-012`, `SEC-013`, `SEC-014`, `SEC-015`, `SEC-016`,
+`API-009`, `API-010`, `API-011`, `HTTP-005`, `LOG-005`, `PERF-003`, `OPS-004`, `RES-003`,
+`MULE-805`.
+
 ## [1.25.0] - 2026-08-18
 
 Documentation release. No rule, engine, or CLI behavior changed.
