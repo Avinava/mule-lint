@@ -255,12 +255,16 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 | Property       | Value          |
 | -------------- | -------------- |
-| **Severity**   | Warning        |
+| **Severity**   | Info           |
 | **Category**   | Error Handling |
 | **Issue Type** | Bug            |
 | **Fixable**    | No             |
 
-**Description:** Error handlers should set both an `httpStatus` variable and a response body (via `set-payload` or `ee:set-payload`). Missing either results in incomplete error responses to API consumers.
+**Description:** Error responses should include both a `correlationId` and a `message` field so a failure can be traced and explained. The rule inspects the DataWeave body of `ee:set-payload` elements inside `on-error-continue` and `on-error-propagate` blocks.
+
+> **Note (v1.26):** The rule now also reports an error block that produces no response payload at all, which in an HTTP application returns the inbound payload to the caller instead of a described error. That check applies only to HTTP-exposed projects, so non-HTTP handlers are not forced to build a response body. Blocks delegating through `raise-error` or an external DWL resource still pass.
+
+> **Note:** The `httpStatus` variable is MULE-005's concern, not this rule's.
 
 ---
 
@@ -1606,6 +1610,70 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 
 ---
 
+### API-009: API Specification Present
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | API-Led |
+| **Fixable**  | No      |
+
+**Description:** An HTTP-exposed project should include a RAML or OpenAPI document so the contract is versioned alongside the implementation. Reported once per project.
+
+**Check Logic:** Detection is by content, not location. A `.raml` file whose first meaningful line begins with `#%RAML`, or a `.yaml`, `.yml`, or `.json` file with a top-level `openapi` or `swagger` key, anywhere under `src/main/resources`. Generated output and `target` are excluded.
+
+**Options:**
+
+| Option                    | Default | Description                                               |
+| ------------------------- | ------- | --------------------------------------------------------- |
+| `allowExchangeDependency` | `false` | Accept a plausible API contract dependency from `pom.xml` |
+
+> **Note:** This rule detects and identifies a specification; it does not validate one. Contract validation is a separate concern.
+
+---
+
+### API-010: Versioned API Path
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Warning |
+| **Category** | API-Led |
+| **Fixable**  | No      |
+
+**Description:** An API path should carry a version segment so a breaking change can be released alongside the existing contract rather than replacing it.
+
+**Check Logic:** The effective path is the listener configuration's `basePath` joined with the listener's own `path`; either part may supply the version. Accepted forms are a literal `/v1`-style segment and a version placeholder such as `/${api.version}` or `/v${api.majorVersion}`.
+
+**Options:**
+
+| Option                 | Default | Description                                   |
+| ---------------------- | ------- | --------------------------------------------- |
+| `allowSemanticVersion` | `false` | Also accept a semantic segment such as `/1.2` |
+
+> **Note:** A listener whose `config-ref` cannot be resolved produces no finding, because the effective path is unknown rather than unversioned.
+
+---
+
+### API-011: Health Endpoint Present
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Info    |
+| **Category** | API-Led |
+| **Fixable**  | No      |
+
+**Description:** An HTTP-exposed application should offer a health endpoint so load balancers and monitoring can distinguish a running worker from a healthy one. Reported once per project.
+
+**Check Logic:** Evidence is a recognised indicator in either a literal listener path or a flow name, matched case-insensitively. Non-HTTP batch, library, and event-only projects are skipped.
+
+**Options:**
+
+| Option       | Default                                                                                  | Description                         |
+| ------------ | ---------------------------------------------------------------------------------------- | ----------------------------------- |
+| `indicators` | `["health","healthz","ping","status","heartbeat","ready","readiness","live","liveness"]` | Path or flow-name markers to accept |
+
+---
+
 ## Connector Rules
 
 ### SF-001: Salesforce Replay Channel Config
@@ -1641,6 +1709,26 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 | **Fixable**  | No      |
 
 **Description:** HTTP request configurations should set `connectionIdleTimeout` to release idle connections and prevent resource exhaustion under load.
+
+---
+
+### HTTP-005: Listener Response Content Type
+
+| Property     | Value |
+| ------------ | ----- |
+| **Severity** | Info  |
+| **Category** | HTTP  |
+| **Fixable**  | No    |
+
+**Description:** An HTTP listener response should make its content type visible, through a header, a `mimeType` attribute, or a DataWeave `output` directive. A client that cannot tell JSON from text has to guess. Applies to both `http:response` and `http:error-response`.
+
+**Options:**
+
+| Option                 | Default | Description                                                            |
+| ---------------------- | ------- | ---------------------------------------------------------------------- |
+| `reportDynamicHeaders` | `true`  | Emit a "verify content type" finding when headers are expression-built |
+
+> **Note:** MULE-402 remains responsible for outbound request content type.
 
 ---
 

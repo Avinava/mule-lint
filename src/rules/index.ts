@@ -37,6 +37,10 @@ import { TlsContextRequiredRule } from './security/TlsContextRequiredRule';
 import { BasicAuthenticationRule } from './security/BasicAuthenticationRule';
 import { CorsPolicyEvidenceRule } from './security/CorsPolicyEvidenceRule';
 import { InboundAuthenticationEvidenceRule } from './security/InboundAuthenticationEvidenceRule';
+import { ApiSpecificationPresentRule } from './api-led/ApiSpecificationPresentRule';
+import { VersionedApiPathRule } from './api-led/VersionedApiPathRule';
+import { HealthEndpointRule } from './api-led/HealthEndpointRule';
+import { ListenerResponseContentTypeRule } from './http/ListenerResponseContentTypeRule';
 
 // Import all rules - Logging
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -158,6 +162,10 @@ export { TlsContextRequiredRule } from './security/TlsContextRequiredRule';
 export { BasicAuthenticationRule } from './security/BasicAuthenticationRule';
 export { CorsPolicyEvidenceRule } from './security/CorsPolicyEvidenceRule';
 export { InboundAuthenticationEvidenceRule } from './security/InboundAuthenticationEvidenceRule';
+export { ApiSpecificationPresentRule } from './api-led/ApiSpecificationPresentRule';
+export { VersionedApiPathRule } from './api-led/VersionedApiPathRule';
+export { HealthEndpointRule } from './api-led/HealthEndpointRule';
+export { ListenerResponseContentTypeRule } from './http/ListenerResponseContentTypeRule';
 
 // Export individual rules - Logging
 export { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -341,6 +349,12 @@ export const ALL_RULES: Rule[] = [
   new BasicAuthenticationRule(), // SEC-014: Basic Authentication Usage
   new CorsPolicyEvidenceRule(), // SEC-015: CORS Policy Evidence
   new InboundAuthenticationEvidenceRule(), // SEC-016: Inbound Authentication Evidence
+
+  // API interface controls (API-009..API-011, HTTP-005)
+  new ApiSpecificationPresentRule(), // API-009: API Specification Present
+  new VersionedApiPathRule(), // API-010: Versioned API Path
+  new HealthEndpointRule(), // API-011: Health Endpoint Present
+  new ListenerResponseContentTypeRule(), // HTTP-005: Listener Response Content Type
 
   // Code Hygiene Rules (HYG-001, HYG-002, HYG-003, HYG-004, HYG-005)
   new ExcessiveLoggersRule(),
