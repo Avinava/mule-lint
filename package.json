@@ -1,6 +1,6 @@
 {
   "name": "@sfdxy/mule-lint",
-  "version": "1.29.1",
+  "version": "1.30.0",
   "description": "Static analysis tool for MuleSoft applications - supports humans, AI agents, and CI/CD pipelines",
   "author": "Avinava",
   "license": "MIT",
