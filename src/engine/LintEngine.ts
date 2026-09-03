@@ -18,6 +18,29 @@ import { MetricsAggregator } from '../core/MetricsAggregator';
 import { collectFileMetrics as collectMetrics } from '../core/MetricsCollector';
 import { getErrorMessage } from '../core/errors';
 import { ProjectRule } from '../rules/base/ProjectRule';
+import { getLineNumber } from '../core/XPathHelper';
+
+/**
+ * Element local-name fragments that count as inbound authentication evidence.
+ */
+const AUTH_ELEMENT_PATTERNS = [
+  'oauth',
+  'openid',
+  'jwt',
+  'client-id-enforcement',
+  'basic-security-filter',
+  'authentication-filter',
+  'authorization-filter',
+  'validate-client',
+  'spring-security',
+  'security-manager',
+];
+
+/** POM artifactId fragments indicating the Secure Configuration Properties module. */
+const SECURE_PROPERTIES_ARTIFACTS = ['secure-configuration-property', 'secure-properties'];
+
+/** POM artifactId fragments indicating a messaging connector. */
+const MESSAGING_ARTIFACTS = ['mule-jms-connector', 'anypoint-mq'];
 
 /**
  * Engine options
@@ -89,7 +112,7 @@ export class LintEngine {
     // Pre-scan: collect cross-file context before rule execution
     const { allFlowRefs, allFlowNames, projectContext } = isStandalone
       ? { allFlowRefs: undefined, allFlowNames: undefined, projectContext: undefined }
-      : this.preScanFiles(files);
+      : this.preScanFiles(files, projectRoot);
 
     // Process each file and collect metrics
     const fileResults: FileResult[] = [];
@@ -132,15 +155,7 @@ export class LintEngine {
         allFlowNames,
         projectContext,
       );
-      if (projectIssues.length > 0) {
-        // Add a virtual file result for project-level issues
-        fileResults.push({
-          filePath: path.join(projectRoot, 'mule-artifact.json'), // Virtual target
-          relativePath: 'Project Structure',
-          issues: projectIssues,
-          parsed: true,
-        });
-      }
+      fileResults.push(...this.groupProjectIssues(projectIssues, projectRoot));
     }
 
     // Detect environment configurations from property files
@@ -430,6 +445,272 @@ export class LintEngine {
   }
 
   /**
+   * Record inventory facts about one element during the pre-scan walk.
+   *
+   * Called for every element of every cached document, so it must stay cheap:
+   * local-name comparisons only, no XPath and no re-parsing.
+   */
+  private collectInventory(
+    el: Element,
+    localName: string,
+    prefix: string,
+    namespace: string,
+    relativePath: string,
+    projectContext: ProjectContext,
+  ): void {
+    const isHttp = prefix === 'http' || namespace.endsWith('/mule/http');
+
+    // HTTP listeners and their global configs, for path/versioning analysis
+    if (localName === 'listener' && isHttp) {
+      projectContext.listenerEndpoints?.push({
+        relativePath,
+        line: getLineNumber(el),
+        flowName: this.findEnclosingFlowName(el),
+        configRef: el.getAttribute('config-ref') ?? undefined,
+        path: el.getAttribute('path') ?? undefined,
+        allowedMethods: el.getAttribute('allowedMethods') ?? undefined,
+      });
+    }
+    if (localName === 'listener-config' && isHttp) {
+      const name = el.getAttribute('name');
+      if (name) {
+        projectContext.listenerConfigs?.push({
+          name,
+          basePath: el.getAttribute('basePath') ?? undefined,
+        });
+      }
+    }
+
+    // Secure Configuration Properties module
+    if (
+      localName === 'secure-configuration-properties' ||
+      (localName === 'config' && namespace.includes('secure-properties'))
+    ) {
+      projectContext.hasSecurePropertiesConfig = true;
+    }
+
+    // Object Store usage
+    if (prefix === 'os' || namespace.endsWith('/mule/os')) {
+      projectContext.hasObjectStoreUsage = true;
+    }
+    if (localName === 'private-object-store' || localName === 'object-store') {
+      projectContext.hasObjectStoreUsage = true;
+    }
+
+    // Messaging connectors
+    if (
+      prefix === 'jms' ||
+      prefix === 'anypoint-mq' ||
+      namespace.endsWith('/mule/jms') ||
+      namespace.endsWith('/mule/anypoint-mq')
+    ) {
+      projectContext.hasMessagingUsage = true;
+    }
+
+    // Idempotency
+    if (localName === 'idempotent-message-validator') {
+      projectContext.hasIdempotencyEvidence = true;
+    }
+
+    // CORS
+    if (localName === 'cors' || localName.startsWith('cors-')) {
+      projectContext.hasCorsConfig = true;
+    }
+
+    // Batch
+    if (localName === 'job' && (prefix === 'batch' || namespace.endsWith('/mule/batch'))) {
+      projectContext.hasBatchJob = true;
+    }
+
+    // Inbound authentication evidence
+    if (AUTH_ELEMENT_PATTERNS.some((pattern) => localName.includes(pattern))) {
+      projectContext.hasAuthEvidence = true;
+    }
+
+    // APIKit OPTIONS flow, used as the CORS applicability signal
+    if (localName === 'flow') {
+      const flowName = el.getAttribute('name') ?? '';
+      if (/\boptions\b/i.test(flowName.replace(/[:\\/]/g, ' '))) {
+        projectContext.hasOptionsFlow = true;
+      }
+    }
+  }
+
+  /**
+   * Walk up from a node to the name of the flow or sub-flow containing it.
+   */
+  private findEnclosingFlowName(node: Node): string | undefined {
+    let current: Node | null = node.parentNode;
+    while (current) {
+      const localName = (current as Element).localName;
+      if (localName === 'flow' || localName === 'sub-flow') {
+        return (current as Element).getAttribute('name') ?? undefined;
+      }
+      current = current.parentNode;
+    }
+    return undefined;
+  }
+
+  /**
+   * Discover API specifications and POM dependencies once per project scan.
+   *
+   * A malformed or unreadable resource is skipped rather than aborting the
+   * scan; the rule that depends on it simply sees no evidence.
+   */
+  private collectProjectResources(projectRoot: string, projectContext: ProjectContext): void {
+    const specFiles: string[] = [];
+    const resourcesPath = path.join(projectRoot, 'src/main/resources');
+
+    if (fs.existsSync(resourcesPath)) {
+      const candidates = fg.sync(['**/*.raml', '**/*.yaml', '**/*.yml', '**/*.json'], {
+        cwd: resourcesPath,
+        onlyFiles: true,
+        ignore: ['**/target/**', '**/node_modules/**'],
+      });
+
+      for (const candidate of candidates.sort()) {
+        const absolutePath = path.join(resourcesPath, candidate);
+        if (this.looksLikeApiSpec(absolutePath)) {
+          specFiles.push(path.join('src/main/resources', candidate));
+        }
+      }
+    }
+
+    projectContext.apiSpecFiles = specFiles;
+    projectContext.hasApiSpec = specFiles.length > 0;
+    projectContext.dependencyArtifactIds = this.readPomArtifactIds(projectRoot);
+
+    if (
+      projectContext.dependencyArtifactIds.some((id) =>
+        SECURE_PROPERTIES_ARTIFACTS.some((artifact) => id.includes(artifact)),
+      )
+    ) {
+      projectContext.hasSecurePropertiesConfig = true;
+    }
+    if (
+      projectContext.dependencyArtifactIds.some((id) =>
+        MESSAGING_ARTIFACTS.some((artifact) => id.includes(artifact)),
+      )
+    ) {
+      projectContext.hasMessagingUsage = true;
+    }
+    if (projectContext.dependencyArtifactIds.some((id) => id.includes('objectstore'))) {
+      projectContext.hasObjectStoreUsage = true;
+    }
+  }
+
+  /**
+   * Identify a RAML or OpenAPI document by its content, not its location.
+   *
+   * Only the first part of the file is inspected so a large specification does
+   * not have to be read in full.
+   */
+  private looksLikeApiSpec(absolutePath: string): boolean {
+    let head: string;
+    try {
+      head = fs.readFileSync(absolutePath, 'utf8').slice(0, 4096);
+    } catch {
+      return false;
+    }
+
+    const extension = path.extname(absolutePath).toLowerCase();
+
+    if (extension === '.raml') {
+      const firstMeaningfulLine = head
+        .split(/\r?\n/)
+        .find((line) => line.trim().length > 0)
+        ?.trim();
+      return firstMeaningfulLine?.startsWith('#%RAML') ?? false;
+    }
+
+    if (extension === '.json') {
+      return /"(openapi|swagger)"\s*:/.test(head);
+    }
+
+    // YAML: a top-level openapi/swagger key, i.e. at column zero
+    return /^(openapi|swagger)\s*:/m.test(head);
+  }
+
+  /**
+   * Read Maven artifactIds from pom.xml.
+   *
+   * A regex is sufficient and avoids parsing a document that is not a Mule
+   * configuration; the POM is only used for coarse dependency evidence.
+   */
+  private readPomArtifactIds(projectRoot: string): string[] {
+    const pomPath = path.join(projectRoot, 'pom.xml');
+    if (!fs.existsSync(pomPath)) {
+      return [];
+    }
+
+    try {
+      const content = fs.readFileSync(pomPath, 'utf8');
+      const ids = [...content.matchAll(/<artifactId>\s*([^<\s]+)\s*<\/artifactId>/g)].map(
+        (match) => match[1] ?? '',
+      );
+      return [...new Set(ids.filter((id) => id.length > 0))].sort();
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Turn project-rule issues into file results.
+   *
+   * Issues carrying a relativePath (reported by a project rule against a real
+   * resource such as a `.properties` file) get their own file result so
+   * formatters and SARIF point at the responsible file. Everything else keeps
+   * the synthetic project entry. Groups are sorted by path so output does not
+   * depend on filesystem enumeration order.
+   */
+  private groupProjectIssues(issues: Issue[], projectRoot: string): FileResult[] {
+    if (issues.length === 0) {
+      return [];
+    }
+
+    const located = new Map<string, Issue[]>();
+    const unlocated: Issue[] = [];
+
+    for (const issue of issues) {
+      const relativePath = issue.relativePath;
+      if (relativePath) {
+        const bucket = located.get(relativePath);
+        if (bucket) {
+          bucket.push(issue);
+        } else {
+          located.set(relativePath, [issue]);
+        }
+      } else {
+        unlocated.push(issue);
+      }
+    }
+
+    const results: FileResult[] = [];
+
+    if (unlocated.length > 0) {
+      results.push({
+        filePath: path.join(projectRoot, 'mule-artifact.json'), // Virtual target
+        relativePath: 'Project Structure',
+        issues: unlocated,
+        parsed: true,
+      });
+    }
+
+    for (const relativePath of [...located.keys()].sort()) {
+      const fileIssues = located.get(relativePath) ?? [];
+      fileIssues.sort((a, b) => a.line - b.line || a.ruleId.localeCompare(b.ruleId));
+      results.push({
+        filePath: path.join(projectRoot, relativePath),
+        relativePath,
+        issues: fileIssues,
+        parsed: true,
+      });
+    }
+
+    return results;
+  }
+
+  /**
    * Run project-level rules that don't depend on specific files
    */
   private runProjectRules(
@@ -506,7 +787,10 @@ export class LintEngine {
    * HYG-004 cross-file flow-ref target validation,
    * MULE-005 HTTP-only project detection).
    */
-  private preScanFiles(files: ScannedFile[]): {
+  private preScanFiles(
+    files: ScannedFile[],
+    projectRoot: string,
+  ): {
     allFlowRefs: Set<string>;
     allFlowNames: Set<string>;
     projectContext: ProjectContext;
@@ -518,6 +802,16 @@ export class LintEngine {
       hasApikitRouter: false,
       hasApiKitConfig: false,
       hasAutoDiscovery: false,
+      hasSecurePropertiesConfig: false,
+      hasObjectStoreUsage: false,
+      hasMessagingUsage: false,
+      hasIdempotencyEvidence: false,
+      hasCorsConfig: false,
+      hasOptionsFlow: false,
+      hasAuthEvidence: false,
+      hasBatchJob: false,
+      listenerEndpoints: [],
+      listenerConfigs: [],
     };
 
     // Clear the cache at the start of each scan
@@ -581,6 +875,15 @@ export class LintEngine {
           if (localName === 'autodiscovery' || localName === 'api-autodiscovery') {
             projectContext.hasAutoDiscovery = true;
           }
+
+          this.collectInventory(
+            el,
+            localName,
+            prefix,
+            namespace,
+            file.relativePath,
+            projectContext,
+          );
         }
       } catch {
         // Ignore unreadable files during pre-scan
@@ -588,6 +891,8 @@ export class LintEngine {
     }
 
     // Detect project layer from directory name, flow names, and content
+    this.collectProjectResources(projectRoot, projectContext);
+
     projectContext.projectLayer = this.detectProjectLayer(files, allFlowNames, projectContext);
 
     return { allFlowRefs, allFlowNames, projectContext };

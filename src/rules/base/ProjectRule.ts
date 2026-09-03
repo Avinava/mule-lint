@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { Severity, ValidationContext, Issue } from '../../types';
 import { BaseRule } from './BaseRule';
 
@@ -75,5 +76,36 @@ export abstract class ProjectRule extends BaseRule {
       severity: options?.severity ?? this.severity,
       suggestion: options?.suggestion,
     };
+  }
+
+  /**
+   * Create a project-level issue that points at a specific file.
+   *
+   * Project rules that inspect resources — property files, API specifications,
+   * the POM — should use this so the finding is reported against the real file
+   * and line rather than being collapsed into the synthetic project entry.
+   * The engine groups these into their own file results.
+   *
+   * @param relativePath - Path relative to the project root
+   * @param line - 1-indexed line within that file, or 0 when unknown
+   */
+  protected createLocatedIssue(
+    relativePath: string,
+    line: number,
+    message: string,
+    options?: { suggestion?: string; severity?: Severity; projectRoot?: string },
+  ): Issue {
+    const issue: Issue = {
+      line,
+      message,
+      ruleId: this.id,
+      severity: options?.severity ?? this.severity,
+      suggestion: options?.suggestion,
+      relativePath,
+    };
+    if (options?.projectRoot) {
+      issue.filePath = path.join(options.projectRoot, relativePath);
+    }
+    return issue;
   }
 }

@@ -49,6 +49,19 @@ export interface Issue {
   suggestion?: string | undefined;
   /** Optional code snippet showing the problematic code */
   codeSnippet?: string | undefined;
+  /**
+   * Absolute path of the file this issue belongs to.
+   * Only set by project-level rules that report against a file other than the
+   * one being validated (e.g. a `.properties` resource). Per-file rules leave
+   * this undefined and are attributed to the file under validation.
+   */
+  filePath?: string | undefined;
+  /**
+   * Project-root-relative path matching {@link Issue.filePath}.
+   * Used by formatters and the engine to group project findings under the real
+   * file rather than a synthetic project entry.
+   */
+  relativePath?: string | undefined;
 }
 
 /**
@@ -84,6 +97,63 @@ export interface ProjectContext {
   hasAutoDiscovery?: boolean | undefined;
   /** Detected project layer based on naming conventions and content */
   projectLayer?: ProjectLayer | undefined;
+
+  // --- Resource and dependency inventory (collected once during pre-scan) ---
+
+  /** True if an API specification (RAML or OpenAPI) was found in project resources */
+  hasApiSpec?: boolean | undefined;
+  /** Project-relative paths of detected API specification files */
+  apiSpecFiles?: string[] | undefined;
+  /** Maven artifactIds declared in pom.xml */
+  dependencyArtifactIds?: string[] | undefined;
+  /** True if a Secure Configuration Properties module is configured in XML or declared in the POM */
+  hasSecurePropertiesConfig?: boolean | undefined;
+  /** True if any Object Store config or operation is present */
+  hasObjectStoreUsage?: boolean | undefined;
+  /** True if JMS or Anypoint MQ usage was detected */
+  hasMessagingUsage?: boolean | undefined;
+  /** True if an idempotent-message-validator component is present */
+  hasIdempotencyEvidence?: boolean | undefined;
+  /** True if a CORS configuration element is present */
+  hasCorsConfig?: boolean | undefined;
+  /** True if an APIKit flow handling the OPTIONS method is present */
+  hasOptionsFlow?: boolean | undefined;
+  /** True if a recognized inbound authentication component is present */
+  hasAuthEvidence?: boolean | undefined;
+  /** True if a batch job is defined anywhere in the project */
+  hasBatchJob?: boolean | undefined;
+  /** Every HTTP listener found in the project, with its source location */
+  listenerEndpoints?: ListenerEndpoint[] | undefined;
+  /** Global http:listener-config elements keyed by name, for basePath resolution */
+  listenerConfigs?: ListenerConfigInfo[] | undefined;
+}
+
+/**
+ * A single HTTP listener discovered during the pre-scan.
+ */
+export interface ListenerEndpoint {
+  /** Project-relative path of the file declaring the listener */
+  relativePath: string;
+  /** 1-indexed line of the listener element */
+  line: number;
+  /** Name of the enclosing flow, when there is one */
+  flowName?: string | undefined;
+  /** Value of the listener's config-ref attribute */
+  configRef?: string | undefined;
+  /** Value of the listener's path attribute */
+  path?: string | undefined;
+  /** Value of the listener's allowedMethods attribute */
+  allowedMethods?: string | undefined;
+}
+
+/**
+ * A global HTTP listener configuration discovered during the pre-scan.
+ */
+export interface ListenerConfigInfo {
+  /** Value of the config's name attribute */
+  name: string;
+  /** Value of the config's basePath attribute */
+  basePath?: string | undefined;
 }
 
 /**
