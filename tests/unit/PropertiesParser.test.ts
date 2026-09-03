@@ -50,6 +50,19 @@ describe('PropertiesParser', () => {
       expect(entries).toEqual([{ key: 'lonely', value: '', line: 1 }]);
     });
 
+    it('decodes Java unicode escapes in keys and values', () => {
+      // Java resolves \uXXXX before anything sees the key, so a sensitive key
+      // written this way must still be recognised as sensitive.
+      const entries = parseProperties('db.pass\\u0077ord=literal\ngreeting=caf\\u00e9\n');
+      expect(entries[0]?.key).toBe('db.password');
+      expect(entries[1]?.value).toBe('café');
+    });
+
+    it('leaves a malformed unicode escape alone', () => {
+      const entries = parseProperties('a=\\uZZZZ\n');
+      expect(entries[0]?.value).toBe('uZZZZ');
+    });
+
     it('preserves placeholder values verbatim', () => {
       const entries = parseProperties('p=${secure::db.password}\n');
       expect(entries[0]?.value).toBe('${secure::db.password}');

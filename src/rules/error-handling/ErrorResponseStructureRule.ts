@@ -119,17 +119,30 @@ export class ErrorResponseStructureRule extends BaseRule {
    * and a raise-error that hands responsibility to an outer handler.
    */
   private producesPayload(block: Node): boolean {
-    const payloadProducers = [
+    // Components that set the payload directly, or hand the response to an
+    // outer handler.
+    const directProducers = [
       'set-payload',
-      'transform',
       'raise-error',
       'set-response',
       'invoke',
       'invoke-static',
     ];
+    if (
+      directProducers.some((producer) => this.exists(`.//*[local-name()="${producer}"]`, block))
+    ) {
+      return true;
+    }
 
-    return payloadProducers.some((producer) =>
-      this.exists(`.//*[local-name()="${producer}"]`, block),
-    );
+    // A transform only produces a response if it actually assigns the payload.
+    // One that sets variables alone still returns the inbound payload, so it
+    // must not satisfy the check.
+    for (const transform of this.select('.//*[local-name()="transform"]', block)) {
+      if (this.exists('.//*[local-name()="set-payload"]', transform)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

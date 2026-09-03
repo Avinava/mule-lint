@@ -1809,6 +1809,8 @@ The APIKit console is generated scaffolding rather than an API surface, so its f
 
 **Description:** An HTTP listener response should make its content type visible, through a header, a `mimeType` attribute, or a DataWeave `output` directive. A client that cannot tell JSON from text has to guess. Applies to both `http:response` and `http:error-response`.
 
+**Check Logic:** The content type may be declared on the response itself or on the payload the flow produces. The two responses are checked against different parts of the flow — an `error-response` against the error handler, a success `response` against the processors before it — so a JSON error transform does not vouch for an untyped success response.
+
 **Options:**
 
 | Option                 | Default | Description                                                            |
@@ -1923,7 +1925,7 @@ The APIKit console is generated scaffolding rather than an API surface, so its f
 
 **Description:** Queue-based delivery is at-least-once, so a consumer can legitimately receive the same message twice. Without a deduplication mechanism, a retry becomes a duplicate side effect. Reported once per project.
 
-**Check Logic:** Messaging usage is detected from JMS or Anypoint MQ namespaces, elements, or POM dependencies. Object Store usage and Mule's `idempotent-message-validator` both count as idempotency evidence.
+**Check Logic:** Applies only where a messaging _consumer_ is present — a JMS or Anypoint MQ listener, subscriber, or consume operation. A publisher, or a bare connector configuration, receives nothing and so cannot process a duplicate. Object Store usage and Mule's `idempotent-message-validator` both count as idempotency evidence.
 
 **Why This Matters:** This stays an info finding because whether duplication matters depends on the operation — a read is naturally idempotent, an append is not.
 

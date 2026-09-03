@@ -54,8 +54,19 @@ const INBOUND_AUTH_PATTERNS = ['jwt-valid', 'client-id-enforcement', 'oauth2-pro
 /** POM artifactId fragments indicating the Secure Configuration Properties module. */
 const SECURE_PROPERTIES_ARTIFACTS = ['secure-configuration-property', 'secure-properties'];
 
-/** POM artifactId fragments indicating a messaging connector. */
-const MESSAGING_ARTIFACTS = ['mule-jms-connector', 'anypoint-mq'];
+/**
+ * Messaging elements that *receive* a message.
+ *
+ * A dependency on a messaging connector, or a publish operation, says nothing
+ * about consuming, so neither is treated as consumer evidence.
+ */
+const MESSAGING_CONSUMER_ELEMENTS = new Set([
+  'listener',
+  'subscriber',
+  'consume',
+  'on-new-message',
+  'message-listener',
+]);
 import { isRuleEnabledInProfile, resolveRuleProfile, type RuleProfileName } from '../catalog';
 
 /**
@@ -589,13 +600,15 @@ export class LintEngine {
       projectContext.hasObjectStoreUsage = true;
     }
 
-    // Messaging connectors
-    if (
+    // Messaging *consumers*. A publisher, or a bare connector configuration,
+    // receives nothing and so cannot process a duplicate; RES-003 is about the
+    // consuming side, so only inbound elements count.
+    const isMessagingNamespace =
       prefix === 'jms' ||
       prefix === 'anypoint-mq' ||
       namespace.endsWith('/mule/jms') ||
-      namespace.endsWith('/mule/anypoint-mq')
-    ) {
+      namespace.endsWith('/mule/anypoint-mq');
+    if (isMessagingNamespace && MESSAGING_CONSUMER_ELEMENTS.has(localName)) {
       projectContext.hasMessagingUsage = true;
     }
 
@@ -699,13 +712,6 @@ export class LintEngine {
     ) {
       projectContext.hasSecurePropertiesConfig = true;
     }
-    if (
-      projectContext.dependencyArtifactIds.some((id) =>
-        MESSAGING_ARTIFACTS.some((artifact) => id.includes(artifact)),
-      )
-    ) {
-      projectContext.hasMessagingUsage = true;
-    }
     if (projectContext.dependencyArtifactIds.some((id) => id.includes('objectstore'))) {
       projectContext.hasObjectStoreUsage = true;
     }
@@ -744,10 +750,12 @@ export class LintEngine {
   }
 
   /**
-   * Read Maven artifactIds from pom.xml.
+   * Read declared dependency artifactIds from pom.xml.
    *
-   * A regex suffices and avoids parsing a document that is not a Mule
-   * configuration; the POM is only coarse dependency evidence.
+   * Only `<dependency>` elements are read. Scanning every `<artifactId>` would
+   * also pick up the project's own coordinates and its build plugins, so a
+   * project merely *named* `orders-api` would look like it depends on an API
+   * contract.
    */
   private readPomArtifactIds(projectRoot: string): string[] {
     const pomPath = path.join(projectRoot, 'pom.xml');
@@ -757,10 +765,17 @@ export class LintEngine {
 
     try {
       const content = fs.readFileSync(pomPath, 'utf8');
-      const ids = [...content.matchAll(/<artifactId>\s*([^<\s]+)\s*<\/artifactId>/g)].map(
-        (match) => match[1] ?? '',
-      );
-      return [...new Set(ids.filter((id) => id.length > 0))].sort();
+      const ids: string[] = [];
+
+      for (const block of content.matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)) {
+        const body = block[1] ?? '';
+        const id = /<artifactId>\s*([^<\s]+)\s*<\/artifactId>/.exec(body)?.[1];
+        if (id) {
+          ids.push(id);
+        }
+      }
+
+      return [...new Set(ids)].sort();
     } catch {
       return [];
     }

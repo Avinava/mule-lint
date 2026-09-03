@@ -327,6 +327,65 @@ describe('HTTP-005 ListenerResponseContentTypeRule', () => {
     expect(issues[0]?.message).toContain('error-response');
   });
 
+  it('accepts a mimeType declared on the payload the flow produces', () => {
+    // This is the fix the rule itself suggests, so it has to clear the finding.
+    const issues = run(`
+      <flow name="f">
+        <http:listener config-ref="L" path="/orders">
+          <http:response statusCode="200"/>
+        </http:listener>
+        <set-payload value="#[payload]" mimeType="application/json"/>
+      </flow>`);
+    expect(issues).toHaveLength(0);
+  });
+
+  it('accepts a DataWeave output directive in the flow', () => {
+    const issues = run(`
+      <flow name="f">
+        <http:listener config-ref="L" path="/orders">
+          <http:response statusCode="200"/>
+        </http:listener>
+        <ee:transform><ee:message><ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload></ee:message></ee:transform>
+      </flow>`);
+    expect(issues).toHaveLength(0);
+  });
+
+  it('does not let an error handler’s JSON transform clear the success response', () => {
+    // The error handler produces the error body, not the success body; letting
+    // it vouch for the success response would hide a genuinely untyped one.
+    const issues = run(`
+      <flow name="f">
+        <http:listener config-ref="L" path="/orders">
+          <http:response statusCode="200"/>
+        </http:listener>
+        <set-payload value="#[payload]"/>
+        <error-handler>
+          <on-error-propagate>
+            <ee:transform><ee:message><ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{}]]></ee:set-payload></ee:message></ee:transform>
+          </on-error-propagate>
+        </error-handler>
+      </flow>`);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.message).toContain('<response>');
+  });
+
+  it('still reports when the flow declares no content type anywhere', () => {
+    const issues = run(`
+      <flow name="f">
+        <http:listener config-ref="L" path="/orders">
+          <http:response statusCode="200"/>
+        </http:listener>
+        <set-payload value="#[payload]"/>
+      </flow>`);
+    expect(issues).toHaveLength(1);
+  });
+
   it('ignores responses outside a listener', () => {
     expect(run(`<flow name="f"><http:request config-ref="A" path="/x"/></flow>`)).toHaveLength(0);
   });
@@ -370,6 +429,22 @@ describe('ERR-003 error handlers with no payload', () => {
       true,
     );
     expect(issues).toHaveLength(0);
+  });
+
+  it('does not accept a transform that only sets variables', () => {
+    // The handler still returns the inbound payload to the caller, so the
+    // missing-response check must not be satisfied by a variables-only
+    // transform.
+    const issues = run(
+      `<flow name="f"><error-handler>
+         <on-error-propagate>
+           <ee:transform><ee:variables><ee:set-variable variableName="httpStatus">404</ee:set-variable></ee:variables></ee:transform>
+         </on-error-propagate>
+       </error-handler></flow>`,
+      true,
+    );
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.message).toContain('no response payload');
   });
 
   it('accepts a transform using an external DWL resource', () => {

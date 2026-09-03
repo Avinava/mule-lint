@@ -29,7 +29,16 @@ export class ListenerResponseContentTypeRule extends BaseRule {
     );
 
     for (const response of responses) {
-      const state = this.inspectContentType(response);
+      let state = this.inspectContentType(response);
+
+      // The response element is not the only place a content type can be
+      // declared: the flow that produces the body may set a mimeType or a
+      // DataWeave output directive. That is also the fix this rule suggests,
+      // so it has to clear the finding.
+      if (state !== 'present' && this.flowDeclaresContentType(response)) {
+        state = 'present';
+      }
+
       if (state === 'present') {
         continue;
       }
@@ -110,5 +119,60 @@ export class ListenerResponseContentTypeRule extends BaseRule {
     }
 
     return sawDynamic ? 'dynamic-unverified' : 'missing';
+  }
+
+  /**
+   * Check whether the part of the flow that produces this response declares a
+   * content type on the payload.
+   *
+   * The two responses are checked against different parts of the flow: an
+   * `error-response` is produced by the error handler, and a success `response`
+   * by the processors before it. Searching the whole flow for either would let
+   * a JSON error transform silently clear a genuinely untyped success response.
+   */
+  private flowDeclaresContentType(response: Node): boolean {
+    let flow: Node | null = response.parentNode;
+    while (flow) {
+      const localName = (flow as Element).localName;
+      if (localName === 'flow' || localName === 'sub-flow') {
+        break;
+      }
+      flow = flow.parentNode;
+    }
+    if (!flow) {
+      return false;
+    }
+
+    const isErrorResponse = (response as Element).localName === 'error-response';
+    const scopes = Array.from(flow.childNodes).filter((child) => {
+      if (child.nodeType !== 1) {
+        return false;
+      }
+      const isErrorHandler = (child as Element).localName === 'error-handler';
+      return isErrorResponse ? isErrorHandler : !isErrorHandler;
+    });
+
+    return scopes.some((scope) => this.declaresContentType(scope));
+  }
+
+  /** True when a subtree declares a MIME type or a DataWeave output directive. */
+  private declaresContentType(scope: Node): boolean {
+    for (const node of this.select(
+      'descendant-or-self::*[local-name()="set-payload" or local-name()="transform" or local-name()="message"]',
+      scope,
+    )) {
+      const mimeType = this.getAttribute(node, 'mimeType');
+      if (mimeType && mimeType.trim().length > 0) {
+        return true;
+      }
+    }
+
+    for (const transform of this.select('descendant-or-self::*[local-name()="transform"]', scope)) {
+      if (/output\s+[\w-]+\/[\w.+-]+/i.test(transform.textContent ?? '')) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

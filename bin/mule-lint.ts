@@ -232,11 +232,16 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
 
   // Filter if quiet mode
   if (options.quiet) {
-    report = filterReportBySeverity(report, new Set(['error']), effectiveRules);
+    report = filterReportBySeverity(
+      report,
+      new Set(['error']),
+      effectiveRules,
+      new Set(customRules.map((rule) => rule.id)),
+    );
   }
 
   // Format output
-  const output = format(report, formatterType);
+  const output = format(report, formatterType, effectiveRules);
 
   // Write output
   if (options.output) {

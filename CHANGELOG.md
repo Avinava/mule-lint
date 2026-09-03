@@ -37,8 +37,9 @@ result.
   response content type, the inbound counterpart to `MULE-402`). `API-009` complements the AMF
   contract validator added in 1.28: that validates a specification, this reports having none.
 - **Runtime practice rules.** `LOG-005` (flow contains a logger), `PERF-003` (batch job declares
-  `blockSize` or `maxConcurrency`), `OPS-004` (scheduler mode), `RES-003` (messaging idempotency
-  evidence), and `MULE-805` (oversized sequential flow). `MULE-805` complements `MULE-801` rather
+  `blockSize` or `maxConcurrency`), `OPS-004` (scheduler mode), `RES-003` (idempotency evidence
+  where a messaging _consumer_ exists — a publisher cannot receive a duplicate), and `MULE-805`
+  (oversized sequential flow). `MULE-805` complements `MULE-801` rather
   than duplicating it: a 25-step straight-line flow scores a cyclomatic complexity of 1.
 - **`customRulesPath` now works.** It was accepted by the schema, warned about as reserved, and then
   ignored. It loads a YAML file of declarative XPath rules, resolved relative to the configuration

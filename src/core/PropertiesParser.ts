@@ -18,7 +18,7 @@ export interface PropertyEntry {
  *
  * Implements the subset of `java.util.Properties` syntax that appears in Mule
  * configuration: comments, the three separator forms, escaped separators in
- * keys, and backslash continuations. It deliberately performs no environment
+ * keys, backslash continuations, and `\uXXXX` escapes. It deliberately performs no environment
  * interpolation and evaluates no expressions — a value is returned exactly as
  * written so callers can decide whether it is a literal or a placeholder.
  */
@@ -60,6 +60,20 @@ function unescape(text: string): string {
       case 'f':
         result += '\f';
         break;
+      case 'u': {
+        // Java decodes \uXXXX before anything else sees the key, so
+        // `db.pass\u0077ord` is really `db.password` at runtime.
+        const hex = text.slice(i + 1, i + 5);
+        if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+          result += String.fromCharCode(parseInt(hex, 16));
+          i += 4;
+        } else {
+          // Not a valid escape; Java would reject the file, so keep the
+          // character rather than inventing a replacement.
+          result += next;
+        }
+        break;
+      }
       default:
         // Covers \: \= \  \\ \# \! and any other escaped literal
         result += next;

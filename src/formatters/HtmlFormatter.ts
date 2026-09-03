@@ -8,6 +8,7 @@
 
 import { LintReport } from '../types/Report';
 import { ALL_RULES } from '../rules';
+import type { Rule } from '../types';
 import packageJson from '../../package.json';
 
 // Import all modular components from html/
@@ -50,7 +51,10 @@ function escapeHtml(value: string): string {
 /**
  * Enrich files with rule metadata
  */
-function enrichFiles(report: LintReport): Array<{
+function enrichFiles(
+  report: LintReport,
+  rules: Rule[],
+): Array<{
   issues: Array<{
     category: string;
     ruleDescription: string;
@@ -73,7 +77,7 @@ function enrichFiles(report: LintReport): Array<{
   return report.files.map((file) => ({
     ...file,
     issues: file.issues.map((issue) => {
-      const ruleDef = ALL_RULES.find((r) => r.id === issue.ruleId);
+      const ruleDef = rules.find((r) => r.id === issue.ruleId);
       return {
         ...issue,
         category: ruleDef?.category ?? 'General',
@@ -90,7 +94,11 @@ function enrichFiles(report: LintReport): Array<{
  * Build client-side data payload
  */
 
-function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof enrichFiles>) {
+function buildClientData(
+  report: LintReport,
+  enrichedFiles: ReturnType<typeof enrichFiles>,
+  rules: Rule[],
+) {
   const projectName = report.projectRoot.split('/').filter(Boolean).pop() ?? 'MuleSoft Project';
 
   return {
@@ -104,7 +112,7 @@ function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof en
     },
     summary: report.summary,
     files: enrichedFiles,
-    rules: ALL_RULES.map((r) => ({
+    rules: rules.map((r) => ({
       id: r.id,
       name: r.name,
       category: r.category,
@@ -135,12 +143,12 @@ function buildClientData(report: LintReport, enrichedFiles: ReturnType<typeof en
 /**
  * Format lint report as a premium HTML Single Page Application
  */
-export function formatHtml(report: LintReport): string {
+export function formatHtml(report: LintReport, rules: Rule[] = ALL_RULES): string {
   // 1. Enrich Data
-  const enrichedFiles = enrichFiles(report);
+  const enrichedFiles = enrichFiles(report, rules);
 
   // 2. Build client data payload
-  const clientData = buildClientData(report, enrichedFiles);
+  const clientData = buildClientData(report, enrichedFiles, rules);
   const jsonPayload = JSON.stringify(clientData).replace(/</g, '\\u003c');
 
   // 3. Calculate summary values

@@ -7,6 +7,7 @@ export function filterReportBySeverity(
   report: LintReport,
   severities: ReadonlySet<Severity>,
   rules: Rule[],
+  excludedRuleIds: ReadonlySet<string> = new Set(),
 ): LintReport {
   const files = report.files.map((file) => ({
     ...file,
@@ -16,8 +17,10 @@ export function filterReportBySeverity(
   const byRule: Record<string, number> = {};
   let filesWithIssues = 0;
 
-  for (const file of files) {
-    if (file.relativePath !== 'Project Structure' && file.issues.length > 0) {
+  for (const [index, file] of files.entries()) {
+    // Mirror buildSummary(): only scanned source files count, and they are the
+    // leading entries. Project results are appended after them.
+    if (index < report.summary.totalFiles && file.issues.length > 0) {
       filesWithIssues++;
     }
     for (const issue of file.issues) {
@@ -38,6 +41,7 @@ export function filterReportBySeverity(
   };
   return {
     ...filtered,
-    metrics: MetricsAggregator.aggregateMetrics(filtered, rules) ?? filtered.metrics,
+    metrics:
+      MetricsAggregator.aggregateMetrics(filtered, rules, excludedRuleIds) ?? filtered.metrics,
   };
 }
