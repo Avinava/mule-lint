@@ -156,6 +156,42 @@ describe('API-010 VersionedApiPathRule', () => {
   it('reports nothing when there are no listeners', () => {
     expect(rule.runProject(context([]))).toHaveLength(0);
   });
+
+  it('excludes the generated APIKit console flow by default', () => {
+    const issues = rule.runProject(
+      context(
+        [
+          {
+            relativePath: 'a.xml',
+            line: 1,
+            configRef: 'L',
+            path: '/console/*',
+            flowName: 'orders-api-console',
+          },
+        ],
+        [{ name: 'L' }],
+      ),
+    );
+    expect(issues).toHaveLength(0);
+  });
+
+  it('still reports the generated main flow, which is the API surface', () => {
+    const issues = rule.runProject(
+      context(
+        [
+          {
+            relativePath: 'a.xml',
+            line: 1,
+            configRef: 'L',
+            path: '/api/*',
+            flowName: 'orders-api-main',
+          },
+        ],
+        [{ name: 'L' }],
+      ),
+    );
+    expect(issues).toHaveLength(1);
+  });
 });
 
 describe('API-011 HealthEndpointRule', () => {

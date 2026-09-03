@@ -81,6 +81,24 @@ describe('LOG-005 FlowLoggingRule', () => {
     expect(runRule(rule, body)).toHaveLength(1);
     expect(runRule(rule, body, { excludePatterns: ['health-*'] })).toHaveLength(0);
   });
+
+  it('excludes APIKit-generated router flows by default', () => {
+    expect(
+      runRule(rule, `<flow name="orders-api-main"><set-payload value="x"/></flow>`),
+    ).toHaveLength(0);
+    expect(
+      runRule(rule, `<flow name="orders-api-console"><set-payload value="x"/></flow>`),
+    ).toHaveLength(0);
+  });
+
+  it('capitalises the element label in the message', () => {
+    const message = runRule(rule, `<flow name="f"><set-payload value="x"/></flow>`)[0]?.message;
+    expect(message).toMatch(/^Flow "f"/);
+    const sub = runRule(rule, `<sub-flow name="s"><set-payload value="x"/></sub-flow>`, {
+      includeSubflows: true,
+    })[0]?.message;
+    expect(sub).toMatch(/^Sub-flow "s"/);
+  });
 });
 
 describe('PERF-003 BatchResourceConfigRule', () => {

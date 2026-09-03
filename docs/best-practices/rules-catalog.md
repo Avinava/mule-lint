@@ -834,12 +834,12 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 **Options:**
 
-| Option            | Default | Description                                        |
-| ----------------- | ------- | -------------------------------------------------- |
-| `includeSubflows` | `false` | Also require a logger in sub-flows                 |
-| `excludePatterns` | `[]`    | Flow-name patterns to skip, `*` wildcard supported |
+| Option            | Default                   | Description                                        |
+| ----------------- | ------------------------- | -------------------------------------------------- |
+| `includeSubflows` | `false`                   | Also require a logger in sub-flows                 |
+| `excludePatterns` | `["*-main", "*-console"]` | Flow-name patterns to skip, `*` wildcard supported |
 
-**Why This Matters:** Sub-flows are excluded by default because they are reusable units — requiring a logger in each one produces noise rather than insight.
+**Why This Matters:** Sub-flows are excluded by default because they are reusable units — requiring a logger in each one produces noise rather than insight. The default `excludePatterns` skip the APIKit-generated `*-main` and `*-console` router flows for the same reason MULE-002 and MULE-003 exclude them; they hold no business logic. APIKit **route** flows are still checked, because they do.
 
 ---
 
@@ -1708,9 +1708,12 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 
 **Options:**
 
-| Option                 | Default | Description                                   |
-| ---------------------- | ------- | --------------------------------------------- |
-| `allowSemanticVersion` | `false` | Also accept a semantic segment such as `/1.2` |
+| Option                 | Default         | Description                                   |
+| ---------------------- | --------------- | --------------------------------------------- |
+| `allowSemanticVersion` | `false`         | Also accept a semantic segment such as `/1.2` |
+| `excludeFlows`         | `["*-console"]` | Flow-name patterns to skip                    |
+
+The APIKit console is generated scaffolding rather than an API surface, so its flow is excluded by default. The generated `*-main` flow is still checked, because it carries the real API base path.
 
 > **Note:** A listener whose `config-ref` cannot be resolved produces no finding, because the effective path is unknown rather than unversioned.
 

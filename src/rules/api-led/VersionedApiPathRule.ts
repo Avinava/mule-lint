@@ -11,6 +11,9 @@ import { ProjectRule } from '../base/ProjectRule';
  * listener's own path; either part may supply the version. A listener whose
  * config-ref cannot be resolved produces no finding, because the effective path
  * is unknown rather than unversioned.
+ *
+ * The APIKit console is generated scaffolding rather than an API surface, so
+ * its flow is excluded by default.
  */
 export class VersionedApiPathRule extends ProjectRule {
   id = 'API-010';
@@ -18,6 +21,9 @@ export class VersionedApiPathRule extends ProjectRule {
   description = 'HTTP listener paths should include an API version segment';
   severity = 'warning' as const;
   category = 'api-led' as const;
+
+  /** Generated flows that do not represent an API surface. */
+  private static readonly DEFAULT_EXCLUDED_FLOWS = ['*-console'];
 
   /** `/v1`, `/v2` … */
   private static readonly NUMERIC_VERSION = /(^|\/)v\d+(\/|$)/i;
@@ -34,6 +40,11 @@ export class VersionedApiPathRule extends ProjectRule {
     }
 
     const allowSemanticVersion = this.getOption<boolean>(context, 'allowSemanticVersion', false);
+    const excludeFlows = this.getOption<string[]>(
+      context,
+      'excludeFlows',
+      VersionedApiPathRule.DEFAULT_EXCLUDED_FLOWS,
+    );
     const basePaths = new Map<string, string | undefined>(
       (projectContext?.listenerConfigs ?? []).map((config) => [config.name, config.basePath]),
     );
@@ -42,6 +53,10 @@ export class VersionedApiPathRule extends ProjectRule {
     const reported = new Set<string>();
 
     for (const endpoint of endpoints) {
+      if (endpoint.flowName && this.isExcluded(endpoint.flowName, excludeFlows)) {
+        continue;
+      }
+
       const configRef = endpoint.configRef;
 
       // An unresolved reference means the effective path is unknown, not unversioned.
