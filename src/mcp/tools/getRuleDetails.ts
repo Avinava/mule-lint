@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { getRuleById } from '../../rules';
+import type { RuleCategory } from '../../types';
 import { getRuleDefinition, getStandardById } from '../../catalog';
 import { registerTool } from '../register';
 
@@ -13,7 +14,15 @@ interface GetRuleDetailsInput {
  * Mapping from rule category to the best-practice doc slug.
  * Used by get_rule_details to point agents at the relevant guide.
  */
-const categoryToDocSlug: Record<string, string> = {
+/**
+ * Maps a rule category to a documentation resource slug.
+ *
+ * Every value must name a resource actually registered in src/mcp/resources,
+ * otherwise get_rule_details points agents at a document that does not exist.
+ * Typing this by RuleCategory makes a newly added category a compile error
+ * rather than a silent fallback.
+ */
+const categoryToDocSlug: Record<RuleCategory, string> = {
   'error-handling': 'error-handling',
   naming: 'variables',
   security: 'security',
@@ -24,12 +33,12 @@ const categoryToDocSlug: Record<string, string> = {
   standards: 'best-practices',
   complexity: 'performance',
   structure: 'folder-structure',
-  yaml: 'security',
   dataweave: 'dataweave',
   'api-led': 'best-practices',
-  connector: 'connectors',
+  'api-design': 'best-practices',
   governance: 'ci-cd',
   operations: 'ci-cd',
+  testing: 'testing',
   experimental: 'best-practices',
 };
 
@@ -61,7 +70,7 @@ export function registerGetRuleDetails(server: McpServer): void {
         };
       }
 
-      const docSlug = categoryToDocSlug[rule.category] || 'best-practices';
+      const docSlug = categoryToDocSlug[rule.category];
       const definition = getRuleDefinition(rule.id);
       const standards = definition?.standardIds
         .map((id) => getStandardById(id))

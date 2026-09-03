@@ -67,9 +67,10 @@ const SUPPORTED_KEYS = new Set([
   'defaultFormatter',
   'failOnWarning',
   'qualityGate',
+  'customRulesPath',
 ]);
 
-const RESERVED_KEYS = new Set(['customRulesPath', 'maxIssues']);
+const RESERVED_KEYS = new Set(['maxIssues']);
 
 export interface ParsedLintConfig {
   config: Partial<LintConfig>;

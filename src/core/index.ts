@@ -9,3 +9,4 @@ export * from './ConfigLoader';
 export * from './ReportFilter';
 export * from './SensitiveKeys';
 export * from './PropertiesParser';
+export * from './CustomRuleLoader';
