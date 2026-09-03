@@ -1,8 +1,8 @@
 # Rules Catalog
 
-> **Version:** 1.24.1
-> **Total Rules:** 82 implemented across 15 runtime categories
-> **Last Updated:** August 2026
+> **Version:** 1.26.0
+> **Total Rules:** 98 implemented across 15 runtime categories
+> **Last Updated:** September 2026
 
 ---
 
@@ -34,25 +34,29 @@
 The catalog uses documentation families for navigation; several families share the same runtime
 `RuleCategory` value.
 
-| Family         | Prefix                                                       | Count | Description                                    |
-| -------------- | ------------------------------------------------------------ | ----- | ---------------------------------------------- |
-| Error Handling | MULE-001/003/005/007/009, ERR-001–004                        | 9     | Error handler configuration and best practices |
-| Naming         | MULE-002/101/102                                             | 3     | Naming conventions for flows and variables     |
-| Security       | MULE-004/201/202, SEC-002–004/006–010                        | 11    | Security vulnerabilities, TLS, credentials     |
-| Logging        | MULE-006/301/303, LOG-001/004, HYG-001                       | 6     | Logging standards, structured logging, hygiene |
-| HTTP           | MULE-401/402/403, HTTP-004                                   | 4     | HTTP configuration and headers                 |
-| Performance    | MULE-501/502/503, PERF-002, RES-001/002                      | 6     | Performance anti-patterns and resilience       |
-| Documentation  | MULE-601/604, DOC-001                                        | 3     | Documentation requirements                     |
-| Standards      | MULE-008/010/701, OPS-001–003, API-005, CFG-001/002, STD-001 | 10    | Coding standards and operations                |
-| Complexity     | MULE-801                                                     | 1     | Code complexity                                |
-| Structure      | MULE-802/803/804                                             | 3     | Project structure                              |
-| YAML           | YAML-001/003/004                                             | 3     | YAML configuration validation                  |
-| DataWeave      | DW-001/002/003/004/005                                       | 5     | DataWeave file validation                      |
-| API-Led        | API-001–004/006–008                                          | 7     | API-Led connectivity patterns                  |
-| Connectors     | SF-001/002                                                   | 2     | Salesforce and event connector rules           |
-| Governance     | PROJ-001/002                                                 | 2     | POM and Git hygiene                            |
-| Code Hygiene   | HYG-002–005                                                  | 4     | Commented code, unused flows/variables         |
-| Experimental   | EXP-001/002/003                                              | 3     | Beta rules for evaluation                      |
+| Family         | Prefix                                                       | Count | Description                                       |
+| -------------- | ------------------------------------------------------------ | ----- | ------------------------------------------------- |
+| Error Handling | MULE-001/003/005/007/009, ERR-001–004                        | 9     | Error handler configuration and best practices    |
+| Naming         | MULE-002/101/102                                             | 3     | Naming conventions for flows and variables        |
+| Security       | MULE-004/201/202, SEC-002–004/006–016, CFG-003, YAML-004     | 19    | Security vulnerabilities, TLS, transport, secrets |
+| Logging        | MULE-006/301/303, LOG-001/004/005, HYG-001                   | 7     | Logging standards, structured logging, hygiene    |
+| HTTP           | MULE-401/402/403, HTTP-004/005                               | 5     | HTTP configuration, headers, responses            |
+| Performance    | MULE-501/502/503, PERF-002/003, RES-001/002                  | 7     | Performance anti-patterns and resilience          |
+| Documentation  | MULE-601/604, DOC-001                                        | 3     | Documentation requirements                        |
+| Standards      | MULE-008/010/701, OPS-001–003, API-005, CFG-001/002, STD-001 | 10    | Coding standards and operations                   |
+| Operations     | HYG-004/005, OPS-004, RES-003, SF-001/002                    | 6     | Runtime operability and connector behaviour       |
+| Complexity     | MULE-801/805                                                 | 2     | Code complexity and flow length                   |
+| Structure      | MULE-802/803/804                                             | 3     | Project structure                                 |
+| YAML           | YAML-001/003                                                 | 2     | YAML configuration validation                     |
+| DataWeave      | DW-001/002/003/004/005                                       | 5     | DataWeave file validation                         |
+| API-Led        | API-001–004/006–011                                          | 10    | API-Led patterns, contracts, interface controls   |
+| Governance     | PROJ-001/002                                                 | 2     | POM and Git hygiene                               |
+| Code Hygiene   | HYG-002/003                                                  | 2     | Commented code and unused flows                   |
+| Experimental   | EXP-001/002/003                                              | 3     | Beta rules for evaluation                         |
+
+> **Note:** A rule's identifier prefix and its runtime `category` do not always agree — `RES-001`
+> reports as `performance`, and `YAML-001` reports as `standards`. Configuration and quality gates
+> filter on the category, so check the per-rule entry rather than inferring from the prefix.
 
 ### MULE Category ID Ranges
 
@@ -1972,11 +1976,11 @@ error.errorType.namespace ++ ":" ++ error.errorType.identifier
 
 ## Rule Priority Matrix
 
-| Severity | Count | Rules                                                                                                                                                                                                                                                                                                                       |
-| -------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Error    | 14    | MULE-001, 003, 004, 201, 202, SEC-002, SEC-006, SEC-007, SEC-008, SEC-009, LOG-004, DW-004, YAML-004, ERR-004, HYG-004, PROJ-001                                                                                                                                                                                            |
-| Warning  | 37    | MULE-002, 005, 006, 007, 008, 009, 101, 102, 301, 303, 401, 402, 403, 502, 503, 604, 701, 801, 802, 803, 804, SEC-003, SEC-004, SEC-010, PERF-002, RES-001, RES-002, OPS-002, OPS-003, HYG-001, HYG-003, HYG-005, API-004, API-006, API-007, API-008, ERR-002, ERR-003, SF-001, SF-002, HTTP-004, CFG-002, DW-005, PROJ-002 |
-| Info     | 27    | MULE-010, 501, 601, YAML-001, 003, DW-001, 002, 003, API-001, 002, 003, 005, EXP-001, 002, 003, ERR-001, LOG-001, OPS-001, DOC-001, HYG-002, CFG-001, STD-001                                                                                                                                                               |
+| Severity | Count | Rules                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Error    | 17    | CFG-003, DW-004, ERR-004, HYG-004, LOG-004, MULE-003, MULE-004, MULE-201, MULE-202, PROJ-001, SEC-002, SEC-006, SEC-007, SEC-008, SEC-009, SEC-012, YAML-004                                                                                                                                                                                                                                                                                                          |
+| Warning  | 48    | API-004, API-006, API-008, API-009, API-010, CFG-002, DW-001, ERR-002, HYG-001, HYG-003, LOG-005, MULE-001, MULE-002, MULE-005, MULE-006, MULE-007, MULE-008, MULE-009, MULE-101, MULE-102, MULE-301, MULE-303, MULE-402, MULE-403, MULE-502, MULE-503, MULE-604, MULE-701, MULE-801, MULE-802, MULE-803, MULE-804, OPS-002, OPS-003, PERF-002, PERF-003, PROJ-002, RES-001, RES-002, SEC-003, SEC-004, SEC-010, SEC-011, SEC-013, SEC-014, SEC-016, SF-001, YAML-001 |
+| Info     | 33    | API-001, API-002, API-003, API-005, API-007, API-011, CFG-001, DOC-001, DW-002, DW-003, DW-005, ERR-001, ERR-003, EXP-001, EXP-002, EXP-003, HTTP-004, HTTP-005, HYG-002, HYG-005, LOG-001, MULE-010, MULE-401, MULE-501, MULE-601, MULE-805, OPS-001, OPS-004, RES-003, SEC-015, SF-002, STD-001, YAML-003                                                                                                                                                           |
 
 ---
 

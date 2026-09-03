@@ -42,20 +42,75 @@ deliberate: a scan should do the same thing wherever it is invoked from.
 
 ## Supported keys
 
-| Key                | Effect                                                                      |
-| ------------------ | --------------------------------------------------------------------------- |
-| `rules`            | Per-rule `enabled`, `severity`, and rule-specific `options`                 |
-| `include`          | Glob patterns to scan                                                       |
-| `exclude`          | Glob patterns to skip, such as MUnit tests                                  |
-| `defaultFormatter` | Format used when `-f` is absent                                             |
-| `failOnWarning`    | Treat warnings as failures                                                  |
-| `qualityGate`      | Custom gate conditions — see [Quality gates](quality-gates.md#custom-gates) |
+| Key                | Effect                                                                              |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `rules`            | Per-rule `enabled`, `severity`, and rule-specific `options`                         |
+| `include`          | Glob patterns to scan                                                               |
+| `exclude`          | Glob patterns to skip, such as MUnit tests                                          |
+| `defaultFormatter` | Format used when `-f` is absent                                                     |
+| `failOnWarning`    | Treat warnings as failures                                                          |
+| `qualityGate`      | Custom gate conditions — see [Quality gates](quality-gates.md#custom-gates)         |
+| `customRulesPath`  | Path to a YAML file of custom XPath rules — see [Custom rules](#custom-xpath-rules) |
 
-Anything else is rejected. An unknown key exits with code `2` rather than being ignored, because a typo
-in a rule identifier that silently does nothing is worse than a failed run.
+An unknown key is reported as a warning on stderr and then ignored. A malformed value — a bad
+severity, an unknown formatter — is a validation error and exits with code `2`.
 
-Three keys are accepted for backward compatibility but have no runtime effect, and warn when used:
-`extends`, `customRulesPath`, and `maxIssues`.
+Two keys are accepted for backward compatibility but have no runtime effect, and warn when used:
+`extends` and `maxIssues`.
+
+## Custom XPath rules
+
+`customRulesPath` points at a YAML file of rules defined declaratively. The path is resolved
+**relative to the configuration file**, not the working directory.
+
+```json
+{
+  "customRulesPath": ".mule-lint/custom-rules.yaml"
+}
+```
+
+```yaml
+namespaces:
+  acme: https://schemas.example.com/mule/acme
+rules:
+  - id: ACME-001
+    name: Standard flow error handler
+    description: Organization flows must declare an error handler.
+    category: error-handling
+    severity: warning
+    xpath: //mule:flow[not(mule:error-handler)]
+    message: 'Flow "{name}" does not declare an error handler.'
+    suggestion: Add an error-handler or an approved global error-handler reference.
+```
+
+`id`, `name`, `description`, `category`, `severity`, `xpath`, and `message` are required;
+`suggestion` is optional. `category` must be one of the runtime categories, and `id` must match
+`ACME-001` in shape — an organization prefix keeps custom identifiers clear of the built-ins.
+
+Message placeholders are limited to `{name}`, `{nodeName}`, `{filePath}`, and `{line}`. Anything
+else is left literal.
+
+Every namespace registered by the linter is available automatically. The optional `namespaces` block
+adds prefixes; redefining a built-in prefix is an error, so a custom file can never change how
+built-in rules resolve theirs.
+
+A custom rule is an XPath expression and a message — nothing executable. Only local files are read:
+URLs are rejected, no module is imported, no environment variable is interpolated. Expressions are
+compiled when the configuration loads, so a bad expression or an unbound prefix fails the run with
+exit code `2` rather than silently matching nothing.
+
+Custom findings appear in every output format and honour `enabled` and `severity` overrides. They are
+excluded from quality-rating denominators, because their issue types are author-declared rather than
+modelled.
+
+Library consumers can load the same file directly:
+
+```typescript
+import { LintEngine, ALL_RULES, loadCustomXPathRules } from '@sfdxy/mule-lint';
+
+const customRules = loadCustomXPathRules('./custom-rules.yaml');
+const engine = new LintEngine({ rules: [...ALL_RULES, ...customRules] });
+```
 
 ## Precedence
 

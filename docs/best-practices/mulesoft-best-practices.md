@@ -108,4 +108,15 @@ mule-lint://docs/documentation-standards → Documentation standards
 mule-lint://docs/rules-catalog         → Complete rules reference
 ```
 
+## API interface conventions
+
+An HTTP API is easier to operate and evolve when its interface is explicit:
+
+- Version the path, so a breaking change ships alongside the existing contract rather than replacing
+  it (`API-010`).
+- Keep the RAML or OpenAPI specification in the repository, versioned with the implementation
+  (`API-009`).
+- Expose a health endpoint, so monitoring can tell a running worker from a healthy one (`API-011`).
+- Declare the response content type, so a client does not have to guess (`HTTP-005`).
+
 For linter rule details, see the [Rules Catalog](rules-catalog.md).

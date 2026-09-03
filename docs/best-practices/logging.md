@@ -158,6 +158,8 @@ With MDC configured, log4j2 can automatically include the correlation ID in ever
 - [ ] `log4j2.xml` configured with appropriate log levels for production
 - [ ] Noisy connector loggers suppressed to WARN
 
+- [ ] Every flow contains at least one logger, so its execution leaves a trace (`LOG-005`)
+
 ---
 
 **See also:** [Variable Contracts](variable-contracts.md) · [Security](security.md) · [Error Handling](error-handling.md)

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { getRuleById } from '../../rules';
+import { RuleCategory } from '../../types';
 import { registerTool } from '../register';
 
 interface GetRuleDetailsInput {
@@ -12,24 +13,22 @@ interface GetRuleDetailsInput {
  * Mapping from rule category to the best-practice doc slug.
  * Used by get_rule_details to point agents at the relevant guide.
  */
-const categoryToDocSlug: Record<string, string> = {
+const categoryToDocSlug: Record<RuleCategory, string> = {
   'error-handling': 'error-handling',
-  naming: 'variables',
+  naming: 'variable-contracts',
   security: 'security',
   logging: 'logging',
   http: 'performance',
   performance: 'performance',
   documentation: 'documentation-standards',
-  standards: 'best-practices',
+  standards: 'mulesoft-best-practices',
   complexity: 'performance',
   structure: 'folder-structure',
-  yaml: 'security',
-  dataweave: 'dataweave',
-  'api-led': 'best-practices',
-  connector: 'connectors',
+  dataweave: 'dataweave-patterns',
+  'api-led': 'mulesoft-best-practices',
   governance: 'ci-cd',
   operations: 'ci-cd',
-  experimental: 'best-practices',
+  experimental: 'mulesoft-best-practices',
 };
 
 /**
@@ -60,7 +59,7 @@ export function registerGetRuleDetails(server: McpServer): void {
         };
       }
 
-      const docSlug = categoryToDocSlug[rule.category] || 'best-practices';
+      const docSlug = categoryToDocSlug[rule.category];
 
       return {
         content: [

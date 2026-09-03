@@ -419,6 +419,9 @@ Validate your AsyncAPI spec against organizational rulesets in API Governance be
 - [ ] Deferred task polling uses structured result `{ status, taskId, attempts, data }` (Pattern 8)
 - [ ] Orphan cleanup scheduler exists for deferred tasks (Pattern 8)
 
+- [ ] Schedulers use CRON where a job must run at a particular time (`OPS-004`)
+- [ ] Messaging consumers show idempotency evidence for non-idempotent operations (`RES-003`)
+
 ---
 
 **See also:** [Error Handling](error-handling.md) · [Connector Patterns](connector-patterns.md) · [Variable Contracts](variable-contracts.md)

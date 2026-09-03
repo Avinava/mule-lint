@@ -268,6 +268,9 @@ var resolvedProject = (vars.lookupMaps.projects[payload.projectId] default [])[0
 - [ ] Reconnection strategies on all outbound connectors
 - [ ] Pre-batch bulk lookup used for foreach with 10+ records needing related lookups (Pattern 7)
 
+- [ ] Batch jobs declare `blockSize` or `maxConcurrency` rather than running on defaults (`PERF-003`)
+- [ ] Flows keep their top-level sequence short enough to read; extract cohesive steps (`MULE-805`)
+
 ---
 
 **See also:** [Connector Patterns](connector-patterns.md) · [Error Handling](error-handling.md)

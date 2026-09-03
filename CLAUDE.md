@@ -1,6 +1,6 @@
 # mule-lint
 
-MuleSoft static analysis tool — 82 lint rules across 15 runtime categories, TypeScript strict mode.
+MuleSoft static analysis tool — 98 lint rules across 15 runtime categories, TypeScript strict mode.
 
 ## Quick Commands
 

@@ -86,9 +86,14 @@ const engine = new LintEngine({
 });
 ```
 
-The CLI configuration supports `rules`, `include`, `exclude`, `defaultFormatter`,
-`failOnWarning`, and `qualityGate`. It does not dynamically import custom rule files. The reserved
-keys `extends`, `customRulesPath`, and `maxIssues` currently warn and have no runtime effect.
+The CLI configuration supports `rules`, `include`, `exclude`, `defaultFormatter`, `failOnWarning`,
+`qualityGate`, and `customRulesPath`. The reserved keys `extends` and `maxIssues` currently warn and
+have no runtime effect.
+
+A TypeScript rule must be compiled and passed to the engine, as above. For a check that is one XPath
+expression, `customRulesPath` avoids writing code at all — see
+[custom XPath rules](../configuration.md#custom-xpath-rules). It never imports executable code: a
+custom rule is an expression and a message template.
 
 ## Test the Rule
 

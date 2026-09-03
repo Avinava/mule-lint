@@ -189,7 +189,7 @@ function registerDocsResource(server: McpServer): void {
               uri: 'mule-lint://docs/rules-catalog',
               name: 'Rules Catalog',
               description:
-                'Complete reference for all 82 lint rules with severity, examples, and configuration options',
+                'Complete reference for all 98 lint rules with severity, examples, and configuration options',
               mimeType: 'text/markdown',
             },
             // ── Linter Internals (for contributors) ──

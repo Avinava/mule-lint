@@ -146,7 +146,10 @@ docs: update rules catalog with new examples
 ## Testing Guidelines
 
 - Write unit tests for all new rules
-- Use fixtures in `tests/fixtures/` for XML test data
+- Write XML test data inline in the test as a template literal, parsed with `parseXml()`. The files
+  under `tests/fixtures/` back the CLI smoke tests in CI and are not used by unit tests
+- For project-level rules, build a throwaway project with `fs.mkdtempSync()` and run `engine.scan()`,
+  so the pre-scan and shared context are exercised
 - Test both positive (should pass) and negative (should fail) cases
 - Test edge cases and configuration options
 

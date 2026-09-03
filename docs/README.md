@@ -43,7 +43,7 @@ Comprehensive guidelines for building maintainable, secure, and performant Mule 
 
 | Document                                         | Description                                            |
 | ------------------------------------------------ | ------------------------------------------------------ |
-| [Rules Catalog](best-practices/rules-catalog.md) | Complete reference for all 82 lint rules with examples |
+| [Rules Catalog](best-practices/rules-catalog.md) | Complete reference for all 98 lint rules with examples |
 
 ---
 
@@ -117,28 +117,28 @@ mule-lint ./src/main/mule --fail-on-warning
 
 Counts are per identifier prefix, taken from the rule registry.
 
-| Prefix   | Count | Covers                                             |
-| -------- | ----- | -------------------------------------------------- |
-| MULE-XXX | 29    | Core Mule 4 XML validation                         |
-| SEC-XXX  | 8     | Secure properties, TLS, credentials, rate limiting |
-| API-XXX  | 8     | API-Led and APIKit patterns                        |
-| DW-XXX   | 5     | DataWeave file validation                          |
-| HYG-XXX  | 5     | Code hygiene, unused flows and variables           |
-| ERR-XXX  | 4     | Error handler structure and coverage               |
-| YAML-XXX | 3     | YAML property configuration                        |
-| OPS-XXX  | 3     | Auto-discovery, ports, externalized schedules      |
-| EXP-XXX  | 3     | Experimental rules for evaluation                  |
-| LOG-XXX  | 2     | Structured logging and sensitive data              |
-| RES-XXX  | 2     | Reconnection and listener resilience               |
-| CFG-XXX  | 2     | Configuration properties and environment parity    |
-| PROJ-XXX | 2     | POM and Git hygiene                                |
-| SF-XXX   | 2     | Salesforce and event connector rules               |
-| HTTP-XXX | 1     | HTTP connector configuration                       |
-| PERF-XXX | 1     | Connection pooling                                 |
-| DOC-XXX  | 1     | Display names and documentation                    |
-| STD-XXX  | 1     | Coding and API standards                           |
+| Prefix   | Count | Covers                                                       |
+| -------- | ----- | ------------------------------------------------------------ |
+| MULE-XXX | 30    | Core Mule 4 XML validation                                   |
+| SEC-XXX  | 14    | Secure properties, TLS, transport, authentication evidence   |
+| API-XXX  | 11    | API-Led, APIKit, specification and interface conventions     |
+| DW-XXX   | 5     | DataWeave file validation                                    |
+| HYG-XXX  | 5     | Code hygiene, unused flows and variables                     |
+| ERR-XXX  | 4     | Error handler structure and coverage                         |
+| OPS-XXX  | 4     | Auto-discovery, ports, schedules and scheduler mode          |
+| CFG-XXX  | 3     | Configuration properties, environment parity, config secrets |
+| YAML-XXX | 3     | YAML property configuration                                  |
+| LOG-XXX  | 3     | Structured logging, sensitive data, flow logging             |
+| RES-XXX  | 3     | Reconnection, listener resilience, messaging idempotency     |
+| EXP-XXX  | 3     | Experimental rules for evaluation                            |
+| HTTP-XXX | 2     | HTTP connector and listener response configuration           |
+| PERF-XXX | 2     | Connection pooling and batch resources                       |
+| PROJ-XXX | 2     | POM and Git hygiene                                          |
+| SF-XXX   | 2     | Salesforce and event connector rules                         |
+| DOC-XXX  | 1     | Display names and documentation                              |
+| STD-XXX  | 1     | Coding and API standards                                     |
 
-**Total: 82 rules** across 18 prefixes and 15 runtime categories. A prefix groups identifiers; a
+**Total: 98 rules** across 18 prefixes and 15 runtime categories. A prefix groups identifiers; a
 category is the `category` field a rule reports, which is what configuration and quality gates filter
 on. The two do not map one to one.
 
@@ -151,7 +151,7 @@ on. The two do not map one to one.
 All best practice guides are available via the MuleSoft Lint MCP server:
 
 ```
-mule-lint://rules                          → JSON catalog of all 82 rules
+mule-lint://rules                          → JSON catalog of all 98 rules
 mule-lint://docs/best-practices            → Master index and quick reference
 mule-lint://docs/error-handling            → Error handling patterns
 mule-lint://docs/event-driven              → Event-driven architecture

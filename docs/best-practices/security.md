@@ -176,6 +176,14 @@ config/
 - [ ] Input validation configured for all POST/PUT/PATCH endpoints
 - [ ] API Manager `api.id` populated in environment YAML
 
+- [ ] No plaintext secrets in `.properties` files (`CFG-003`) or YAML (`YAML-004`)
+- [ ] Secure Configuration Properties module configured wherever secret keys exist (`SEC-011`)
+- [ ] Outbound HTTP connections use HTTPS, not literal `protocol="HTTP"` (`SEC-012`)
+- [ ] Every HTTPS connection declares or references a TLS context (`SEC-013`)
+- [ ] Token-based authentication preferred over Basic Authentication (`SEC-014`)
+- [ ] Browser-facing APIs have a CORS policy (`SEC-015`)
+- [ ] Inbound HTTP flows show authentication evidence, in source or an acknowledged gateway policy (`SEC-016`)
+
 ---
 
 **See also:** [Connector Patterns](connector-patterns.md) · [Logging](logging.md) · [Configuration Management](variable-contracts.md)

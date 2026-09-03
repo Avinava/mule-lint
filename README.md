@@ -24,7 +24,7 @@
 
 ---
 
-82 rules across Mule XML, DataWeave, YAML properties, and project structure. Five output formats
+98 rules across Mule XML, DataWeave, YAML properties, and project structure. Five output formats
 including SARIF, so findings land as pull-request annotations instead of scrolling past in a log. No
 credentials, no platform access, nothing to configure to get a first result.
 
@@ -103,28 +103,28 @@ as "your code has issues". Details in
 
 ## Rules
 
-82 rules across 15 runtime categories and 18 identifier prefixes.
+98 rules across 15 runtime categories and 18 identifier prefixes.
 
-| Prefix | Count | Covers                                             |
-| ------ | ----- | -------------------------------------------------- |
-| `MULE` | 29    | Core Mule 4 XML validation                         |
-| `SEC`  | 8     | Secure properties, TLS, credentials, rate limiting |
-| `API`  | 8     | API-Led and APIKit patterns                        |
-| `DW`   | 5     | DataWeave files                                    |
-| `HYG`  | 5     | Code hygiene, unused flows and variables           |
-| `ERR`  | 4     | Error handler structure and coverage               |
-| `YAML` | 3     | YAML property configuration                        |
-| `OPS`  | 3     | Auto-discovery, ports, externalized schedules      |
-| `EXP`  | 3     | Experimental, opt-in                               |
-| `LOG`  | 2     | Structured logging and sensitive data              |
-| `RES`  | 2     | Reconnection and listener resilience               |
-| `CFG`  | 2     | Configuration properties and environment parity    |
-| `PROJ` | 2     | POM and Git hygiene                                |
-| `SF`   | 2     | Salesforce and event connector rules               |
-| `HTTP` | 1     | HTTP connector configuration                       |
-| `PERF` | 1     | Connection pooling                                 |
-| `DOC`  | 1     | Display names and documentation                    |
-| `STD`  | 1     | Coding and API standards                           |
+| Prefix | Count | Covers                                                       |
+| ------ | ----- | ------------------------------------------------------------ |
+| `MULE` | 30    | Core Mule 4 XML validation                                   |
+| `SEC`  | 14    | Secure properties, TLS, transport, authentication evidence   |
+| `API`  | 11    | API-Led, APIKit, specification and interface conventions     |
+| `DW`   | 5     | DataWeave files                                              |
+| `HYG`  | 5     | Code hygiene, unused flows and variables                     |
+| `ERR`  | 4     | Error handler structure and coverage                         |
+| `OPS`  | 4     | Auto-discovery, ports, schedules and scheduler mode          |
+| `CFG`  | 3     | Configuration properties, environment parity, config secrets |
+| `YAML` | 3     | YAML property configuration                                  |
+| `LOG`  | 3     | Structured logging, sensitive data, flow logging             |
+| `RES`  | 3     | Reconnection, listener resilience, messaging idempotency     |
+| `EXP`  | 3     | Experimental, opt-in                                         |
+| `HTTP` | 2     | HTTP connector and listener response configuration           |
+| `PERF` | 2     | Connection pooling and batch resources                       |
+| `PROJ` | 2     | POM and Git hygiene                                          |
+| `SF`   | 2     | Salesforce and event connector rules                         |
+| `DOC`  | 1     | Display names and documentation                              |
+| `STD`  | 1     | Coding and API standards                                     |
 
 The **[rules catalog](https://avinava.github.io/mule-lint/best-practices/rules-catalog/)** documents
 every rule with severity, options, and before-and-after examples. It is the single source of truth —
@@ -246,7 +246,7 @@ Published at **<https://avinava.github.io/mule-lint/>** with search.
 
 | Page                                                             | Contents                                           |
 | ---------------------------------------------------------------- | -------------------------------------------------- |
-| [Rules catalog](docs/best-practices/rules-catalog.md)            | All 82 rules with options and examples             |
+| [Rules catalog](docs/best-practices/rules-catalog.md)            | All 98 rules with options and examples             |
 | [Quality gates](docs/quality-gates.md)                           | Gates, custom conditions, A–E ratings              |
 | [Configuration](docs/configuration.md)                           | `.mulelintrc.json` keys and precedence             |
 | [Output formats](docs/output-formats.md)                         | Table, JSON, SARIF, HTML, CSV, exit codes          |
