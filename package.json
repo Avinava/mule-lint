@@ -58,7 +58,7 @@
     "*.{ts,tsx,js,jsx,mjs,cjs,json,md,css,html,yml,yaml}": "prettier --write"
   },
   "dependencies": {
-    "@aml-org/amf-custom-validator": "1.7.7",
+    "@aml-org/amf-custom-validator": "1.7.8",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@prettier/plugin-xml": "^3.4.2",
     "@xmldom/xmldom": "^0.8.15",
