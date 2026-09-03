@@ -13,7 +13,7 @@ mule-lint/
 │   ├── formatters/              # Table, JSON, SARIF, HTML, and CSV output
 │   ├── mcp/                     # MCP server, handlers, docs, and registration adapter
 │   ├── quality/                 # Quality-gate definitions and evaluation
-│   ├── rules/                   # 82 built-in rules and their registry
+│   ├── rules/                   # 98 built-in rules and their registry
 │   │   └── base/                # BaseRule and ProjectRule lifecycle abstractions
 │   ├── types/                   # Public interfaces and configuration types
 │   └── index.ts                 # Public package exports

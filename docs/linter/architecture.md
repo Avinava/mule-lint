@@ -17,7 +17,7 @@ flowchart TB
         E --> D
     end
 
-    subgraph Rules["Rules (82 Total)"]
+    subgraph Rules["Rules (98 Total)"]
         D --> R1[Error Handling<br/>MULE-001,003,005,007,009<br/>ERR-001,002,003,004]
         D --> R2[Naming<br/>MULE-002,101,102]
         D --> R3[Security<br/>MULE-004,201,202<br/>SEC-002,003,004,006,007,008,009,010]

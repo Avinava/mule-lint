@@ -158,6 +158,12 @@ With MDC configured, log4j2 can automatically include the correlation ID in ever
 - [ ] `log4j2.xml` configured with appropriate log levels for production
 - [ ] Noisy connector loggers suppressed to WARN
 
+## Every flow leaves a trace (v1.30)
+
+`LOG-005` reports a flow with no logger, so an incident can be reconstructed from the log.
+APIKit-generated `*-main` and `*-console` router flows are excluded by default; the route flows they
+dispatch to are not.
+
 ---
 
 **See also:** [Variable Contracts](variable-contracts.md) · [Security](security.md) · [Error Handling](error-handling.md)
