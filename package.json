@@ -62,7 +62,7 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@prettier/plugin-xml": "^3.4.2",
     "@xmldom/xmldom": "^0.8.15",
-    "amf-client-js": "5.12.0",
+    "amf-client-js": "5.14.0",
     "chalk": "^4.1.2",
     "commander": "^14.0.3",
     "fast-glob": "^3.3.2",
