@@ -44,8 +44,8 @@ that installation instead of creating a second, competing configuration.
 Run the exact published version:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.29.1 --version
-npx -y @sfdxy/mule-lint@1.29.1 . --profile recommended
+npx -y @sfdxy/mule-lint@1.30.1 --version
+npx -y @sfdxy/mule-lint@1.30.1 . --profile recommended
 ```
 
 The scan is read-only. Exit code `1` normally means lint findings were found; it does not mean setup
@@ -74,7 +74,7 @@ Do not add all four by default.
 Use this command for every host:
 
 ```text
-npx -y @sfdxy/mule-lint@1.29.1 mcp
+npx -y @sfdxy/mule-lint@1.30.1 mcp
 ```
 
 Merge only a missing `mule-lint` entry. If one exists, preserve its other settings and propose only
@@ -91,7 +91,7 @@ Codex configuration:
 ```toml
 [mcp_servers.mule-lint]
 command = "npx"
-args = ["-y", "@sfdxy/mule-lint@1.29.1", "mcp"]
+args = ["-y", "@sfdxy/mule-lint@1.30.1", "mcp"]
 ```
 
 Claude Code, Copilot CLI, Cursor, or Gemini configuration:
@@ -101,7 +101,7 @@ Claude Code, Copilot CLI, Cursor, or Gemini configuration:
   "mcpServers": {
     "mule-lint": {
       "command": "npx",
-      "args": ["-y", "@sfdxy/mule-lint@1.29.1", "mcp"]
+      "args": ["-y", "@sfdxy/mule-lint@1.30.1", "mcp"]
     }
   }
 }
@@ -115,7 +115,7 @@ VS Code configuration:
     "mule-lint": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@sfdxy/mule-lint@1.29.1", "mcp"]
+      "args": ["-y", "@sfdxy/mule-lint@1.30.1", "mcp"]
     }
   }
 }
@@ -140,13 +140,13 @@ If the user wants a shared configuration, start small:
 The file is not discovered automatically, so commands must include:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.29.1 . --config .mulelintrc.json
+npx -y @sfdxy/mule-lint@1.30.1 . --config .mulelintrc.json
 ```
 
 Preserve existing rule choices. Do not disable a rule merely to make the first scan green; explain
 the finding and ask whether the exception is intentional.
 
-For CI, pin `1.29.1`, begin with report generation or a reviewed profile, and explain the exit-code
+For CI, pin `@sfdxy/mule-lint@1.30.1`, begin with report generation or a reviewed profile, and explain the exit-code
 effect before adding `--fail-on-warning` or a quality gate. Follow the maintained
 [CI/CD guide](best-practices/ci-cd.md) for SARIF permissions and upload steps.
 
@@ -157,7 +157,7 @@ After approved changes:
 ```bash
 git diff --check
 git diff
-npx -y @sfdxy/mule-lint@1.29.1 . --profile recommended
+npx -y @sfdxy/mule-lint@1.30.1 . --profile recommended
 ```
 
 Also validate the selected host's MCP configuration or CI syntax. Report:

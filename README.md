@@ -116,7 +116,7 @@ Pin the package version so local and CI scans use the same rules:
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@1.29.1 . --profile recommended --fail-on-warning
+  run: npx -y @sfdxy/mule-lint@1.30.1 . --profile recommended --fail-on-warning
 ```
 
 For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integration](docs/best-practices/ci-cd.md).
@@ -126,7 +126,7 @@ For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integrat
 mule-lint includes a local MCP server with tools for full-project analysis, snippet validation, rule explanations, XML formatting, and API contract validation:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.29.1 mcp
+npx -y @sfdxy/mule-lint@1.30.1 mcp
 ```
 
 It uses standard input/output and needs no credentials. Host-specific setup is in the [MCP guide](docs/mcp-design.md).
