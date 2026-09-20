@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.30.1] - 2026-09-20
+
+Docs-only patch. Aligns every documented install pin with the published package and adds a
+regression test so stale pins cannot ship again.
+
+### Fixed
+
+- **Stale install pins in README and docs.** Twenty-three `@sfdxy/mule-lint@1.29.1` references and
+  one bare `pin 1.29.1` instruction still described the previous release after 1.30.0 shipped.
+  All now read `@sfdxy/mule-lint@1.30.1`.
+- **`package-lock.json` version drift.** Root and `packages[""]` versions were stranded at
+  `1.29.1` while `package.json` said `1.30.0`. Bumped via `npm version` so they match
+  `1.30.1`.
+- **Transitive `hono` advisory.** `@modelcontextprotocol/sdk` pulled `hono@4.13.1`
+  (`<=4.13.4` moderate). Lockfile now resolves `4.13.8` so `npm run audit:prod` stays clean.
+
+### Quality
+
+- **Documented-pin consistency test.** `tests/unit/DocumentedPinConsistency.test.ts` asserts every
+  `@sfdxy/mule-lint@x.y.z` in `README.md` and `docs/**` equals `package.json.version`. Wired
+  through the existing `npm run check` / `test:coverage` path — no extra CI step.
+- **`publish.yml` action majors.** `actions/checkout` and `actions/setup-node` bumped `v4` →
+  `v7` to match `ci.yml`.
+- **ReleaseCompatibility header.** Comment now correctly attributes the sixteen additive rules to
+  `1.30.0` (was `1.26.0`).
+
 ## [1.30.0] - 2026-09-03
 
 Rule coverage release. 82 rules become 98, two existing rules widen, custom XPath rules become

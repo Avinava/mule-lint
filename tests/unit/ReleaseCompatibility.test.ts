@@ -7,7 +7,7 @@ import { format } from '../../src/formatters';
 import { LintReport } from '../../src/types/Report';
 
 /**
- * Rules introduced in 1.26.0. Disabling all of them must reproduce the
+ * Rules introduced in 1.30.0. Disabling all of them must reproduce the
  * previous result exactly, which is what makes this release additive.
  */
 const NEW_RULE_IDS = [
