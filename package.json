@@ -84,7 +84,7 @@
     "lint-staged": "^16.4.0",
     "publint": "^0.3.23",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.67.0",
+    "typescript-eslint": "^8.71.0",
     "vitest": "^4.1.11"
   },
   "engines": {
