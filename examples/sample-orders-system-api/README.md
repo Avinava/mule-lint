@@ -17,8 +17,8 @@ Expected summary:
 ```text
 Summary:
   Errors:    1
-  Warnings:  5
-  Infos:     5
+  Warnings:  10
+  Infos:     9
 ```
 
 The command exits with status `1` because the sample includes an error. That is expected. Open `src/main/mule/orders-api.xml` and add an error handler to `get-order-by-id-flow` to try the fix.

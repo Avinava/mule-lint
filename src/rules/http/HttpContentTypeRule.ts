@@ -36,7 +36,7 @@ export class HttpContentTypeRule extends BaseRule {
     const issues: Issue[] = [];
 
     // Find HTTP requests
-    const httpRequests = this.select('//*[local-name()="request"]', doc);
+    const httpRequests = this.select('//http:request', doc);
 
     for (const request of httpRequests) {
       const nodeName = request.nodeName;

@@ -29,7 +29,7 @@ export class ConnectionIdleTimeoutRule extends BaseRule {
     const issues: Issue[] = [];
 
     // Find HTTP request-config elements
-    const requestConfigs = this.select('//*[local-name()="request-config"]', doc);
+    const requestConfigs = this.select('//http:request-config', doc);
 
     for (const config of requestConfigs) {
       const configName = this.getNameAttribute(config) ?? 'HTTP Request Config';

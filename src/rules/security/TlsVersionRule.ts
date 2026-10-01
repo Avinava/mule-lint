@@ -21,7 +21,7 @@ export class TlsVersionRule extends BaseRule {
     const issues: Issue[] = [];
 
     // Find all TLS context configurations
-    const tlsContexts = this.select('//*[local-name()="context"]', doc);
+    const tlsContexts = this.select('//tls:context', doc);
 
     for (const context of tlsContexts) {
       const element = context as Element;

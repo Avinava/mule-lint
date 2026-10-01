@@ -1,6 +1,6 @@
 import { MetricsAggregator } from './MetricsAggregator';
 import { LintReport } from '../types/Report';
-import { Rule, Severity } from '../types/Rule';
+import { Issue, Rule, Severity } from '../types/Rule';
 
 /** Return a report containing only selected severities with consistent aggregates. */
 export function filterReportBySeverity(
@@ -9,9 +9,24 @@ export function filterReportBySeverity(
   rules: Rule[],
   excludedRuleIds: ReadonlySet<string> = new Set(),
 ): LintReport {
+  return filterReportIssues(
+    report,
+    (issue) => severities.has(issue.severity),
+    rules,
+    excludedRuleIds,
+  );
+}
+
+/** Return a report keeping only issues the predicate accepts, with consistent aggregates. */
+export function filterReportIssues(
+  report: LintReport,
+  keep: (issue: Issue, relativePath: string) => boolean,
+  rules: Rule[],
+  excludedRuleIds: ReadonlySet<string> = new Set(),
+): LintReport {
   const files = report.files.map((file) => ({
     ...file,
-    issues: file.issues.filter((issue) => severities.has(issue.severity)),
+    issues: file.issues.filter((issue) => keep(issue, file.relativePath)),
   }));
   const bySeverity: Record<Severity, number> = { error: 0, warning: 0, info: 0 };
   const byRule: Record<string, number> = {};

@@ -1,3 +1,5 @@
+import { RATING_GRADES } from '../types/constants';
+
 /**
  * Quality Scoring Types
  * Core interfaces for the extensible quality rating system
@@ -6,7 +8,7 @@
 /**
  * Rating grades (A-E scale)
  */
-export type RatingGrade = 'A' | 'B' | 'C' | 'D' | 'E';
+export type RatingGrade = (typeof RATING_GRADES)[number];
 
 /**
  * Quality dimensions - extensible for future metrics

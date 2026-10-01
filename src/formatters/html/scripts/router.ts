@@ -36,7 +36,11 @@ const router = {
     },
     
     hasActiveFilters() {
-        return filterState.severities.length > 0 || filterState.categories.length > 0;
+        return (
+            filterState.severities.length > 0 ||
+            filterState.categories.length > 0 ||
+            Boolean(filterState.searchTerm)
+        );
     },
     
     toggleSeverity(severity) {
@@ -127,7 +131,10 @@ const router = {
     
     setSearchTerm(term) {
         filterState.searchTerm = term;
-        this.navigate('issues');
+        // Typing must not yank the user off the page they are on, except to reveal results.
+        if (term && this.currentView !== 'issues') {
+            this.navigate('issues');
+        }
         this.applyFilters();
     }
 };

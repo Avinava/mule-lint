@@ -79,7 +79,7 @@ const ruleIdsOf = (report: LintReport): string[] =>
     .map((issue) => issue.ruleId)
     .sort();
 
-describe('1.26.0 release compatibility', () => {
+describe('release compatibility', () => {
   it('the new rules actually fire on a project that violates them', async () => {
     const fired = new Set(ruleIdsOf(await scan()));
     const firedNew = NEW_RULE_IDS.filter((id) => fired.has(id));

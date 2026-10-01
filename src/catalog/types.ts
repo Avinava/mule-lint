@@ -1,11 +1,12 @@
 import type { IssueType, RuleCategory, Severity } from '../types/Rule';
+import type { RULE_PROFILE_NAMES } from '../types/constants';
 
 export type StandardClassification =
   'vendor-requirement' | 'recommended-practice' | 'opinionated-convention';
 
 export type CatalogStatus = 'stable' | 'experimental' | 'deprecated';
 
-export type RuleProfileName = 'baseline' | 'recommended' | 'strict';
+export type RuleProfileName = (typeof RULE_PROFILE_NAMES)[number];
 export type RuleProfileReference = `mule-lint:${RuleProfileName}`;
 
 export interface StandardSource {

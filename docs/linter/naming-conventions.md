@@ -29,6 +29,7 @@ mule-lint uses multiple rule prefixes to organize rules by domain:
 | `SF`   | `SF-NNN`   | Salesforce connector          | `SF-001`   |
 | `CFG`  | `CFG-NNN`  | Configuration patterns        | `CFG-001`  |
 | `STD`  | `STD-NNN`  | Coding standards              | `STD-001`  |
+| `TEST` | `TEST-NNN` | Testing practices             | `TEST-001` |
 | `EXP`  | `EXP-NNN`  | Experimental rules            | `EXP-001`  |
 
 ### MULE ID Ranges

@@ -17,22 +17,22 @@ flowchart TB
         E --> D
     end
 
-    subgraph Rules["Rules (98 Total)"]
-        D --> R1[Error Handling<br/>MULE-001,003,005,007,009<br/>ERR-001,002,003,004]
-        D --> R2[Naming<br/>MULE-002,101,102]
-        D --> R3[Security<br/>MULE-004,201,202<br/>SEC-002,003,004,006,007,008,009,010]
-        D --> R4[Logging<br/>MULE-006,301,303<br/>LOG-001,004,HYG-001]
-        D --> R5[HTTP<br/>MULE-401,402,403,HTTP-004]
-        D --> R6[Performance<br/>MULE-501,502,503<br/>PERF-002,RES-001,002]
-        D --> R7[Documentation<br/>MULE-601,604,DOC-001]
-        D --> R8[Standards<br/>MULE-008,010,701<br/>OPS,CFG,STD]
-        D --> R9[Complexity<br/>MULE-801]
-        D --> R10[Structure<br/>MULE-802-804]
-        D --> R11[YAML<br/>YAML-001,003,004]
-        D --> R12[DataWeave<br/>DW-001,002,003,004,005]
-        D --> R13[API-Led<br/>API-001-008]
-        D --> R14[Connectors<br/>SF-001,002]
-        D --> R15[Governance<br/>PROJ-001,002]
+    subgraph Rules["Rules (99 Total)"]
+        D --> R1[Error Handling<br/>9 rules]
+        D --> R2[Naming<br/>3 rules]
+        D --> R3[Security<br/>19 rules]
+        D --> R4[Logging<br/>7 rules]
+        D --> R5[HTTP<br/>5 rules]
+        D --> R6[Performance<br/>7 rules]
+        D --> R7[Documentation<br/>3 rules]
+        D --> R8[Standards<br/>14 rules]
+        D --> R9[Complexity<br/>2 rules]
+        D --> R10[Structure<br/>3 rules]
+        D --> R11[DataWeave<br/>5 rules]
+        D --> R12[API-Led<br/>10 rules]
+        D --> R13[Operations<br/>6 rules]
+        D --> R14[Governance<br/>2 rules]
+        D --> R15[Testing<br/>TEST-001]
         D --> R16[Experimental<br/>EXP-001,002,003]
     end
 
@@ -41,6 +41,7 @@ flowchart TB
         K[JSON<br/>Scripts]
         L[SARIF<br/>AI Agents]
         M[HTML<br/>Reports]
+        N[CSV / Markdown<br/>JUnit / GitHub<br/>CI]
     end
 
     A --> B
@@ -279,31 +280,35 @@ src/
 │   └── calculator.ts    # Rating calculation functions
 ├── engine/               # Orchestration
 │   └── LintEngine.ts    # Main engine (document cache, pre-scan, project layer)
-├── rules/                # All rules (82 total)
+├── rules/                # All rules (99 total)
 │   ├── index.ts         # Rule registry (ALL_RULES array)
 │   ├── base/            # BaseRule + ProjectRule classes
-│   ├── api-led/         # API-001–004, API-006–008
-│   ├── complexity/      # MULE-801
+│   ├── api-led/         # API-001–004, API-006–011
+│   ├── complexity/      # MULE-801, MULE-805
 │   ├── connector/       # SF-001, SF-002
 │   ├── dataweave/       # DW-001–005
 │   ├── documentation/   # MULE-601, 604, DOC-001
 │   ├── error-handling/  # MULE-001,003,005,007,009, ERR-001–004
-│   ├── experimental/    # EXP-001–003
+│   ├── experimental/    # EXP-001–003 (opt-in; EXP-003 is a deprecated alias)
 │   ├── governance/      # PROJ-001, PROJ-002
-│   ├── http/            # MULE-401–403, HTTP-004
-│   ├── logging/         # MULE-006,301,303, LOG-001,004, HYG-001
+│   ├── http/            # MULE-401–403, HTTP-004, HTTP-005
+│   ├── logging/         # MULE-006,301,303, LOG-001,004,005, HYG-001
 │   ├── naming/          # MULE-002, 101, 102
-│   ├── operations/      # HYG-002–005
-│   ├── performance/     # MULE-501–503, PERF-002, RES-001–002
-│   ├── security/        # MULE-004,201,202, SEC-002–004,006–010
+│   ├── operations/      # HYG-002–005, OPS-004, RES-003
+│   ├── performance/     # MULE-501–503, PERF-002,003, RES-001–002
+│   ├── security/        # MULE-004,201,202, SEC-002–016, CFG-003, YAML-004
 │   ├── standards/       # MULE-008,010,701, OPS-001–003, API-005, CFG-001–002, STD-001
 │   ├── structure/       # MULE-802–804
-│   └── yaml/            # YAML-001, 003, 004
+│   ├── testing/         # TEST-001
+│   └── yaml/            # YAML-001, 003
 └── formatters/           # Output formatters
     ├── TableFormatter.ts
     ├── JsonFormatter.ts
     ├── SarifFormatter.ts
     ├── CsvFormatter.ts
+    ├── MarkdownFormatter.ts
+    ├── GithubFormatter.ts
+    ├── JunitFormatter.ts
     ├── HtmlFormatter.ts  # Orchestrates HTML report
     └── html/             # Modular HTML components
         ├── components/   # RatingBadge, Modal, etc.
@@ -315,24 +320,48 @@ src/
 
 ## Rule Categories
 
-| Category       | ID Prefix                       | Count | Description                                    |
-| -------------- | ------------------------------- | ----- | ---------------------------------------------- |
-| Error Handling | MULE-00X, ERR-001–004           | 9     | Error handler configuration and best practices |
-| Naming         | MULE-002, 10X                   | 3     | Flow, variable, and file naming                |
-| Security       | MULE-004, 20X, SEC-002–010      | 11    | Hardcoded values, TLS, credentials             |
-| Logging        | MULE-006, 30X, LOG, HYG-001     | 6     | Logger configuration and hygiene               |
-| HTTP           | MULE-40X, HTTP-004              | 4     | HTTP request configuration                     |
-| Performance    | MULE-50X, PERF-002, RES-001–002 | 6     | Performance anti-patterns and resilience       |
-| Documentation  | MULE-60X, DOC-001               | 3     | Component documentation                        |
-| Standards      | MULE-008,010,70X, OPS, CFG, STD | 10    | Best practices and operations                  |
-| Complexity     | MULE-801                        | 1     | Cyclomatic complexity                          |
-| Structure      | MULE-80X                        | 3     | Project structure                              |
-| YAML           | YAML-XXX                        | 3     | Properties validation                          |
-| DataWeave      | DW-XXX                          | 5     | DWL file validation                            |
-| API-Led        | API-XXX                         | 7     | API-Led patterns                               |
-| Connectors     | SF-001, SF-002                  | 2     | Salesforce and event connector rules           |
-| Governance     | PROJ-XXX                        | 2     | POM and Git hygiene                            |
-| Experimental   | EXP-XXX                         | 3     | Beta rules                                     |
+| Runtime category | Count | Description                                            |
+| ---------------- | ----- | ------------------------------------------------------ |
+| error-handling   | 9     | Error handler configuration and best practices         |
+| naming           | 3     | Flow, variable, and file naming                        |
+| security         | 19    | Hardcoded values, TLS, transport, credentials, secrets |
+| logging          | 7     | Logger configuration and hygiene                       |
+| http             | 5     | HTTP request and listener configuration                |
+| performance      | 7     | Performance anti-patterns and resilience               |
+| documentation    | 3     | Component documentation                                |
+| standards        | 14    | Best practices, operations, configuration, YAML        |
+| complexity       | 2     | Cognitive complexity and flow size                     |
+| structure        | 3     | Project structure                                      |
+| dataweave        | 5     | DWL file validation                                    |
+| api-led          | 10    | API-Led patterns, contracts, interface controls        |
+| operations       | 6     | Runtime operability and connector behaviour            |
+| governance       | 2     | POM and Git hygiene                                    |
+| testing          | 1     | MUnit test presence                                    |
+| experimental     | 3     | Opt-in rules for evaluation (`--experimental`)         |
+
+A rule's ID prefix and its runtime category do not always agree (for example `YAML-001` is
+`standards`, `CFG-003` is `security`). Profiles, config, and quality gates use the category.
+
+## Glossary
+
+Use these terms consistently in code, docs, and output.
+
+| Term             | Meaning                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| issue            | One lint result (`Issue`, the entries in JSON/SARIF). RAML/OpenAPI results are called _findings_. |
+| `ruleId` / `id`  | `ruleId` on an issue or output record; `id` on a rule or catalog definition                       |
+| `filePath`       | Absolute path of a scanned file                                                                   |
+| `relativePath`   | Path relative to the scanned project root                                                         |
+| rule profile     | `baseline`, `recommended`, or `strict`: which rules run                                           |
+| contract ruleset | A local AMF Validation Profile passed to `api validate --ruleset`                                 |
+| quality gate     | Pass/fail policy over the report (`--quality-gate`)                                               |
+| rating threshold | The A–E bands used by quality ratings                                                             |
+| `category`       | The topic a rule belongs to (`error-handling`, `security`, …)                                     |
+| `issueType`      | `code-smell`, `bug`, or `vulnerability`, used by quality ratings                                  |
+| experimental     | Opt-in rules in the `experimental` category; not part of any profile                              |
+
+`src/formatter/` holds the Mule XML source formatter (`mule-lint format`). `src/formatters/` holds
+the report output formatters (table, JSON, SARIF, HTML, CSV, Markdown, GitHub, JUnit).
 
 ## Extension Points
 

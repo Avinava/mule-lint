@@ -11,7 +11,7 @@ import { ALL_RULES } from '../rules';
 import { IssueType, Rule } from '../types';
 
 /**
- * Rating type for metrics (SonarQube-style A-E)
+ * Rating type for metrics (A-E scale)
  * @deprecated Use RatingGrade from quality module instead
  */
 export type MetricRating = RatingGrade;
@@ -41,7 +41,7 @@ export class MetricsAggregator {
 
   /**
    * Calculate file complexity rating based on flow count
-   * This matches mule-sonarqube-plugin's logic:
+   * Rating bands used by the quality ratings:
    * - Simple (A): ≤ 7 flows
    * - Medium (B): 8-14 flows
    * - Complex (C+): ≥ 15 flows

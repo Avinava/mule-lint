@@ -11,7 +11,13 @@ import {
   ProjectLayer,
 } from '../types';
 import { LintConfig, DEFAULT_CONFIG } from '../types/Config';
-import { LintReport, LintSummary, FileResult, ProjectMetrics } from '../types/Report';
+import {
+  LintReport,
+  LintSummary,
+  FileResult,
+  ProjectMetrics,
+  RuleExecutionError,
+} from '../types/Report';
 import { parseXml } from '../core/XmlParser';
 import { scanDirectory, readFileContent, ScannedFile } from '../core/FileScanner';
 import { MetricsAggregator } from '../core/MetricsAggregator';
@@ -97,6 +103,16 @@ export class LintEngine {
    */
   private documentCache: Map<string, Document> = new Map();
 
+  /** Rule failures collected during the current scan; reported on the LintReport. */
+  private ruleErrors: RuleExecutionError[] = [];
+
+  /** Serialises scans so concurrent callers (the MCP server shares one engine) cannot share caches. */
+  private scanQueue: Promise<unknown> = Promise.resolve();
+
+  /** Rule configuration never changes after construction, so it is resolved once per rule. */
+  private ruleConfigCache = new Map<string, RuleConfig>();
+  private enabledRulesCache: Rule[] | undefined;
+
   constructor(options: EngineOptions) {
     this.rules = options.rules;
     this.config = { ...DEFAULT_CONFIG, ...options.config };
@@ -107,7 +123,14 @@ export class LintEngine {
   /**
    * Scan a directory or file and return lint report
    */
-  public async scan(targetPath: string): Promise<LintReport> {
+  public scan(targetPath: string): Promise<LintReport> {
+    const run = this.scanQueue.then(() => this.runScan(targetPath));
+    this.scanQueue = run.catch(() => undefined);
+    return run;
+  }
+
+  private async runScan(targetPath: string): Promise<LintReport> {
+    this.ruleErrors = [];
     const startTime = Date.now();
     let projectRoot = path.resolve(targetPath);
     let isStandalone = false;
@@ -226,6 +249,7 @@ export class LintEngine {
       files: fileResults,
       summary,
       metrics: metricsAggregator,
+      ...(this.ruleErrors.length > 0 ? { ruleErrors: this.ruleErrors } : {}),
     };
 
     // Aggregate enhanced metrics (A-E ratings, debt calculation)
@@ -279,17 +303,22 @@ export class LintEngine {
     }
 
     // For direct content scan, we assume standalone unless we can infer otherwise (out of scope here)
-    return this.runRules(parseResult.document, filePath, path.dirname(filePath), true);
+    // Direct content scans return issues only; keep their rule failures out of an in-flight scan's list.
+    const scanErrors = this.ruleErrors;
+    this.ruleErrors = [];
+    try {
+      return this.runRules(parseResult.document, filePath, path.dirname(filePath), true);
+    } finally {
+      this.ruleErrors = scanErrors;
+    }
   }
 
   /**
    * Get all enabled rules based on configuration
    */
   public getEnabledRules(): Rule[] {
-    return this.rules.filter((rule) => {
-      const ruleConfig = this.getRuleConfig(rule.id);
-      return ruleConfig.enabled;
-    });
+    this.enabledRulesCache ??= this.rules.filter((rule) => this.getRuleConfig(rule.id).enabled);
+    return this.enabledRulesCache;
   }
 
   /**
@@ -416,6 +445,7 @@ export class LintEngine {
         const message = getErrorMessage(error);
         // eslint-disable-next-line no-console -- isolate rule failures without hiding diagnostics.
         console.error(`Error in rule ${rule.id}: ${message}`);
+        this.ruleErrors.push({ ruleId: rule.id, message });
         // Don't fail the whole scan for a single rule error
       }
     }
@@ -427,6 +457,14 @@ export class LintEngine {
    * Get configuration for a specific rule
    */
   private getRuleConfig(ruleId: string): RuleConfig {
+    const cached = this.ruleConfigCache.get(ruleId);
+    if (cached) return cached;
+    const resolved = this.resolveRuleConfig(ruleId);
+    this.ruleConfigCache.set(ruleId, resolved);
+    return resolved;
+  }
+
+  private resolveRuleConfig(ruleId: string): RuleConfig {
     const config = this.config.rules[ruleId];
 
     if (config === undefined) {
@@ -821,6 +859,7 @@ export class LintEngine {
         const message = getErrorMessage(error);
         // eslint-disable-next-line no-console -- isolate project-rule failures without hiding diagnostics.
         console.error(`Error in project rule ${rule.id}: ${message}`);
+        this.ruleErrors.push({ ruleId: rule.id, message });
       }
     }
 

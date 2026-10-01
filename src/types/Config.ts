@@ -1,10 +1,11 @@
 import { RuleConfig } from './Rule';
 import { QualityGate } from './QualityGate';
+import { FORMATTER_TYPES } from './constants';
 
 /**
  * Formatter type for output
  */
-export type FormatterType = 'table' | 'json' | 'sarif' | 'html' | 'csv';
+export type FormatterType = (typeof FORMATTER_TYPES)[number];
 
 /**
  * Main configuration for mule-lint

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Rule, Issue, Severity, RuleCategory, ValidationContext, IssueType } from '../types';
 import { XPathHelper, getLineNumber, getAttribute } from './XPathHelper';
 import { getErrorMessage } from './errors';
+import { SEVERITIES } from '../types/constants';
 
 /**
  * Categories a custom rule may declare.
@@ -50,7 +51,7 @@ const CustomRuleSchema = z
     name: z.string().min(1),
     description: z.string().min(1),
     category: z.enum(RULE_CATEGORIES),
-    severity: z.enum(['error', 'warning', 'info']),
+    severity: z.enum(SEVERITIES),
     xpath: z.string().min(1),
     message: z.string().min(1),
     suggestion: z.string().optional(),

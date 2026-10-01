@@ -24,7 +24,7 @@ export class StructuredLoggingRule extends BaseRule {
 
     // Look for JSON logger module configuration
     const jsonLoggerConfig = this.select(
-      '//*[contains(local-name(), "json-logger") or contains(local-name(), "jsonlogger")]',
+      '//*[contains(local-name(), "json-logger") or contains(local-name(), "jsonlogger") or contains(namespace-uri(), "json-logger")]',
       doc,
     );
 

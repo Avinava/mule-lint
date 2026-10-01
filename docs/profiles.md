@@ -50,6 +50,9 @@ A recommended scan with warnings can still exit `0`. Add `--fail-on-warning` or 
 4. Document narrow exceptions in `.mulelintrc.json`.
 5. Add enforcement only after the baseline is stable.
 
+To adopt mule-lint without fixing every existing finding first, save a JSON report and scan with
+[`--baseline`](output-formats.md#baseline-report-only-new-issues) so only new issues are reported.
+
 This keeps the first scan useful instead of creating a permanently red pipeline.
 
 ## Experimental rules
@@ -60,7 +63,9 @@ Experimental rules are not included in stable profiles. Evaluate them explicitly
 mule-lint . --profile recommended --experimental
 ```
 
-Do not gate a team on an experimental rule without reviewing its false positives and release notes.
+Do not gate a team on an experimental rule without reviewing its false positives and release notes. `--experimental` turns the experimental rules on, but a rule you set to `false` in your config stays off.
+
+`EXP-003` graduated to the stable `TEST-001` rule in 1.31.0 (part of `recommended` and `strict`). `EXP-003` remains registered so existing configuration keeps loading, but it no longer reports.
 
 ## Compatibility
 

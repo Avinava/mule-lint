@@ -1,28 +1,20 @@
 import { z } from 'zod';
 import { LintConfig } from '../types/Config';
+import {
+  FORMATTER_TYPES,
+  QUALITY_METRICS,
+  QUALITY_OPERATORS,
+  RULE_PROFILE_NAMES,
+  SEVERITIES,
+} from '../types/constants';
 
-const severitySchema = z.enum(['error', 'warning', 'info']);
-const formatterSchema = z.enum(['table', 'json', 'sarif', 'html', 'csv']);
+const severitySchema = z.enum(SEVERITIES);
+const formatterSchema = z.enum(FORMATTER_TYPES);
 const profileSchema = z.enum([
-  'baseline',
-  'recommended',
-  'strict',
-  'mule-lint:baseline',
-  'mule-lint:recommended',
-  'mule-lint:strict',
+  ...RULE_PROFILE_NAMES,
+  ...RULE_PROFILE_NAMES.map((name) => `mule-lint:${name}` as const),
 ]);
-const qualityMetricSchema = z.enum([
-  'errors',
-  'warnings',
-  'infos',
-  'complexity_max',
-  'complexity_avg',
-  'coverage',
-  'duplications',
-  'security_vulnerabilities',
-  'security_hotspots',
-  'technical_debt_ratio',
-]);
+const qualityMetricSchema = z.enum(QUALITY_METRICS);
 
 const ruleConfigSchema = z.object({
   enabled: z.boolean(),
@@ -35,7 +27,7 @@ const qualityGateSchema = z.object({
   conditions: z.array(
     z.object({
       metric: qualityMetricSchema,
-      operator: z.enum(['<', '>', '<=', '>=', '=']),
+      operator: z.enum(QUALITY_OPERATORS),
       threshold: z.number(),
       status: z.enum(['fail', 'warn']),
       onNewCode: z.boolean().optional(),

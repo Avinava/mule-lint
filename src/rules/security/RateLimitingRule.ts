@@ -35,7 +35,7 @@ export class RateLimitingRule extends BaseRule {
 
     // Check for rate limiting policies (apikit-config, throttling-policy, etc.)
     const rateLimitingElements = this.select(
-      '//*[contains(local-name(), "rate") or contains(local-name(), "throttl") or contains(local-name(), "spike")]',
+      '//*[contains(local-name(), "rate-limit") or contains(local-name(), "ratelimit") or contains(local-name(), "throttl") or contains(local-name(), "spike") or contains(namespace-uri(), "throttl")]',
       doc,
     );
 

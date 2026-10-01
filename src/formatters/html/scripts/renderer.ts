@@ -327,7 +327,7 @@ export function generateRendererScript(config: {
                             .sort((a, b) => b[1] - a[1]) // Sort by count desc
                             .map(([method, count]) => {
                                 const style = methodStyles[method] || methodStyles['ALL'];
-                                return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + ' ' + style.text + '"><span class="w-2 h-2 rounded-full ' + style.dot + '"></span>' + method + ' <span class="font-bold">' + count + '</span></span>';
+                                return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 text-2xs font-medium rounded-full ' + style.bg + ' ' + style.text + '"><span class="w-2 h-2 rounded-full ' + style.dot + '"></span>' + escapeHtml(method) + ' <span class="font-bold">' + count + '</span></span>';
                             }).join('');
                         
                         endpointContainer.innerHTML = totalBadge + methodBadges;
@@ -454,13 +454,19 @@ export function generateRendererScript(config: {
                 const sortedCats = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
                 
                 catNav.innerHTML = sortedCats.map(([cat, count]) => \`
-                    <a href="#" onclick="router.toggleCategory('\${cat}'); return false;"
-                        data-filter-category="\${cat}"
+                    <a href="#" data-filter-category="\${escapeHtml(cat)}"
                         class="sidebar-link flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 rounded-r-md">
-                        <span class="capitalize truncate">\${cat}</span>
+                        <span class="capitalize truncate">\${escapeHtml(cat)}</span>
                         <span class="ml-auto text-xs font-bold text-slate-400 dark:text-slate-500">\${count}</span>
                     </a>
                 \`).join('');
+                // Delegated handler: category names never reach an inline JS context.
+                catNav.onclick = (event) => {
+                    const link = event.target.closest('[data-filter-category]');
+                    if (!link) return;
+                    event.preventDefault();
+                    router.toggleCategory(link.dataset.filterCategory);
+                };
             },
             
             renderCharts() {
@@ -652,7 +658,7 @@ export function generateRendererScript(config: {
                             headerFilterFunc: 'in',
                             formatter: (cell) => {
                                 const row = cell.getRow().getData();
-                                return \`<div><div class="font-medium text-slate-800 dark:text-slate-200 truncate">\${cell.getValue()}</div><div class="text-xs text-slate-400 font-mono">\${row.ruleId}</div></div>\`;
+                                return \`<div><div class="font-medium text-slate-800 dark:text-slate-200 truncate">\${escapeHtml(cell.getValue())}</div><div class="text-xs text-slate-400 font-mono">\${escapeHtml(row.ruleId)}</div></div>\`;
                             }
                         },
                         {
@@ -662,7 +668,7 @@ export function generateRendererScript(config: {
                             headerFilter: 'list',
                             headerFilterParams: { valuesLookup: true, multiselect: true, clearable: true },
                             headerFilterFunc: 'in',
-                            formatter: (cell) => \`<span class="capitalize text-slate-600 dark:text-slate-300">\${cell.getValue()}</span>\`
+                            formatter: (cell) => \`<span class="capitalize text-slate-600 dark:text-slate-300">\${escapeHtml(cell.getValue())}</span>\`
                         },
                         {
                             title: 'Type',

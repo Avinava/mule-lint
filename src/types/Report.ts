@@ -149,6 +149,13 @@ export interface ProjectMetrics {
 /**
  * Complete report for a lint run
  */
+export interface RuleExecutionError {
+  /** Rule that threw */
+  ruleId: string;
+  /** Error message */
+  message: string;
+}
+
 export interface LintReport {
   /** Project root directory */
   projectRoot: string;
@@ -162,4 +169,9 @@ export interface LintReport {
   summary: LintSummary;
   /** Project metrics (optional for backward compatibility) */
   metrics?: ProjectMetrics | undefined;
+  /**
+   * Rules that threw during the scan. The scan continues without them, so an
+   * empty result from a listed rule is not a pass.
+   */
+  ruleErrors?: RuleExecutionError[] | undefined;
 }

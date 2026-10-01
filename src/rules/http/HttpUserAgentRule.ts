@@ -22,7 +22,7 @@ export class HttpUserAgentRule extends BaseRule {
     const excludeConfigPatterns = this.getOption<string[]>(context, 'excludeConfigs', []);
 
     // Find HTTP requests
-    const httpRequests = this.select('//*[local-name()="request"]', doc);
+    const httpRequests = this.select('//http:request', doc);
 
     for (const request of httpRequests) {
       // Check if it's an HTTP namespace element

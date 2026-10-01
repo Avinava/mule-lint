@@ -1,5 +1,81 @@
 # Changelog
 
+## [1.31.0] - 2026-10-01
+
+Hardening and CI-output release. Report output is safe to pipe, SARIF validates, three CI formats
+and a baseline mode arrive, one dead rule starts working, and one experimental rule graduates.
+No rule ID, JSON shape, or exit code changes.
+
+### Behaviour changes to review on upgrade
+
+- **Standard output carries only the report.** The quality-gate summary, `--verbose` messages, and
+  "Report written to" now go to standard error. Scripts that parsed gate text from stdout must read
+  stderr. `-f json -g strict | jq` now works.
+- **An unknown `--format` fails immediately** with exit code `2` and a list of valid formats,
+  instead of failing after the scan.
+- **`--experimental` no longer overrides** a rule you set to `false` in config.
+- **`TEST-001` is new** (testing category, `recommended` and `strict` profiles, info severity). It
+  reports projects with flows and no executable MUnit test, and skips libraries. It graduates
+  `EXP-003`, which stays registered as a deprecated alias that no longer reports. Rule count is 99.
+- **`SEC-004` now fires.** Its old matching could not occur, so it never reported. It now flags
+  `http:listener` flows that accept a request body with no `validation:*`, schema validator, or
+  DataWeave validation. APIKit-routed and `flow-ref` flows are skipped. Expect new warnings.
+- **`EXP-001` is renamed "Flow Reference Fan-out"** to match what it measures (flow-ref count per
+  flow). Behaviour and the `maxDepth` option are unchanged.
+- **`EXP-002` is less noisy.** It accepts Studio default names such as `HTTP_Listener_config`,
+  checks bare `<x:config>` elements, and skips APIKit and MUnit configs.
+
+### Added
+
+- **`--format markdown`, `--format github`, `--format junit`** for PR comments and job summaries,
+  GitHub Actions annotations, and generic CI test reports.
+- **`--baseline <file>`** reports only issues missing from a previous `--format json` run, matched
+  by rule, file, and message so line shifts do not matter. The gate and exit code use only new issues.
+- **Per-rule documentation links.** SARIF `helpUri` now points at each rule's catalog entry.
+- **HTML report:** parse failures appear in the issue table; the search box, side panel (dialog
+  role, Escape to close, focus return), and result count are accessible; Chart.js is pinned to 4.5.1
+  and Chart.js and Tabulator load with SRI hashes.
+
+### Fixed
+
+- **SARIF validity.** Removed the schema-invalid `fixes` array (the suggestion is now
+  `properties.suggestion`), dropped columns below 1, declared the `PARSE-ERROR` rule, omitted the
+  fake `Project Structure` location, percent-encoded URIs, and added `partialFingerprints`.
+- **CSV formula injection.** Cells starting with `=`, `+`, `-`, `@`, tab, or CR are neutralised.
+- **HTML report escaping.** Rule name, ID, category, and method are escaped, and category filters no
+  longer use inline JavaScript. Search no longer navigates away while typing, "Clear filters"
+  reflects an active search, and Windows project paths resolve a name.
+- **`--output`** creates missing directories.
+- **JSON Logger and throttling modules are recognised.** `LOG-001` and `SEC-003` matched only the
+  element's local name, so `json-logger:config` and `throttling:config` were still reported. `SEC-003`
+  also no longer treats unrelated names containing "rate" (such as `iterate`) as rate limiting.
+- **HTTP and TLS rules match their own namespace.** `MULE-401`, `MULE-402`, `MULE-403`,
+  `HTTP-004`, `SEC-002` and `SEC-012` now select `http:` and `tls:` elements instead of any
+  element with a matching local name.
+- **Rule failures are visible.** A rule that throws is recorded in `LintReport.ruleErrors` and the CLI
+  prints a warning, instead of the rule silently looking like a pass.
+- **Concurrent scans on one engine are serialised**, so the MCP server cannot interleave caches.
+- **Config safety.** `isExcluded` patterns treat only `*` as a wildcard, and unknown rule IDs in a
+  config file produce a warning.
+- **Docs.** The JSON example now shows `relativePath`; quoted sample summaries match the sample
+  project and a test keeps them current; rule counts, rule lists, and the architecture page are
+  current; `rules-catalog` anchors are stable.
+
+### Dependencies
+
+- `amf-client-js` 5.14.0 and `@aml-org/amf-custom-validator` 1.8.5 (exact pins), `eslint` 10.11,
+  `knip` 6.39, `softprops/action-gh-release` v3.
+- `npm audit fix` clears advisories in `fast-uri`, `ip-address`, and `brace-expansion`.
+- Dependabot now holds `@xmldom/xmldom` below 0.9, which changes the public `Document` type.
+
+### Internal
+
+- Shared value lists in `src/types/constants.ts` drive the severity, format, issue-type, and
+  rating types and the config schema.
+- New tests for SARIF, CSV, the CI formats, baseline, HTML hardening, `SEC-004`, `TEST-001`, engine
+  robustness, sample-project documentation drift, and six previously untested rules (`SEC-003`,
+  `LOG-001`, `HYG-002`, `MULE-010`, `MULE-701`, `MULE-803`).
+
 ## [1.30.1] - 2026-09-20
 
 Docs-only patch. Aligns every documented install pin with the published package and adds a

@@ -16,7 +16,7 @@ Every pull request gets the same scan as local development, the pipeline makes a
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@1.30.1 . --profile recommended --fail-on-warning
+  run: npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended --fail-on-warning
 ```
 
 This is enough when terminal logs are the desired output.
@@ -41,16 +41,16 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
       - name: Generate SARIF
         continue-on-error: true
         run: >-
-          npx -y @sfdxy/mule-lint@1.30.1 .
+          npx -y @sfdxy/mule-lint@1.31.0 .
           --profile recommended
           --format sarif
           --output mule-lint.sarif
@@ -62,12 +62,36 @@ jobs:
 
       - name: Enforce quality gate
         run: >-
-          npx -y @sfdxy/mule-lint@1.30.1 .
+          npx -y @sfdxy/mule-lint@1.31.0 .
           --profile recommended
           --quality-gate default
 ```
 
 The first scan is allowed to return a finding exit code so the upload still runs. The final scan owns the pipeline decision.
+
+### Annotations and job summary
+
+Without code scanning, mule-lint can annotate the pull request directly and write a summary to the job page:
+
+```yaml
+- name: Annotate and summarize
+  run: |
+    npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended --format github || true
+    npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended --format markdown >> "$GITHUB_STEP_SUMMARY" || true
+```
+
+Use `--format junit --output mule-lint-junit.xml` for CI systems that read JUnit reports.
+
+### Fail only on new issues
+
+To adopt a quality gate on an existing project, commit a baseline and compare against it:
+
+```bash
+mule-lint . --profile recommended --format json --output .mule-lint-baseline.json
+mule-lint . --profile recommended --baseline .mule-lint-baseline.json --quality-gate default
+```
+
+The gate and exit code then consider only issues that are not in the baseline.
 
 ## Use a shared config
 
