@@ -197,6 +197,13 @@ async function runLint(targetPath: string, options: LintCliOptions): Promise<voi
     }
   }
 
+  const knownRuleIds = new Set([...ALL_RULES, ...customRules].map((rule) => rule.id));
+  for (const ruleId of Object.keys(config.rules ?? {})) {
+    if (!knownRuleIds.has(ruleId)) {
+      console.error(`Config warning: rule "${ruleId}" does not exist and was ignored.`);
+    }
+  }
+
   if (options.profile) {
     config.extends = toRuleProfileReference(normalizeRuleProfile(options.profile));
   }
@@ -243,6 +250,13 @@ async function runLint(targetPath: string, options: LintCliOptions): Promise<voi
       new Set(['error']),
       effectiveRules,
       new Set(customRules.map((rule) => rule.id)),
+    );
+  }
+
+  if (report.ruleErrors && report.ruleErrors.length > 0) {
+    const failed = [...new Set(report.ruleErrors.map((error) => error.ruleId))].join(', ');
+    console.error(
+      `Warning: ${report.ruleErrors.length} rule execution error(s) (${failed}). Results for these rules are incomplete.`,
     );
   }
 

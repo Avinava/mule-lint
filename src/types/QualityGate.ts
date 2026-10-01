@@ -3,25 +3,17 @@
  * Quality Gates provide pass/fail thresholds for code quality metrics
  */
 
+import { QUALITY_METRICS, QUALITY_OPERATORS } from './constants';
+
 /**
  * Metrics that can be evaluated in quality gate conditions
  */
-export type QualityMetric =
-  | 'errors'
-  | 'warnings'
-  | 'infos'
-  | 'complexity_max'
-  | 'complexity_avg'
-  | 'coverage'
-  | 'duplications'
-  | 'security_vulnerabilities'
-  | 'security_hotspots'
-  | 'technical_debt_ratio';
+export type QualityMetric = (typeof QUALITY_METRICS)[number];
 
 /**
  * Comparison operators for quality gate conditions
  */
-export type QualityOperator = '<' | '>' | '<=' | '>=' | '=';
+export type QualityOperator = (typeof QUALITY_OPERATORS)[number];
 
 /**
  * Result status of a quality gate evaluation
