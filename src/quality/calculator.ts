@@ -102,7 +102,7 @@ export function calculateAllRatings(metrics: QualityMetrics): QualityRatings {
 
 /**
  * Calculate technical debt in minutes
- * Based on SonarQube-style debt calculation
+ * Based on a debt-ratio calculation (debt time versus estimated development time)
  */
 export function calculateDebtMinutes(
   codeSmells: number,
