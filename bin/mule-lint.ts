@@ -12,6 +12,7 @@ import { FORMATTER_TYPES } from '../src/types/constants';
 import { parseLintConfig } from '../src/core/ConfigLoader';
 import { loadCustomXPathRules } from '../src/core/CustomRuleLoader';
 import { Rule } from '../src/types';
+import { applyBaseline, parseBaseline } from '../src/core/Baseline';
 import { filterReportBySeverity } from '../src/core/ReportFilter';
 import {
   evaluateQualityGate,
@@ -40,7 +41,7 @@ program
   .description('Static analysis tool for MuleSoft applications')
   .version(packageJson.version)
   .argument('[path]', 'Path to scan (directory or file)')
-  .option('-f, --format <type>', 'Output format: table, json, sarif, html, csv')
+  .option('-f, --format <type>', `Output format: ${FORMATTER_TYPES.join(', ')}`)
   .option('-o, --output <file>', 'Write output to file instead of stdout')
   .option('-c, --config <file>', 'Path to configuration file')
   .option('-q, --quiet', 'Show only errors (suppress warnings and info)')
@@ -48,6 +49,7 @@ program
   .option('-e, --experimental', 'Enable experimental rules (opt-in)')
   .option('-p, --profile <name>', 'Rule profile: baseline, recommended, or strict')
   .option('-g, --quality-gate <name>', 'Apply quality gate: default, strict, or from config')
+  .option('--baseline <file>', 'Report only issues not present in a previous `-f json` report')
   .option('-v, --verbose', 'Show verbose output')
   .action(async (targetPath: string | undefined, options: LintCliOptions) => {
     if (!targetPath) {
@@ -147,6 +149,7 @@ program
   });
 
 interface LintCliOptions {
+  baseline?: string;
   format?: string;
   output?: string;
   config?: string;
@@ -240,6 +243,23 @@ async function runLint(targetPath: string, options: LintCliOptions): Promise<voi
       new Set(['error']),
       effectiveRules,
       new Set(customRules.map((rule) => rule.id)),
+    );
+  }
+
+  if (options.baseline) {
+    const baselinePath = path.resolve(options.baseline);
+    if (!fs.existsSync(baselinePath)) {
+      throw new Error(`Baseline file not found: ${baselinePath}`);
+    }
+    const applied = applyBaseline(
+      report,
+      parseBaseline(fs.readFileSync(baselinePath, 'utf-8')),
+      effectiveRules,
+      new Set(customRules.map((rule) => rule.id)),
+    );
+    report = applied.report;
+    console.error(
+      `Baseline: ${applied.stats.newIssues} new, ${applied.stats.unchanged} unchanged, ${applied.stats.fixed} fixed`,
     );
   }
 

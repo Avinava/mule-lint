@@ -3,6 +3,9 @@ export * from './JsonFormatter';
 export * from './SarifFormatter';
 export * from './HtmlFormatter';
 export * from './CsvFormatter';
+export * from './MarkdownFormatter';
+export * from './GithubFormatter';
+export * from './JunitFormatter';
 
 import { LintReport } from '../types/Report';
 import { FormatterType } from '../types/Config';
@@ -12,6 +15,9 @@ import { formatJson } from './JsonFormatter';
 import { formatSarif } from './SarifFormatter';
 import { formatHtml } from './HtmlFormatter';
 import { formatCsv } from './CsvFormatter';
+import { formatMarkdown } from './MarkdownFormatter';
+import { formatGithub } from './GithubFormatter';
+import { formatJunit } from './JunitFormatter';
 import type { Rule } from '../types';
 
 /**
@@ -29,6 +35,12 @@ export function format(report: LintReport, type: FormatterType, rules: Rule[] = 
       return formatHtml(report, rules);
     case 'csv':
       return formatCsv(report);
+    case 'markdown':
+      return formatMarkdown(report);
+    case 'github':
+      return formatGithub(report);
+    case 'junit':
+      return formatJunit(report);
     default: {
       const _exhaustiveCheck: never = type;
       throw new Error(`Unknown formatter type: ${String(_exhaustiveCheck)}`);

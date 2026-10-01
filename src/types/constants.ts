@@ -5,7 +5,16 @@
 
 export const SEVERITIES = ['error', 'warning', 'info'] as const;
 
-export const FORMATTER_TYPES = ['table', 'json', 'sarif', 'html', 'csv'] as const;
+export const FORMATTER_TYPES = [
+  'table',
+  'json',
+  'sarif',
+  'html',
+  'csv',
+  'markdown',
+  'github',
+  'junit',
+] as const;
 
 export const ISSUE_TYPES = ['code-smell', 'bug', 'vulnerability'] as const;
 

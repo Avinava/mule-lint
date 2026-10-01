@@ -2,7 +2,7 @@ import { LintReport } from '../types/Report';
 import { Issue, Severity, Rule } from '../types/Rule';
 import { ALL_RULES } from '../rules';
 import { getRuleDefinition } from '../catalog';
-import { createHash } from 'crypto';
+import { fingerprintIssue } from '../core/Baseline';
 import packageJson from '../../package.json';
 
 /**
@@ -114,14 +114,6 @@ function toArtifactUri(relativePath: string): string {
   return relativePath.split(/[\\/]/).map(encodeURIComponent).join('/');
 }
 
-/** Stable across line shifts so code-scanning can de-duplicate alerts between runs. */
-function fingerprint(issue: Issue, relativePath: string): string {
-  const normalizedMessage = issue.message.replace(/\s+/g, ' ').trim();
-  return createHash('sha256')
-    .update(`${issue.ruleId}\n${relativePath}\n${normalizedMessage}`)
-    .digest('hex');
-}
-
 /**
  * Convert Rule to SARIF rule definition
  */
@@ -150,7 +142,9 @@ function toSarifResult(issue: Issue, relativePath: string): SarifResult {
     ruleId: issue.ruleId,
     level: toSarifLevel(issue.severity),
     message: { text: issue.message },
-    partialFingerprints: { 'muleLint/v1': fingerprint(issue, relativePath) },
+    partialFingerprints: {
+      'muleLint/v1': fingerprintIssue(issue.ruleId, relativePath, issue.message),
+    },
     ...(issue.suggestion ? { properties: { suggestion: issue.suggestion } } : {}),
   };
 
