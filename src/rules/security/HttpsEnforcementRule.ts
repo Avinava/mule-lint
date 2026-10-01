@@ -37,7 +37,7 @@ export class HttpsEnforcementRule extends BaseRule {
     const reportUnknown = this.getOption<boolean>(context, 'reportUnknownProtocol', false);
 
     // Split protocol/host form: <http:request-connection protocol="HTTP" host="..."/>
-    const connections = this.select('//*[local-name()="request-connection"]', doc);
+    const connections = this.select('//http:request-connection', doc);
     for (const connection of connections) {
       const protocol = this.getAttribute(connection, 'protocol');
       const host = this.getAttribute(connection, 'host') ?? '';
@@ -83,7 +83,7 @@ export class HttpsEnforcementRule extends BaseRule {
     }
 
     // Absolute URL form: <http:request url="http://..."/>
-    const requests = this.select('//*[local-name()="request"]', doc);
+    const requests = this.select('//http:request', doc);
     for (const request of requests) {
       const url = this.getAttribute(request, 'url');
       if (!url || !/^http:\/\//i.test(url)) {

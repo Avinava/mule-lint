@@ -32,7 +32,9 @@ No rule ID, JSON shape, or exit code changes.
 - **`--baseline <file>`** reports only issues missing from a previous `--format json` run, matched
   by rule, file, and message so line shifts do not matter. The gate and exit code use only new issues.
 - **Per-rule documentation links.** SARIF `helpUri` now points at each rule's catalog entry.
-- **HTML report:** parse failures appear in the issue table.
+- **HTML report:** parse failures appear in the issue table; the search box, side panel (dialog
+  role, Escape to close, focus return), and result count are accessible; Chart.js is pinned to 4.5.1
+  and Chart.js and Tabulator load with SRI hashes.
 
 ### Fixed
 
@@ -44,6 +46,17 @@ No rule ID, JSON shape, or exit code changes.
   longer use inline JavaScript. Search no longer navigates away while typing, "Clear filters"
   reflects an active search, and Windows project paths resolve a name.
 - **`--output`** creates missing directories.
+- **JSON Logger and throttling modules are recognised.** `LOG-001` and `SEC-003` matched only the
+  element's local name, so `json-logger:config` and `throttling:config` were still reported. `SEC-003`
+  also no longer treats unrelated names containing "rate" (such as `iterate`) as rate limiting.
+- **HTTP and TLS rules match their own namespace.** `MULE-401`, `MULE-402`, `MULE-403`,
+  `HTTP-004`, `SEC-002` and `SEC-012` now select `http:` and `tls:` elements instead of any
+  element with a matching local name.
+- **Rule failures are visible.** A rule that throws is recorded in `LintReport.ruleErrors` and the CLI
+  prints a warning, instead of the rule silently looking like a pass.
+- **Concurrent scans on one engine are serialised**, so the MCP server cannot interleave caches.
+- **Config safety.** `isExcluded` patterns treat only `*` as a wildcard, and unknown rule IDs in a
+  config file produce a warning.
 - **Docs.** The JSON example now shows `relativePath`; quoted sample summaries match the sample
   project and a test keeps them current; rule counts, rule lists, and the architecture page are
   current; `rules-catalog` anchors are stable.
@@ -59,8 +72,9 @@ No rule ID, JSON shape, or exit code changes.
 
 - Shared value lists in `src/types/constants.ts` drive the severity, format, issue-type, and
   rating types and the config schema.
-- New tests for SARIF, CSV, the CI formats, baseline, HTML hardening, `SEC-004`, `TEST-001`, and
-  sample-project documentation drift.
+- New tests for SARIF, CSV, the CI formats, baseline, HTML hardening, `SEC-004`, `TEST-001`, engine
+  robustness, sample-project documentation drift, and six previously untested rules (`SEC-003`,
+  `LOG-001`, `HYG-002`, `MULE-010`, `MULE-701`, `MULE-803`).
 
 ## [1.30.1] - 2026-09-20
 

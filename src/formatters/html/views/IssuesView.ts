@@ -15,7 +15,7 @@ export function renderIssuesView(props: IssuesViewProps): string {
                 <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-5 py-3 flex items-center gap-4 shrink-0">
                     <div>
                         <div class="text-sm text-slate-500 dark:text-slate-400">
-                            Showing <strong id="filtered-count" class="text-slate-700 dark:text-slate-200">${props.totalIssues}</strong> of ${props.totalIssues} issues
+                            Showing <strong id="filtered-count" aria-live="polite" class="text-slate-700 dark:text-slate-200">${props.totalIssues}</strong> of ${props.totalIssues} issues
                         </div>
                         <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Select a row to see the complete message, location, and suggested fix.</div>
                     </div>

@@ -55,3 +55,23 @@ describe('HtmlFormatter hardening', () => {
     expect(html).toContain('"projectName":"orders-api"');
   });
 });
+
+describe('HtmlFormatter accessibility and CDN pinning', () => {
+  const html = formatHtml(report, [hostileRule]);
+
+  it('labels the search box and exposes the side panel as a dialog', () => {
+    expect(html).toContain('aria-label="Search issues"');
+    expect(html).toContain('role="dialog"');
+    expect(html).toContain('aria-label="Close details"');
+    expect(html).toContain("event.key === 'Escape'");
+  });
+
+  it('pins every CDN library and protects it with SRI', () => {
+    expect(html).not.toMatch(/cdn\.jsdelivr\.net\/npm\/chart\.js"/);
+    for (const tag of html.match(/<(?:script|link)[^>]+(?:unpkg\.com|cdn\.jsdelivr\.net)[^>]*>/g) ??
+      []) {
+      expect(tag).toMatch(/integrity="sha384-/);
+      expect(tag).toContain('crossorigin="anonymous"');
+    }
+  });
+});

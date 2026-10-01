@@ -51,7 +51,7 @@ export function renderHeader(props: HeaderProps): string {
 
             <!-- Search -->
             <div class="relative w-52 hidden md:block">
-                <input type="text" id="global-search" placeholder="Search issues..." 
+                <input type="text" id="global-search" placeholder="Search issues..." aria-label="Search issues" 
                     class="w-full pl-9 pr-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </div>

@@ -17,7 +17,7 @@ export class HttpTimeoutRule extends BaseRule {
     const issues: Issue[] = [];
 
     // Find HTTP request configurations
-    const requestConfigs = this.select('//*[local-name()="request-config"]', doc);
+    const requestConfigs = this.select('//http:request-config', doc);
 
     for (const config of requestConfigs) {
       const hasTimeout = this.getAttribute(config, 'responseTimeout') !== null;
