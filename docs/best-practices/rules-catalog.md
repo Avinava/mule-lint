@@ -1,7 +1,7 @@
 # Rules Catalog
 
-> **Version:** 1.30.0
-> **Total Rules:** 98 implemented across 15 runtime categories
+> **Version:** 1.31.0
+> **Total Rules:** 99 implemented across 16 runtime categories
 > **Last Updated:** September 2026
 
 ---
@@ -25,6 +25,7 @@
 - [Connector Rules](#connector-rules)
 - [Operations and Hygiene Rules](#operations-and-hygiene-rules)
 - [Governance Rules](#governance-rules)
+- [Testing Rules](#testing-rules)
 - [Experimental Rules](#experimental-rules)
 
 ---
@@ -52,7 +53,8 @@ The catalog uses documentation families for navigation; several families share t
 | API-Led        | API-001–004/006–011                                          | 10    | API-Led patterns, contracts, interface controls   |
 | Governance     | PROJ-001/002                                                 | 2     | POM and Git hygiene                               |
 | Code Hygiene   | HYG-002/003                                                  | 2     | Commented code and unused flows                   |
-| Experimental   | EXP-001/002/003                                              | 3     | Beta rules for evaluation                         |
+| Testing        | TEST-001                                                     | 1     | MUnit test presence                               |
+| Experimental   | EXP-001/002/003                                              | 3     | Opt-in rules for evaluation (EXP-003 deprecated)  |
 
 > **Note:** A rule's identifier prefix and its runtime `category` do not always agree — `RES-001`
 > reports as `performance`, and `YAML-001` reports as `standards`. Configuration and quality gates
@@ -1967,11 +1969,29 @@ The APIKit console is generated scaffolding rather than an API surface, so its f
 
 ---
 
+## Testing Rules
+
+### TEST-001: MUnit Executable Test Presence
+
+| Property     | Value   |
+| ------------ | ------- |
+| **Severity** | Info    |
+| **Category** | Testing |
+| **Fixable**  | No      |
+
+**Description:** Projects with production flows should contain at least one executable,
+non-ignored MUnit test in `src/test/munit`. Empty directories, malformed suites, wrong XML
+namespaces, and ignored-only suites do not satisfy the check. Libraries are skipped.
+
+**Profiles:** `recommended`, `strict`. Graduated from EXP-003 in 1.31.0.
+
+---
+
 ## Experimental Rules
 
-> ⚠️ These rules are in beta and may have false positives. Use for guidance only.
+> ⚠️ These rules are opt-in (`--experimental`) and may have false positives. Use for guidance only.
 
-### EXP-001: Flow Reference Depth
+### EXP-001: Flow Reference Fan-out { #exp-001-flow-reference-fan-out }
 
 | Property     | Value        |
 | ------------ | ------------ |
@@ -1979,7 +1999,9 @@ The APIKit console is generated scaffolding rather than an API surface, so its f
 | **Category** | Experimental |
 | **Fixable**  | No           |
 
-**Description:** Limit the number of flow-refs in a single flow to avoid deep call chains.
+**Description:** Counts `flow-ref` elements inside one flow or sub-flow and reports when the count
+exceeds `maxDepth` (default 5). It measures fan-out, not call-chain depth, so a flat orchestration
+flow calling six sub-flows is reported while a deep chain with one reference per flow is not.
 
 ---
 
@@ -1991,7 +2013,9 @@ The APIKit console is generated scaffolding rather than an API surface, so its f
 | **Category** | Experimental |
 | **Fixable**  | No           |
 
-**Description:** Connector configurations should follow `Convention_Type` pattern (e.g., `HTTP_Request_Config`).
+**Description:** Connector configurations (`<x:config>` and `*-config` elements) should start with a
+capital letter and use underscores, for example `HTTP_Request_Config` or the Studio default
+`HTTP_Listener_config`. APIKit and MUnit configs are skipped.
 
 ---
 
@@ -2003,9 +2027,8 @@ The APIKit console is generated scaffolding rather than an API surface, so its f
 | **Category** | Experimental |
 | **Fixable**  | No           |
 
-**Description:** Projects with production flows should contain at least one executable,
-non-ignored MUnit test in `src/test/munit`. Empty directories, malformed suites, wrong XML
-namespaces, and ignored-only suites do not satisfy the check.
+**Description:** Deprecated. Superseded by [TEST-001](#test-001-munit-executable-test-presence). The ID
+stays registered so existing configuration keeps loading, but it no longer reports.
 
 ---
 
@@ -2017,7 +2040,7 @@ namespaces, and ignored-only suites do not satisfy the check.
 | -------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Error    | 17    | CFG-003, DW-004, ERR-004, HYG-004, LOG-004, MULE-003, MULE-004, MULE-201, MULE-202, PROJ-001, SEC-002, SEC-006, SEC-007, SEC-008, SEC-009, SEC-012, YAML-004                                                                                                                                                                                                                                                                                                          |
 | Warning  | 48    | API-004, API-006, API-008, API-009, API-010, CFG-002, DW-001, ERR-002, HYG-001, HYG-003, LOG-005, MULE-001, MULE-002, MULE-005, MULE-006, MULE-007, MULE-008, MULE-009, MULE-101, MULE-102, MULE-301, MULE-303, MULE-402, MULE-403, MULE-502, MULE-503, MULE-604, MULE-701, MULE-801, MULE-802, MULE-803, MULE-804, OPS-002, OPS-003, PERF-002, PERF-003, PROJ-002, RES-001, RES-002, SEC-003, SEC-004, SEC-010, SEC-011, SEC-013, SEC-014, SEC-016, SF-001, YAML-001 |
-| Info     | 33    | API-001, API-002, API-003, API-005, API-007, API-011, CFG-001, DOC-001, DW-002, DW-003, DW-005, ERR-001, ERR-003, EXP-001, EXP-002, EXP-003, HTTP-004, HTTP-005, HYG-002, HYG-005, LOG-001, MULE-010, MULE-401, MULE-501, MULE-601, MULE-805, OPS-001, OPS-004, RES-003, SEC-015, SF-002, STD-001, YAML-003                                                                                                                                                           |
+| Info     | 34    | API-001, API-002, API-003, API-005, API-007, API-011, CFG-001, DOC-001, DW-002, DW-003, DW-005, ERR-001, ERR-003, EXP-001, EXP-002, EXP-003, HTTP-004, HTTP-005, HYG-002, HYG-005, LOG-001, MULE-010, MULE-401, MULE-501, MULE-601, MULE-805, OPS-001, OPS-004, RES-003, SEC-015, SF-002, STD-001, TEST-001, YAML-003                                                                                                                                                 |
 
 ---
 

@@ -114,6 +114,9 @@ import { ApikitMainFlowStructureRule } from './api-led/ApikitMainFlowStructureRu
 import { ApikitStatusCodeVariableRule } from './api-led/ApikitStatusCodeVariableRule';
 import { ApikitConsoleProductionRule } from './api-led/ApikitConsoleProductionRule';
 
+// Import all rules - Testing
+import { MUnitTestPresenceRule } from './testing/MUnitTestPresenceRule';
+
 // Import all rules - Experimental
 import {
   FlowRefDepthRule,
@@ -240,6 +243,7 @@ export {
   ConnectorConfigNamingRule,
   MUnitCoverageRule,
 } from './experimental/ExperimentalRules';
+export { MUnitTestPresenceRule } from './testing/MUnitTestPresenceRule';
 export { CommentedCodeRule } from './operations/CommentedCodeRule';
 export { UnusedFlowRule } from './operations/UnusedFlowRule';
 export { FlowRefTargetExistsRule } from './operations/FlowRefTargetExistsRule';
@@ -248,7 +252,7 @@ export { PomValidationRule, GitHygieneRule } from './governance/GovernanceRules'
 
 /**
  * All available rules - instantiated and ready to use
- * Total: 98 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
+ * Total: 99 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
  */
 export const ALL_RULES: Rule[] = [
   // Error Handling Rules (MULE-001, 003, 005, 007, 009)
@@ -332,7 +336,10 @@ export const ALL_RULES: Rule[] = [
   new ApikitStatusCodeVariableRule(), // API-007: APIKit Status Code Variable
   new ApikitConsoleProductionRule(), // API-008: APIKit Console in Production
 
-  // Experimental Rules (EXP-001, 002, 003)
+  // Testing Rules (TEST-001)
+  new MUnitTestPresenceRule(),
+
+  // Experimental Rules (EXP-001, 002, 003; EXP-003 is a deprecated alias of TEST-001)
   new FlowRefDepthRule(),
   new ConnectorConfigNamingRule(),
   new MUnitCoverageRule(),

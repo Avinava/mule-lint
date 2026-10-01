@@ -1,20 +1,17 @@
 import { ValidationContext, Issue } from '../../types';
 import { BaseRule } from '../base/BaseRule';
 import { ProjectRule } from '../base/ProjectRule';
-import * as fs from 'fs';
-import * as path from 'path';
-import fg from 'fast-glob';
-import { parseXml } from '../../core/XmlParser';
 
 /**
- * EXP-001: Flow Reference Depth
+ * EXP-001: Flow Reference Fan-out
  *
- * Limit the depth of flow-ref chains.
+ * Counts flow-refs inside one flow or sub-flow. It measures fan-out, not the
+ * depth of a call chain; `maxDepth` keeps its name for config compatibility.
  */
 export class FlowRefDepthRule extends BaseRule {
   id = 'EXP-001';
-  name = 'Flow Reference Depth';
-  description = 'Limit flow-ref chain depth to avoid complexity';
+  name = 'Flow Reference Fan-out';
+  description = 'Limit the number of flow-refs in one flow to avoid orchestration sprawl';
   severity = 'info' as const;
   category = 'experimental' as const;
 
@@ -58,9 +55,12 @@ export class ConnectorConfigNamingRule extends BaseRule {
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
 
-    // Find all config elements
+    // Connector configs: `<x:config>`, `<x:*-config>`, and `<x:*-configuration>`.
+    // APIKit and MUnit configs follow their own tooling-generated names.
     const configs = this.select(
-      '//*[contains(local-name(), "-config") or contains(local-name(), "_config")]',
+      '//*[(local-name()="config" or contains(local-name(), "-config") or contains(local-name(), "_config"))' +
+        ' and not(namespace-uri()="http://www.mulesoft.org/schema/mule/mule-apikit")' +
+        ' and not(starts-with(namespace-uri(), "http://www.mulesoft.org/schema/mule/munit"))]',
       doc,
     );
 
@@ -69,9 +69,11 @@ export class ConnectorConfigNamingRule extends BaseRule {
 
       if (name && !this.isValidConfigName(name)) {
         issues.push(
-          this.createIssue(config, `Config "${name}" should follow Convention_Type pattern`, {
-            suggestion: 'Use pattern: HTTP_Request_Config, Database_Config',
-          }),
+          this.createIssue(
+            config,
+            `Config "${name}" should start with a capital letter and use underscores`,
+            { suggestion: 'Use a pattern such as HTTP_Request_config, Database_Config' },
+          ),
         );
       }
     }
@@ -80,71 +82,25 @@ export class ConnectorConfigNamingRule extends BaseRule {
   }
 
   private isValidConfigName(name: string): boolean {
-    // Valid patterns: HTTP_Request_Config, Salesforce_Config, etc.
-    return /^[A-Z][a-zA-Z0-9]*(_[A-Z][a-zA-Z0-9]*)*$/.test(name);
+    // Accepts Studio defaults (HTTP_Listener_config) as well as HTTP_Request_Config.
+    return /^[A-Z][A-Za-z0-9]*(_[A-Za-z0-9]+)*$/.test(name);
   }
 }
 
 /**
- * EXP-003: MUnit Executable Test Presence
+ * EXP-003: MUnit Executable Test Presence (deprecated)
  *
- * Check that projects with flows contain at least one executable MUnit test.
+ * Graduated to TEST-001 in 1.31.0. The ID stays registered so existing
+ * configuration that names it keeps loading; it no longer reports.
  */
 export class MUnitCoverageRule extends ProjectRule {
   id = 'EXP-003';
   name = 'MUnit Executable Test Presence';
-  description = 'Projects with flows should contain at least one executable MUnit test';
+  description = 'Deprecated: superseded by TEST-001';
   severity = 'info' as const;
   category = 'experimental' as const;
 
-  protected validateProject(context: ValidationContext): Issue[] {
-    const flowCount = context.allFlowNames?.size ?? 0;
-    if (flowCount === 0) {
-      return [];
-    }
-
-    const munitDir = path.join(context.projectRoot, 'src', 'test', 'munit');
-    const usableMunitDir = fs.existsSync(munitDir) && !fs.lstatSync(munitDir).isSymbolicLink();
-    const suites = usableMunitDir
-      ? fg.sync('**/*.xml', {
-          cwd: munitDir,
-          absolute: true,
-          onlyFiles: true,
-          followSymbolicLinks: false,
-        })
-      : [];
-
-    let executableTests = 0;
-    for (const suite of suites) {
-      let content: string;
-      try {
-        content = fs.readFileSync(suite, 'utf8');
-      } catch {
-        continue;
-      }
-      const parsed = parseXml(content, path.relative(context.projectRoot, suite));
-      if (!parsed.success || !parsed.document) {
-        continue;
-      }
-      const tests = parsed.document.getElementsByTagNameNS(
-        'http://www.mulesoft.org/schema/mule/munit',
-        'test',
-      );
-      for (let index = 0; index < tests.length; index += 1) {
-        const test = tests.item(index);
-        if (test && (test.getAttribute('ignore') ?? '').trim().toLowerCase() !== 'true') {
-          executableTests += 1;
-        }
-      }
-    }
-
-    return executableTests > 0
-      ? []
-      : [
-          this.createProjectIssue(`Project has ${flowCount} flows but no executable MUnit tests`, {
-            suggestion:
-              'Add at least one non-ignored munit:test under src/test/munit for project behavior',
-          }),
-        ];
+  protected validateProject(_context: ValidationContext): Issue[] {
+    return [];
   }
 }
