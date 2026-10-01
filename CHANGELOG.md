@@ -1,5 +1,67 @@
 # Changelog
 
+## [1.31.0] - 2026-10-01
+
+Hardening and CI-output release. Report output is safe to pipe, SARIF validates, three CI formats
+and a baseline mode arrive, one dead rule starts working, and one experimental rule graduates.
+No rule ID, JSON shape, or exit code changes.
+
+### Behaviour changes to review on upgrade
+
+- **Standard output carries only the report.** The quality-gate summary, `--verbose` messages, and
+  "Report written to" now go to standard error. Scripts that parsed gate text from stdout must read
+  stderr. `-f json -g strict | jq` now works.
+- **An unknown `--format` fails immediately** with exit code `2` and a list of valid formats,
+  instead of failing after the scan.
+- **`--experimental` no longer overrides** a rule you set to `false` in config.
+- **`TEST-001` is new** (testing category, `recommended` and `strict` profiles, info severity). It
+  reports projects with flows and no executable MUnit test, and skips libraries. It graduates
+  `EXP-003`, which stays registered as a deprecated alias that no longer reports. Rule count is 99.
+- **`SEC-004` now fires.** Its old matching could not occur, so it never reported. It now flags
+  `http:listener` flows that accept a request body with no `validation:*`, schema validator, or
+  DataWeave validation. APIKit-routed and `flow-ref` flows are skipped. Expect new warnings.
+- **`EXP-001` is renamed "Flow Reference Fan-out"** to match what it measures (flow-ref count per
+  flow). Behaviour and the `maxDepth` option are unchanged.
+- **`EXP-002` is less noisy.** It accepts Studio default names such as `HTTP_Listener_config`,
+  checks bare `<x:config>` elements, and skips APIKit and MUnit configs.
+
+### Added
+
+- **`--format markdown`, `--format github`, `--format junit`** for PR comments and job summaries,
+  GitHub Actions annotations, and generic CI test reports.
+- **`--baseline <file>`** reports only issues missing from a previous `--format json` run, matched
+  by rule, file, and message so line shifts do not matter. The gate and exit code use only new issues.
+- **Per-rule documentation links.** SARIF `helpUri` now points at each rule's catalog entry.
+- **HTML report:** parse failures appear in the issue table.
+
+### Fixed
+
+- **SARIF validity.** Removed the schema-invalid `fixes` array (the suggestion is now
+  `properties.suggestion`), dropped columns below 1, declared the `PARSE-ERROR` rule, omitted the
+  fake `Project Structure` location, percent-encoded URIs, and added `partialFingerprints`.
+- **CSV formula injection.** Cells starting with `=`, `+`, `-`, `@`, tab, or CR are neutralised.
+- **HTML report escaping.** Rule name, ID, category, and method are escaped, and category filters no
+  longer use inline JavaScript. Search no longer navigates away while typing, "Clear filters"
+  reflects an active search, and Windows project paths resolve a name.
+- **`--output`** creates missing directories.
+- **Docs.** The JSON example now shows `relativePath`; quoted sample summaries match the sample
+  project and a test keeps them current; rule counts, rule lists, and the architecture page are
+  current; `rules-catalog` anchors are stable.
+
+### Dependencies
+
+- `amf-client-js` 5.14.0 and `@aml-org/amf-custom-validator` 1.8.5 (exact pins), `eslint` 10.11,
+  `knip` 6.39, `softprops/action-gh-release` v3.
+- `npm audit fix` clears advisories in `fast-uri`, `ip-address`, and `brace-expansion`.
+- Dependabot now holds `@xmldom/xmldom` below 0.9, which changes the public `Document` type.
+
+### Internal
+
+- Shared value lists in `src/types/constants.ts` drive the severity, format, issue-type, and
+  rating types and the config schema.
+- New tests for SARIF, CSV, the CI formats, baseline, HTML hardening, `SEC-004`, `TEST-001`, and
+  sample-project documentation drift.
+
 ## [1.30.1] - 2026-09-20
 
 Docs-only patch. Aligns every documented install pin with the published package and adds a

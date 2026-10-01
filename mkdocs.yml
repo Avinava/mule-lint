@@ -11,11 +11,9 @@ edit_uri: edit/master/docs/
 docs_dir: docs
 site_dir: .site
 
-# macOS cruft and an empty placeholder directory would otherwise be copied into
-# the published site.
+# macOS cruft would otherwise be copied into the published site.
 exclude_docs: |
   .DS_Store
-  next-gen/
 
 # With `mkdocs build --strict` in CI, these turn a broken cross-link, a missing
 # anchor, or a page left out of the nav into a failed build rather than a warning

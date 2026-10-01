@@ -38,16 +38,16 @@ mule-lint does not search for `.mulelintrc.json` automatically. A file in the pr
 
 ## Supported keys
 
-| Key                | What it controls                                                                  |
-| ------------------ | --------------------------------------------------------------------------------- |
-| `extends`          | One profile: `mule-lint:baseline`, `mule-lint:recommended`, or `mule-lint:strict` |
-| `rules`            | Per-rule `enabled`, `severity`, and rule-specific `options`                       |
-| `include`          | File globs to include                                                             |
-| `exclude`          | File globs to skip                                                                |
-| `defaultFormatter` | Format used when `--format` is absent                                             |
-| `failOnWarning`    | Whether warnings exit non-zero                                                    |
-| `qualityGate`      | Conditions used with `--quality-gate config`                                      |
-| `customRulesPath`  | YAML file of custom XPath rules — see [Custom XPath rules](#custom-xpath-rules)   |
+| Key                | What it controls                                                                                                 |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `extends`          | One profile: `mule-lint:baseline`, `mule-lint:recommended`, or `mule-lint:strict`                                |
+| `rules`            | Per-rule `enabled`, `severity`, and rule-specific `options`                                                      |
+| `include`          | File globs to include                                                                                            |
+| `exclude`          | File globs to skip                                                                                               |
+| `defaultFormatter` | Format used when `--format` is absent: `table`, `json`, `sarif`, `html`, `csv`, `markdown`, `github`, or `junit` |
+| `failOnWarning`    | Whether warnings exit non-zero                                                                                   |
+| `qualityGate`      | Conditions used with `--quality-gate config`                                                                     |
+| `customRulesPath`  | YAML file of custom XPath rules — see [Custom XPath rules](#custom-xpath-rules)                                  |
 
 Unknown keys produce a warning and are ignored. Treat that warning as a configuration defect: a misspelled setting did not take effect.
 

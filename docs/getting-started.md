@@ -33,7 +33,7 @@ mule-lint --version
 If your company does not allow global npm installs, skip installation and use:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.30.1 . --profile recommended
+npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended
 ```
 
 ## 3. Open the Mule project root
@@ -66,7 +66,7 @@ mule-lint . --profile recommended
 
 `.` means “the current directory.” `recommended` is the reviewed profile intended for normal team use.
 
-The bundled sample produces:
+The bundled sample produces output like this (abbreviated):
 
 ```text
 Mule-Lint Report
@@ -77,8 +77,8 @@ src/main/mule/orders-api.xml
 
 Summary:
   Errors:    1
-  Warnings:  5
-  Infos:     5
+  Warnings:  10
+  Infos:     9
 ```
 
 Your numbers will be different. A non-zero exit status is expected when errors are found.

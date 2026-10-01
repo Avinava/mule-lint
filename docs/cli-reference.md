@@ -10,19 +10,22 @@ mule-lint [path] [options]
 
 ## Lint options
 
-| Option                      | Meaning                                          |
-| --------------------------- | ------------------------------------------------ |
-| `-p, --profile <name>`      | Use `baseline`, `recommended`, or `strict`       |
-| `-c, --config <file>`       | Load an explicit JSON configuration file         |
-| `-f, --format <type>`       | Print `table`, `json`, `sarif`, `html`, or `csv` |
-| `-o, --output <file>`       | Write output to a file instead of the terminal   |
-| `-q, --quiet`               | Show errors only                                 |
-| `--fail-on-warning`         | Exit `1` when a warning exists                   |
-| `-g, --quality-gate <name>` | Apply `default`, `strict`, or `config` gate      |
-| `-e, --experimental`        | Include experimental rules                       |
-| `-v, --verbose`             | Print more execution detail                      |
-| `-V, --version`             | Print the installed version                      |
-| `-h, --help`                | Print help                                       |
+| Option                      | Meaning                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------- |
+| `-p, --profile <name>`      | Use `baseline`, `recommended`, or `strict`                                      |
+| `-c, --config <file>`       | Load an explicit JSON configuration file                                        |
+| `-f, --format <type>`       | Print `table`, `json`, `sarif`, `html`, `csv`, `markdown`, `github`, or `junit` |
+| `--baseline <file>`         | Report only issues missing from a previous `--format json` report               |
+| `-o, --output <file>`       | Write output to a file instead of the terminal                                  |
+| `-q, --quiet`               | Show errors only                                                                |
+| `--fail-on-warning`         | Exit `1` when a warning exists                                                  |
+| `-g, --quality-gate <name>` | Apply `default`, `strict`, or `config` gate                                     |
+| `-e, --experimental`        | Include experimental rules                                                      |
+| `-v, --verbose`             | Print more execution detail                                                     |
+| `-V, --version`             | Print the installed version                                                     |
+| `-h, --help`                | Print help                                                                      |
+
+Only the report goes to standard output; gate results and status messages go to standard error.
 
 Examples:
 

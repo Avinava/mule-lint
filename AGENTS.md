@@ -16,8 +16,8 @@ src/engine/LintEngine.ts     scan orchestration and project pre-scan
 src/rules/                   rule implementations and ALL_RULES registry
 src/catalog/                 standards, rule definitions, profiles
 src/core/                    parsing, scanning, metrics, gates, config
-src/formatters/              table/JSON/SARIF/HTML/CSV output
-src/formatter/               Mule XML formatting
+src/formatters/              table/JSON/SARIF/HTML/CSV/Markdown/GitHub/JUnit report output
+src/formatter/               Mule XML source formatting (not report output)
 src/api-contract/            RAML/OpenAPI validation
 src/mcp/                     tools, prompts, and resources
 tests/unit/                  behavioral and parity tests
