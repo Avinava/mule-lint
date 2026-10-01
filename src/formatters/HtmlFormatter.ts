@@ -8,7 +8,7 @@
 
 import { LintReport } from '../types/Report';
 import { ALL_RULES } from '../rules';
-import type { Rule } from '../types';
+import type { Issue, Rule } from '../types';
 import packageJson from '../../package.json';
 
 // Import all modular components from html/
@@ -51,6 +51,19 @@ function escapeHtml(value: string): string {
 /**
  * Enrich files with rule metadata
  */
+/** Files that failed to parse have no issues; surface the failure as one so the table shows it. */
+function parseErrorIssues(file: LintReport['files'][number]): Issue[] {
+  if (file.parsed) return [];
+  return [
+    {
+      severity: 'error',
+      ruleId: 'PARSE-ERROR',
+      message: file.parseError ?? 'Failed to parse file',
+      line: 1,
+    },
+  ];
+}
+
 function enrichFiles(
   report: LintReport,
   rules: Rule[],
@@ -74,10 +87,11 @@ function enrichFiles(
   parsed: boolean;
   parseError?: string | undefined;
 }> {
+  const rulesById = new Map(rules.map((rule) => [rule.id, rule]));
   return report.files.map((file) => ({
     ...file,
-    issues: file.issues.map((issue) => {
-      const ruleDef = rules.find((r) => r.id === issue.ruleId);
+    issues: [...parseErrorIssues(file), ...file.issues].map((issue) => {
+      const ruleDef = rulesById.get(issue.ruleId);
       return {
         ...issue,
         category: ruleDef?.category ?? 'General',
@@ -99,7 +113,7 @@ function buildClientData(
   enrichedFiles: ReturnType<typeof enrichFiles>,
   rules: Rule[],
 ) {
-  const projectName = report.projectRoot.split('/').filter(Boolean).pop() ?? 'MuleSoft Project';
+  const projectName = report.projectRoot.split(/[\\/]/).filter(Boolean).pop() ?? 'MuleSoft Project';
 
   return {
     metadata: {
