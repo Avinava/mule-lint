@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { LintConfig } from '../types/Config';
+import { FORMATTER_TYPES, SEVERITIES } from '../types/constants';
 
-const severitySchema = z.enum(['error', 'warning', 'info']);
-const formatterSchema = z.enum(['table', 'json', 'sarif', 'html', 'csv']);
+const severitySchema = z.enum(SEVERITIES);
+const formatterSchema = z.enum(FORMATTER_TYPES);
 const profileSchema = z.enum([
   'baseline',
   'recommended',

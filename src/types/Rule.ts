@@ -1,7 +1,9 @@
+import { ISSUE_TYPES, SEVERITIES } from './constants';
+
 /**
  * Severity levels for lint issues
  */
-export type Severity = 'error' | 'warning' | 'info';
+export type Severity = (typeof SEVERITIES)[number];
 
 /**
  * Categories for organizing rules
@@ -31,7 +33,7 @@ export type RuleCategory =
  * - bug: Reliability issues (missing error handlers, runtime failures)
  * - vulnerability: Security issues (hardcoded secrets, insecure configs)
  */
-export type IssueType = 'code-smell' | 'bug' | 'vulnerability';
+export type IssueType = (typeof ISSUE_TYPES)[number];
 
 /**
  * Represents a single lint issue found during validation

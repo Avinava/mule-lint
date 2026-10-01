@@ -542,7 +542,7 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 ---
 
-### SEC-009: TLS Keystore Password
+### SEC-009: TLS Keystore Password { #sec-009-tls-keystore-password-secured }
 
 | Property       | Value         |
 | -------------- | ------------- |
@@ -857,7 +857,7 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 > **Best Practice**: Configure explicit timeouts, include identifying headers, and handle all HTTP response codes appropriately.
 
-### MULE-401: HTTP Request Missing User-Agent
+### MULE-401: HTTP Request Missing User-Agent { #mule-401-http-request-user-agent }
 
 | Property     | Value   |
 | ------------ | ------- |
@@ -869,7 +869,7 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 ---
 
-### MULE-402: HTTP Request Missing Content-Type
+### MULE-402: HTTP Request Missing Content-Type { #mule-402-http-request-content-type }
 
 | Property     | Value   |
 | ------------ | ------- |
@@ -909,7 +909,7 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 
 > **Best Practice**: Keep flows simple and focused. Use async processing carefully with proper error handling. Configure connection pooling and reconnection for production resilience.
 
-### MULE-501: Scatter-Gather Routes
+### MULE-501: Scatter-Gather Routes { #mule-501-scatter-gather-route-count }
 
 | Property     | Value       |
 | ------------ | ----------- |
@@ -1221,7 +1221,7 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 
 ---
 
-### CFG-001: Config Properties Ordering
+### CFG-001: Config Properties Ordering { #cfg-001-configuration-properties-ordering }
 
 | Property     | Value     |
 | ------------ | --------- |
@@ -1233,7 +1233,7 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 
 ---
 
-### CFG-002: Missing Env Properties Declaration
+### CFG-002: Missing Env Properties Declaration { #cfg-002-missing-environment-properties }
 
 | Property     | Value     |
 | ------------ | --------- |
@@ -1547,7 +1547,7 @@ db.password: '![encryptedValue]'
 
 ---
 
-### DW-004: Java 17 DataWeave Error Handling
+### DW-004: Java 17 DataWeave Error Handling { #dw-004-java-17-dw-error-handling }
 
 | Property     | Value     |
 | ------------ | --------- |
@@ -1876,7 +1876,7 @@ The APIKit console is generated scaffolding rather than an API surface, so its f
 
 ---
 
-### HYG-005: Unused Variable Detection
+### HYG-005: Unused Variable Detection { #hyg-005-unused-variable }
 
 | Property     | Value     |
 | ------------ | --------- |

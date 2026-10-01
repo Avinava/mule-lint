@@ -2,6 +2,7 @@ import { LintReport } from '../types/Report';
 import { Issue, Severity, Rule } from '../types/Rule';
 import { ALL_RULES } from '../rules';
 import { getRuleDefinition } from '../catalog';
+import { createHash } from 'crypto';
 import packageJson from '../../package.json';
 
 /**
@@ -51,8 +52,9 @@ interface SarifResult {
   ruleId: string;
   level: SarifLevel;
   message: SarifMessage;
-  locations: SarifLocation[];
-  fixes?: SarifFix[];
+  locations?: SarifLocation[];
+  partialFingerprints?: Record<string, string>;
+  properties?: Record<string, unknown>;
 }
 
 interface SarifLocation {
@@ -76,10 +78,6 @@ interface SarifRegion {
   endColumn?: number;
 }
 
-interface SarifFix {
-  description?: SarifMessage;
-}
-
 interface SarifInvocation {
   executionSuccessful: boolean;
   startTimeUtc?: string;
@@ -100,6 +98,28 @@ function toSarifLevel(severity: Severity): SarifLevel {
     case 'info':
       return 'note';
   }
+}
+
+const PARSE_ERROR_RULE: SarifRule = {
+  id: 'PARSE-ERROR',
+  name: 'File could not be parsed',
+  shortDescription: { text: 'File could not be parsed' },
+  defaultConfiguration: { level: 'error' },
+};
+
+const PSEUDO_FILES = new Set(['Project Structure']);
+
+/** SARIF artifact URIs are forward-slash, percent-encoded relative references. */
+function toArtifactUri(relativePath: string): string {
+  return relativePath.split(/[\\/]/).map(encodeURIComponent).join('/');
+}
+
+/** Stable across line shifts so code-scanning can de-duplicate alerts between runs. */
+function fingerprint(issue: Issue, relativePath: string): string {
+  const normalizedMessage = issue.message.replace(/\s+/g, ' ').trim();
+  return createHash('sha256')
+    .update(`${issue.ruleId}\n${relativePath}\n${normalizedMessage}`)
+    .digest('hex');
 }
 
 /**
@@ -130,37 +150,38 @@ function toSarifResult(issue: Issue, relativePath: string): SarifResult {
     ruleId: issue.ruleId,
     level: toSarifLevel(issue.severity),
     message: { text: issue.message },
-    locations: [
-      {
-        physicalLocation: {
-          artifactLocation: {
-            uri: relativePath,
-            uriBaseId: '%SRCROOT%',
-          },
-          // SARIF requires startLine >= 1. Project-level findings use line 0 to
-          // mean "the project, not a line", so the region is omitted for them
-          // rather than emitting an invalid document an uploader would reject.
-          ...(issue.line > 0
-            ? {
-                region: {
-                  startLine: issue.line,
-                  ...(issue.column === undefined ? {} : { startColumn: issue.column }),
-                },
-              }
-            : {}),
-        },
-      },
-    ],
+    partialFingerprints: { 'muleLint/v1': fingerprint(issue, relativePath) },
+    ...(issue.suggestion ? { properties: { suggestion: issue.suggestion } } : {}),
   };
 
-  // Add fix suggestion if available
-  if (issue.suggestion) {
-    result.fixes = [
-      {
-        description: { text: issue.suggestion },
-      },
-    ];
+  // Project-level findings have no file; "Project Structure" is not a valid URI.
+  if (PSEUDO_FILES.has(relativePath)) {
+    return result;
   }
+
+  result.locations = [
+    {
+      physicalLocation: {
+        artifactLocation: {
+          uri: toArtifactUri(relativePath),
+          uriBaseId: '%SRCROOT%',
+        },
+        // SARIF requires startLine >= 1. Project-level findings use line 0 to
+        // mean "the project, not a line", so the region is omitted for them
+        // rather than emitting an invalid document an uploader would reject.
+        ...(issue.line > 0
+          ? {
+              region: {
+                startLine: issue.line,
+                ...(issue.column === undefined || issue.column < 1
+                  ? {}
+                  : { startColumn: issue.column }),
+              },
+            }
+          : {}),
+      },
+    },
+  ];
 
   return result;
 }
@@ -180,7 +201,7 @@ export function formatSarif(report: LintReport, rules: Rule[] = ALL_RULES): stri
             name: '@sfdxy/mule-lint',
             version: packageJson.version,
             informationUri: 'https://github.com/Avinava/mule-lint',
-            rules: rules.map(toSarifRule),
+            rules: [...rules.map(toSarifRule), PARSE_ERROR_RULE],
           },
         },
         results: [],
@@ -210,7 +231,7 @@ export function formatSarif(report: LintReport, rules: Rule[] = ALL_RULES): stri
           {
             physicalLocation: {
               artifactLocation: {
-                uri: file.relativePath,
+                uri: toArtifactUri(file.relativePath),
                 uriBaseId: '%SRCROOT%',
               },
               region: { startLine: 1 },

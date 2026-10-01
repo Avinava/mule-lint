@@ -6,6 +6,16 @@ import type { RuleDefinition } from './types';
 
 const docsRoot = 'https://avinava.github.io/mule-lint/best-practices/rules-catalog/';
 
+/** MkDocs heading anchor for `### RULE-ID: Name` in the rules catalog. */
+function ruleDocsAnchor(rule: Rule): string {
+  const slug = `${rule.id} ${rule.name}`
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+  return `${docsRoot}#${slug}`;
+}
+
 export function createRuleDefinition(rule: Rule): RuleDefinition {
   const standard = STANDARD_BY_CATEGORY.get(rule.category);
   if (!standard) throw new Error(`No standard is registered for rule category: ${rule.category}`);
@@ -20,7 +30,7 @@ export function createRuleDefinition(rule: Rule): RuleDefinition {
     status: rule.category === 'experimental' ? 'experimental' : 'stable',
     standardIds: [standard.id],
     profiles: getRuleProfiles(rule),
-    docsUrl: rule.docsUrl ?? docsRoot,
+    docsUrl: rule.docsUrl ?? ruleDocsAnchor(rule),
     resourceUri: `mule-lint://rules/${rule.id}`,
   };
 }

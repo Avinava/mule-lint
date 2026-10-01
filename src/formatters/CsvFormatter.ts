@@ -42,11 +42,15 @@ export function formatCsv(report: LintReport): string {
   return lines.join('\n');
 }
 
+/** Spreadsheet apps evaluate cells that start with these characters as formulas. */
+const FORMULA_PREFIX = /^[=+\-@\t\r]/;
+
 function escapeCsvRow(fields: string[]): string {
   return fields
     .map((field) => {
-      const escaped = field.replace(/"/g, '""');
-      if (escaped.includes(',') || escaped.includes('"') || escaped.includes('\n')) {
+      const safe = FORMULA_PREFIX.test(field) ? `'${field}` : field;
+      const escaped = safe.replace(/"/g, '""');
+      if (/[",\r\n]/.test(escaped)) {
         return `"${escaped}"`;
       }
       return escaped;

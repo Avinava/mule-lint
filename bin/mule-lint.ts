@@ -8,6 +8,7 @@ import { ALL_RULES } from '../src/rules';
 import { format, getExitCode } from '../src/formatters';
 import { FormatterType, LintConfig } from '../src/types/Config';
 import { DEFAULT_CONFIG } from '../src/types/Config';
+import { FORMATTER_TYPES } from '../src/types/constants';
 import { parseLintConfig } from '../src/core/ConfigLoader';
 import { loadCustomXPathRules } from '../src/core/CustomRuleLoader';
 import { Rule } from '../src/types';
@@ -48,7 +49,7 @@ program
   .option('-p, --profile <name>', 'Rule profile: baseline, recommended, or strict')
   .option('-g, --quality-gate <name>', 'Apply quality gate: default, strict, or from config')
   .option('-v, --verbose', 'Show verbose output')
-  .action(async (targetPath: string | undefined, options: CliOptions) => {
+  .action(async (targetPath: string | undefined, options: LintCliOptions) => {
     if (!targetPath) {
       program.help();
       return;
@@ -145,7 +146,7 @@ program
     }
   });
 
-interface CliOptions {
+interface LintCliOptions {
   format?: string;
   output?: string;
   config?: string;
@@ -157,7 +158,7 @@ interface CliOptions {
   verbose?: boolean;
 }
 
-async function runLint(targetPath: string, options: CliOptions): Promise<void> {
+async function runLint(targetPath: string, options: LintCliOptions): Promise<void> {
   const absolutePath = path.resolve(targetPath);
 
   // Validate path exists
@@ -188,7 +189,7 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
         ALL_RULES.map((rule) => rule.id),
       );
       if (options.verbose) {
-        console.log(`Loaded ${customRules.length} custom rules from ${customRulesPath}`);
+        console.error(`Loaded ${customRules.length} custom rules from ${customRulesPath}`);
       }
     }
   }
@@ -206,12 +207,13 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
   if (options.experimental) {
     config.rules = { ...config.rules };
     for (const rule of ALL_RULES.filter((candidate) => candidate.category === 'experimental')) {
-      config.rules[rule.id] = true;
+      // An explicit `false` in the config file wins over the --experimental opt-in.
+      config.rules[rule.id] ??= true;
     }
   }
 
   if (options.verbose) {
-    console.log(
+    console.error(
       `Loaded ${effectiveRules.length} rules (Experimental: ${options.experimental ? 'ON' : 'OFF'})`,
     );
   }
@@ -223,11 +225,12 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
     verbose: options.verbose,
   });
 
+  const formatterType = resolveFormatter(
+    options.format ?? config.defaultFormatter ?? DEFAULT_CONFIG.defaultFormatter,
+  );
+
   // Run scan
   let report = await engine.scan(absolutePath);
-  const formatterType = (options.format ??
-    config.defaultFormatter ??
-    DEFAULT_CONFIG.defaultFormatter) as FormatterType;
   const failOnWarning = options.failOnWarning === true || config.failOnWarning === true;
 
   // Filter if quiet mode
@@ -244,14 +247,13 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
   const output = format(report, formatterType, effectiveRules);
 
   // Write output
-  if (options.output) {
-    const outputPath = path.resolve(options.output);
+  // Only the report itself goes to stdout so `-f json | jq` and SARIF piping stay valid.
+  const outputFile = options.output ?? (formatterType === 'html' ? 'report.html' : undefined);
+  if (outputFile) {
+    const outputPath = path.resolve(outputFile);
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, output, 'utf-8');
-    console.log(`Report written to: ${outputPath}`);
-  } else if (formatterType === 'html') {
-    const outputPath = path.resolve('report.html');
-    fs.writeFileSync(outputPath, output, 'utf-8');
-    console.log(`Report written to: ${outputPath}`);
+    console.error(`Report written to: ${outputPath}`);
   } else {
     console.log(output);
   }
@@ -265,7 +267,7 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
     const gateResult = evaluateQualityGate(report, gate);
 
     // Print quality gate result
-    console.log(formatQualityGateResult(gateResult));
+    console.error(formatQualityGateResult(gateResult));
 
     // Exit code based on quality gate
     exitCode = getQualityGateExitCode(gateResult.status, failOnWarning);
@@ -275,6 +277,14 @@ async function runLint(targetPath: string, options: CliOptions): Promise<void> {
   }
 
   process.exit(exitCode);
+}
+
+function resolveFormatter(value: string): FormatterType {
+  const match = FORMATTER_TYPES.find((type) => type === value);
+  if (!match) {
+    throw new Error(`Unknown format: ${value}. Use one of: ${FORMATTER_TYPES.join(', ')}`);
+  }
+  return match;
 }
 
 /**
