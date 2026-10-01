@@ -470,7 +470,9 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 **Description:** Incoming payloads should be validated using JSON or XML schema validation to prevent injection attacks and malformed data processing.
 
-**Check Logic:** Flags flows accepting POST/PUT/PATCH requests that have no schema validation or DataWeave validation patterns.
+**Check Logic:** Flags flows that start at an `http:listener` accepting a request body (`allowedMethods` includes POST, PUT, or PATCH, or is unset) and contain no `validation:*` operation, `json:validate-schema`, `xml-module:validate-schema`, or DataWeave `validate…(` call.
+
+**Not reported:** flows routed through `apikit:router` (APIKit validates against the API spec) and flows that delegate with `flow-ref` (the validation may live in the referenced flow, which a per-file rule cannot see). Before 1.31.0 this rule only matched APIKit-named flows containing a listener and effectively never fired.
 
 **Example:**
 
