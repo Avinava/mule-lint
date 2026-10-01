@@ -1,10 +1,10 @@
-import type { UserConfig } from '@commitlint/types';
+import { RuleConfigSeverity, type UserConfig } from '@commitlint/types';
 
 const config: UserConfig = {
   extends: ['@commitlint/config-conventional'],
   rules: {
     'scope-enum': [
-      2,
+      RuleConfigSeverity.Error,
       'always',
       [
         'cli',
@@ -23,7 +23,7 @@ const config: UserConfig = {
         'tooling',
       ],
     ],
-    'body-max-line-length': [0, 'always', Infinity],
+    'body-max-line-length': [RuleConfigSeverity.Disabled, 'always', Infinity],
   },
 };
 
