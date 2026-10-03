@@ -80,7 +80,10 @@ compatible official browser executable. The host must provide that browser's nor
 shared-library prerequisites, permit browser child processes and local-file access,
 and provide writable temporary storage for the extracted browser and disposable
 profile. The bundled browser upstream recommends at least 512 MB RAM (1.6 GB preferred).
-The CI browser job uses the current Node.js 22 LTS on Linux; restricted containers may
+The CI browser job uses Node.js 22 LTS and the runner image's installed official
+Chrome via `MULE_LINT_BROWSER_EXECUTABLE`, retaining its normal sandbox support.
+The pinned headless-shell fallback remains available for compatible local Linux
+environments; restricted containers may
 still block secure browser launch and should report that limitation explicitly.
 
 ### CSS compiler compatibility
