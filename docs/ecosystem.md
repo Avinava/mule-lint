@@ -32,3 +32,21 @@ version, so you do not need to set it up separately. The `mule-development`, `mu
 [the mule-skills MCP server reference](https://avinava.github.io/mule-skills/mcp-servers/).
 
 To use `mule-lint` on its own, follow [the getting-started guide](getting-started.md).
+
+## Release and documentation coordination
+
+Package releases remain explicit version-tag releases. Keep `package.json`, both lockfile root
+versions, the newest versioned changelog entry, and any versioned examples in agreement. Run
+`node scripts/check-release.mjs` before preparing a release; the tag workflow additionally requires
+an exact `vX.Y.Z` match and passes the repository checks, dependency audit, and strict documentation
+build before publishing. Changes under `Unreleased` do not update a published package automatically.
+
+Choose the next semantic version after reviewing public contract changes. Merge the reviewed version
+commit before pushing only its new tag; never move an existing release tag. The compatibility hub
+keeps its existing published pins until the new package is available and its compatibility checks pass.
+A missing dispatch token requires a manual hub update and does not undo a successful publication.
+
+The documentation site follows the default branch independently of npm releases. Its Pages workflow
+builds with `mkdocs build --strict`; manual publication also requires the default branch. A passing
+pull-request build validates the proposed docs without publishing them. Tag publication, Pages
+deployment, and a hub pin update remain separate operations.

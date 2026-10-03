@@ -14,6 +14,10 @@
 
 ### Fixed
 
+- Replace vulnerable glob dependencies with bounded matching that preserves supported brace ranges, exclusions, depth and symlink behavior. Oversized patterns fail explicitly instead of silently truncating scans.
+- Upgrade the offline report CSS compiler, preserving design tokens; HTML reports require Chrome 111+, Safari 16.4+, or Firefox 128+.
+- Verify package, lockfile, changelog and release-tag identity; validate release documentation and restrict manual Pages publication to the default branch.
+
 - Keep nested file findings project-relative so file and project scans share stable finding identities.
 - HTML reports expose target, scan and gate status, distinguish parse diagnostics, synchronize
   filters and preserve findings when chart or table dependencies fail.

@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import fg from 'fast-glob';
+import fg from '../core/GlobFiles';
 import {
   Rule,
   Issue,

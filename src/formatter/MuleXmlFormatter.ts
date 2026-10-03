@@ -1,7 +1,7 @@
 import * as prettier from 'prettier';
 import * as fs from 'fs';
 import * as path from 'path';
-import fg from 'fast-glob';
+import fg from '../core/GlobFiles';
 
 /**
  * Anypoint Studio-compatible formatting defaults for Mule XML.

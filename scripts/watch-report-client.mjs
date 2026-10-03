@@ -24,7 +24,7 @@ function rebuild() {
   });
 }
 const watcher = watch('src/formatters/html', { recursive: true }, (_event, filename) => {
-  if (!filename?.endsWith('.ts') || filename.includes('generated')) return;
+  if (!filename || !/\.(ts|css)$/.test(filename) || filename.includes('generated')) return;
   clearTimeout(timer);
   timer = setTimeout(rebuild, 100);
 });

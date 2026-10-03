@@ -48,6 +48,10 @@ Add `--quiet` to print only errors.
 mule-lint . --profile recommended --format html --output mule-lint-report.html
 ```
 
+Open HTML reports in Chrome 111+, Safari 16.4+, or Firefox 128+. Scripts, styles,
+fonts and charts are embedded, so the report works offline. The HTML browser
+requirement is separate from the CLI Node.js requirement.
+
 The report provides:
 
 - project metrics and quality ratings;

@@ -82,3 +82,17 @@ and provide writable temporary storage for the extracted browser and disposable
 profile. The bundled browser upstream recommends at least 512 MB RAM (1.6 GB preferred).
 The CI browser job uses the current Node.js 22 LTS on Linux; restricted containers may
 still block secure browser launch and should report that limitation explicitly.
+
+### CSS compiler compatibility
+
+The report uses Tailwind CSS 4 with an explicit source list and safelist. Its
+stylesheet preserves the previous report typography, palette, rounded corners and
+shadow sizes. Compiled layers are flattened to preserve the existing unlayered
+component cascade; browser checks guard utility spacing against reset overrides. Changes to TypeScript or CSS rebuild the generated assets. The
+compiler and runtime glob library no longer depend on the vulnerable `braces`
+package. Both production and complete dependency trees remain audited.
+
+Reports require Chrome 111+, Safari 16.4+, or Firefox 128+, matching the CSS
+compiler's documented browser support. This changes the HTML viewer requirement,
+not the Node.js CLI requirement. Browser qualification checks computed design
+tokens as well as interactions and responsive layouts.

@@ -1,6 +1,6 @@
 # Release workflow
 
-Releases are triggered by a pushed `v*` tag. The publish workflow uses Node.js 22, runs `npm run check`, verifies the tag matches `package.json`, publishes with npm provenance, creates a GitHub release, and then notifies the mule-skills compatibility hub on a best-effort basis.
+Releases are triggered by a pushed `v*` tag. The publish workflow uses Node.js 22, verifies package/lockfile/changelog/tag identity, runs `npm run check`, audits all dependencies including bundled browser assets, builds strict documentation, publishes with npm provenance, creates a GitHub release, and then notifies the mule-skills compatibility hub on a best-effort basis.
 
 ## 1. Prepare
 
@@ -8,7 +8,7 @@ Releases are triggered by a pushed `v*` tag. The publish workflow uses Node.js 2
 - Update `package.json` and `package-lock.json` together.
 - Update `CHANGELOG.md` and versioned docs/examples when public behavior changed.
 - Review profile membership, rule IDs, output/exit codes, library exports, MCP contracts, and screenshots.
-- Run `npm run check` locally.
+- Run `node scripts/check-release.mjs`, `npm run check`, `npm audit --audit-level=moderate`, and `mkdocs build --strict` locally.
 - Confirm the working tree and branch are ready for release.
 
 ## 2. Create the version commit and tag
@@ -29,7 +29,7 @@ In `.github/workflows/publish.yml`, the tag run should:
 
 1. install with `npm ci` on Node 22;
 2. pass `npm run check`;
-3. verify `vX.Y.Z` equals `package.json` version;
+3. verify package/lockfile/changelog/tag identity, audit the browser dependency graph, and build strict docs;
 4. publish `@sfdxy/mule-lint` publicly with provenance;
 5. create generated GitHub release notes;
 6. dispatch `tool_release` to the compatibility hub when its token is configured.

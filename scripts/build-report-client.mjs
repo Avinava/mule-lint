@@ -1,6 +1,6 @@
 import { build } from 'esbuild';
 import postcss from 'postcss';
-import tailwind from 'tailwindcss';
+import tailwind from '@tailwindcss/postcss';
 import { readFile, mkdir, writeFile, copyFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -24,33 +24,17 @@ const client = await build({
   legalComments: 'inline',
   write: false,
 });
-const utilityCss = await postcss([
-  tailwind({
-    content: [path.join(root, 'src/formatters/html/**/*.ts')],
-    darkMode: 'class',
-    safelist: [
-      {
-        pattern:
-          /^(text|border)-(purple|emerald|blue|rose|cyan|sky|slate|amber)-(300|400|500|600)$/,
-        variants: ['dark', 'hover', 'dark:hover'],
-      },
-    ],
-    theme: {
-      extend: {
-        fontFamily: {
-          sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-          mono: ['JetBrains Mono', 'SF Mono', 'monospace'],
-        },
-        fontSize: {
-          '2xs': ['0.65rem', { lineHeight: '0.9rem' }],
-          xs: ['0.75rem', { lineHeight: '1rem' }],
-          sm: ['0.8125rem', { lineHeight: '1.15rem' }],
-          base: ['0.875rem', { lineHeight: '1.35rem' }],
-        },
-      },
-    },
-  }),
-]).process('@tailwind base;\n@tailwind components;\n@tailwind utilities;', { from: undefined });
+const stylesheet = path.join(root, 'src/formatters/html/client/styles.css');
+const utilityCss = await postcss([tailwind({ base: root, optimize: true })]).process(
+  await readFile(stylesheet, 'utf8'),
+  { from: stylesheet },
+);
+// The report's existing component CSS is unlayered. Preserve the previous
+// specificity-based cascade: otherwise its universal reset overrides v4 utilities.
+utilityCss.root.walkAtRules('layer', (rule) => {
+  if (rule.nodes) rule.replaceWith(...rule.nodes);
+  else rule.remove();
+});
 const fonts = [];
 for (const [packageName, family, weights] of [
   ['inter', 'Inter', [400, 500, 600, 700]],
@@ -74,7 +58,7 @@ for (const [label, licensePath] of [
   ['Chart.js 4.5.1 (MIT)', 'chart.js/LICENSE.md'],
   ['@kurkle/color (MIT)', '@kurkle/color/LICENSE.md'],
   ['Tabulator 6.2.1 (MIT)', 'tabulator-tables/LICENSE'],
-  ['Tailwind CSS 3.4.17 (MIT)', 'tailwindcss/LICENSE'],
+  ['Tailwind CSS 4.3.3 (MIT)', 'tailwindcss/LICENSE'],
   ['Inter (SIL OFL 1.1)', '@fontsource/inter/LICENSE'],
   ['JetBrains Mono (SIL OFL 1.1)', '@fontsource/jetbrains-mono/LICENSE'],
 ])
@@ -82,7 +66,11 @@ for (const [label, licensePath] of [
 await writeFile(path.join(generated, 'client.mjs'), client.outputFiles[0].text);
 await writeFile(
   path.join(generated, 'client.css'),
-  [...fonts, utilityCss.css, tableCss.replace(/\/\*# sourceMappingURL=.*?\*\//g, '')].join('\n'),
+  [
+    ...fonts,
+    utilityCss.root.toString(),
+    tableCss.replace(/\/\*# sourceMappingURL=.*?\*\//g, ''),
+  ].join('\n'),
 );
 await writeFile(path.join(generated, 'licenses.txt'), notices.join('\n\n'));
 if (process.argv.includes('--copy-dist')) {

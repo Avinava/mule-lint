@@ -10,7 +10,8 @@
     "src/formatters/html/client/index.ts",
     "src/formatters/html/sections/index.ts",
     "src/formatters/html/styles/index.ts",
-    "src/formatters/html/views/index.ts"
+    "src/formatters/html/views/index.ts",
+    "src/formatters/html/client/styles.css"
   ],
   "ignoreDependencies": ["@prettier/plugin-xml"],
   "ignoreExportsUsedInFile": true,

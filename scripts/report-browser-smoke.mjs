@@ -123,12 +123,40 @@ try {
   );
   assert.ok([0, 1].includes(result.status), `Sample report failed: ${result.stderr}`);
   const { page, errors, requests } = await openOffline(sample);
+  assert.deepEqual(
+    await page.evaluate(() => {
+      const dashboard = getComputedStyle(document.getElementById('view-dashboard'));
+      const metric = document.getElementById('metric-flows');
+      const card = getComputedStyle(metric.parentElement);
+      const heading = getComputedStyle(document.querySelector('#view-dashboard h3'));
+      return {
+        horizontalPadding: dashboard.paddingLeft,
+        verticalPadding: dashboard.paddingTop,
+        cardPadding: card.paddingLeft,
+        headingSize: heading.fontSize,
+        metricColor: getComputedStyle(metric).color,
+      };
+    }),
+    {
+      horizontalPadding: '28px',
+      verticalPadding: '24px',
+      cardPadding: '12px',
+      headingSize: '13px',
+      metricColor: 'rgb(124, 58, 237)',
+    },
+    'CSS compiler upgrade must preserve report spacing, typography and palette',
+  );
   await capture(page, 'dashboard');
   await page.click('#nav-issues');
   await page.waitForSelector('.tabulator-row');
   await capture(page, 'issues');
   await page.click('#theme-toggle');
   assert.equal(await page.$eval('html', (el) => el.classList.contains('dark')), true);
+  assert.equal(
+    await page.$eval('#metric-flows', (el) => getComputedStyle(el).color),
+    'rgb(167, 139, 250)',
+    'Dynamic metric colors must retain the dark variant',
+  );
   await capture(page, 'issues-dark');
   for (const width of [390, 320]) {
     await page.setViewport({ width, height: 844 });
