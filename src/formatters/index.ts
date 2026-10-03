@@ -19,6 +19,7 @@ import { formatMarkdown } from './MarkdownFormatter';
 import { formatGithub } from './GithubFormatter';
 import { formatJunit } from './JunitFormatter';
 import type { Rule } from '../types';
+import { createReportContract } from '../core/ReportContract';
 
 /**
  * Format a lint report using the specified formatter
@@ -29,6 +30,8 @@ export function format(report: LintReport, type: FormatterType, rules: Rule[] = 
       return formatTable(report);
     case 'json':
       return formatJson(report);
+    case 'report-json':
+      return JSON.stringify(createReportContract(report, rules), null, 2);
     case 'sarif':
       return formatSarif(report, rules);
     case 'html':

@@ -1,0 +1,83 @@
+{
+  "registeredRules": 99,
+  "categories": [
+    {
+      "category": "api-led",
+      "count": 10
+    },
+    {
+      "category": "complexity",
+      "count": 2
+    },
+    {
+      "category": "dataweave",
+      "count": 5
+    },
+    {
+      "category": "documentation",
+      "count": 3
+    },
+    {
+      "category": "error-handling",
+      "count": 9
+    },
+    {
+      "category": "experimental",
+      "count": 3
+    },
+    {
+      "category": "governance",
+      "count": 2
+    },
+    {
+      "category": "http",
+      "count": 5
+    },
+    {
+      "category": "logging",
+      "count": 7
+    },
+    {
+      "category": "naming",
+      "count": 3
+    },
+    {
+      "category": "operations",
+      "count": 6
+    },
+    {
+      "category": "performance",
+      "count": 7
+    },
+    {
+      "category": "security",
+      "count": 19
+    },
+    {
+      "category": "standards",
+      "count": 14
+    },
+    {
+      "category": "structure",
+      "count": 3
+    },
+    {
+      "category": "testing",
+      "count": 1
+    }
+  ],
+  "profiles": [
+    {
+      "name": "baseline",
+      "count": 28
+    },
+    {
+      "name": "recommended",
+      "count": 91
+    },
+    {
+      "name": "strict",
+      "count": 96
+    }
+  ]
+}

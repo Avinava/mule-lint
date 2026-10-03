@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "tool": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": ["name", "version"]
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["complete", "incomplete", "no-files"]
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["parse-error", "rule-error", "no-files"]
+              },
+              "message": {
+                "type": "string"
+              },
+              "ruleId": {
+                "type": "string"
+              },
+              "relativePath": {
+                "type": "string"
+              }
+            },
+            "required": ["kind", "message"]
+          }
+        }
+      },
+      "required": ["status", "diagnostics"]
+    },
+    "scan": {
+      "type": "object",
+      "properties": {
+        "scopeKnown": {
+          "type": "boolean"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": ["file", "project"]
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": ["kind", "path"]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "profile": {
+          "type": ["string", "null"]
+        },
+        "enabledRuleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "scopeKnown",
+        "target",
+        "timestamp",
+        "durationMs",
+        "profile",
+        "enabledRuleIds",
+        "include",
+        "exclude"
+      ]
+    },
+    "selection": {
+      "type": "object",
+      "properties": {
+        "quiet": {
+          "type": "boolean"
+        },
+        "baseline": {
+          "type": "object",
+          "properties": {
+            "newIssues": {
+              "type": "number"
+            },
+            "unchanged": {
+              "type": "number"
+            },
+            "fixed": {
+              "type": "number"
+            }
+          },
+          "required": ["newIssues", "unchanged", "fixed"]
+        }
+      },
+      "required": ["quiet"]
+    },
+    "gate": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["not-evaluated", "passed", "warning", "failed"]
+        },
+        "name": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": ["status"]
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "totalFiles": {
+          "type": "number"
+        },
+        "totalIssues": {
+          "type": "number"
+        },
+        "parseErrors": {
+          "type": "number"
+        },
+        "ruleErrors": {
+          "type": "number"
+        },
+        "bySeverity": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "number"
+            },
+            "warning": {
+              "type": "number"
+            },
+            "info": {
+              "type": "number"
+            }
+          },
+          "required": ["error", "warning", "info"]
+        }
+      },
+      "required": ["totalFiles", "totalIssues", "parseErrors", "ruleErrors", "bySeverity"]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["error", "warning", "info"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "fingerprint": {
+            "type": "string"
+          },
+          "fingerprintVersion": {
+            "type": "string",
+            "const": "muleLint/v1"
+          },
+          "occurrence": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string",
+                "enum": ["file", "project"]
+              },
+              "path": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "column": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": ["scope"]
+          },
+          "suggestion": {
+            "type": "string"
+          },
+          "codeSnippet": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "issueType": {
+            "type": "string"
+          },
+          "standardIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "docsUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ruleId",
+          "severity",
+          "message",
+          "fingerprint",
+          "fingerprintVersion",
+          "occurrence",
+          "location",
+          "standardIds"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "tool",
+    "execution",
+    "scan",
+    "selection",
+    "gate",
+    "summary",
+    "findings"
+  ]
+}

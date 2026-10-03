@@ -3,24 +3,10 @@
 import { Command } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
-import { LintEngine } from '../src/engine/LintEngine';
-import { ALL_RULES } from '../src/rules';
-import { format, getExitCode } from '../src/formatters';
-import { FormatterType, LintConfig } from '../src/types/Config';
-import { DEFAULT_CONFIG } from '../src/types/Config';
+import { format } from '../src/formatters';
 import { FORMATTER_TYPES } from '../src/types/constants';
-import { parseLintConfig } from '../src/core/ConfigLoader';
-import { loadCustomXPathRules } from '../src/core/CustomRuleLoader';
-import { Rule } from '../src/types';
-import { applyBaseline, parseBaseline } from '../src/core/Baseline';
-import { filterReportBySeverity } from '../src/core/ReportFilter';
-import {
-  evaluateQualityGate,
-  formatQualityGateResult,
-  getQualityGateExitCode,
-} from '../src/core/QualityGateEvaluator';
-import { DEFAULT_QUALITY_GATE, STRICT_QUALITY_GATE, QualityGate } from '../src/types/QualityGate';
-import { normalizeRuleProfile, toRuleProfileReference } from '../src/catalog';
+import { analyze } from '../src/core/AnalysisService';
+import { formatQualityGateResult } from '../src/core/QualityGateEvaluator';
 import {
   formatApiContractReport,
   validateApiContract,
@@ -162,127 +148,47 @@ interface LintCliOptions {
 }
 
 async function runLint(targetPath: string, options: LintCliOptions): Promise<void> {
-  const absolutePath = path.resolve(targetPath);
-
-  // Validate path exists
-  if (!fs.existsSync(absolutePath)) {
-    throw new Error(`Path does not exist: ${absolutePath}`);
-  }
-
-  // Load configuration if specified
-  let config: Partial<LintConfig> = {};
-  let customRules: Rule[] = [];
-  if (options.config) {
-    const configPath = path.resolve(options.config);
-    if (!fs.existsSync(configPath)) {
-      throw new Error(`Config file not found: ${configPath}`);
-    }
-    const configContent = fs.readFileSync(configPath, 'utf-8');
-    const parsedConfig = parseLintConfig(JSON.parse(configContent) as unknown);
-    config = parsedConfig.config;
-    for (const warning of parsedConfig.warnings) {
-      console.error(`Config warning: ${warning}`);
-    }
-
-    // Custom rule paths resolve relative to the configuration file, not the cwd.
-    if (config.customRulesPath) {
-      const customRulesPath = path.resolve(path.dirname(configPath), config.customRulesPath);
-      customRules = loadCustomXPathRules(
-        customRulesPath,
-        ALL_RULES.map((rule) => rule.id),
-      );
-      if (options.verbose) {
-        console.error(`Loaded ${customRules.length} custom rules from ${customRulesPath}`);
-      }
-    }
-  }
-
-  const knownRuleIds = new Set([...ALL_RULES, ...customRules].map((rule) => rule.id));
-  for (const ruleId of Object.keys(config.rules ?? {})) {
-    if (!knownRuleIds.has(ruleId)) {
-      console.error(`Config warning: rule "${ruleId}" does not exist and was ignored.`);
-    }
-  }
-
-  if (options.profile) {
-    config.extends = toRuleProfileReference(normalizeRuleProfile(options.profile));
-  }
-
-  // Filter rules based on keys (experimental is opt-in)
-  const builtInRules = options.experimental
-    ? ALL_RULES
-    : ALL_RULES.filter((rule) => rule.category !== 'experimental');
-  const effectiveRules = [...builtInRules, ...customRules];
-
-  if (options.experimental) {
-    config.rules = { ...config.rules };
-    for (const rule of ALL_RULES.filter((candidate) => candidate.category === 'experimental')) {
-      // An explicit `false` in the config file wins over the --experimental opt-in.
-      config.rules[rule.id] ??= true;
-    }
-  }
-
-  if (options.verbose) {
-    console.error(
-      `Loaded ${effectiveRules.length} rules (Experimental: ${options.experimental ? 'ON' : 'OFF'})`,
-    );
-  }
-
-  // Create engine
-  const engine = new LintEngine({
-    rules: effectiveRules,
-    config,
-    verbose: options.verbose,
-  });
-
-  const formatterType = resolveFormatter(
-    options.format ?? config.defaultFormatter ?? DEFAULT_CONFIG.defaultFormatter,
+  const result = await analyze(
+    {
+      targetPath,
+      configPath: options.config,
+      baselinePath: options.baseline,
+      profile: options.profile,
+      experimental: options.experimental,
+      quiet: options.quiet,
+      qualityGate: options.qualityGate,
+      failOnWarning: options.failOnWarning,
+      format: options.format,
+      verbose: options.verbose,
+    },
+    {
+      onMessage: ({ kind, message }) => {
+        console.error(kind === 'config-warning' ? `Config warning: ${message}` : message);
+      },
+    },
   );
-
-  // Run scan
-  let report = await engine.scan(absolutePath);
-  const failOnWarning = options.failOnWarning === true || config.failOnWarning === true;
-
-  // Filter if quiet mode
-  if (options.quiet) {
-    report = filterReportBySeverity(
-      report,
-      new Set(['error']),
-      effectiveRules,
-      new Set(customRules.map((rule) => rule.id)),
-    );
-  }
-
+  const { report, contract, rules, formatter, exitCode } = result;
   if (report.ruleErrors && report.ruleErrors.length > 0) {
     const failed = [...new Set(report.ruleErrors.map((error) => error.ruleId))].join(', ');
     console.error(
       `Warning: ${report.ruleErrors.length} rule execution error(s) (${failed}). Results for these rules are incomplete.`,
     );
   }
-
-  if (options.baseline) {
-    const baselinePath = path.resolve(options.baseline);
-    if (!fs.existsSync(baselinePath)) {
-      throw new Error(`Baseline file not found: ${baselinePath}`);
-    }
-    const applied = applyBaseline(
-      report,
-      parseBaseline(fs.readFileSync(baselinePath, 'utf-8')),
-      effectiveRules,
-      new Set(customRules.map((rule) => rule.id)),
-    );
-    report = applied.report;
+  const baseline = report.selection?.baseline;
+  if (baseline)
     console.error(
-      `Baseline: ${applied.stats.newIssues} new, ${applied.stats.unchanged} unchanged, ${applied.stats.fixed} fixed`,
+      `Baseline: ${baseline.newIssues} new, ${baseline.unchanged} unchanged, ${baseline.fixed} fixed`,
+    );
+  // Flat JSON has no execution envelope. Execution diagnostics remain visible on stderr.
+  for (const diagnostic of contract.execution.diagnostics) {
+    if (diagnostic.kind === 'rule-error') continue;
+    console.error(
+      `Analysis ${diagnostic.kind}: ${diagnostic.relativePath ? `${diagnostic.relativePath}: ` : ''}${diagnostic.message}`,
     );
   }
-
-  // Format output
-  const output = format(report, formatterType, effectiveRules);
-
-  // Write output
-  // Only the report itself goes to stdout so `-f json | jq` and SARIF piping stay valid.
-  const outputFile = options.output ?? (formatterType === 'html' ? 'report.html' : undefined);
+  if (report.gate) console.error(formatQualityGateResult(report.gate));
+  const output = format(report, formatter, rules);
+  const outputFile = options.output ?? (formatter === 'html' ? 'report.html' : undefined);
   if (outputFile) {
     const outputPath = path.resolve(outputFile);
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
@@ -291,55 +197,7 @@ async function runLint(targetPath: string, options: LintCliOptions): Promise<voi
   } else {
     console.log(output);
   }
-
-  // Determine exit code
-  let exitCode: number;
-
-  // Quality Gate evaluation
-  if (options.qualityGate) {
-    const gate = resolveQualityGate(options.qualityGate, config);
-    const gateResult = evaluateQualityGate(report, gate);
-
-    // Print quality gate result
-    console.error(formatQualityGateResult(gateResult));
-
-    // Exit code based on quality gate
-    exitCode = getQualityGateExitCode(gateResult.status, failOnWarning);
-  } else {
-    // Legacy exit code based on issue count
-    exitCode = getExitCode(report, failOnWarning);
-  }
-
   process.exit(exitCode);
-}
-
-function resolveFormatter(value: string): FormatterType {
-  const match = FORMATTER_TYPES.find((type) => type === value);
-  if (!match) {
-    throw new Error(`Unknown format: ${value}. Use one of: ${FORMATTER_TYPES.join(', ')}`);
-  }
-  return match;
-}
-
-/**
- * Resolves the quality gate to use based on CLI option and config
- */
-function resolveQualityGate(gateName: string, config: Partial<LintConfig>): QualityGate {
-  // Check for built-in gates
-  switch (gateName.toLowerCase()) {
-    case 'default':
-      return DEFAULT_QUALITY_GATE;
-    case 'strict':
-      return STRICT_QUALITY_GATE;
-    case 'config':
-      // Use gate from config file
-      if (config.qualityGate) {
-        return config.qualityGate;
-      }
-      throw new Error('Quality gate "config" specified but no qualityGate found in config file');
-    default:
-      throw new Error(`Unknown quality gate: ${gateName}. Use 'default', 'strict', or 'config'`);
-  }
 }
 
 // ─── Format command ─────────────────────────────────────────────────────────

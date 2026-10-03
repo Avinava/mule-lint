@@ -4,6 +4,7 @@ import { getErrorMessage } from '../../core/errors';
 import { RULE_CATALOG, STANDARD_CATALOG, getRuleDefinition, getStandardById } from '../../catalog';
 import * as path from 'path';
 import * as fs from 'fs';
+import packageJson from '../../../package.json';
 
 /**
  * Register all MCP resources (rules catalog, docs)
@@ -17,17 +18,30 @@ export function registerResources(server: McpServer): void {
 
 /** Locate a bundled documentation file in development and installed packages. */
 export function resolveDocumentationPath(relativePath: string): string | undefined {
-  const cwdCandidate = path.resolve(process.cwd(), relativePath);
-  if (fs.existsSync(cwdCandidate)) {
-    return cwdCandidate;
-  }
-
+  // Only bundled docs are authoritative; never shadow them with caller-controlled cwd files.
+  const normalized = relativePath.replace(/\\/g, '/');
+  if (
+    !normalized.startsWith('docs/') ||
+    normalized.split('/').includes('..') ||
+    path.isAbsolute(relativePath)
+  )
+    return undefined;
   let current = __dirname;
   const filesystemRoot = path.parse(current).root;
   while (current !== filesystemRoot) {
-    const candidate = path.resolve(current, relativePath);
-    if (fs.existsSync(candidate)) {
-      return candidate;
+    const manifest = path.join(current, 'package.json');
+    if (fs.existsSync(manifest)) {
+      const metadata: unknown = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+      if (
+        metadata &&
+        typeof metadata === 'object' &&
+        'name' in metadata &&
+        metadata.name === packageJson.name &&
+        fs.existsSync(path.join(current, 'docs'))
+      ) {
+        const candidate = path.resolve(current, normalized);
+        return fs.existsSync(candidate) && fs.statSync(candidate).isFile() ? candidate : undefined;
+      }
     }
     current = path.dirname(current);
   }

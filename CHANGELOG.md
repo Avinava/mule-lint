@@ -1,5 +1,29 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Add a shared typed `analyze()` service for CLI/MCP/library policy, generated schema and rule-registry references, and executable drift checks.
+
+- Opt-in `--format report-json` and exported `reportSchema` / `createReportContract`: a
+  version 1 execution, scope, selection, gate, and deterministic findings contract. Legacy
+  flat JSON and `formatJsonFull` remain compatible. Unknown legacy scope is explicit.
+- MCP `run_lint_analysis` output schema and structured report content, retaining grouped
+  legacy text findings and exposing incomplete/no-file analysis as tool errors.
+
+### Fixed
+
+- Keep nested file findings project-relative so file and project scans share stable finding identities.
+- HTML reports expose target, scan and gate status, distinguish parse diagnostics, synchronize
+  filters and preserve findings when chart or table dependencies fail.
+
+- Rule execution failures exit `2`, parse failures exit `3`, and no-file scans exit `2`,
+  before ordinary finding/gate outcomes. Quiet mode, baselines, and permissive gates cannot
+  hide execution failure. Diagnostic and verbose output stays on stderr.
+- SARIF marks incomplete/no-file execution unsuccessful and includes execution notifications.
+- Snippet rule failures are surfaced instead of returning misleading empty findings.
+
 ## [1.31.0] - 2026-10-01
 
 Hardening and CI-output release. Report output is safe to pipe, SARIF validates, three CI formats

@@ -7,11 +7,12 @@
     "src/mcp/index.ts",
     "src/formatters/html/index.ts",
     "src/formatters/html/components/index.ts",
-    "src/formatters/html/scripts/index.ts",
+    "src/formatters/html/client/index.ts",
     "src/formatters/html/sections/index.ts",
     "src/formatters/html/styles/index.ts",
     "src/formatters/html/views/index.ts"
   ],
   "ignoreDependencies": ["@prettier/plugin-xml"],
-  "ignoreExportsUsedInFile": true
+  "ignoreExportsUsedInFile": true,
+  "ignore": ["docs/stylesheets/**"]
 }

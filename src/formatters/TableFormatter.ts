@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { LintReport } from '../types/Report';
+import { getFindingExitCode } from '../core/AnalysisExitCode';
 import { Issue, Severity } from '../types/Rule';
 
 /**
@@ -100,14 +101,5 @@ function formatSummaryLine(severity: Severity, count: number): string {
  * Get exit code based on report
  */
 export function getExitCode(report: LintReport, failOnWarning = false): number {
-  if (report.summary.bySeverity.error > 0) {
-    return 1;
-  }
-  if (failOnWarning && report.summary.bySeverity.warning > 0) {
-    return 1;
-  }
-  if (report.summary.parseErrors > 0) {
-    return 3;
-  }
-  return 0;
+  return getFindingExitCode(report, failOnWarning);
 }

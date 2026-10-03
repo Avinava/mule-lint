@@ -4,3 +4,4 @@ coverage
 antigravity-plus
 *.tgz
 *.min.js
+src/formatters/html/generated

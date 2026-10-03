@@ -108,9 +108,13 @@ nav:
   - AI and automation:
       - MCP server: mcp-design.md
       - Library API: library.md
+      - Report contract reference: generated/report-contract.md
   - Contributor reference:
       - Architecture: linter/architecture.md
+      - Analysis pipeline decision: decisions/analysis-pipeline.md
+      - Typed offline report decision: architecture/typed-html-client.md
       - Rule engine: linter/rule-engine.md
+      - Rule registry reference: generated/rule-reference.md
       - Extending: linter/extending.md
       - Repository structure: linter/folder-structure.md
       - Naming conventions: linter/naming-conventions.md

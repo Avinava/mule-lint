@@ -10,3 +10,6 @@ export * from './ReportFilter';
 export * from './SensitiveKeys';
 export * from './PropertiesParser';
 export * from './CustomRuleLoader';
+export * from './ReportContract';
+export * from './AnalysisService';
+export * from './AnalysisExitCode';

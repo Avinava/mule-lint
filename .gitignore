@@ -51,3 +51,6 @@ report.html
 
 # Separate project — not part of mule-lint
 antigravity-plus/
+
+# Generated offline report assets
+src/formatters/html/generated/

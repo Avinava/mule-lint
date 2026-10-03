@@ -77,6 +77,13 @@ jobs:
       - name: Run all quality, coverage, audit, and package checks
         run: npm run check
 
+      - name: Qualify offline report behavior in a real browser
+        run: npm run test:browser
+
+      - name: Audit browser build dependencies as well as runtime dependencies
+        # Browser assets are bundled from dev dependencies into the shipped report.
+        run: npm audit --audit-level=moderate
+
       - name: Setup Python
         uses: actions/setup-python@v7
         with:

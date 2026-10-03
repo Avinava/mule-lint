@@ -10,20 +10,20 @@ mule-lint [path] [options]
 
 ## Lint options
 
-| Option                      | Meaning                                                                         |
-| --------------------------- | ------------------------------------------------------------------------------- |
-| `-p, --profile <name>`      | Use `baseline`, `recommended`, or `strict`                                      |
-| `-c, --config <file>`       | Load an explicit JSON configuration file                                        |
-| `-f, --format <type>`       | Print `table`, `json`, `sarif`, `html`, `csv`, `markdown`, `github`, or `junit` |
-| `--baseline <file>`         | Report only issues missing from a previous `--format json` report               |
-| `-o, --output <file>`       | Write output to a file instead of the terminal                                  |
-| `-q, --quiet`               | Show errors only                                                                |
-| `--fail-on-warning`         | Exit `1` when a warning exists                                                  |
-| `-g, --quality-gate <name>` | Apply `default`, `strict`, or `config` gate                                     |
-| `-e, --experimental`        | Include experimental rules                                                      |
-| `-v, --verbose`             | Print more execution detail                                                     |
-| `-V, --version`             | Print the installed version                                                     |
-| `-h, --help`                | Print help                                                                      |
+| Option                      | Meaning                                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `-p, --profile <name>`      | Use `baseline`, `recommended`, or `strict`                                                     |
+| `-c, --config <file>`       | Load an explicit JSON configuration file                                                       |
+| `-f, --format <type>`       | Print `table`, `json`, `report-json`, `sarif`, `html`, `csv`, `markdown`, `github`, or `junit` |
+| `--baseline <file>`         | Report only issues missing from a previous `--format json` report                              |
+| `-o, --output <file>`       | Write output to a file instead of the terminal                                                 |
+| `-q, --quiet`               | Show errors only                                                                               |
+| `--fail-on-warning`         | Exit `1` when a warning exists                                                                 |
+| `-g, --quality-gate <name>` | Apply `default`, `strict`, or `config` gate                                                    |
+| `-e, --experimental`        | Include experimental rules                                                                     |
+| `-v, --verbose`             | Print more execution detail                                                                    |
+| `-V, --version`             | Print the installed version                                                                    |
+| `-h, --help`                | Print help                                                                                     |
 
 Only the report goes to standard output; gate results and status messages go to standard error.
 
@@ -79,11 +79,18 @@ Starts the local MCP server over standard input/output. It is normally launched 
 
 ## Exit codes
 
-| Code | Lint meaning                                               |
-| ---- | ---------------------------------------------------------- |
-| `0`  | No failing finding or gate condition                       |
-| `1`  | Errors found, warnings configured to fail, or gate failed  |
-| `2`  | Invalid command, configuration, path, or execution failure |
-| `3`  | Source parse error                                         |
+| Code | Lint meaning                                                                    |
+| ---- | ------------------------------------------------------------------------------- |
+| `0`  | Complete scan with no failing finding or gate condition                         |
+| `1`  | Errors found, warnings configured to fail, or gate failed                       |
+| `2`  | Invalid command/configuration/path, rule execution failure, or no scanned files |
+| `3`  | Source parse error                                                              |
 
 `format --check` also uses `1` when formatting would change a file. `api validate` uses `0` for conformant, `1` for findings, and `2` for configuration/execution failure.
+
+For lint scans, rule failures (`2`) take precedence over parse failures (`3`), then no files
+(`2`), then ordinary finding/gate results. Quiet mode, baselines, and custom gate thresholds
+cannot turn incomplete analysis into a pass. Use `--format report-json` for the versioned
+execution, scope, selection, gate, and findings object; `--format json` stays a flat array.
+
+Lint execution failures override finding and gate results, including with `--quiet` or `--baseline`: rule failure `2`, then parse failure `3`, then no files `2`. Use `--format report-json` for structured execution status and scan scope; `--format json` remains a flat array.

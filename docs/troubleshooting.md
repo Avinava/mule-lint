@@ -65,7 +65,12 @@ Group findings by rule in the HTML report. Fix genuine errors, then review repea
 
 ## HTML opens without charts or a table
 
-The report loads Tailwind CSS, Chart.js, Tabulator, and fonts from public CDNs. Allow browser network access, then reload. The lint data itself is embedded in the HTML file and is not uploaded by mule-lint.
+New reports embed their interactive assets and do not need network access. Regenerate an old
+report with a version supporting offline output; older releases used public CDNs. If a current
+report cannot initialize its charts or table, findings remain available in the fallback list
+with search and CSV export. Keep the original file intact, inspect browser errors and regenerate
+it from the source. Report loading does not upload lint data. JavaScript must be enabled for
+interactive controls; a script-disabled browser is not the same as a missing chart library.
 
 ## The MCP server appears to hang on first use
 

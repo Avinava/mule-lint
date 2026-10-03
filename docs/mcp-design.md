@@ -68,15 +68,23 @@ Reload the VS Code window after saving the file.
 
 ## Available tools
 
-| Tool                    | Use it for                                    | Important behavior                                           |
-| ----------------------- | --------------------------------------------- | ------------------------------------------------------------ |
-| `run_lint_analysis`     | Scan a complete Mule project                  | Requires an absolute project path; defaults to `recommended` |
-| `validate_snippet`      | Check generated Mule XML before suggesting it | XML only; no project-wide context                            |
-| `get_rule_details`      | Explain a rule ID and related standard        | Read-only catalog lookup                                     |
-| `format_mule_xml`       | Format a project, file, or XML string         | File/project mode writes unless `check: true`                |
-| `validate_api_contract` | Validate a local RAML/OpenAPI project         | Remote references are never fetched                          |
+| Tool                    | Use it for                                    | Important behavior                                          |
+| ----------------------- | --------------------------------------------- | ----------------------------------------------------------- |
+| `run_lint_analysis`     | Scan a selected project or file scope         | Requires an absolute target path; defaults to `recommended` |
+| `validate_snippet`      | Check generated Mule XML before suggesting it | XML only; no project-wide context                           |
+| `get_rule_details`      | Explain a rule ID and related standard        | Read-only catalog lookup                                    |
+| `format_mule_xml`       | Format a project, file, or XML string         | File/project mode writes unless `check: true`               |
+| `validate_api_contract` | Validate a local RAML/OpenAPI project         | Remote references are never fetched                         |
 
 The server also exposes standards, rules, and practice guides as MCP resources, plus prompts for project analysis, rule explanation, and fixing an issue.
+
+## Structured analysis results
+
+`run_lint_analysis` advertises an output schema and returns the versioned report directly in `structuredContent`. Read `schemaVersion`, `execution.status`, and `scan` before interpreting `findings`. A successful tool transport is not evidence of a complete analysis. Incomplete and no-file scans return `isError: true`; failures before scanning starts return an explicit tool error without a report.
+
+Legacy text issue groups remain available for existing clients. Quality ratings are omitted from that text when execution is incomplete or no files were scanned. Snippet rule failures also return errors instead of clean results. Static-analysis findings and secure-property reference checks are not a complete security assessment.
+
+See [versioned report JSON](output-formats.md#versioned-report-json) for the shared CLI/library contract.
 
 ## A good agent request
 
@@ -111,3 +119,15 @@ If the server does not appear:
 5. check the host’s MCP logs for npm/PATH errors.
 
 See [general troubleshooting](troubleshooting.md#the-mcp-server-appears-to-hang-on-first-use) for installation issues.
+
+## Analysis result contract
+
+The shared [analysis service](library.md#shared-analysis-policy) owns configuration and result
+policy. MCP preserves its recommended default and existing tool names, grouped text and
+resource URIs. See [structured analysis results](#structured-analysis-results) and the
+[generated schema reference](generated/report-contract.md). A missing `structuredContent`
+on a fatal tool error must never be interpreted as zero issues.
+
+MCP standards and documentation resources resolve from the installed package, not similarly
+named files in the caller's working directory. File-target scope uses selected-file context
+and may run project rules; a complete execution is not proof of full-project coverage.

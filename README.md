@@ -86,16 +86,18 @@ The [sample project](examples/sample-orders-system-api) produces the documentati
 
 ## Choose an output
 
-| Format         | Command option                         | Best for                      |
-| -------------- | -------------------------------------- | ----------------------------- |
-| Terminal table | `--format table`                       | A developer fixing a project  |
-| HTML           | `--format html --output report.html`   | Exploring and sharing results |
-| SARIF          | `--format sarif --output report.sarif` | Pull-request annotations      |
-| JSON           | `--format json`                        | Scripts and integrations      |
-| CSV            | `--format csv --output report.csv`     | Spreadsheet review            |
-| Markdown       | `--format markdown`                    | PR comments, job summaries    |
-| GitHub         | `--format github`                      | Inline Actions annotations    |
-| JUnit XML      | `--format junit --output junit.xml`    | Generic CI test reports       |
+| Format         | Command option                         | Best for                         |
+| -------------- | -------------------------------------- | -------------------------------- |
+| Terminal table | `--format table`                       | A developer fixing a project     |
+| HTML           | `--format html --output report.html`   | Exploring and sharing results    |
+| SARIF          | `--format sarif --output report.sarif` | Pull-request annotations         |
+| Report JSON    | `--format report-json`                 | Versioned automation contract    |
+| JSON           | `--format json`                        | Legacy flat finding arrays       |
+| Report JSON    | `--format report-json`                 | Versioned execution and findings |
+| CSV            | `--format csv --output report.csv`     | Spreadsheet review               |
+| Markdown       | `--format markdown`                    | PR comments, job summaries       |
+| GitHub         | `--format github`                      | Inline Actions annotations       |
+| JUnit XML      | `--format junit --output junit.xml`    | Generic CI test reports          |
 
 See [output formats](docs/output-formats.md) for real examples, exit codes, and `--baseline` for reporting only new issues.
 

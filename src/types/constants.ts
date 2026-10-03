@@ -8,6 +8,7 @@ export const SEVERITIES = ['error', 'warning', 'info'] as const;
 export const FORMATTER_TYPES = [
   'table',
   'json',
+  'report-json',
   'sarif',
   'html',
   'csv',

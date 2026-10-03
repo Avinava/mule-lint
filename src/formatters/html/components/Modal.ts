@@ -6,11 +6,11 @@
 import { THRESHOLDS, QualityDimension } from '../../../quality';
 
 export const modalHtml = `
-<div id="modal-overlay" class="modal-overlay">
+<div id="modal-overlay" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 class="modal-title"></h3>
-            <button class="modal-close" onclick="modal.close()">
+            <h3 class="modal-title" id="modal-title"></h3>
+            <button type="button" aria-label="Close explanation" class="modal-close" >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -60,7 +60,7 @@ export const modalContent: Record<string, ModalContent> = {
     title: 'Maintainability Rating (Beta)',
     body: `
             <h4>What is measured</h4>
-            <p>Technical debt as a percentage of estimated development time.</p>
+            <p>A heuristic estimate of remediation effort as a percentage of estimated development time. These fixed per-issue estimates are not measured engineering time.</p>
             <h4 style="margin-top: 16px;">How it's calculated</h4>
             <p><strong>Debt minutes:</strong></p>
             <ul>
@@ -154,31 +154,3 @@ export const modalContent: Record<string, ModalContent> = {
         `,
   },
 };
-
-export const modalScript = `
-const modal = {
-    overlay: null,
-    content: ${JSON.stringify(modalContent)},
-    init() {
-        this.overlay = document.getElementById('modal-overlay');
-        this.overlay.addEventListener('click', (e) => {
-            if (e.target === this.overlay) this.close();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
-                this.close();
-            }
-        });
-    },
-    open(type) {
-        const data = this.content[type];
-        if (!data) return;
-        this.overlay.querySelector('.modal-title').textContent = data.title;
-        this.overlay.querySelector('.modal-body').innerHTML = data.body;
-        this.overlay.classList.add('active');
-    },
-    close() {
-        this.overlay.classList.remove('active');
-    }
-};
-`;
