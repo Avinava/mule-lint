@@ -4,6 +4,7 @@ import { ALL_RULES } from '../rules';
 import { getRuleDefinition } from '../catalog';
 import { fingerprintIssue } from '../core/Baseline';
 import packageJson from '../../package.json';
+import { getScanExecution } from '../core/ReportContract';
 
 /**
  * SARIF 2.1.0 Schema Types
@@ -82,6 +83,11 @@ interface SarifInvocation {
   executionSuccessful: boolean;
   startTimeUtc?: string;
   endTimeUtc?: string;
+  toolExecutionNotifications?: Array<{
+    level: 'error';
+    message: SarifMessage;
+    descriptor: { id: string };
+  }>;
 }
 
 type SarifLevel = 'error' | 'warning' | 'note' | 'none';
@@ -201,7 +207,12 @@ export function formatSarif(report: LintReport, rules: Rule[] = ALL_RULES): stri
         results: [],
         invocations: [
           {
-            executionSuccessful: report.summary.parseErrors === 0,
+            executionSuccessful: getScanExecution(report).status === 'complete',
+            toolExecutionNotifications: getScanExecution(report).diagnostics.map((diagnostic) => ({
+              level: 'error',
+              message: { text: diagnostic.message },
+              descriptor: { id: diagnostic.ruleId ?? diagnostic.kind },
+            })),
             startTimeUtc: report.timestamp,
           },
         ],

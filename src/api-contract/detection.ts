@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import fg from 'fast-glob';
+import fg from '../core/GlobFiles';
 import { load } from 'js-yaml';
 import type { ApiContractFormat } from './types';
 

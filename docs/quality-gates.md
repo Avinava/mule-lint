@@ -67,7 +67,15 @@ The formulas and thresholds are implemented in `src/quality/`. Because averages 
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended --quality-gate default
+  run: npx -y @sfdxy/mule-lint@2.0.0 . --profile recommended --quality-gate default
 ```
 
 Generate SARIF as a separate or combined step when you also want inline annotations. See [CI/CD integration](best-practices/ci-cd.md).
+
+## Incomplete analysis
+
+A gate cannot pass if a source file failed to parse, a rule threw, or no source files were
+scanned. This execution guard runs before gate thresholds, including empty custom gates.
+Quiet mode and baselines filter findings only; they do not suppress execution failures.
+CLI exit codes remain `2` for rule failures/no files and `3` for parse failures (rule failures
+win when both occur), rather than the ordinary gate-failure code `1`.

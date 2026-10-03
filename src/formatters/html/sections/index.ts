@@ -3,6 +3,6 @@
  * Re-exports all section templates
  */
 
-export { renderQualityRatingsSection, qualityRatingsRendererScript } from './QualityRatings';
+export { renderQualityRatingsSection } from './QualityRatings';
 export { renderLintSummarySection, LintSummaryProps } from './LintSummary';
 export { renderHeader, HeaderProps } from './Header';

@@ -1,0 +1,45 @@
+{
+  "projectRoot": "/synthetic/orders-api",
+  "timestamp": "2026-01-01T00:00:00.000Z",
+  "durationMs": 42,
+  "scope": {
+    "target": { "kind": "project", "path": "." },
+    "profile": "recommended",
+    "enabledRuleIds": ["SYNTH-1"],
+    "include": ["**/*.xml"],
+    "exclude": []
+  },
+  "selection": { "quiet": false, "baseline": { "newIssues": 1, "unchanged": 0, "fixed": 2 } },
+  "files": [
+    {
+      "filePath": "/synthetic/orders-api/main.xml",
+      "relativePath": "main.xml",
+      "parsed": true,
+      "issues": [
+        {
+          "ruleId": "SYNTH-1",
+          "severity": "warning",
+          "line": 12,
+          "column": 3,
+          "message": "Synthetic finding",
+          "suggestion": "Use a named flow",
+          "codeSnippet": "<flow name=\"example\"/>"
+        }
+      ]
+    },
+    {
+      "filePath": "/synthetic/orders-api/broken.xml",
+      "relativePath": "broken.xml",
+      "parsed": false,
+      "parseError": "Synthetic parse failure",
+      "issues": []
+    }
+  ],
+  "summary": {
+    "totalFiles": 2,
+    "filesWithIssues": 1,
+    "parseErrors": 1,
+    "bySeverity": { "error": 0, "warning": 1, "info": 0 },
+    "byRule": { "SYNTH-1": 1 }
+  }
+}

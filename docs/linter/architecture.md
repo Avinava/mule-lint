@@ -1,403 +1,175 @@
 # Architecture
 
-This document describes the architecture, design patterns, and best practices used in mule-lint.
+The analysis pipeline keeps transport, analysis policy, rule execution and presentation
+separate while preserving existing CLI, library and MCP contracts.
 
 ## System Overview
 
 ```mermaid
 flowchart TB
-    subgraph CLI["CLI Layer (commander)"]
-        A["mule-lint ./path -f sarif"]
-    end
-
-    subgraph Engine["LintEngine"]
-        B[FileScanner<br/>fast-glob] --> C[XmlParser<br/>xmldom]
-        C --> D[Rule Executor]
-        B --> E[YamlParser<br/>yaml]
-        E --> D
-    end
-
-    subgraph Rules["Rules (99 Total)"]
-        D --> R1[Error Handling<br/>9 rules]
-        D --> R2[Naming<br/>3 rules]
-        D --> R3[Security<br/>19 rules]
-        D --> R4[Logging<br/>7 rules]
-        D --> R5[HTTP<br/>5 rules]
-        D --> R6[Performance<br/>7 rules]
-        D --> R7[Documentation<br/>3 rules]
-        D --> R8[Standards<br/>14 rules]
-        D --> R9[Complexity<br/>2 rules]
-        D --> R10[Structure<br/>3 rules]
-        D --> R11[DataWeave<br/>5 rules]
-        D --> R12[API-Led<br/>10 rules]
-        D --> R13[Operations<br/>6 rules]
-        D --> R14[Governance<br/>2 rules]
-        D --> R15[Testing<br/>TEST-001]
-        D --> R16[Experimental<br/>EXP-001,002,003]
-    end
-
-    subgraph Output["Formatters"]
-        J[Table<br/>Human]
-        K[JSON<br/>Scripts]
-        L[SARIF<br/>AI Agents]
-        M[HTML<br/>Reports]
-        N[CSV / Markdown<br/>JUnit / GitHub<br/>CI]
-    end
-
-    A --> B
-    D --> J
-    D --> K
-    D --> L
-    D --> M
+    CLI[CLI adapter] --> Service[Typed analysis service]
+    MCP[MCP adapter] --> Service
+    Library[Library API] --> Service
+    Service --> Engine[LintEngine]
+    Engine --> Scope[File and project context]
+    Engine --> Rules[Registered rules and profiles]
+    Engine --> Metrics[Scan metrics]
+    Engine --> Report[Legacy LintReport]
+    Report --> Selection[Selection, baseline and gate]
+    Selection --> Contract[Canonical report-v1 projection]
+    Contract --> Structured[Structured MCP and report-json]
+    Selection --> Legacy[Compatible legacy formatters]
+    Contract --> HTML[Typed, bundled HTML client]
 ```
+
+The [analysis decision](../decisions/analysis-pipeline.md) records compatibility boundaries.
+The exported schema drives the [generated contract reference](../generated/report-contract.md).
 
 ## Data Flow
 
-```mermaid
-sequenceDiagram
-    participant CLI
-    participant Engine as LintEngine
-    participant Scanner as FileScanner
-    participant Parser as XmlParser
-    participant YAML as YamlParser
-    participant Rules
-    participant Formatter
+1. The adapter supplies an explicit target and request options. Configuration is loaded only
+   when requested; unknown keys retain warning semantics.
+2. The service resolves the rule set, profile and formatter selection. CLI defaults and MCP's
+   recommended default remain deliberately distinct.
+3. The engine discovers selected files, gathers context, executes rules and aggregates metrics.
+4. The service applies quiet selection, then a baseline, then a quality gate. Execution health
+   is independent of finding selection and cannot become a pass through filtering.
+5. The service returns the report, canonical contract, effective rules, messages and exit policy.
+   Adapters own transport, report file writes and process exit.
+6. Legacy formatters remain compatible projections. HTML and structured consumers use canonical
+   findings; existing JSON continues to be a flat issue array.
 
-    CLI->>Engine: scan(path)
-    Engine->>Scanner: scanDirectory(path)
-    Scanner-->>Engine: ScannedFile[]
-
-    Note over Engine: Pre-Scan Phase
-    loop Each XML File (Pre-Scan)
-        Engine->>Parser: parseXml(content)
-        Parser-->>Engine: Document (cached)
-        Note over Engine: Collect allFlowRefs, allFlowNames
-    end
-    Note over Engine: Detect projectLayer
-
-    loop Each XML File
-        Engine->>Engine: Get Document from cache
-        loop Each Per-File Rule
-            Engine->>Rules: validate(doc, context)
-            Rules-->>Engine: Issue[]
-        end
-    end
-
-    Note over Engine: Project Rules
-    loop Each Project Rule
-        Engine->>Rules: validateProject(context)
-        Rules-->>Engine: Issue[]
-    end
-
-    loop YAML Rules
-        Engine->>YAML: parseYaml(path)
-        YAML-->>Engine: Properties
-        Engine->>Rules: validate(props, context)
-    end
-
-    Engine->>Formatter: format(report)
-    Formatter-->>CLI: string output
-```
+A complete execution is not whole-project coverage. A file target gathers selected-file context
+and may also run project checks. The recorded target, profile, enabled rules and patterns must
+be interpreted together. Unknown legacy scope remains explicit.
 
 ## Core Components
 
+### AnalysisService
+
+`analyze()` owns request/configuration, selection, baseline and gate policy. It does not print
+normal report output, write report files or exit the process. Optional message callbacks let
+adapters present configuration diagnostics. Verbose engine output retains stderr behavior.
+
+A caller may provide rules or a configured engine. An injected engine supplies its actual enabled
+rule metadata; conflicting rule/config/profile requests are rejected. Scan configuration is
+inherited, while formatter, warning-exit and gate policy remain explicit service options.
+
 ### LintEngine
 
-The central orchestrator that:
-
-1. Scans directories for XML and YAML files using FileScanner
-2. **Pre-scans** all XML files to collect cross-file metadata (`allFlowRefs`, `allFlowNames`, `projectContext` with `projectLayer`)
-3. **Caches** parsed XML `Document` objects to avoid redundant parsing
-4. Executes all enabled per-file rules against each cached document
-5. Executes project-level rules (`ProjectRule` subclasses) once per scan
-6. Aggregates results into a LintReport
-
-```typescript
-const engine = new LintEngine({ rules: ALL_RULES, config });
-const report = await engine.scan('./project');
-```
+The engine owns file discovery, parsing, cross-file context, execution and metrics. Rule IDs,
+profile memberships and meanings are stable API. Engine internals are not being rewritten as
+part of the service extraction.
 
 #### Document Cache
 
-During `preScanFiles()`, the engine parses each XML file and stores the resulting `Document` in an internal `Map<string, Document>`. When `processFile()` runs, it retrieves the cached document instead of re-parsing. The cache is cleared after each scan to free memory.
+Documents are cached during a scan and released afterward. A per-engine queue serializes scans
+so mutable caches and rule-error collections cannot leak between concurrent callers. Removing
+that queue requires separate per-run isolation and concurrency characterization.
 
 #### Project Layer Detection
 
-The engine automatically classifies projects into a `ProjectLayer`:
-
-| Layer     | Detection Heuristic                                         |
-| --------- | ----------------------------------------------------------- |
-| `sapi`    | Directory name contains `-sapi`, `-sys-`, or `-system-`     |
-| `papi`    | Directory name contains `-papi`, `-proc-`, or `-process-`   |
-| `eapi`    | Directory name contains `-eapi`, `-exp-`, or `-experience-` |
-| `library` | Directory name contains `-library`, `-lib`, or `-common`    |
-| `batch`   | Batch job elements detected in XML files                    |
-| `unknown` | Default when no pattern matches                             |
-
-Available to rules via `context.projectContext?.projectLayer`.
+Project context includes heuristic layer classification and cross-file flow facts. Rules consume
+that context rather than independently rescanning the repository. Heuristics do not establish
+architectural correctness; see the [rule engine](rule-engine.md) for execution details.
 
 ### XPathHelper
 
-Singleton utility for namespace-aware XPath queries:
-
-```typescript
-const xpath = XPathHelper.getInstance();
-const flows = xpath.selectNodes('//mule:flow', document);
-```
-
-Pre-configured namespaces:
-
-| Prefix        | Namespace                                         |
-| ------------- | ------------------------------------------------- |
-| `mule`        | http://www.mulesoft.org/schema/mule/core          |
-| `http`        | http://www.mulesoft.org/schema/mule/http          |
-| `ee`          | http://www.mulesoft.org/schema/mule/ee/core       |
-| `db`          | http://www.mulesoft.org/schema/mule/db            |
-| `doc`         | http://www.mulesoft.org/schema/mule/documentation |
-| `tls`         | http://www.mulesoft.org/schema/mule/tls           |
-| `file`        | http://www.mulesoft.org/schema/mule/file          |
-| `sftp`        | http://www.mulesoft.org/schema/mule/sftp          |
-| `vm`          | http://www.mulesoft.org/schema/mule/vm            |
-| `jms`         | http://www.mulesoft.org/schema/mule/jms           |
-| `apikit`      | http://www.mulesoft.org/schema/mule/mule-apikit   |
-| `batch`       | http://www.mulesoft.org/schema/mule/batch         |
-| `netsuite`    | http://www.mulesoft.org/schema/mule/netsuite      |
-| `sap`         | http://www.mulesoft.org/schema/mule/sap           |
-| `anypoint-mq` | http://www.mulesoft.org/schema/mule/anypoint-mq   |
-| `oauth`       | http://www.mulesoft.org/schema/mule/oauth         |
+The namespace-aware XPath helper centralizes Mule connector namespaces and source locations.
+Custom declarative rules use the same helper and are excluded from built-in quality ratings.
 
 ### BaseRule
 
-Abstract base class providing utilities to all rules:
-
-```mermaid
-classDiagram
-    class BaseRule {
-        +id: string
-        +name: string
-        +severity: Severity
-        +category: RuleCategory
-        +issueType: IssueType
-        +validate(doc, context): Issue[]
-        #select(xpath, doc): Node[]
-        #getAttribute(node, name): string
-        #createIssue(node, message): Issue
-        #getOption(context, key, default): T
-    }
-
-    class ProjectRule {
-        +validateProject(context): Issue[]
-        +validate(doc, context): Issue[]
-    }
-
-    class FlowNamingRule {
-        +validate()
-    }
-
-    class YamlRuleBase {
-        +validate()
-        #findYamlFiles(): string[]
-    }
-
-    class GlobalErrorHandlerRule {
-        +validateProject()
-    }
-
-    BaseRule <|-- FlowNamingRule
-    BaseRule <|-- YamlRuleBase
-    BaseRule <|-- ProjectRule
-    ProjectRule <|-- GlobalErrorHandlerRule
-```
-
-**Issue Types for Quality Metrics:**
-
-- `code-smell` (default) - Maintainability issues
-- `bug` - Reliability issues (error-handling rules)
-- `vulnerability` - Security issues (security rules)
+Per-file rules implement `Rule`/`BaseRule`; project checks extend `ProjectRule`. Catalog metadata
+supplies standards, profiles and documentation links. `issueType` drives heuristic quality
+calculations; it is independent of category and severity. A parse diagnostic is not a code smell.
 
 ## Design Patterns
 
 ### Strategy Pattern (Rules)
 
-Each rule is a strategy implementing the same interface:
-
-```typescript
-interface Rule {
-  id: string;
-  name: string;
-  severity: Severity;
-  validate(doc: Document, context: ValidationContext): Issue[];
-}
-```
+Rules implement a common validation interface and run against engine-provided context. New rules
+must update registration, catalog metadata, tests and the canonical executable reference together.
 
 ### Factory Pattern (Formatters)
 
-Formatters are selected via factory function:
-
-```typescript
-function getFormatter(type: FormatterType): Formatter {
-  switch (type) {
-    case 'table':
-      return formatTable;
-    case 'json':
-      return formatJson;
-    case 'sarif':
-      return formatSarif;
-    case 'html':
-      return formatHtml;
-  }
-}
-```
+`format(report, type, rules)` selects the compatible output adapter. Canonical projection is
+centralized in `createReportContract`; formatters do not decide whether an incomplete scan passed.
 
 ### Singleton Pattern (XPathHelper)
 
-XPathHelper uses singleton to avoid recreating namespace resolver:
-
-```typescript
-XPathHelper.getInstance(); // Same instance always
-```
+The shared XPath namespace registry remains unchanged. Its lifetime is distinct from per-scan
+engine caches and execution diagnostics.
 
 ## Directory Structure
 
-```
-src/
-├── index.ts              # Package entry point
-├── types/                # TypeScript interfaces
-│   ├── Rule.ts          # Rule, Issue, Severity, IssueType, ProjectLayer
-│   ├── Report.ts        # LintReport, FileResult
-│   └── Config.ts        # LintConfig, CliOptions
-├── core/                 # Core utilities
-│   ├── XPathHelper.ts   # Namespace-aware XPath (16 namespaces)
-│   ├── XmlParser.ts     # DOM parsing
-│   ├── YamlParser.ts    # YAML parsing
-│   ├── FileScanner.ts   # File discovery
-│   ├── ComplexityCalculator.ts
-│   └── MetricsAggregator.ts  # Quality rating calculations
-├── quality/              # Quality scoring system
-│   ├── index.ts         # Module exports
-│   ├── types.ts         # Rating types and interfaces
-│   ├── thresholds.ts    # A-E rating boundaries
-│   └── calculator.ts    # Rating calculation functions
-├── engine/               # Orchestration
-│   └── LintEngine.ts    # Main engine (document cache, pre-scan, project layer)
-├── rules/                # All rules (99 total)
-│   ├── index.ts         # Rule registry (ALL_RULES array)
-│   ├── base/            # BaseRule + ProjectRule classes
-│   ├── api-led/         # API-001–004, API-006–011
-│   ├── complexity/      # MULE-801, MULE-805
-│   ├── connector/       # SF-001, SF-002
-│   ├── dataweave/       # DW-001–005
-│   ├── documentation/   # MULE-601, 604, DOC-001
-│   ├── error-handling/  # MULE-001,003,005,007,009, ERR-001–004
-│   ├── experimental/    # EXP-001–003 (opt-in; EXP-003 is a deprecated alias)
-│   ├── governance/      # PROJ-001, PROJ-002
-│   ├── http/            # MULE-401–403, HTTP-004, HTTP-005
-│   ├── logging/         # MULE-006,301,303, LOG-001,004,005, HYG-001
-│   ├── naming/          # MULE-002, 101, 102
-│   ├── operations/      # HYG-002–005, OPS-004, RES-003
-│   ├── performance/     # MULE-501–503, PERF-002,003, RES-001–002
-│   ├── security/        # MULE-004,201,202, SEC-002–016, CFG-003, YAML-004
-│   ├── standards/       # MULE-008,010,701, OPS-001–003, API-005, CFG-001–002, STD-001
-│   ├── structure/       # MULE-802–804
-│   ├── testing/         # TEST-001
-│   └── yaml/            # YAML-001, 003
-└── formatters/           # Output formatters
-    ├── TableFormatter.ts
-    ├── JsonFormatter.ts
-    ├── SarifFormatter.ts
-    ├── CsvFormatter.ts
-    ├── MarkdownFormatter.ts
-    ├── GithubFormatter.ts
-    ├── JunitFormatter.ts
-    ├── HtmlFormatter.ts  # Orchestrates HTML report
-    └── html/             # Modular HTML components
-        ├── components/   # RatingBadge, Modal, etc.
-        ├── sections/     # Header, Sidebar, QualityRatings
-        ├── views/        # Dashboard, IssuesView
-        ├── scripts/      # Client-side JS (renderer, router)
-        └── styles/       # CSS modules and badges
+```text
+bin/                       CLI and MCP entry adapters
+src/core/AnalysisService   Shared request and result policy
+src/core/ReportContract    Versioned schema and canonical projection
+src/engine/                Discovery/context/execution/metrics orchestration
+src/rules/                 Registered rule implementations
+src/catalog/               Standards, profiles and rule metadata
+src/mcp/                   MCP tools, resources and prompts
+src/formatters/            Compatible report output adapters
+src/formatters/html/client Typed browser modules bundled into one report
+src/formatter/             XML source formatting, a separate capability
+src/api-contract/          RAML/OpenAPI validation, a separate capability
+scripts/                   Build and generated-reference drift checks
 ```
 
 ## Rule Categories
 
-| Runtime category | Count | Description                                            |
-| ---------------- | ----- | ------------------------------------------------------ |
-| error-handling   | 9     | Error handler configuration and best practices         |
-| naming           | 3     | Flow, variable, and file naming                        |
-| security         | 19    | Hardcoded values, TLS, transport, credentials, secrets |
-| logging          | 7     | Logger configuration and hygiene                       |
-| http             | 5     | HTTP request and listener configuration                |
-| performance      | 7     | Performance anti-patterns and resilience               |
-| documentation    | 3     | Component documentation                                |
-| standards        | 14    | Best practices, operations, configuration, YAML        |
-| complexity       | 2     | Cognitive complexity and flow size                     |
-| structure        | 3     | Project structure                                      |
-| dataweave        | 5     | DWL file validation                                    |
-| api-led          | 10    | API-Led patterns, contracts, interface controls        |
-| operations       | 6     | Runtime operability and connector behaviour            |
-| governance       | 2     | POM and Git hygiene                                    |
-| testing          | 1     | MUnit test presence                                    |
-| experimental     | 3     | Opt-in rules for evaluation (`--experimental`)         |
-
-A rule's ID prefix and its runtime category do not always agree (for example `YAML-001` is
-`standards`, `CFG-003` is `security`). Profiles, config, and quality gates use the category.
+Counts and built-in profile membership come from the
+[generated registry reference](../generated/rule-reference.md). The
+[rules catalog](../best-practices/rules-catalog.md) owns rule meanings and reviewed guidance.
+An ID prefix need not match its runtime category; do not infer semantics from a prefix alone.
 
 ## Glossary
 
-Use these terms consistently in code, docs, and output.
-
-| Term             | Meaning                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------- |
-| issue            | One lint result (`Issue`, the entries in JSON/SARIF). RAML/OpenAPI results are called _findings_. |
-| `ruleId` / `id`  | `ruleId` on an issue or output record; `id` on a rule or catalog definition                       |
-| `filePath`       | Absolute path of a scanned file                                                                   |
-| `relativePath`   | Path relative to the scanned project root                                                         |
-| rule profile     | `baseline`, `recommended`, or `strict`: which rules run                                           |
-| contract ruleset | A local AMF Validation Profile passed to `api validate --ruleset`                                 |
-| quality gate     | Pass/fail policy over the report (`--quality-gate`)                                               |
-| rating threshold | The A–E bands used by quality ratings                                                             |
-| `category`       | The topic a rule belongs to (`error-handling`, `security`, …)                                     |
-| `issueType`      | `code-smell`, `bug`, or `vulnerability`, used by quality ratings                                  |
-| experimental     | Opt-in rules in the `experimental` category; not part of any profile                              |
-
-`src/formatter/` holds the Mule XML source formatter (`mule-lint format`). `src/formatters/` holds
-the report output formatters (table, JSON, SARIF, HTML, CSV, Markdown, GitHub, JUnit).
+- **Issue/finding:** an observed rule result; legacy JSON uses issue records, report-v1 uses findings.
+- **Execution:** whether the requested scan completed, independently of findings or a gate.
+- **Scope:** the actual target, effective profile/rules and file-selection patterns.
+- **Selection:** quiet filtering and baseline provenance applied to a scan.
+- **Quality gate:** a pass/warn/fail policy over eligible complete results.
+- **Rating:** a heuristic estimate, not a release or security guarantee.
+- **Relative path:** location within the resolved project root; stable between nested file and project scans.
 
 ## Extension Points
 
 ### Adding Rules
 
-1. Create class extending `BaseRule`
-2. Implement `validate()` method
-3. Register in `src/rules/index.ts`
-4. Add documentation to `docs/best-practices/rules-catalog.md`
+Follow the [extending guide](extending.md), preserve stable IDs and update executable/catalog
+parity tests. Generate mechanical metadata; author explanatory guidance and reviewed standards.
 
 ### Adding Formatters
 
-1. Create function implementing formatter interface
-2. Add to factory in `src/formatters/index.ts`
-3. Update `FormatterType` in types
+Preserve report-v1 and flat JSON contracts. Add an adapter, expose its formatter name deliberately,
+and cover parse/rule/no-files diagnostics, escaping and exit behavior before adding examples.
 
 ## Error Handling
 
-- **Parse Errors**: Captured and reported, don't stop scan
-- **Rule Errors**: Caught and logged, continue with next rule
-- **File Errors**: Reported in results, continue scanning
+Parse and rule failures remain visible even when ordinary findings are filtered or baselined.
+Rule failures, parse failures and no-files outcomes take precedence over findings and gates.
+MCP may return a fatal tool error without a report when analysis cannot start; absence of a
+structured report is not an empty successful scan.
 
 ## Performance Specifications
 
-| Metric              | Target          |
-| ------------------- | --------------- |
-| Files per second    | > 100           |
-| Memory per file     | < 10MB          |
-| Rule execution      | < 50ms per rule |
-| Total for 100 files | < 5 seconds     |
+Performance targets require measured fixtures. Retain project pre-scan caching and avoid repeated
+rule-level filesystem walks. Characterize large-report rendering and scan behavior before claiming
+throughput or memory guarantees; architecture alone does not establish those measurements.
 
 ## Exit Codes
 
-| Code | Meaning                        |
-| ---- | ------------------------------ |
-| 0    | No errors or warnings          |
-| 1    | At least one error found       |
-| 2    | Configuration error            |
-| 3    | Critical error (parse failure) |
+The [CLI reference](../cli-reference.md#exit-codes) owns exact exit-code precedence.
+The shared service returns that decision; adapters do not independently reimplement it.
+
+## Documentation ownership
+
+- Runtime schema/catalog/profile definitions own generated mechanical references.
+- This package owns analysis semantics, rules and MCP resources. Bundled docs cannot be shadowed
+  by similarly named files in an unrelated caller working directory.
+- The [ecosystem hub](https://avinava.github.io/mule-skills/ecosystem/) owns package pins and
+  consumer capability expectations. Build owns local artifacts; the platform connector owns
+  authorized platform operations. Independent releases and package boundaries remain intact.

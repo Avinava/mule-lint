@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import fg from 'fast-glob';
+import fg from '../../core/GlobFiles';
 import { ValidationContext, Issue, IssueType } from '../../types';
 import { ProjectRule } from '../base/ProjectRule';
 import { parsePropertiesFile } from '../../core/PropertiesParser';

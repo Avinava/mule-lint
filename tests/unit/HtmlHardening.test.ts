@@ -1,3 +1,4 @@
+import { Linter } from 'eslint';
 import { formatHtml } from '../../src/formatters/HtmlFormatter';
 import { LintReport } from '../../src/types/Report';
 import { Rule } from '../../src/types/Rule';
@@ -56,22 +57,43 @@ describe('HtmlFormatter hardening', () => {
   });
 });
 
-describe('HtmlFormatter accessibility and CDN pinning', () => {
+describe('HtmlFormatter accessibility and offline packaging', () => {
   const html = formatHtml(report, [hostileRule]);
 
   it('labels the search box and exposes the side panel as a dialog', () => {
     expect(html).toContain('aria-label="Search issues"');
     expect(html).toContain('role="dialog"');
     expect(html).toContain('aria-label="Close details"');
-    expect(html).toContain("event.key === 'Escape'");
+    expect(html).toContain('Escape');
   });
 
-  it('pins every CDN library and protects it with SRI', () => {
-    expect(html).not.toMatch(/cdn\.jsdelivr\.net\/npm\/chart\.js"/);
-    for (const tag of html.match(/<(?:script|link)[^>]+(?:unpkg\.com|cdn\.jsdelivr\.net)[^>]*>/g) ??
-      []) {
-      expect(tag).toMatch(/integrity="sha384-/);
-      expect(tag).toContain('crossorigin="anonymous"');
-    }
+  it('embeds every runtime script, stylesheet and font without network dependencies', () => {
+    expect(html).not.toMatch(/<script[^>]+src=/);
+    expect(html).not.toMatch(/<link[^>]+(?:stylesheet|preconnect)/);
+    expect(html).not.toMatch(/<img[^>]+src=["']https?:/);
+    expect(html).toContain('data:font/woff2;base64,');
+    expect(html).toContain('Browser dependency licenses:');
+    expect(html.replace(/<script[\s\S]*?<\/script>/g, '')).not.toMatch(
+      /\bon(?:click|error|input)=/,
+    );
   });
+});
+
+describe('Generated report JavaScript', () => {
+  it('parses every executable script and rejects duplicate object keys', () => {
+    const html = formatHtml(report, [hostileRule]);
+    const linter = new Linter();
+    const scripts = [...html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)].filter(
+      (match) => !match[1].includes('application/json') && match[2].trim(),
+    );
+    expect(scripts.length).toBeGreaterThan(0);
+    for (const script of scripts) {
+      expect(
+        linter.verify(script[2], {
+          languageOptions: { ecmaVersion: 2022, sourceType: 'script' },
+          rules: { 'no-dupe-keys': 'error', 'no-unreachable': 'error' },
+        }),
+      ).toEqual([]);
+    }
+  }, 20000);
 });

@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import fg from 'fast-glob';
+import fg from '../core/GlobFiles';
 import {
   Rule,
   Issue,
@@ -154,10 +154,16 @@ export class LintEngine {
     this.log(`Rules enabled: ${this.getEnabledRules().length}`);
 
     // Discover files
-    const files = await scanDirectory(isFile ? targetPath : projectRoot, {
-      include: this.config.include,
-      exclude: this.config.exclude,
-    });
+    const files = (
+      await scanDirectory(isFile ? targetPath : projectRoot, {
+        include: this.config.include,
+        exclude: this.config.exclude,
+      })
+    ).map((file) => ({
+      ...file,
+      // Keep file and project scans in the same location/fingerprint namespace.
+      relativePath: path.relative(projectRoot, file.absolutePath).replace(/\\/g, '/'),
+    }));
 
     this.log(`Found ${files.length} files to scan`);
 
@@ -243,6 +249,18 @@ export class LintEngine {
 
     // Build initial report with base metrics
     const baseReport: LintReport = {
+      scope: {
+        target: {
+          kind: isFile ? 'file' : 'project',
+          path: isFile
+            ? path.relative(projectRoot, path.resolve(targetPath)).replace(/\\/g, '/')
+            : '.',
+        },
+        profile: this.profile,
+        enabledRuleIds: this.getEnabledRules().map((rule) => rule.id),
+        include: this.config.include,
+        exclude: this.config.exclude,
+      },
       projectRoot,
       timestamp: new Date().toISOString(),
       durationMs,
@@ -307,7 +325,13 @@ export class LintEngine {
     const scanErrors = this.ruleErrors;
     this.ruleErrors = [];
     try {
-      return this.runRules(parseResult.document, filePath, path.dirname(filePath), true);
+      const issues = this.runRules(parseResult.document, filePath, path.dirname(filePath), true);
+      if (this.ruleErrors.length > 0) {
+        throw new Error(
+          `Analysis incomplete: rule execution failed (${[...new Set(this.ruleErrors.map((error) => error.ruleId))].join(', ')})`,
+        );
+      }
+      return issues;
     } finally {
       this.ruleErrors = scanErrors;
     }
@@ -872,7 +896,7 @@ export class LintEngine {
   private log(message: string): void {
     if (this.verbose) {
       // eslint-disable-next-line no-console -- intentional verbose debug output
-      console.log(message);
+      console.error(message);
     }
   }
 

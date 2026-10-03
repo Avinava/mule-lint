@@ -10,12 +10,11 @@ export interface MetricCardProps {
   sublabel: string;
   color: string;
   icon?: string;
-  onClick?: string;
 }
 
 export function renderMetricCard(props: MetricCardProps): string {
   return `
-    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 ${props.onClick ? 'cursor-pointer hover:shadow-lg transition-all' : ''}" ${props.onClick ? `onclick="${props.onClick}"` : ''}>
+    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
         <div class="flex items-center justify-between mb-1">
             <span class="text-2xs font-semibold text-${props.color}-600 dark:text-${props.color}-400 uppercase tracking-wider">${props.label}</span>
             ${props.icon ?? ''}

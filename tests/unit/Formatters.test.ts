@@ -72,10 +72,13 @@ describe('Formatters', () => {
       expect(output).toContain('issues-table');
       expect(output).toContain('global-search');
       expect(output).toContain('chart-severity');
-      expect(output).toContain('Project health at a glance');
+      expect(output).toContain('Findings to review');
+      expect(output).toContain('execution-status');
+      expect(output).toContain('Export visible CSV');
       expect(output).toContain('Select a row to see the complete message');
-      expect(output).toContain('exchangeBase + meta.icon');
-      expect(output).toContain("tableInstance.on('rowClick'");
+      expect(output).not.toMatch(/<script[^>]+src=/);
+      expect(output).toContain('Browser dependency licenses:');
+      expect(output).toContain('issues-table');
     });
 
     it('should include parse error files in the report data', () => {

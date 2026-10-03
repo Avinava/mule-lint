@@ -53,6 +53,14 @@ Unknown keys produce a warning and are ignored. Treat that warning as a configur
 
 `maxIssues` is accepted for backward compatibility but has no runtime effect and produces a warning.
 
+File patterns support brace lists and padded or stepped ranges, exclusions and
+extglobs. To keep scanning bounded, each pattern is limited to 4,096 characters,
+32 nested groups and 256 groups in total. Each include or exclude array may expand
+to at most 1,000 alternatives. Exceeding a limit is an operational error (CLI exit
+`2`), not a partial or successful no-files report. Unreadable directories also
+fail explicitly. Simplify the patterns or split the scan rather than relying on
+truncated results.
+
 ## Custom XPath rules
 
 `customRulesPath` points at a YAML file of rules defined declaratively, for checks specific to your

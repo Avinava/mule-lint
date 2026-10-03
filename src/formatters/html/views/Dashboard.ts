@@ -17,7 +17,7 @@ export function renderDashboardView(props: DashboardViewProps): string {
                 <!-- Header -->
                 <div class="mb-6">
                     <div class="inline-flex items-center gap-2 px-2.5 py-1 mb-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-2xs font-semibold uppercase tracking-wider">Local static analysis</div>
-                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Project health at a glance</h2>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Findings to review</h2>
                     <p class="text-base text-slate-500 dark:text-slate-400 mt-2">
                         Scanned <strong class="text-slate-700 dark:text-slate-200">${props.filesScanned} files</strong> • Found <strong class="text-rose-600 dark:text-rose-400">${props.errors} errors</strong>, 
                         <strong class="text-amber-600 dark:text-amber-400">${props.warnings} warnings</strong>, and 
@@ -25,16 +25,18 @@ export function renderDashboardView(props: DashboardViewProps): string {
                     </p>
                 </div>
 
+                <div class="execution-status" role="status"></div>
+                ${renderLintSummarySection(props)}
                 <!-- Project Metrics -->
                 <div class="mb-6">
                     <div class="mb-3">
                         <div class="flex items-center gap-2">
                             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Project Metrics</h3>
-                            <button class="info-btn" onclick="modal.open('project-metrics')">?</button>
+                            <button type="button" aria-label="About project metrics" class="info-btn" data-modal="project-metrics">?</button>
                         </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Architecture overview: flows, components, and configurations</p>
                     </div>
-                    <div class="grid grid-cols-5 gap-3">
+                    <div class="metrics-grid grid grid-cols-5 gap-3">
                         ${renderMetricCard({
                           id: 'metric-flows',
                           label: 'Flows',
@@ -83,11 +85,11 @@ export function renderDashboardView(props: DashboardViewProps): string {
                     </div>
                     <!-- API Endpoints -->
                     <div id="endpoints-inventory" class="mt-2" style="display: none;">
-                        <div class="flex items-center gap-2 flex-wrap cursor-pointer" onclick="window.toggleEndpoints()">
+                        <button type="button" aria-expanded="false" aria-controls="endpoint-details" class="flex items-center gap-2 flex-wrap cursor-pointer" data-toggle-details="endpoint">
                             <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">API Endpoints:</span>
                             <div id="endpoint-pills" class="flex flex-wrap gap-1.5"></div>
                             <svg id="endpoints-chevron" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </div>
+                        </button>
                         <div id="endpoint-details" class="hidden mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto">
                             <div id="endpoint-list" class="flex flex-wrap gap-1.5"></div>
                         </div>
@@ -104,22 +106,22 @@ export function renderDashboardView(props: DashboardViewProps): string {
                     </div>
                     <!-- External Services -->
                     <div id="services-inventory" class="mt-2" style="display: none;">
-                        <div class="flex items-center gap-2 flex-wrap cursor-pointer" onclick="window.toggleServices()">
+                        <button type="button" aria-expanded="false" aria-controls="service-details" class="flex items-center gap-2 flex-wrap cursor-pointer" data-toggle-details="service">
                             <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">External Services:</span>
                             <div id="service-pills" class="flex flex-wrap gap-1.5"></div>
                             <svg id="services-chevron" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </div>
+                        </button>
                         <div id="service-details" class="hidden mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
                             <div id="service-list" class="flex flex-wrap gap-1.5"></div>
                         </div>
                     </div>
                     <!-- Schedulers -->
                     <div id="schedulers-inventory" class="mt-2" style="display: none;">
-                        <div class="flex items-center gap-2 flex-wrap cursor-pointer" onclick="window.toggleSchedulers()">
+                        <button type="button" aria-expanded="false" aria-controls="scheduler-details" class="flex items-center gap-2 flex-wrap cursor-pointer" data-toggle-details="scheduler">
                             <span class="text-2xs font-medium text-slate-500 dark:text-slate-400">Schedulers:</span>
                             <div id="scheduler-pills" class="flex flex-wrap gap-1.5"></div>
                             <svg id="schedulers-chevron" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </div>
+                        </button>
                         <div id="scheduler-details" class="hidden mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
                             <div id="scheduler-list" class="flex flex-wrap gap-1.5"></div>
                         </div>
@@ -127,16 +129,15 @@ export function renderDashboardView(props: DashboardViewProps): string {
                 </div>
 
                 ${renderQualityRatingsSection()}
-
-                ${renderLintSummarySection(props)}
+                <p id="chart-status" class="report-notice" hidden></p>
 
                 <!-- Charts -->
-                <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="finding-chart charts-grid grid grid-cols-3 gap-4 mb-6">
                     <div class="col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
                         <div class="mb-4">
                             <div class="flex items-center gap-2">
                                 <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200">Top Violated Rules</h3>
-                                <button class="info-btn" onclick="modal.open('categories')">?</button>
+                                <button type="button" aria-label="About categories" class="info-btn" data-modal="categories">?</button>
                             </div>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Most frequent rule violations across the project</p>
                         </div>
@@ -155,7 +156,7 @@ export function renderDashboardView(props: DashboardViewProps): string {
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                <div class="finding-chart bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
                     <div class="mb-4">
                         <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200">Issues by Category</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Breakdown of issues by functional category</p>

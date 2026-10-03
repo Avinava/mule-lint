@@ -8,6 +8,7 @@ import {
   DEFAULT_QUALITY_GATE,
 } from '../types/QualityGate';
 import { LintReport } from '../types/Report';
+import { getScanExecution } from './ReportContract';
 
 /**
  * Extracts metric values from a lint report
@@ -72,6 +73,15 @@ export function evaluateQualityGate(
   report: LintReport,
   gate: QualityGate = DEFAULT_QUALITY_GATE,
 ): QualityGateResult {
+  const execution = getScanExecution(report);
+  if (execution.status !== 'complete') {
+    return {
+      gate,
+      status: 'failed',
+      conditions: [],
+      message: `Quality Gate "${gate.name}" FAILED - analysis ${execution.status}; resolve execution diagnostics before evaluating findings.`,
+    };
+  }
   const conditionResults: ConditionResult[] = [];
   const failedConditions: string[] = [];
   const warnConditions: string[] = [];
@@ -147,6 +157,7 @@ export function formatQualityGateResult(result: QualityGateResult): string {
 
   lines.push(`\nQuality Gate: ${result.gate.name}`);
   lines.push(`Status: ${icon} ${result.status.toUpperCase()}`);
+  lines.push(result.message);
   lines.push('');
 
   lines.push('Conditions:');

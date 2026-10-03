@@ -2,11 +2,12 @@ import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { getErrorMessage } from '../../core/errors';
-import { LintEngine } from '../../engine/LintEngine';
-import { getRuleById } from '../../rules';
+import type { LintEngine } from '../../engine/LintEngine';
 import { ALL_RULES } from '../../rules';
-import { normalizeRuleProfile, toRuleProfileReference, type RuleProfileName } from '../../catalog';
+import type { RuleProfileName } from '../../catalog';
 import { registerTool } from '../register';
+import { reportSchema } from '../../core/ReportContract';
+import { analyze } from '../../core/AnalysisService';
 
 interface RunLintAnalysisInput {
   projectPath: string;
@@ -21,8 +22,9 @@ export function registerRunLintAnalysis(server: McpServer, engine: LintEngine): 
     server,
     'run_lint_analysis',
     {
+      outputSchema: reportSchema.shape,
       description:
-        'USE THIS TOOL FIRST to analyze a MuleSoft project. It scans the codebase for best practice violations, security issues (secure:: properties), and potential runtime errors. Returns a comprehensive report needed to identify what needs fixing.',
+        'USE THIS TOOL FIRST to analyze a MuleSoft project. Checks enabled static-analysis rules for best practice violations, secure:: property references, and potential runtime errors. Inspect structuredContent.execution and scan scope before interpreting findings; this is not a complete security assessment.',
       inputSchema: {
         projectPath: z.string().describe('Absolute path to the MuleSoft project directory to scan'),
         profile: z
@@ -33,56 +35,49 @@ export function registerRunLintAnalysis(server: McpServer, engine: LintEngine): 
     },
     async ({ projectPath, profile }) => {
       try {
-        const selectedEngine = profile
-          ? new LintEngine({
-              rules: ALL_RULES,
-              config: {
-                extends: toRuleProfileReference(normalizeRuleProfile(profile)),
-              },
-            })
-          : engine;
-        const report = await selectedEngine.scan(projectPath);
+        const { report, contract } = await analyze(
+          { targetPath: projectPath, ...(profile ? { profile } : {}) },
+          profile ? { rules: ALL_RULES } : { engine },
+        );
 
         const summary = {
           totalFiles: report.summary.totalFiles,
-          totalIssues:
-            report.summary.bySeverity.error +
-            report.summary.bySeverity.warning +
-            report.summary.bySeverity.info,
-          errors: report.summary.bySeverity.error,
-          warnings: report.summary.bySeverity.warning,
-          profile: profile ?? 'recommended',
+          totalIssues: contract.summary.totalIssues,
+          errors: contract.summary.bySeverity.error,
+          warnings: contract.summary.bySeverity.warning,
+          execution: contract.execution,
+          schemaVersion: contract.schemaVersion,
+          tool: contract.tool,
+          profile: contract.scan.profile,
           // Include quality metrics if available
-          qualityMetrics: report.metrics
-            ? {
-                complexity: report.metrics.complexity,
-                maintainability: report.metrics.maintainability,
-                reliability: report.metrics.reliability,
-                security: report.metrics.security,
-              }
-            : undefined,
-          issues: report.files
-            .map((r) => ({
-              file: r.relativePath,
-              issues: r.issues.map((i) => {
-                // Get issueType from rule metadata
-                const rule = getRuleById(i.ruleId);
-                return {
-                  ruleId: i.ruleId,
-                  message: i.message,
-                  line: i.line,
-                  column: i.column,
-                  severity: i.severity,
-                  issueType: rule?.issueType ?? 'code-smell',
-                  suggestion: i.suggestion,
-                  codeSnippet: i.codeSnippet,
-                };
-              }),
-            }))
-            .filter((r) => r.issues.length > 0),
+          qualityMetrics:
+            report.metrics && contract.execution.status === 'complete'
+              ? {
+                  complexity: report.metrics.complexity,
+                  maintainability: report.metrics.maintainability,
+                  reliability: report.metrics.reliability,
+                  security: report.metrics.security,
+                }
+              : undefined,
+          issues: [
+            ...new Set(
+              contract.findings.map((finding) => finding.location.path ?? 'Project Structure'),
+            ),
+          ].map((file) => ({
+            file,
+            issues: contract.findings
+              .filter((finding) => (finding.location.path ?? 'Project Structure') === file)
+              .map((finding) => ({
+                ...finding,
+                line: finding.location.line ?? 0,
+                column: finding.location.column,
+              })),
+          })),
         };
 
         return {
+          structuredContent: contract,
+          ...(contract.execution.status !== 'complete' ? { isError: true } : {}),
           content: [
             {
               type: 'text',

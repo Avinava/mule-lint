@@ -86,16 +86,18 @@ The [sample project](examples/sample-orders-system-api) produces the documentati
 
 ## Choose an output
 
-| Format         | Command option                         | Best for                      |
-| -------------- | -------------------------------------- | ----------------------------- |
-| Terminal table | `--format table`                       | A developer fixing a project  |
-| HTML           | `--format html --output report.html`   | Exploring and sharing results |
-| SARIF          | `--format sarif --output report.sarif` | Pull-request annotations      |
-| JSON           | `--format json`                        | Scripts and integrations      |
-| CSV            | `--format csv --output report.csv`     | Spreadsheet review            |
-| Markdown       | `--format markdown`                    | PR comments, job summaries    |
-| GitHub         | `--format github`                      | Inline Actions annotations    |
-| JUnit XML      | `--format junit --output junit.xml`    | Generic CI test reports       |
+| Format         | Command option                         | Best for                         |
+| -------------- | -------------------------------------- | -------------------------------- |
+| Terminal table | `--format table`                       | A developer fixing a project     |
+| HTML           | `--format html --output report.html`   | Exploring and sharing results    |
+| SARIF          | `--format sarif --output report.sarif` | Pull-request annotations         |
+| Report JSON    | `--format report-json`                 | Versioned automation contract    |
+| JSON           | `--format json`                        | Legacy flat finding arrays       |
+| Report JSON    | `--format report-json`                 | Versioned execution and findings |
+| CSV            | `--format csv --output report.csv`     | Spreadsheet review               |
+| Markdown       | `--format markdown`                    | PR comments, job summaries       |
+| GitHub         | `--format github`                      | Inline Actions annotations       |
+| JUnit XML      | `--format junit --output junit.xml`    | Generic CI test reports          |
 
 See [output formats](docs/output-formats.md) for real examples, exit codes, and `--baseline` for reporting only new issues.
 
@@ -119,7 +121,7 @@ Pin the package version so local and CI scans use the same rules:
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended --fail-on-warning
+  run: npx -y @sfdxy/mule-lint@2.0.0 . --profile recommended --fail-on-warning
 ```
 
 For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integration](docs/best-practices/ci-cd.md).
@@ -129,7 +131,7 @@ For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integrat
 mule-lint includes a local MCP server with tools for full-project analysis, snippet validation, rule explanations, XML formatting, and API contract validation:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.31.0 mcp
+npx -y @sfdxy/mule-lint@2.0.0 mcp
 ```
 
 It uses standard input/output and needs no credentials. Host-specific setup is in the [MCP guide](docs/mcp-design.md).

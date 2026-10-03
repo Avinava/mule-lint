@@ -4,6 +4,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 export interface TextToolResult {
   content: Array<{ type: 'text'; text: string }>;
   isError?: boolean;
+  structuredContent?: Record<string, unknown>;
 }
 
 export interface TextPromptResult {
@@ -20,7 +21,7 @@ type InputSchema<Input extends object> = {
 interface StableMcpRegistration {
   registerTool<Input extends object>(
     name: string,
-    config: { description: string; inputSchema: InputSchema<Input> },
+    config: { description: string; inputSchema: InputSchema<Input>; outputSchema?: z.ZodRawShape },
     callback: (input: Input) => TextToolResult | Promise<TextToolResult>,
   ): unknown;
   registerPrompt<Input extends object>(
@@ -43,7 +44,7 @@ function stableRegistration(server: McpServer): StableMcpRegistration {
 export function registerTool<Input extends object>(
   server: McpServer,
   name: string,
-  config: { description: string; inputSchema: InputSchema<Input> },
+  config: { description: string; inputSchema: InputSchema<Input>; outputSchema?: z.ZodRawShape },
   callback: (input: Input) => TextToolResult | Promise<TextToolResult>,
 ): void {
   stableRegistration(server).registerTool(name, config, callback);

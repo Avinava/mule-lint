@@ -16,12 +16,12 @@ export function renderLintSummarySection(props: LintSummaryProps): string {
         <div class="mb-3">
             <div class="flex items-center gap-2">
                 <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Lint Summary</h3>
-                <button class="info-btn" onclick="modal.open('severity')">?</button>
+                <button type="button" aria-label="About severity" class="info-btn" data-modal="severity">?</button>
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Issue breakdown by severity. Click to filter issues.</p>
         </div>
-        <div class="grid grid-cols-4 gap-3">
-            <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-rose-300 dark:hover:border-rose-600 transition-all" onclick="router.toggleSeverity('error')">
+        <div class="summary-grid grid grid-cols-4 gap-3">
+            <button type="button" class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-rose-300 dark:hover:border-rose-600 transition-all" data-show-severity="error">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-2xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Errors</span>
                     <div class="w-6 h-6 rounded bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center">
@@ -30,8 +30,8 @@ export function renderLintSummarySection(props: LintSummaryProps): string {
                 </div>
                 <div class="text-xl font-bold text-rose-600 dark:text-rose-400">${props.errors}</div>
                 <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Critical issues</div>
-            </div>
-            <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-600 transition-all" onclick="router.toggleSeverity('warning')">
+            </button>
+            <button type="button" class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-600 transition-all" data-show-severity="warning">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-2xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Warnings</span>
                     <div class="w-6 h-6 rounded bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
@@ -40,8 +40,8 @@ export function renderLintSummarySection(props: LintSummaryProps): string {
                 </div>
                 <div class="text-xl font-bold text-amber-600 dark:text-amber-400">${props.warnings}</div>
                 <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Best practice violations</div>
-            </div>
-            <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-cyan-300 dark:hover:border-cyan-600 transition-all" onclick="router.toggleSeverity('info')">
+            </button>
+            <button type="button" class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 cursor-pointer hover:shadow-lg hover:border-cyan-300 dark:hover:border-cyan-600 transition-all" data-show-severity="info">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-2xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">Info</span>
                     <div class="w-6 h-6 rounded bg-cyan-100 dark:bg-cyan-500/20 flex items-center justify-center">
@@ -50,7 +50,7 @@ export function renderLintSummarySection(props: LintSummaryProps): string {
                 </div>
                 <div class="text-xl font-bold text-cyan-600 dark:text-cyan-400">${props.info}</div>
                 <div class="text-2xs text-slate-400 dark:text-slate-500 mt-0.5">Advisory findings</div>
-            </div>
+            </button>
             <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-2xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Files</span>

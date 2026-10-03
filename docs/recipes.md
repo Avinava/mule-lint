@@ -32,7 +32,9 @@ Quiet mode reduces terminal noise. It does not change the rules that run.
 mule-lint . --profile recommended --format html --output mule-lint-report.html
 ```
 
-Open the file locally. Because charts, fonts, and the issue table load from public CDNs, the interactive report needs browser network access.
+Open the generated file locally. New offline reports include charts, fonts and the issue table
+in the file; no browser network connection is needed. Older published versions may still
+generate CDN-dependent reports. Report data can contain source details, so review it before sharing.
 
 ## Share findings in a spreadsheet
 
@@ -89,7 +91,7 @@ See [XML formatting](formatting.md) for safe usage.
 ## Run without installing globally
 
 ```bash
-npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended
+npx -y @sfdxy/mule-lint@2.0.0 . --profile recommended
 ```
 
 Pinning the version makes results repeatable across developers and CI.

@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.0.0] - 2026-10-03
+
+### Upgrade notes
+
+- Review automation that interprets exit codes: rule execution failures and no-file scans
+  exit `2`; parse failures exit `3`, even with permissive gates, quiet mode, or baselines.
+- MCP clients must handle incomplete and no-file analysis as tool errors. Use the versioned
+  `report-json` contract for explicit execution status; legacy flat JSON remains supported.
+- Offline HTML reports require Chrome 111+, Safari 16.4+, or Firefox 128+. The CLI's Node.js
+  requirement remains unchanged.
+- Regenerate baselines that contain nested file findings after reviewing results: project-relative
+  paths now match across file and project scans. Reduce oversized glob or brace-expansion patterns
+  if validation rejects them rather than relying on partial discovery.
+
+### Added
+
+- Add a shared typed `analyze()` service for CLI/MCP/library policy, generated schema and rule-registry references, and executable drift checks.
+
+- Opt-in `--format report-json` and exported `reportSchema` / `createReportContract`: a
+  version 1 execution, scope, selection, gate, and deterministic findings contract. Legacy
+  flat JSON and `formatJsonFull` remain compatible. Unknown legacy scope is explicit.
+- MCP `run_lint_analysis` output schema and structured report content, retaining grouped
+  legacy text findings and exposing incomplete/no-file analysis as tool errors.
+
+### Fixed
+
+- Replace vulnerable glob dependencies with bounded matching that preserves supported brace ranges, exclusions, depth and symlink behavior. Oversized patterns fail explicitly instead of silently truncating scans.
+- Upgrade the offline report CSS compiler, preserving design tokens; HTML reports require Chrome 111+, Safari 16.4+, or Firefox 128+.
+- Build offline report assets once per package build and document maintained script entrypoints.
+- Verify package, lockfile, changelog and release-tag identity; validate release documentation and restrict manual Pages publication to the default branch.
+
+- Keep nested file findings project-relative so file and project scans share stable finding identities.
+- HTML reports expose target, scan and gate status, distinguish parse diagnostics, synchronize
+  filters and preserve findings when chart or table dependencies fail.
+
+- Rule execution failures exit `2`, parse failures exit `3`, and no-file scans exit `2`,
+  before ordinary finding/gate outcomes. Quiet mode, baselines, and permissive gates cannot
+  hide execution failure. Diagnostic and verbose output stays on stderr.
+- SARIF marks incomplete/no-file execution unsuccessful and includes execution notifications.
+- Snippet rule failures are surfaced instead of returning misleading empty findings.
+
 ## [1.31.0] - 2026-10-01
 
 Hardening and CI-output release. Report output is safe to pipe, SARIF validates, three CI formats

@@ -14,7 +14,7 @@ npm --version
 The global npm command directory is not on your `PATH`, or the install did not finish. The quickest workaround is:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended
+npx -y @sfdxy/mule-lint@2.0.0 . --profile recommended
 ```
 
 You can also locate npm’s global prefix with `npm prefix -g` and ask your workstation administrator to add its executable directory to `PATH`.
@@ -65,14 +65,19 @@ Group findings by rule in the HTML report. Fix genuine errors, then review repea
 
 ## HTML opens without charts or a table
 
-The report loads Tailwind CSS, Chart.js, Tabulator, and fonts from public CDNs. Allow browser network access, then reload. The lint data itself is embedded in the HTML file and is not uploaded by mule-lint.
+New reports embed their interactive assets and do not need network access. Regenerate an old
+report with a version supporting offline output; older releases used public CDNs. If a current
+report cannot initialize its charts or table, findings remain available in the fallback list
+with search and CSV export. Keep the original file intact, inspect browser errors and regenerate
+it from the source. Report loading does not upload lint data. JavaScript must be enabled for
+interactive controls; a script-disabled browser is not the same as a missing chart library.
 
 ## The MCP server appears to hang on first use
 
 When a host runs `npx`, npm may download the pinned package before the server starts. Run the exact command once in a terminal to confirm it starts, then stop it with Ctrl+C:
 
 ```bash
-npx -y @sfdxy/mule-lint@1.31.0 mcp
+npx -y @sfdxy/mule-lint@2.0.0 mcp
 ```
 
 If the host still cannot see it, restart the host and verify its MCP configuration key in the [MCP guide](mcp-design.md).

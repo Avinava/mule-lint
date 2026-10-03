@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import fg from 'fast-glob';
+import fg from './GlobFiles';
 
 /**
  * Options for file scanning
@@ -69,7 +69,7 @@ export async function scanDirectory(
     ];
   }
 
-  // Use fast-glob for directory scanning
+  // Use the shared glob adapter for directory scanning
   const files = await fg(opts.include, {
     cwd: absoluteRoot,
     absolute: true,
@@ -114,7 +114,7 @@ export function scanDirectorySync(
     ];
   }
 
-  // Use fast-glob sync for directory scanning
+  // Use the shared glob adapter sync for directory scanning
   const files = fg.sync(opts.include, {
     cwd: absoluteRoot,
     absolute: true,

@@ -1,4 +1,5 @@
 import { Issue, Severity } from './Rule';
+import type { QualityGateResult } from './QualityGate';
 
 /**
  * Result for a single file scan
@@ -157,6 +158,22 @@ export interface RuleExecutionError {
 }
 
 export interface LintReport {
+  /** Effective analysis scope; absent on reports produced by older callers. */
+  scope?: {
+    /** Scan target relative to project root; absent for legacy library reports. */
+    target?: { kind: 'file' | 'project'; path: string };
+    profile?: string | undefined;
+    enabledRuleIds: string[];
+    include: string[];
+    exclude: string[];
+  };
+  /** Presentation selection, never used to hide execution failures. */
+  selection?: {
+    quiet: boolean;
+    baseline?: { newIssues: number; unchanged: number; fixed: number };
+  };
+  /** Evaluated gate when requested by the caller. */
+  gate?: QualityGateResult;
   /** Project root directory */
   projectRoot: string;
   /** When the lint run started */
