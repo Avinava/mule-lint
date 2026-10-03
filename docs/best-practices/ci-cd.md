@@ -16,7 +16,7 @@ Every pull request gets the same scan as local development, the pipeline makes a
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended --fail-on-warning
+  run: npx -y @sfdxy/mule-lint@2.0.0 . --profile recommended --fail-on-warning
 ```
 
 This is enough when terminal logs are the desired output.
@@ -50,7 +50,7 @@ jobs:
       - name: Generate SARIF
         continue-on-error: true
         run: >-
-          npx -y @sfdxy/mule-lint@1.31.0 .
+          npx -y @sfdxy/mule-lint@2.0.0 .
           --profile recommended
           --format sarif
           --output mule-lint.sarif
@@ -62,7 +62,7 @@ jobs:
 
       - name: Enforce quality gate
         run: >-
-          npx -y @sfdxy/mule-lint@1.31.0 .
+          npx -y @sfdxy/mule-lint@2.0.0 .
           --profile recommended
           --quality-gate default
 ```
@@ -76,8 +76,8 @@ Without code scanning, mule-lint can annotate the pull request directly and writ
 ```yaml
 - name: Annotate and summarize
   run: |
-    npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended --format github || true
-    npx -y @sfdxy/mule-lint@1.31.0 . --profile recommended --format markdown >> "$GITHUB_STEP_SUMMARY" || true
+    npx -y @sfdxy/mule-lint@2.0.0 . --profile recommended --format github || true
+    npx -y @sfdxy/mule-lint@2.0.0 . --profile recommended --format markdown >> "$GITHUB_STEP_SUMMARY" || true
 ```
 
 Use `--format junit --output mule-lint-junit.xml` for CI systems that read JUnit reports.

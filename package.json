@@ -1,6 +1,6 @@
 {
   "name": "@sfdxy/mule-lint",
-  "version": "1.31.0",
+  "version": "2.0.0",
   "description": "Static analysis tool for MuleSoft applications - supports humans, AI agents, and CI/CD pipelines",
   "author": "Avinava",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
-    "build": "npm run clean && npm run build:client && tsc && node scripts/build-report-client.mjs --copy-dist",
+    "build": "npm run clean && npm run build:client -- --copy-dist && tsc",
     "build:watch": "npm run build && node scripts/watch-report-client.mjs",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.client.json",
     "typecheck:tests": "tsc -p tests/tsconfig.json",

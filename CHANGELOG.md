@@ -1,6 +1,18 @@
 # Changelog
 
-## [Unreleased]
+## [2.0.0] - 2026-10-03
+
+### Upgrade notes
+
+- Review automation that interprets exit codes: rule execution failures and no-file scans
+  exit `2`; parse failures exit `3`, even with permissive gates, quiet mode, or baselines.
+- MCP clients must handle incomplete and no-file analysis as tool errors. Use the versioned
+  `report-json` contract for explicit execution status; legacy flat JSON remains supported.
+- Offline HTML reports require Chrome 111+, Safari 16.4+, or Firefox 128+. The CLI's Node.js
+  requirement remains unchanged.
+- Regenerate baselines that contain nested file findings after reviewing results: project-relative
+  paths now match across file and project scans. Reduce oversized glob or brace-expansion patterns
+  if validation rejects them rather than relying on partial discovery.
 
 ### Added
 
@@ -16,6 +28,7 @@
 
 - Replace vulnerable glob dependencies with bounded matching that preserves supported brace ranges, exclusions, depth and symlink behavior. Oversized patterns fail explicitly instead of silently truncating scans.
 - Upgrade the offline report CSS compiler, preserving design tokens; HTML reports require Chrome 111+, Safari 16.4+, or Firefox 128+.
+- Build offline report assets once per package build and document maintained script entrypoints.
 - Verify package, lockfile, changelog and release-tag identity; validate release documentation and restrict manual Pages publication to the default branch.
 
 - Keep nested file findings project-relative so file and project scans share stable finding identities.
