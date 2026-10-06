@@ -99,7 +99,7 @@
     "esbuild": "0.28.2",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
-    "jsdom": "27.0.1",
+    "jsdom": "27.4.0",
     "knip": "^6.39.0",
     "lefthook": "^2.1.12",
     "lint-staged": "^16.4.0",
