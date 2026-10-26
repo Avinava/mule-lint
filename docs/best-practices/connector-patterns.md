@@ -1,8 +1,8 @@
 # Connector Configuration Patterns
 
 > **Applies to:** All (System APIs, Process APIs)  
-> **Related Rules:** `SEC-007` · `SEC-008` · `PERF-002` · `RES-001` · `RES-002` · `SF-001` · `SF-002`  
-> **Last Updated:** April 2026
+> **Related Rules:** `SEC-007` · `SEC-008` · `SEC-017` · `PERF-002` · `RES-001` · `RES-002` · `SF-001` – `SF-005`  
+> **Last Updated:** October 2026
 
 ## When to Read This
 
@@ -241,7 +241,9 @@ salesforceUtility::parseAndConvert(payload)
 ## Checklist
 
 - [ ] Entity configs externalized to `entity-config/{entity}.yaml`
-- [ ] All connector credentials use `${secure::...}` property placeholders
+- [ ] All connector credentials use `${secure::...}` (encrypted file) or a declared platform secure property `${key}` ([security guide](security.md#pattern-2-connector-credential-security))
+- [ ] Salesforce Replay listeners do not use `ONLY_NEW` without `autoReplay="true"` (`SF-003`) and run on the primary node when scaled out (`SF-005`)
+- [ ] Salesforce Basic Authentication targets API v64.0 or below, or moves to OAuth (`SF-004`)
 - [ ] Reconnection strategies configured on all connectors
 - [ ] `responseTimeout` explicitly set on HTTP request configs
 - [ ] No hardcoded connector attribute values (hosts, ports, keys)

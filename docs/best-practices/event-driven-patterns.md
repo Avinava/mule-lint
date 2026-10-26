@@ -1,8 +1,8 @@
 # Event-Driven Architecture Patterns
 
 > **Applies to:** Event-Driven (Platform Events, Anypoint MQ, Kafka)  
-> **Related Rules:** `SF-001` · `SF-002` · `MULE-003` · `MULE-007`  
-> **Last Updated:** April 2026
+> **Related Rules:** `SF-001` · `SF-002` · `SF-003` · `SF-005` · `MULE-003` · `MULE-007`  
+> **Last Updated:** October 2026
 
 ## When to Read This
 
@@ -34,8 +34,10 @@ Read this when building Mule applications triggered by Salesforce Platform Event
 <flow name="sf-account-event-listener">
     <salesforce:replay-channel-listener
         config-ref="Salesforce_Config"
-        channel="/event/Account_Event__e"
-        replayOption="LATEST"
+        streamingChannel="/event/Account_Event__e"
+        replayOption="ONLY_NEW"
+        autoReplay="true"
+        primaryNodeOnly="true"
         doc:name="Account Event Listener">
         <reconnection>
             <reconnect-forever frequency="5000"/>
@@ -69,7 +71,13 @@ Read this when building Mule applications triggered by Salesforce Platform Event
 **Key rules:**
 
 - Always set `reconnect-forever` on event listeners — they must auto-recover from disconnects
-- Use `replayOption="LATEST"` for new events; `EARLIEST` replays all cached events (24h window)
+- Choose the replay option deliberately. The connector accepts `ONLY_NEW`, `ALL` (everything in the
+  24-hour retention window), `FROM_REPLAY_ID`, and `FROM_LAST_REPLAY_ID`. `ONLY_NEW` alone loses
+  events published while the application is down (`SF-003`); add `autoReplay="true"` to resume from
+  the last successfully processed replay ID. `FROM_LAST_REPLAY_ID` stores the highest replay ID
+  whether or not processing succeeded, so failed events need their own recovery.
+- Set `primaryNodeOnly="true"` when the application runs on more than one worker or node, or every
+  instance processes every event (`SF-005`)
 - Null-guard event payload fields — platform events can contain `null` values for optional fields
 
 ### Pattern 2: Entity Process Sub-flow
@@ -103,7 +111,7 @@ Each entity gets its own process sub-flow that:
 ```xml
 <!-- Set initialState="stopped" to disable at startup -->
 <flow name="sf-order-event-listener" initialState="stopped">
-    <salesforce:replay-channel-listener channel="/event/Order_Event__e" .../>
+    <salesforce:replay-channel-listener streamingChannel="/event/Order_Event__e" .../>
     <!-- ... -->
 </flow>
 ```

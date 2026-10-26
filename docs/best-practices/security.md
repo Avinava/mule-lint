@@ -1,8 +1,8 @@
 # Security Best Practices
 
 > **Applies to:** All  
-> **Related Rules:** `MULE-004` · `MULE-201` · `MULE-202` · `SEC-002` – `SEC-010` · `YAML-004` · `LOG-004`  
-> **Last Updated:** April 2026
+> **Related Rules:** `MULE-004` · `MULE-201` · `MULE-202` · `SEC-002` – `SEC-019` · `CFG-003` · `YAML-004` · `LOG-004` · `LOG-006`  
+> **Last Updated:** October 2026
 
 ## When to Read This
 
@@ -12,7 +12,8 @@ Read this when handling credentials, configuring TLS, securing API endpoints, or
 
 ## Key Principles
 
-1. **Never hardcode secrets** — use `${secure::...}` property placeholders
+1. **Never hardcode secrets** — use `${secure::...}` for encrypted file values, or `${key}` for a
+   platform secure property declared in `mule-artifact.json` `secureProperties`
 2. **Never hardcode URLs** — all hosts, ports, and paths go in YAML config
 3. **Encrypt sensitive properties** — AES/CBC with externalized key
 4. **Use TLS 1.2+ only** — TLS 1.0/1.1 and SSLv3 are deprecated
@@ -49,24 +50,42 @@ salesforce:
 
 ### Pattern 2: Connector Credential Security
 
+Mule supports two secret models. Both are valid; pick one per value and reference it the way that
+model expects.
+
+| Model                           | Where the value lives                                                                       | Reference        |
+| ------------------------------- | ------------------------------------------------------------------------------------------- | ---------------- |
+| Secure Configuration Properties | Encrypted as `![...]` in a file read by `<secure-properties:config>`                        | `${secure::key}` |
+| Platform secure property        | Set at deployment in Runtime Manager; key listed in `mule-artifact.json` `secureProperties` | `${key}`         |
+
 ```xml
 <!-- ❌ Bad — plaintext credentials -->
-<http:request-config username="admin" password="secret123"/>
+<http:request-config username="admin" password="literal-value"/>
 
-<!-- ❌ Bad — non-secure property -->
+<!-- ✅ Good — encrypted file value -->
+<http:request-config username="${api.username}" password="${secure::api.password}"/>
+
+<!-- ✅ Good — platform secure property, with "api.password" in mule-artifact.json secureProperties -->
 <http:request-config username="${api.username}" password="${api.password}"/>
 
-<!-- ✅ Good — secure property reference -->
-<http:request-config
-    username="${api.username}"
-    password="${secure::api.password}"/>
+<!-- ❌ Bad — a platform secure property referenced with secure:: (SEC-017) -->
+<http:request-config username="${api.username}" password="${secure::api.password}"/>
 ```
 
-Credential attributes that must use `${secure::...}`:
+Do not "fix" a platform secure property by adding `secure::`: it then resolves only from a secure
+properties file and fails at runtime. Where to set platform secure properties depends on the
+target: CloudHub 1.0 and hybrid use `secureProperties` plus the Runtime Manager Properties tab; on
+CloudHub 2.0, `secureProperties` does not mask values, so protect them in Runtime Manager; Runtime
+Fabric uses Runtime Manager protected properties.
 
-- `password`, `storePassword`
-- `clientId`, `clientSecret`, `consumerKey`, `consumerSecret`
-- `token`, `tokenSecret`, `tokenId`
+What lint checks:
+
+- `MULE-201` and `SEC-007`: credential attributes such as `password`, `storePassword`,
+  `securityToken`, `clientSecret`, `consumerKey`, `consumerSecret`, `tokenId`, and `tokenSecret`
+  hold no literal. `SEC-007` accepts `${key}` only when `key` is a declared platform secure property.
+- `SEC-017`: a platform secure property is not referenced with `secure::`.
+- `SEC-018`: every `${secure::key}` has a `<secure-properties:config>` and a definition.
+- `SEC-019`: no sensitive key is defined but never referenced.
 
 ### Pattern 3: TLS Configuration
 
@@ -166,7 +185,9 @@ config/
 
 ## Checklist
 
-- [ ] All credentials use `${secure::...}` property placeholders
+- [ ] All credentials use `${secure::...}` (encrypted file) or a declared platform secure property `${key}`
+- [ ] No platform secure property is referenced with `secure::`
+- [ ] Connector and HTTP wire-logging categories are not committed at DEBUG/TRACE (`LOG-006`)
 - [ ] Secure properties encryption key is externalized (`${secure.key}`)
 - [ ] Encryption algorithm is AES or Blowfish (not DES)
 - [ ] TLS contexts use TLSv1.2+ only — no SSLv3, TLSv1.0, TLSv1.1

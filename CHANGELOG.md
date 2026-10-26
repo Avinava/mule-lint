@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.1.1] - 2026-10-26
+
+### Documentation
+
+- README: add "What's new in 2.1" covering both secret models and the new Salesforce, deployment,
+  and logging checks.
+- Security guide (`mule-lint://docs/security`): describe both secret models instead of requiring
+  `${secure::}` for every credential, and list SEC-017, SEC-018, and SEC-019.
+- Event-driven guide: replace the invalid `LATEST`/`EARLIEST` replay options with the connector's
+  `ONLY_NEW`, `ALL`, `FROM_REPLAY_ID`, and `FROM_LAST_REPLAY_ID`, use `streamingChannel`, and link
+  SF-003 and SF-005.
+- Connector, logging, and deployment guides reference SF-003 to SF-005, LOG-006, and OPS-005.
+- Remove a duplicated Report JSON row from the README output table.
+
 ## [2.1.0] - 2026-10-26
 
 ### Upgrade notes

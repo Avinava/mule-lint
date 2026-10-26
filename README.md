@@ -86,20 +86,34 @@ The [sample project](examples/sample-orders-system-api) produces the documentati
 
 ## Choose an output
 
-| Format         | Command option                         | Best for                         |
-| -------------- | -------------------------------------- | -------------------------------- |
-| Terminal table | `--format table`                       | A developer fixing a project     |
-| HTML           | `--format html --output report.html`   | Exploring and sharing results    |
-| SARIF          | `--format sarif --output report.sarif` | Pull-request annotations         |
-| Report JSON    | `--format report-json`                 | Versioned automation contract    |
-| JSON           | `--format json`                        | Legacy flat finding arrays       |
-| Report JSON    | `--format report-json`                 | Versioned execution and findings |
-| CSV            | `--format csv --output report.csv`     | Spreadsheet review               |
-| Markdown       | `--format markdown`                    | PR comments, job summaries       |
-| GitHub         | `--format github`                      | Inline Actions annotations       |
-| JUnit XML      | `--format junit --output junit.xml`    | Generic CI test reports          |
+| Format         | Command option                         | Best for                      |
+| -------------- | -------------------------------------- | ----------------------------- |
+| Terminal table | `--format table`                       | A developer fixing a project  |
+| HTML           | `--format html --output report.html`   | Exploring and sharing results |
+| SARIF          | `--format sarif --output report.sarif` | Pull-request annotations      |
+| Report JSON    | `--format report-json`                 | Versioned automation contract |
+| JSON           | `--format json`                        | Legacy flat finding arrays    |
+| CSV            | `--format csv --output report.csv`     | Spreadsheet review            |
+| Markdown       | `--format markdown`                    | PR comments, job summaries    |
+| GitHub         | `--format github`                      | Inline Actions annotations    |
+| JUnit XML      | `--format junit --output junit.xml`    | Generic CI test reports       |
 
 See [output formats](docs/output-formats.md) for real examples, exit codes, and `--baseline` for reporting only new issues.
+
+## What's new in 2.1
+
+- **Both secret models are supported.** A credential can be an encrypted file value referenced as
+  `${secure::key}`, or a platform secure property referenced as `${key}` and listed in
+  `mule-artifact.json` `secureProperties`. `SEC-007` no longer asks you to change a platform secure
+  property to `secure::`, and `SEC-017`, `SEC-018`, and `SEC-019` catch the mismatches between the two.
+- **Salesforce connector checks:** Replay listeners that lose events (`SF-003`), Basic
+  Authentication above API v64.0 (`SF-004`), and Replay listeners without `primaryNodeOnly`
+  (`SF-005`).
+- **Deployment and logging checks:** declared Java versions the minimum runtime cannot run
+  (`OPS-005`) and connector debug logging committed in `log4j2.xml` (`LOG-006`).
+
+Each rule is documented in the [rules catalog](https://avinava.github.io/mule-lint/best-practices/rules-catalog/)
+(MCP: `mule-lint://docs/rules-catalog`); the [changelog](CHANGELOG.md) lists upgrade notes.
 
 ## Documentation
 
@@ -121,7 +135,7 @@ Pin the package version so local and CI scans use the same rules:
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@2.1.0 . --profile recommended --fail-on-warning
+  run: npx -y @sfdxy/mule-lint@2.1.1 . --profile recommended --fail-on-warning
 ```
 
 For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integration](docs/best-practices/ci-cd.md).
@@ -131,7 +145,7 @@ For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integrat
 mule-lint includes a local MCP server with tools for full-project analysis, snippet validation, rule explanations, XML formatting, and API contract validation:
 
 ```bash
-npx -y @sfdxy/mule-lint@2.1.0 mcp
+npx -y @sfdxy/mule-lint@2.1.1 mcp
 ```
 
 It uses standard input/output and needs no credentials. Host-specific setup is in the [MCP guide](docs/mcp-design.md).
