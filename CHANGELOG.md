@@ -1,5 +1,41 @@
 # Changelog
 
+## [2.1.0] - 2026-10-26
+
+### Upgrade notes
+
+- SEC-007 accepts both secret models. A plain `${key}` listed in `mule-artifact.json`
+  `secureProperties` (a platform secure property) now passes; an undeclared plain `${key}` is a
+  warning instead of an error. Do not change a platform secure property to `${secure::key}`.
+- MULE-201 matches attribute-name endings instead of substrings: `tokenUrl` and
+  `passwordPolicy`-style attributes are no longer reported, while `securityToken`, `tokenKey`,
+  and `passphrase` now are. A literal `<secure-properties:config key>` stays with SEC-008.
+- Sensitive-key classification (YAML-004, CFG-003, SEC-011, MULE-201) adds the endings `token`,
+  `tokenid`, `tokenkey`, and `passphrase`, and recognizes multi-line `#[...]` and `![...]` values.
+  Review new YAML-004 and CFG-003 findings before tightening gates.
+- New stable rules join profiles: SEC-017, SEC-018, and SEC-019 (`baseline`), LOG-006, OPS-005,
+  SF-003, SF-004, and SF-005 (`recommended`). EXP-004 is opt-in.
+
+### Added
+
+- SEC-017 Platform Secure Property Referenced With secure:: (error), SEC-018 Unresolved
+  secure:: Reference (warning), and SEC-019 Unused Sensitive Property (warning). They share one
+  project secret model and mirror mule-build `MB-SEC-006`, `MB-SEC-007`, and `MB-SEC-004`.
+- LOG-006 Connector Debug Logging: connector-internal or HTTP wire-logging categories at
+  DEBUG/TRACE in `log4j2.xml`.
+- OPS-005 Java Version Supported by Minimum Runtime, from MuleSoft's Java support table.
+- SF-003 Salesforce Replay Listener Loses Events (`ONLY_NEW` without `autoReplay`), SF-004
+  Salesforce Basic Authentication API Version (above v64.0), and SF-005 Salesforce Replay
+  Listener Primary Node.
+- EXP-004 Non-Production Endpoint Shared With Production (experimental).
+- `tests/fixtures/sensitive-key-vectors.json`, shared with mule-build, pins the sensitive-key
+  classification in both tools.
+
+### Fixed
+
+- Upgrade `@modelcontextprotocol/sdk` to 1.32.2 and `zod` to 4.6.7, and refresh their transitive
+  dependencies, to clear published advisories in the MCP server's dependency graph.
+
 ## [2.0.0] - 2026-10-03
 
 ### Upgrade notes

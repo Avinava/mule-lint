@@ -46,6 +46,19 @@ import { BatchResourceConfigRule } from './performance/BatchResourceConfigRule';
 import { SchedulerModeRule } from './operations/SchedulerModeRule';
 import { MessagingIdempotencyRule } from './operations/MessagingIdempotencyRule';
 import { OversizedFlowRule } from './complexity/OversizedFlowRule';
+import {
+  PlatformSecurePropertyPrefixRule,
+  UnresolvedSecureReferenceRule,
+  UnusedSensitivePropertyRule,
+} from './security/SecretModelRules';
+import { ConnectorDebugLoggingRule } from './logging/ConnectorDebugLoggingRule';
+import { JavaRuntimeCompatibilityRule } from './operations/JavaRuntimeCompatibilityRule';
+import {
+  ReplayOnlyNewRule,
+  BasicAuthApiVersionRule,
+  ReplayListenerPrimaryNodeRule,
+} from './connector/SalesforceRules';
+import { NonProductionEndpointRule } from './experimental/NonProductionEndpointRule';
 
 // Import all rules - Logging
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -179,6 +192,19 @@ export { BatchResourceConfigRule } from './performance/BatchResourceConfigRule';
 export { SchedulerModeRule } from './operations/SchedulerModeRule';
 export { MessagingIdempotencyRule } from './operations/MessagingIdempotencyRule';
 export { OversizedFlowRule } from './complexity/OversizedFlowRule';
+export {
+  PlatformSecurePropertyPrefixRule,
+  UnresolvedSecureReferenceRule,
+  UnusedSensitivePropertyRule,
+} from './security/SecretModelRules';
+export { ConnectorDebugLoggingRule } from './logging/ConnectorDebugLoggingRule';
+export { JavaRuntimeCompatibilityRule } from './operations/JavaRuntimeCompatibilityRule';
+export {
+  ReplayOnlyNewRule,
+  BasicAuthApiVersionRule,
+  ReplayListenerPrimaryNodeRule,
+} from './connector/SalesforceRules';
+export { NonProductionEndpointRule } from './experimental/NonProductionEndpointRule';
 
 // Export individual rules - Logging
 export { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -252,7 +278,7 @@ export { PomValidationRule, GitHygieneRule } from './governance/GovernanceRules'
 
 /**
  * All available rules - instantiated and ready to use
- * Total: 99 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
+ * Total: 108 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
  */
 export const ALL_RULES: Rule[] = [
   // Error Handling Rules (MULE-001, 003, 005, 007, 009)
@@ -397,6 +423,16 @@ export const ALL_RULES: Rule[] = [
   new SchedulerModeRule(), // OPS-004: Scheduler Mode
   new MessagingIdempotencyRule(), // RES-003: Messaging Idempotency Evidence
   new OversizedFlowRule(), // MULE-805: Oversized Sequential Flow
+  // Secret models and connector operations (SEC-017..019, LOG-006, OPS-005, SF-003..005, EXP-004)
+  new PlatformSecurePropertyPrefixRule(), // SEC-017: Platform Secure Property Referenced With secure::
+  new UnresolvedSecureReferenceRule(), // SEC-018: Unresolved secure:: Reference
+  new UnusedSensitivePropertyRule(), // SEC-019: Unused Sensitive Property
+  new ConnectorDebugLoggingRule(), // LOG-006: Connector Debug Logging
+  new JavaRuntimeCompatibilityRule(), // OPS-005: Java Version Supported by Minimum Runtime
+  new ReplayOnlyNewRule(), // SF-003: Salesforce Replay Listener Loses Events
+  new BasicAuthApiVersionRule(), // SF-004: Salesforce Basic Authentication API Version
+  new ReplayListenerPrimaryNodeRule(), // SF-005: Salesforce Replay Listener Primary Node
+  new NonProductionEndpointRule(), // EXP-004: Non-Production Endpoint Shared With Production
 ];
 
 /**

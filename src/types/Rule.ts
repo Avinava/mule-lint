@@ -112,6 +112,8 @@ export interface ProjectContext {
   dependencyArtifactIds?: string[] | undefined;
   /** True if a Secure Configuration Properties module is configured in XML or declared in the POM */
   hasSecurePropertiesConfig?: boolean | undefined;
+  /** Entries of mule-artifact.json `secureProperties`, as written */
+  platformSecureProperties?: string[] | undefined;
   /** True if any Object Store config or operation is present */
   hasObjectStoreUsage?: boolean | undefined;
   /** True if JMS or Anypoint MQ usage was detected */

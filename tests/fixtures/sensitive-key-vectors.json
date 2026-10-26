@@ -1,0 +1,40 @@
+{
+  "provenance": "Shared classification cases for @sfdxy/mule-build src/engine/SensitiveKeys.ts and @sfdxy/mule-lint src/core/SensitiveKeys.ts. Change both tools when a case changes.",
+  "keys": [
+    { "key": "sample.password", "sensitive": true },
+    { "key": "sample.db.passwd", "sensitive": true },
+    { "key": "sample.oauth.clientSecret", "sensitive": true },
+    { "key": "sample.oauth.client_secret", "sensitive": true },
+    { "key": "sample.api.apiKey", "sensitive": true },
+    { "key": "sample.api.api-key", "sensitive": true },
+    { "key": "sample.crm.securityToken", "sensitive": true },
+    { "key": "sample.oauth.accessToken", "sensitive": true },
+    { "key": "sample.oauth.refresh_token", "sensitive": true },
+    { "key": "sample.erp.tokenId", "sensitive": true },
+    { "key": "sample.erp.tokenSecret", "sensitive": true },
+    { "key": "sample.erp.consumerKey", "sensitive": true },
+    { "key": "sample.erp.consumerSecret", "sensitive": true },
+    { "key": "sample.tls.privateKey", "sensitive": true },
+    { "key": "sample.tls.keyPassword", "sensitive": true },
+    { "key": "sample.tls.passphrase", "sensitive": true },
+    { "key": "sample.credentials", "sensitive": true },
+    { "key": "password.policy.url", "sensitive": false },
+    { "key": "sample.oauth.tokenUrl", "sensitive": false },
+    { "key": "sample.token.ttl", "sensitive": false },
+    { "key": "sample.tls.keystorePath", "sensitive": false },
+    { "key": "sample.db.primaryKey", "sensitive": false },
+    { "key": "sample.http.host", "sensitive": false },
+    { "key": "sample.passwordFile", "sensitive": false }
+  ],
+  "values": [
+    { "key": "sample.password", "value": "literal-value", "plaintext": true },
+    { "key": "sample.password", "value": 123456, "plaintext": true },
+    { "key": "sample.password", "value": "", "plaintext": false },
+    { "key": "sample.password", "value": "   ", "plaintext": false },
+    { "key": "sample.password", "value": "${other.password}", "plaintext": false },
+    { "key": "sample.password", "value": "${secure::sample.password}", "plaintext": false },
+    { "key": "sample.password", "value": "#[vars.password]", "plaintext": false },
+    { "key": "sample.password", "value": "![c2FtcGxlLWVuY3J5cHRlZA==]", "plaintext": false },
+    { "key": "sample.http.host", "value": "api.example.invalid", "plaintext": false }
+  ]
+}
