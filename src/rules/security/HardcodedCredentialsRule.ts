@@ -1,14 +1,21 @@
 import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
+import {
+  isElementSecretAttribute,
+  isLiteralAttributeValue,
+  isSensitiveAttribute,
+} from '../../core/SensitiveKeys';
+import { secretRemediation } from '../../core/SecretModel';
 
 /**
  * MULE-201: Hardcoded Credentials
  *
- * Passwords and secrets should use secure property placeholders.
+ * Sensitive attributes should resolve from a property rather than hold a literal.
  *
- * Enhanced to cover Salesforce connector-specific sensitive attributes
- * (consumerKey, storePassword, tokenId, tokenSecret) and NetSuite
- * OAuth attributes (consumerSecret, tokenKey, tokenSecret).
+ * Attributes are classified by the shared SensitiveKeys endings, so `password`,
+ * `storePassword`, `securityToken`, and `tokenKey` match while `tokenUrl` and
+ * `passwordPolicy` do not. The decryption key of `<secure-properties:config>` is
+ * owned by SEC-008 and is not reported twice.
  */
 export class HardcodedCredentialsRule extends BaseRule {
   id = 'MULE-201';
@@ -18,80 +25,32 @@ export class HardcodedCredentialsRule extends BaseRule {
   category = 'security' as const;
   override issueType: IssueType = 'vulnerability';
 
-  private readonly SENSITIVE_ATTRS = [
-    'password',
-    'secret',
-    'clientSecret',
-    'client-secret',
-    'apiKey',
-    'api-key',
-    'token',
-    'accessToken',
-    'privateKey',
-    // Salesforce connector attrs
-    'consumerKey',
-    'consumerSecret',
-    'storePassword',
-    'tokenId',
-    'tokenSecret',
-    // NetSuite OAuth attrs
-    'tokenKey',
-    // Keystore/truststore
-    'keyPassword',
-    'keystorePassword',
-  ];
-
   validate(doc: Document, _context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
     const allElements = doc.getElementsByTagName('*');
 
     for (const element of Array.from(allElements)) {
-      const attrs = element.attributes;
-
-      for (const attr of Array.from(attrs)) {
-        const attrName = attr.name.toLowerCase();
-        const value = attr.value;
-
-        // Check if this is a sensitive attribute
-        if (this.isSensitiveAttribute(attrName) && this.isHardcoded(value)) {
-          issues.push(
-            this.createIssue(
-              element,
-              `Hardcoded ${attr.name} found - use secure property placeholder`,
-              {
-                suggestion: `Use \${secure::${attr.name}} instead of hardcoded value`,
-              },
-            ),
-          );
+      for (const attr of Array.from(element.attributes)) {
+        if (!isSensitiveAttribute(element, attr.name)) {
+          continue;
         }
+        if (isElementSecretAttribute(element, attr.name)) {
+          continue;
+        }
+        if (!isLiteralAttributeValue(attr.value)) {
+          continue;
+        }
+
+        issues.push(
+          this.createIssue(
+            element,
+            `Hardcoded ${attr.name} found - use secure property placeholder`,
+            { suggestion: secretRemediation(attr.name) },
+          ),
+        );
       }
     }
 
     return issues;
-  }
-
-  private isSensitiveAttribute(attrName: string): boolean {
-    return this.SENSITIVE_ATTRS.some((sensitive) => attrName.includes(sensitive.toLowerCase()));
-  }
-
-  private isHardcoded(value: string): boolean {
-    // Empty values are not hardcoded
-    if (!value || value.trim() === '') {
-      return false;
-    }
-
-    // Ignore boolean/numeric flags (e.g. useToken="true", timeout="1000")
-    if (value === 'true' || value === 'false' || !isNaN(Number(value))) {
-      return false;
-    }
-
-    // Check for any property placeholder - value defined elsewhere
-    // Allows ${...}, ${secure::...}, ${p(...)}, #[...], etc.
-    if (value.includes('${') || value.startsWith('#[')) {
-      return false;
-    }
-
-    // Any other value is considered "hardcoded" in this context
-    return true;
   }
 }

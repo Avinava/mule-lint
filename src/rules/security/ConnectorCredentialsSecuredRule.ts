@@ -1,15 +1,21 @@
 import { ValidationContext, Issue, IssueType } from '../../types';
 import { BaseRule } from '../base/BaseRule';
+import { platformSecureKeys, secretRemediation } from '../../core/SecretModel';
 
 /**
  * SEC-007: Connector Credentials Secured
  *
- * Salesforce, NetSuite, Database, and other connector configurations must
- * use `${secure::...}` (not plain `${...}`) for credential attributes.
+ * Connector credential attributes must resolve from one of the two supported
+ * secret models:
  *
- * Plain property placeholders like `${sf.password}` store the value in
- * clear text in property files.  The `${secure::...}` prefix ensures the
- * value is read from an encrypted secure properties file.
+ * - `${secure::key}`, encrypted in a secure properties file; or
+ * - `${key}` where `key` is a platform secure property listed in
+ *   mule-artifact.json `secureProperties` and supplied at deployment.
+ *
+ * A hardcoded credential is an error. A plain `${key}` that is not declared as
+ * a platform secure property is a warning: it usually reads a cleartext
+ * properties file, but a deployment target can still supply it as a protected
+ * property, which lint cannot see.
  *
  * Covered connectors and attributes:
  *   - Salesforce: username, password, securityToken, consumerKey, consumerSecret
@@ -21,7 +27,7 @@ import { BaseRule } from '../base/BaseRule';
 export class ConnectorCredentialsSecuredRule extends BaseRule {
   id = 'SEC-007';
   name = 'Connector Credentials Secured';
-  description = 'Connector credentials must use ${secure::} property placeholders';
+  description = 'Connector credentials must use ${secure::} or a declared platform secure property';
   severity = 'error' as const;
   category = 'security' as const;
   override issueType: IssueType = 'vulnerability';
@@ -63,9 +69,10 @@ export class ConnectorCredentialsSecuredRule extends BaseRule {
     'smtps-connection': ['password'],
   };
 
-  validate(doc: Document, _context: ValidationContext): Issue[] {
+  validate(doc: Document, context: ValidationContext): Issue[] {
     const issues: Issue[] = [];
     const allElements = doc.getElementsByTagName('*');
+    const platformKeys = platformSecureKeys(context.projectContext?.platformSecureProperties);
 
     for (const element of Array.from(allElements)) {
       const localName = element.localName;
@@ -86,15 +93,17 @@ export class ConnectorCredentialsSecuredRule extends BaseRule {
           continue;
         }
 
-        // Must use ${secure::...} — plain ${...} is not sufficient
+        // A plain ${key} is valid when the platform supplies the key as a secure property
         if (value.includes('${') && !value.includes('${secure::')) {
+          const key = this.extractPropertyName(value);
+          if (platformKeys.has(key)) {
+            continue;
+          }
           issues.push(
             this.createIssue(
               element,
-              `Credential "${attrName}" uses plain property placeholder — must use \${secure::} for encryption`,
-              {
-                suggestion: `Replace ${value} with \${secure::${this.extractPropertyName(value)}}`,
-              },
+              `Credential "${attrName}" uses plain property placeholder \${${key}}, which is not declared as a platform secure property`,
+              { severity: 'warning', suggestion: secretRemediation(key) },
             ),
           );
         }
@@ -106,14 +115,10 @@ export class ConnectorCredentialsSecuredRule extends BaseRule {
             continue;
           }
           issues.push(
-            this.createIssue(
-              element,
-              `Credential "${attrName}" is hardcoded — must use \${secure::} property placeholder`,
-              {
-                severity: 'error',
-                suggestion: `Use \${secure::${localName}.${attrName}} instead of the hardcoded value`,
-              },
-            ),
+            this.createIssue(element, `Credential "${attrName}" is hardcoded`, {
+              severity: 'error',
+              suggestion: secretRemediation(`${localName}.${attrName}`),
+            }),
           );
         }
       }

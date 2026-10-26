@@ -1,7 +1,7 @@
 # Rules Catalog
 
 > **Version:** 2.0.0
-> **Total Rules:** 99 implemented across 16 runtime categories
+> **Total Rules:** 108 implemented across 16 runtime categories
 > **Last Updated:** October 2026
 
 ---
@@ -39,13 +39,13 @@ The catalog uses documentation families for navigation; several families share t
 | -------------- | ------------------------------------------------------------ | ----- | ------------------------------------------------- |
 | Error Handling | MULE-001/003/005/007/009, ERR-001–004                        | 9     | Error handler configuration and best practices    |
 | Naming         | MULE-002/101/102                                             | 3     | Naming conventions for flows and variables        |
-| Security       | MULE-004/201/202, SEC-002–004/006–016, CFG-003, YAML-004     | 19    | Security vulnerabilities, TLS, transport, secrets |
-| Logging        | MULE-006/301/303, LOG-001/004/005, HYG-001                   | 7     | Logging standards, structured logging, hygiene    |
+| Security       | MULE-004/201/202, SEC-002–004/006–019, CFG-003, YAML-004     | 22    | Security vulnerabilities, TLS, transport, secrets |
+| Logging        | MULE-006/301/303, LOG-001/004/005/006, HYG-001               | 8     | Logging standards, structured logging, hygiene    |
 | HTTP           | MULE-401/402/403, HTTP-004/005                               | 5     | HTTP configuration, headers, responses            |
 | Performance    | MULE-501/502/503, PERF-002/003, RES-001/002                  | 7     | Performance anti-patterns and resilience          |
 | Documentation  | MULE-601/604, DOC-001                                        | 3     | Documentation requirements                        |
 | Standards      | MULE-008/010/701, OPS-001–003, API-005, CFG-001/002, STD-001 | 10    | Coding standards and operations                   |
-| Operations     | HYG-004/005, OPS-004, RES-003, SF-001/002                    | 6     | Runtime operability and connector behaviour       |
+| Operations     | HYG-004/005, OPS-004/005, RES-003, SF-001–005                | 10    | Runtime operability and connector behaviour       |
 | Complexity     | MULE-801/805                                                 | 2     | Code complexity and flow length                   |
 | Structure      | MULE-802/803/804                                             | 3     | Project structure                                 |
 | YAML           | YAML-001/003                                                 | 2     | YAML configuration validation                     |
@@ -54,7 +54,7 @@ The catalog uses documentation families for navigation; several families share t
 | Governance     | PROJ-001/002                                                 | 2     | POM and Git hygiene                               |
 | Code Hygiene   | HYG-002/003                                                  | 2     | Commented code and unused flows                   |
 | Testing        | TEST-001                                                     | 1     | MUnit test presence                               |
-| Experimental   | EXP-001/002/003                                              | 3     | Opt-in rules for evaluation (EXP-003 deprecated)  |
+| Experimental   | EXP-001–004                                                  | 4     | Opt-in rules for evaluation (EXP-003 deprecated)  |
 
 > **Note:** A rule's identifier prefix and its runtime `category` do not always agree — `RES-001`
 > reports as `performance`, and `YAML-001` reports as `standards`. Configuration and quality gates
@@ -399,9 +399,16 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 | **Category** | Security |
 | **Fixable**  | No       |
 
-**Description:** Passwords and secrets should never be hardcoded. Use secure properties.
+**Description:** Sensitive XML attributes must not hold a literal value. Attribute names are
+matched by their ending, the same way configuration keys are: `password`, `storePassword`,
+`securityToken`, `tokenKey`, and `passphrase` match, while `tokenUrl` and `passwordPolicy` do
+not. Namespaced attributes such as `doc:name` and boolean or numeric flags such as
+`useToken="true"` are ignored. A literal decryption `key` on `<secure-properties:config>` is
+reported by [SEC-008](#sec-008-secure-properties-key) instead.
 
-**Best Practice:** Use MuleSoft Secure Properties module with encrypted values `![encrypted.value]`.
+**Best Practice:** Use either secret model: encrypt the value as `![...]` in a secure properties
+file and reference `${secure::key}`, or supply it at deployment as a platform secure property
+referenced as `${key}` and listed in `mule-artifact.json` `secureProperties`.
 
 ---
 
@@ -519,7 +526,40 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 | **Issue Type** | Vulnerability |
 | **Fixable**    | No            |
 
-**Description:** Connector configurations (Salesforce, Database, HTTP, etc.) must use `${secure::...}` property placeholders for credential attributes like `username`, `password`, `clientId`, and `clientSecret`. Plain `${...}` placeholders are accepted but `${secure::...}` is recommended.
+**Description:** Connector credential attributes (Salesforce, NetSuite, Database, SMTP) must
+resolve from one of the two supported secret models:
+
+| Model                           | Where the value lives                                                    | Reference        |
+| ------------------------------- | ------------------------------------------------------------------------ | ---------------- |
+| Secure Configuration Properties | Encrypted as `![...]` in a file read by `<secure-properties:config>`     | `${secure::key}` |
+| Platform secure property        | Set at deployment; key listed in `mule-artifact.json` `secureProperties` | `${key}`         |
+
+A hardcoded credential is an **error**. A plain `${key}` is accepted when `key` is listed in
+`secureProperties`; otherwise it is reported as a **warning**, because it usually reads a
+cleartext properties file but a deployment target can still supply it as a protected property
+that lint cannot see. Do not change a platform secure property to `${secure::key}`: it then
+resolves only from a secure properties file ([SEC-017](#sec-017-platform-secure-property-referenced-with-secure)).
+
+Where to set platform secure properties depends on the target: CloudHub 1.0 and hybrid use
+`secureProperties` plus the Runtime Manager Properties tab; on CloudHub 2.0, `secureProperties`
+does not mask values, so protect them in Runtime Manager; Runtime Fabric uses Runtime Manager
+protected properties.
+
+**Example:**
+
+```xml
+<!-- ❌ Bad - hardcoded -->
+<salesforce:basic-connection username="integration-user" password="literal-value" />
+
+<!-- ✅ Good - encrypted file value -->
+<salesforce:basic-connection username="${sample.username}" password="${secure::sample.password}" />
+
+<!-- ✅ Good - platform secure property, with "sample.password" in mule-artifact.json secureProperties -->
+<salesforce:basic-connection username="${sample.username}" password="${sample.password}" />
+```
+
+Before 2.1.0 this rule reported every plain `${key}` as an error, including declared platform
+secure properties.
 
 ---
 
@@ -709,6 +749,89 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 
 ---
 
+### SEC-017: Platform Secure Property Referenced With secure::
+
+| Property       | Value    |
+| -------------- | -------- |
+| **Severity**   | Error    |
+| **Category**   | Security |
+| **Issue Type** | Bug      |
+| **Fixable**    | No       |
+
+**Description:** A key listed as a plain entry in `mule-artifact.json` `secureProperties` is
+supplied by the platform at deployment and resolves as `${key}`. Referencing it as
+`${secure::key}` asks the Secure Configuration Properties module for it instead, which fails at
+runtime unless the key is also defined encrypted in a scanned secure properties file.
+
+Entries written as `secure::key` (or `secure\:\:key`, as Studio's Text View writes them) mask
+module-backed values and are not platform keys. References are read from Mule XML, DataWeave
+`p('...')` calls, and configuration values. Mirrors mule-build `MB-SEC-006`.
+
+**Example:**
+
+```json
+{ "secureProperties": ["sample.password"] }
+```
+
+```xml
+<!-- ❌ Bad -->
+<db:generic-connection password="${secure::sample.password}" />
+
+<!-- ✅ Good -->
+<db:generic-connection password="${sample.password}" />
+```
+
+---
+
+### SEC-018: Unresolved secure:: Reference
+
+| Property       | Value    |
+| -------------- | -------- |
+| **Severity**   | Warning  |
+| **Category**   | Security |
+| **Issue Type** | Bug      |
+| **Fixable**    | No       |
+
+**Description:** A `${secure::key}` reference resolves only through `<secure-properties:config>`.
+Reported once per key when:
+
+- the application configures no `<secure-properties:config>`; when the POM depends on a
+  `mule-domain`, the message notes that the shared domain may provide one; or
+- the module is configured, but no scanned configuration file under `src/main/resources`
+  defines the key.
+
+Always a warning: MuleSoft does not document how `secure::` resolves without the module, a shared
+domain can configure it, and a secure properties file can be supplied per environment. Keys that
+are platform secure properties are reported by SEC-017 instead. Mirrors mule-build `MB-SEC-007`.
+
+---
+
+### SEC-019: Unused Sensitive Property
+
+| Property       | Value      |
+| -------------- | ---------- |
+| **Severity**   | Warning    |
+| **Category**   | Security   |
+| **Issue Type** | Code Smell |
+| **Fixable**    | No         |
+
+**Description:** A sensitive key defined in a `.properties` or YAML file under
+`src/main/resources` that nothing references from Mule XML, DataWeave, or another configuration
+value. It is often a credential the connector was meant to read while the connector holds a
+literal or a differently named property instead, so check for a MULE-201 or SEC-007 finding it
+should replace. API specification files are not read. The runtime's own
+`anypoint.platform.client_id` and `anypoint.platform.client_secret` are ignored. Mirrors
+mule-build `MB-SEC-004`.
+
+**Options:**
+
+| Option                    | Default | Description                                            |
+| ------------------------- | ------- | ------------------------------------------------------ |
+| `additionalSensitiveKeys` | `[]`    | Extra case-insensitive key endings to treat as secrets |
+| `ignoredKeys`             | `[]`    | Full key names that are read outside the application   |
+
+---
+
 ---
 
 ## Logging Rules
@@ -852,6 +975,43 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
 | `excludePatterns` | `["*-main", "*-console"]` | Flow-name patterns to skip, `*` wildcard supported |
 
 **Why This Matters:** Sub-flows are excluded by default because they are reusable units — requiring a logger in each one produces noise rather than insight. The default `excludePatterns` skip the APIKit-generated `*-main` and `*-console` router flows for the same reason MULE-002 and MULE-003 exclude them; they hold no business logic. APIKit **route** flows are still checked, because they do.
+
+---
+
+### LOG-006: Connector Debug Logging
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Info          |
+| **Category**   | Logging       |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** `src/main/resources/log4j2.xml` sets a connector-internal category, or the HTTP
+wire-logging category, to `DEBUG`, `TRACE`, or `ALL`. At those levels connectors and the HTTP
+service can write request and response content, including authorization headers, session
+identifiers, and tokens, to logs shared across an environment.
+
+Checked category prefixes: `org.mule.extension.`, `org.mule.connectors.`,
+`com.mulesoft.connector.`, `com.mulesoft.connectors.`, and
+`org.mule.service.http.impl.service.HttpMessageLogger`. The rule makes no claim about what a
+particular connector logs; it flags the level.
+
+**Options:**
+
+| Option                 | Default | Description                               |
+| ---------------------- | ------- | ----------------------------------------- |
+| `additionalCategories` | `[]`    | Extra category names or prefixes to check |
+
+**Example:**
+
+```xml
+<!-- ❌ Bad - committed debug level for connector internals -->
+<AsyncLogger name="org.mule.extension.salesforce" level="DEBUG" />
+
+<!-- ✅ Good -->
+<AsyncLogger name="org.mule.extension.salesforce" level="INFO" />
+```
 
 ---
 
@@ -1791,6 +1951,83 @@ The APIKit console is generated scaffolding rather than an API surface, so its f
 
 ---
 
+### SF-003: Salesforce Replay Listener Loses Events
+
+| Property       | Value      |
+| -------------- | ---------- |
+| **Severity**   | Warning    |
+| **Category**   | Operations |
+| **Issue Type** | Bug        |
+| **Fixable**    | No         |
+
+**Description:** A `salesforce:replay-channel-listener` or `salesforce:replay-topic-listener`
+with `replayOption="ONLY_NEW"` receives only events broadcast after it subscribes, so events
+published while the application is stopped or redeploying are lost. A listener with
+`autoReplay="true"` (Studio: _Replay Failed Events If Any or Resume from Last Replay Id_) is not
+reported: it resumes from the last successfully processed replay ID, or the lowest failed one.
+
+`FROM_LAST_REPLAY_ID` is not reported either, but per the connector reference it uses the highest
+replay ID stored in the object store whether or not processing succeeded, so failed events need
+their own recovery. The resume state is keyed by the connector configuration's username, so
+changing the user or moving to client credentials can reset it. Salesforce retains events for 24
+hours. Salesforce Connector 11.0 removed the Subscribe channel and topic listeners in favor of
+the Replay listeners; SF-001 covers the older listeners.
+
+Source: [Salesforce Connector reference, Replay Option](https://docs.mulesoft.com/salesforce-connector/latest/salesforce-connector-reference)
+and [Resume from the Last Replay Id](https://docs.mulesoft.com/salesforce-connector/latest/salesforce-connector-processing-events#resume-from-the-last-replay-id).
+
+**Example:**
+
+```xml
+<!-- ❌ Bad -->
+<salesforce:replay-channel-listener config-ref="Salesforce_Config"
+    streamingChannel="/data/AccountChangeEvent" replayOption="ONLY_NEW" />
+
+<!-- ✅ Good -->
+<salesforce:replay-channel-listener config-ref="Salesforce_Config"
+    streamingChannel="/data/AccountChangeEvent" replayOption="ONLY_NEW" autoReplay="true" />
+```
+
+---
+
+### SF-004: Salesforce Basic Authentication API Version
+
+| Property       | Value      |
+| -------------- | ---------- |
+| **Severity**   | Warning    |
+| **Category**   | Operations |
+| **Issue Type** | Bug        |
+| **Fixable**    | No         |
+
+**Description:** The Salesforce connector supports Basic Authentication only up to Salesforce
+API v64.0. The rule reads the API version from the explicit Authorization URL (`url`) of a
+`salesforce:basic-connection`, for example `https://login.salesforce.com/services/Soap/u/64.0`,
+and reports a version above 64.0.
+
+> **Note:** When `url` is not set, the connector uses the latest API version it supports
+> (`Soap/u/67.0` in Salesforce Connector 12.0). Basic Authentication with the default URL is
+> therefore past the supported line on current connector versions. The rule does not report the
+> unset case, because the default depends on the connector version.
+
+Source: [Salesforce Connector reference, Basic Authentication Connection Type](https://docs.mulesoft.com/salesforce-connector/latest/salesforce-connector-reference).
+
+---
+
+### SF-005: Salesforce Replay Listener Primary Node
+
+| Property       | Value      |
+| -------------- | ---------- |
+| **Severity**   | Info       |
+| **Category**   | Operations |
+| **Issue Type** | Bug        |
+| **Fixable**    | No         |
+
+**Description:** With more than one worker or cluster node, a Salesforce Replay listener without
+`primaryNodeOnly="true"` processes every event on every instance. Set `primaryNodeOnly="true"`,
+or ignore the finding for an application that always runs on a single worker.
+
+---
+
 ### HTTP-004: Connection Idle Timeout
 
 | Property     | Value   |
@@ -1935,6 +2172,45 @@ The APIKit console is generated scaffolding rather than an API surface, so its f
 
 ---
 
+### OPS-005: Java Version Supported by Minimum Runtime
+
+| Property       | Value      |
+| -------------- | ---------- |
+| **Severity**   | Warning    |
+| **Category**   | Operations |
+| **Issue Type** | Bug        |
+| **Fixable**    | No         |
+
+**Description:** `mule-artifact.json` declares the Java versions the application supports
+(`javaSpecificationVersions`) and the oldest runtime it runs on (`minMuleVersion`). The rule
+reports when none of the declared versions is supported by the `minMuleVersion` runtime line,
+because the descriptor then promises a runtime the application cannot run on. `1.8` is read as
+Java 8.
+
+| Runtime line | Java versions |
+| ------------ | ------------- |
+| 4.5          | 8, 11         |
+| 4.6 to 4.8   | 8, 11, 17     |
+| 4.9 to 4.13  | 17            |
+
+Lines outside this table are not judged. Connector minimum Mule and Java versions need resolved
+connector JARs, so mule-build checks those.
+
+Source: [MuleSoft Java support](https://docs.mulesoft.com/general/java-support), verified
+2026-10-26.
+
+**Example:**
+
+```json
+// ❌ Bad - Mule 4.9 runs only on Java 17
+{ "minMuleVersion": "4.9.0", "javaSpecificationVersions": ["11"] }
+
+// ✅ Good
+{ "minMuleVersion": "4.9.0", "javaSpecificationVersions": ["17"] }
+```
+
+---
+
 ---
 
 ## Governance Rules
@@ -2034,15 +2310,33 @@ stays registered so existing configuration keeps loading, but it no longer repor
 
 ---
 
+### EXP-004: Non-Production Endpoint Shared With Production
+
+| Property     | Value        |
+| ------------ | ------------ |
+| **Severity** | Info         |
+| **Category** | Experimental |
+| **Fixable**  | No           |
+
+**Description:** A non-production configuration file under `src/main/resources` names an
+endpoint host that the production configuration file also names, so a development or test
+deployment would reach a live system. Environments are recognized from file-name tokens:
+`prod`, `prd`, and `production` mark production; `dev`, `development`, `local`, `qa`, `test`,
+`sit`, `uat`, `stage`, `staging`, `sandbox`, and `perf` mark non-production. Hosts are read from
+URL values and from keys ending in `host` or `hostname`; placeholders and loopback hosts are
+ignored.
+
+---
+
 ## Rule Priority Matrix
 
 <!-- Generated from the rule registry; regenerate rather than editing by hand. -->
 
-| Severity | Count | Rules                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| -------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Error    | 17    | CFG-003, DW-004, ERR-004, HYG-004, LOG-004, MULE-003, MULE-004, MULE-201, MULE-202, PROJ-001, SEC-002, SEC-006, SEC-007, SEC-008, SEC-009, SEC-012, YAML-004                                                                                                                                                                                                                                                                                                          |
-| Warning  | 48    | API-004, API-006, API-008, API-009, API-010, CFG-002, DW-001, ERR-002, HYG-001, HYG-003, LOG-005, MULE-001, MULE-002, MULE-005, MULE-006, MULE-007, MULE-008, MULE-009, MULE-101, MULE-102, MULE-301, MULE-303, MULE-402, MULE-403, MULE-502, MULE-503, MULE-604, MULE-701, MULE-801, MULE-802, MULE-803, MULE-804, OPS-002, OPS-003, PERF-002, PERF-003, PROJ-002, RES-001, RES-002, SEC-003, SEC-004, SEC-010, SEC-011, SEC-013, SEC-014, SEC-016, SF-001, YAML-001 |
-| Info     | 34    | API-001, API-002, API-003, API-005, API-007, API-011, CFG-001, DOC-001, DW-002, DW-003, DW-005, ERR-001, ERR-003, EXP-001, EXP-002, EXP-003, HTTP-004, HTTP-005, HYG-002, HYG-005, LOG-001, MULE-010, MULE-401, MULE-501, MULE-601, MULE-805, OPS-001, OPS-004, RES-003, SEC-015, SF-002, STD-001, TEST-001, YAML-003                                                                                                                                                 |
+| Severity | Count | Rules                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Error    | 18    | CFG-003, DW-004, ERR-004, HYG-004, LOG-004, MULE-003, MULE-004, MULE-201, MULE-202, PROJ-001, SEC-002, SEC-006, SEC-007, SEC-008, SEC-009, SEC-012, SEC-017, YAML-004                                                                                                                                                                                                                                                                                                                                            |
+| Warning  | 53    | API-004, API-006, API-008, API-009, API-010, CFG-002, DW-001, ERR-002, HYG-001, HYG-003, LOG-005, MULE-001, MULE-002, MULE-005, MULE-006, MULE-007, MULE-008, MULE-009, MULE-101, MULE-102, MULE-301, MULE-303, MULE-402, MULE-403, MULE-502, MULE-503, MULE-604, MULE-701, MULE-801, MULE-802, MULE-803, MULE-804, OPS-002, OPS-003, OPS-005, PERF-002, PERF-003, PROJ-002, RES-001, RES-002, SEC-003, SEC-004, SEC-010, SEC-011, SEC-013, SEC-014, SEC-016, SEC-018, SEC-019, SF-001, SF-003, SF-004, YAML-001 |
+| Info     | 37    | API-001, API-002, API-003, API-005, API-007, API-011, CFG-001, DOC-001, DW-002, DW-003, DW-005, ERR-001, ERR-003, EXP-001, EXP-002, EXP-003, EXP-004, HTTP-004, HTTP-005, HYG-002, HYG-005, LOG-001, LOG-006, MULE-010, MULE-401, MULE-501, MULE-601, MULE-805, OPS-001, OPS-004, RES-003, SEC-015, SF-002, SF-005, STD-001, TEST-001, YAML-003                                                                                                                                                                  |
 
 ---
 

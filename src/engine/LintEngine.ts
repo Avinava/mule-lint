@@ -25,6 +25,7 @@ import { collectFileMetrics as collectMetrics } from '../core/MetricsCollector';
 import { getErrorMessage } from '../core/errors';
 import { ProjectRule } from '../rules/base/ProjectRule';
 import { getLineNumber } from '../core/XPathHelper';
+import { readMuleArtifact } from '../core/MuleArtifact';
 
 /**
  * Element local-names that count as *inbound* authentication evidence.
@@ -766,6 +767,7 @@ export class LintEngine {
     projectContext.apiSpecFiles = specFiles;
     projectContext.hasApiSpec = specFiles.length > 0;
     projectContext.dependencyArtifactIds = this.readPomArtifactIds(projectRoot);
+    projectContext.platformSecureProperties = readMuleArtifact(projectRoot)?.secureProperties ?? [];
 
     if (
       projectContext.dependencyArtifactIds.some((id) =>
