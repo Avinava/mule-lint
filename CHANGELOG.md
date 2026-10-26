@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [2.1.0] - 2026-10-26
 
 ### Upgrade notes
 
@@ -30,6 +30,11 @@
 - EXP-004 Non-Production Endpoint Shared With Production (experimental).
 - `tests/fixtures/sensitive-key-vectors.json`, shared with mule-build, pins the sensitive-key
   classification in both tools.
+
+### Fixed
+
+- Upgrade `@modelcontextprotocol/sdk` to 1.32.2 and `zod` to 4.6.7, and refresh their transitive
+  dependencies, to clear published advisories in the MCP server's dependency graph.
 
 ## [2.0.0] - 2026-10-03
 
