@@ -1,7 +1,12 @@
 import { ValidationContext, Issue, IssueType } from '../../types';
 import { ProjectRule } from '../base/ProjectRule';
 import { getLineNumber } from '../../core/XPathHelper';
-import { allElements, readMuleSources, readPom } from '../../core/ProjectSources';
+import {
+  allElements,
+  mainDependencyIds,
+  readMuleSources,
+  readPom,
+} from '../../core/ProjectSources';
 import { findModuleByNamespace, isModuleDeclared, type MuleModule } from '../../core/MuleModules';
 
 /**
@@ -14,7 +19,8 @@ import { findModuleByNamespace, isModuleDeclared, type MuleModule } from '../../
  * table; runtime-provided namespaces (core, ee, documentation, batch, tls,
  * api-gateway) need no dependency and are not in it.
  *
- * Only namespaces with at least one element are checked, so an unused
+ * A `test`-scoped dependency is on the MUnit classpath only, so it does not
+ * count. Only namespaces with at least one element are checked, so an unused
  * declaration Studio left behind is not reported. When the POM has a
  * `<parent>`, the dependency may be inherited, so the finding is a warning.
  */
@@ -34,7 +40,7 @@ export class NamespaceDependencyRule extends ProjectRule {
     }
 
     const ignored = new Set(this.getOption<string[]>(context, 'ignoredNamespaces', []));
-    const declared = new Set(pom.dependencies.map((dependency) => dependency.artifactId));
+    const declared = mainDependencyIds(pom);
     const firstUse = new Map<
       MuleModule,
       { relativePath: string; line: number; prefix: string | null }

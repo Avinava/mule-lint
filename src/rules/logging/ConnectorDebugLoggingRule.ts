@@ -16,8 +16,8 @@ import { findSensitiveLoggers } from '../../core/SensitiveLogCategories';
  * environment. Raise them only while diagnosing, and not in a shared
  * environment.
  *
- * A logger that enables a category known to write credentials or session
- * data is reported by LOG-007 instead.
+ * When LOG-007 is enabled in the scan, a logger that enables a category known
+ * to write credentials or session data is reported by LOG-007 instead.
  */
 export class ConnectorDebugLoggingRule extends ProjectRule {
   id = 'LOG-006';
@@ -57,9 +57,11 @@ export class ConnectorDebugLoggingRule extends ProjectRule {
       ...this.getOption<string[]>(context, 'additionalCategories', []),
     ];
     const issues: Issue[] = [];
-    // Loggers that enable a credential-writing category are LOG-007's finding
+    // Loggers that enable a credential-writing category are LOG-007's finding,
+    // but only when LOG-007 runs in this scan; otherwise nothing would report them
+    const log007Enabled = context.projectContext?.enabledRuleIds?.includes('LOG-007') ?? false;
     const ownedByLog007 = new Set(
-      findSensitiveLoggers(parsed.document).map((finding) => finding.element),
+      log007Enabled ? findSensitiveLoggers(parsed.document).map((finding) => finding.element) : [],
     );
 
     for (const logger of Array.from(parsed.document.getElementsByTagName('*'))) {

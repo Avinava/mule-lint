@@ -10,9 +10,11 @@ import {
 import { allElements, readMuleSources, type MuleSource } from '../../core/ProjectSources';
 
 /**
- * Keys the Mule runtime, the deployment target, or the JVM supplies, so they
- * resolve without being defined in a properties file. Extend through the
- * `allowedKeys` and `allowedPrefixes` options.
+ * Keys that resolve on every deployment target without a properties file:
+ * Mule runtime and JVM system properties, plus the `mule.env` and `mule.key`
+ * conventions passed at startup. Keys only some targets supply, such as the
+ * `http.port` family CloudHub reserves, are not here; allow them per target
+ * through the `allowedKeys` and `allowedPrefixes` options.
  */
 const RUNTIME_KEYS = [
   'mule.env',
@@ -23,10 +25,6 @@ const RUNTIME_KEYS = [
   'mule.nodeId',
   'app.name',
   'app.home',
-  'http.port',
-  'https.port',
-  'http.private.port',
-  'https.private.port',
   'file.encoding',
   'file.separator',
   'line.separator',
@@ -36,16 +34,21 @@ const RUNTIME_PREFIXES = ['anypoint.platform.', 'java.', 'user.', 'os.'];
 
 const RESOURCES = 'src/main/resources/';
 
-/** Keys of one loaded file, by the environment its file name pattern resolved to. */
-interface PatternGroup {
-  pattern: string;
-  byEnvironment: Map<string, { file: string; keys: Set<string> }>;
+/** One file of a patterned load, with the placeholder values its path bound. */
+interface Variant {
+  load: number;
+  binding: Map<string, string>;
+  file: string;
+  keys: Set<string>;
 }
 
 /** Keys reachable through one resolution path: plain `${key}` or `${secure::key}`. */
 interface KeySpace {
+  /** Keys available in every environment: unpatterned files, global and platform keys */
   always: Set<string>;
-  groups: PatternGroup[];
+  variants: Variant[];
+  /** True when a load of this path names a file that is not in src/main/resources */
+  unlocated: boolean;
 }
 
 interface LoadedConfiguration {
@@ -53,56 +56,77 @@ interface LoadedConfiguration {
   secure: KeySpace;
   /** Names used only as the secure-properties decryption key, supplied at startup */
   decryptionKeys: Set<string>;
-  /** True when a loaded file name matches no file in src/main/resources */
-  unlocatable: boolean;
 }
 
-const emptySpace = (): KeySpace => ({ always: new Set(), groups: [] });
+interface Load {
+  id: number;
+  space: KeySpace;
+  regex: RegExp;
+  /** Placeholder names in capture-group order, such as `region`, `mule.env` */
+  names: string[];
+  literal: number;
+}
+
+const emptySpace = (): KeySpace => ({ always: new Set(), variants: [], unlocated: false });
 
 function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /** Turn a `file` attribute into a matcher; each `${...}` becomes one path segment. */
-function filePattern(file: string): { regex: RegExp; placeholders: number } {
-  const normalized = file.replace(/^classpath:/, '').replace(/^\.?\/+/, '');
+function filePattern(file: string): { regex: RegExp; names: string[] } {
+  const normalized = file
+    .replace(/\\/g, '/')
+    .replace(/^classpath:/, '')
+    .replace(/^\.?\/+/, '');
   let source = '';
-  let placeholders = 0;
+  const names: string[] = [];
   let cursor = 0;
-  for (const match of normalized.matchAll(/\$\{[^}]+\}/g)) {
+  for (const match of normalized.matchAll(/\$\{([^}]+)\}/g)) {
     source += escapeRegExp(normalized.slice(cursor, match.index)) + '([^/]+)';
     cursor = match.index + match[0].length;
-    placeholders++;
+    names.push((match[1] ?? '').trim());
   }
   source += escapeRegExp(normalized.slice(cursor));
-  return { regex: new RegExp(`^${source}$`), placeholders };
+  return { regex: new RegExp(`^${source}$`), names };
 }
 
 function definedIn(space: KeySpace, key: string): boolean {
-  return (
-    space.always.has(key) ||
-    space.groups.some((group) =>
-      [...group.byEnvironment.values()].some((entry) => entry.keys.has(key)),
-    )
-  );
+  return space.always.has(key) || space.variants.some((variant) => variant.keys.has(key));
+}
+
+/** Two bindings can apply together when they agree on every shared placeholder. */
+function compatible(left: Map<string, string>, right: Map<string, string>): boolean {
+  for (const [name, value] of left) {
+    const other = right.get(name);
+    if (other !== undefined && other !== value) return false;
+  }
+  return true;
 }
 
 /**
- * Files of `${mule.env}`-style groups that lack a key another environment of
- * the same resolution path defines. A key defined in an unpatterned file is
- * available in every environment.
+ * Files of patterned loads that lack a key another binding of the same load
+ * defines, when no compatible file of any load supplies it either. A key in an
+ * unpatterned file is available for every binding.
  */
 function missingFiles(space: KeySpace, key: string): string[] {
   if (space.always.has(key)) return [];
-  const environments = new Set(space.groups.flatMap((group) => [...group.byEnvironment.keys()]));
-  const missing: string[] = [];
-  for (const environment of [...environments].sort()) {
-    const groups = space.groups.filter((group) => group.byEnvironment.has(environment));
-    if (groups.some((group) => group.byEnvironment.get(environment)?.keys.has(key))) continue;
-    missing.push(...groups.map((group) => group.byEnvironment.get(environment)?.file ?? ''));
-  }
-  return missing.filter(Boolean);
+  const defining = new Set(
+    space.variants.filter((variant) => variant.keys.has(key)).map((variant) => variant.load),
+  );
+  return space.variants
+    .filter((variant) => defining.has(variant.load) && !variant.keys.has(key))
+    .filter(
+      (variant) =>
+        !space.variants.some(
+          (other) => other.keys.has(key) && compatible(variant.binding, other.binding),
+        ),
+    )
+    .map((variant) => variant.file)
+    .sort();
 }
+
+type Report = (reference: PropertyReference, message: string, suggestion: string) => void;
 
 /**
  * CFG-004: Unresolved Property Placeholder
@@ -112,18 +136,20 @@ function missingFiles(space: KeySpace, key: string): string[] {
  * key, a `<global-property>` declares it, mule-artifact.json
  * `secureProperties` lists it as a platform secure property, or the runtime
  * supplies it. A missing key stops the application at startup. Reported once
- * per key:
+ * per key and form:
  *
  * - a plain `${key}` that no loaded file, global property, or platform key
  *   defines, or that only a secure properties file defines;
- * - a key defined for some `${mule.env}` environments but not others;
+ * - a key a patterned load, such as `config/${region}/${mule.env}.yaml`,
+ *   defines for some placeholder values but not others;
  * - a `${secure::key}` that is defined in a scanned file but not one loaded by
- *   `<secure-properties:config>` (SEC-018 reports the other secure:: cases);
- * - a key referenced both as `${secure::key}` and as `${key}`.
+ *   `<secure-properties:config>` (SEC-018 reports the other secure:: cases).
  *
- * When a loaded file name cannot be matched to a file in src/main/resources,
- * the key set is unknown, so only the mixed-reference check runs. Messages
- * name keys and files, never values.
+ * A key read both as `${key}` and `${secure::key}` is judged on each side,
+ * and only the side that does not resolve is reported. When a load of one
+ * resolution path names a file that is not in the repository, keys that path
+ * does not define are not judged, but keys its located files define are still
+ * checked across environments. Messages name keys and files, never values.
  */
 export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
   id = 'CFG-004';
@@ -166,7 +192,7 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
     }
 
     const issues: Issue[] = [];
-    const report = (reference: PropertyReference, message: string, suggestion: string) =>
+    const report: Report = (reference, message, suggestion) =>
       issues.push(
         this.createLocatedIssue(reference.relativePath, reference.line, message, {
           projectRoot: context.projectRoot,
@@ -176,27 +202,17 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
 
     for (const [key, references] of byName) {
       if (isAllowed(key) || loaded.decryptionKeys.has(key)) continue;
-      const platform = model.platformKeys.has(key);
+      // Platform keys resolve plain; their secure:: misuse is SEC-017's
+      if (model.platformKeys.has(key)) continue;
       const firstPlain = references.plain[0];
       const firstSecure = references.secure[0];
 
-      if (firstPlain && firstSecure && !platform) {
-        report(
-          firstPlain,
-          `"${key}" is referenced as \${${key}} here and as \${secure::${key}} in ${firstSecure.relativePath}; each form resolves from a different source, so one of them fails`,
-          `Use \${secure::${key}} everywhere for an encrypted value, or \${${key}} everywhere for a plain or platform secure property.`,
-        );
-        continue;
+      if (firstPlain) {
+        this.judgePlain(key, firstPlain, firstSecure !== undefined, loaded, report);
       }
-      if (loaded.unlocatable) continue;
-
-      if (firstPlain && !platform && !loaded.plain.always.has(key)) {
-        this.judgePlain(key, firstPlain, loaded, report);
-      }
-
-      // Platform keys are SEC-017's; a missing module or definition is SEC-018's
-      if (firstSecure && !platform && model.secureConfigPresent && scannedKeys.has(key)) {
-        this.judgeSecure(key, firstSecure, loaded, report);
+      // A missing module or definition anywhere is SEC-018's
+      if (firstSecure && model.secureConfigPresent && scannedKeys.has(key)) {
+        this.judgeSecure(key, firstSecure, firstPlain !== undefined, loaded, report);
       }
     }
 
@@ -206,21 +222,25 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
   private judgePlain(
     key: string,
     reference: PropertyReference,
+    alsoSecure: boolean,
     loaded: LoadedConfiguration,
-    report: (reference: PropertyReference, message: string, suggestion: string) => void,
+    report: Report,
   ): void {
     if (!definedIn(loaded.plain, key)) {
+      if (loaded.plain.unlocated) return;
       if (definedIn(loaded.secure, key)) {
         report(
           reference,
-          `"${key}" is defined only in a secure properties file, so \${${key}} does not resolve`,
+          alsoSecure
+            ? `"${key}" is referenced both as \${${key}} and as \${secure::${key}}; \${${key}} does not resolve because only a secure properties file defines it`
+            : `"${key}" is defined only in a secure properties file, so \${${key}} does not resolve`,
           `Reference it as \${secure::${key}}.`,
         );
       } else {
         report(
           reference,
           `"${key}" is not defined in any file loaded by configuration-properties, a global-property, or mule-artifact.json secureProperties`,
-          'Define it in the loaded properties file for every environment, or, if the deployment supplies it, add it to this rule\'s "allowedKeys" option.',
+          'Define it in the loaded properties file for every environment, or, if the deployment target supplies it, add it to this rule\'s "allowedKeys" option.',
         );
       }
       return;
@@ -230,7 +250,7 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
       report(
         reference,
         `"${key}" is missing from ${missing.join(', ')}, so it does not resolve in that environment`,
-        'Define the key in every environment file loaded through the ${mule.env} pattern.',
+        'Define the key in every file the patterned configuration-properties load can select.',
       );
     }
   }
@@ -238,13 +258,17 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
   private judgeSecure(
     key: string,
     reference: PropertyReference,
+    alsoPlain: boolean,
     loaded: LoadedConfiguration,
-    report: (reference: PropertyReference, message: string, suggestion: string) => void,
+    report: Report,
   ): void {
     if (!definedIn(loaded.secure, key)) {
+      if (loaded.secure.unlocated) return;
       report(
         reference,
-        `secure::${key} is defined, but not in a file loaded by secure-properties:config, so it does not resolve`,
+        alsoPlain
+          ? `"${key}" is referenced both as \${${key}} and as \${secure::${key}}; \${secure::${key}} does not resolve because no file loaded by secure-properties:config defines it`
+          : `secure::${key} is defined, but not in a file loaded by secure-properties:config, so it does not resolve`,
         `Move the encrypted value into the secure properties file, or reference \${${key}} if it is a plain property.`,
       );
       return;
@@ -254,7 +278,7 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
       report(
         reference,
         `secure::${key} is missing from ${missing.join(', ')}, so it does not resolve in that environment`,
-        'Define the encrypted key in every environment file loaded through the ${mule.env} pattern.',
+        'Define the encrypted key in every file the patterned secure-properties load can select.',
       );
     }
   }
@@ -268,18 +292,11 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
       plain: emptySpace(),
       secure: emptySpace(),
       decryptionKeys: new Set(),
-      unlocatable: false,
     };
     const model = getSecretModel(context.projectRoot, context.projectContext);
     for (const key of model.platformKeys) loaded.plain.always.add(key);
 
-    const loads: {
-      space: KeySpace;
-      file: string;
-      regex: RegExp;
-      placeholders: number;
-      literal: number;
-    }[] = [];
+    const loads: Load[] = [];
     for (const source of sources) {
       for (const element of allElements(source.document)) {
         const namespace = element.namespaceURI ?? '';
@@ -301,9 +318,9 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
         }
         const file = element.getAttribute('file');
         if (!space || !file) continue;
-        const { regex, placeholders } = filePattern(file);
+        const { regex, names } = filePattern(file);
         const literal = file.replace(/\$\{[^}]+\}/g, '').length;
-        loads.push({ space, file, regex, placeholders, literal });
+        loads.push({ id: loads.length, space, regex, names, literal });
       }
     }
 
@@ -312,37 +329,28 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
     const resourcePaths = listConfigFiles(context.projectRoot, context.projectContext).map((file) =>
       file.slice(RESOURCES.length),
     );
-    const claimed = new Map<
-      (typeof loads)[number],
-      { resource: string; env: string | undefined }[]
-    >();
     for (const load of loads) {
-      if (!resourcePaths.some((resource) => load.regex.test(resource))) loaded.unlocatable = true;
+      if (!resourcePaths.some((resource) => load.regex.test(resource))) load.space.unlocated = true;
     }
+    const specificity = (load: Load) => load.names.length * 1000 - load.literal;
     for (const resource of resourcePaths) {
       const matching = loads.filter((load) => load.regex.test(resource));
-      const best = Math.min(...matching.map((load) => load.placeholders * 1000 - load.literal));
+      if (matching.length === 0) continue;
+      const best = Math.min(...matching.map(specificity));
+      const relativePath = `${RESOURCES}${resource}`;
+      const keys = new Set(
+        readDefinedKeys(context.projectRoot, relativePath).map((entry) => entry.key),
+      );
       for (const load of matching) {
-        if (load.placeholders * 1000 - load.literal !== best) continue;
-        const env = load.placeholders === 1 ? load.regex.exec(resource)?.[1] : undefined;
-        claimed.set(load, [...(claimed.get(load) ?? []), { resource, env }]);
-      }
-    }
-
-    for (const [load, resources] of claimed) {
-      const group: PatternGroup = { pattern: load.file, byEnvironment: new Map() };
-      for (const { resource, env } of resources) {
-        const relativePath = `${RESOURCES}${resource}`;
-        const keys = new Set(
-          readDefinedKeys(context.projectRoot, relativePath).map((entry) => entry.key),
-        );
-        if (env) {
-          group.byEnvironment.set(env, { file: relativePath, keys });
-        } else {
+        if (specificity(load) !== best) continue;
+        if (load.names.length === 0) {
           for (const key of keys) load.space.always.add(key);
+          continue;
         }
+        const values = load.regex.exec(resource)?.slice(1) ?? [];
+        const binding = new Map(load.names.map((name, index) => [name, values[index] ?? '']));
+        load.space.variants.push({ load: load.id, binding, file: relativePath, keys });
       }
-      if (group.byEnvironment.size > 0) load.space.groups.push(group);
     }
     return loaded;
   }

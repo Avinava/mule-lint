@@ -768,6 +768,7 @@ export class LintEngine {
     projectContext.hasApiSpec = specFiles.length > 0;
     projectContext.dependencyArtifactIds = this.readPomArtifactIds(projectRoot);
     projectContext.platformSecureProperties = readMuleArtifact(projectRoot)?.secureProperties ?? [];
+    projectContext.enabledRuleIds = this.getEnabledRules().map((rule) => rule.id);
 
     if (
       projectContext.dependencyArtifactIds.some((id) =>

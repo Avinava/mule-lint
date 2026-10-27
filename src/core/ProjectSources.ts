@@ -29,6 +29,12 @@ export interface PomArtifact {
   rawVersion?: string | undefined;
   /** Version with `${property}` references resolved from `<properties>` */
   version?: string | undefined;
+  /** Maven scope as written; absent means `compile` */
+  scope?: string | undefined;
+  /**
+   * Line of the element, or of the managing `<dependencyManagement>` /
+   * `<pluginManagement>` entry when the version comes from there
+   */
   line: number;
 }
 
@@ -86,6 +92,19 @@ export function readMuleSources(
   return sources;
 }
 
+/**
+ * ArtifactIds of dependencies on the application classpath. `test`-scoped
+ * dependencies exist only for MUnit, so they do not make a connector
+ * available to src/main/mule.
+ */
+export function mainDependencyIds(pom: PomModel | undefined): Set<string> {
+  return new Set(
+    (pom?.dependencies ?? [])
+      .filter((dependency) => dependency.scope !== 'test')
+      .map((dependency) => dependency.artifactId),
+  );
+}
+
 /** Every element in a document. */
 export function allElements(document: Document): Element[] {
   return Array.from(document.getElementsByTagName('*'));
@@ -131,16 +150,31 @@ function readArtifact(
     artifactId,
     rawVersion,
     version: resolveProperties(rawVersion, properties),
+    scope: childText(element, 'scope'),
     line: getLineNumber(element),
   };
+}
+
+/** Fill a missing version from the matching managed entry, as Maven does. */
+function applyManagedVersion(artifact: PomArtifact, managed: PomArtifact[]): PomArtifact {
+  if (artifact.rawVersion !== undefined) return artifact;
+  const entry = managed.find(
+    (candidate) =>
+      candidate.artifactId === artifact.artifactId &&
+      (candidate.groupId === undefined ||
+        artifact.groupId === undefined ||
+        candidate.groupId === artifact.groupId),
+  );
+  if (!entry?.rawVersion) return artifact;
+  return { ...artifact, rawVersion: entry.rawVersion, version: entry.version, line: entry.line };
 }
 
 /**
  * Read pom.xml. Returns undefined when it is missing or malformed.
  *
- * Only the project's own `<dependencies>` and `<build><plugins>` are read;
- * `<dependencyManagement>` and `<pluginManagement>` pin versions without
- * adding anything to the application.
+ * Only the project's own `<dependencies>` and `<build><plugins>` are listed;
+ * `<dependencyManagement>` and `<pluginManagement>` add nothing to the
+ * application, but supply the version of a listed artifact that omits one.
  */
 export function readPom(
   projectRoot: string,
@@ -168,16 +202,30 @@ export function readPom(
         }
       }
 
-      const dependencies = childElements(project, 'dependencies')
-        .flatMap((block) => childElements(block, 'dependency'))
-        .map((element) => readArtifact(element, properties))
-        .filter((artifact): artifact is PomArtifact => artifact !== undefined);
+      const artifacts = (parents: Element[], list: string, item: string): PomArtifact[] =>
+        parents
+          .flatMap((parent) => childElements(parent, list))
+          .flatMap((block) => childElements(block, item))
+          .map((element) => readArtifact(element, properties))
+          .filter((artifact): artifact is PomArtifact => artifact !== undefined);
 
-      const plugins = childElements(project, 'build')
-        .flatMap((build) => childElements(build, 'plugins'))
-        .flatMap((block) => childElements(block, 'plugin'))
-        .map((element) => readArtifact(element, properties))
-        .filter((artifact): artifact is PomArtifact => artifact !== undefined);
+      const builds = childElements(project, 'build');
+      const managedDependencies = artifacts(
+        childElements(project, 'dependencyManagement'),
+        'dependencies',
+        'dependency',
+      );
+      const managedPlugins = artifacts(
+        builds.flatMap((build) => childElements(build, 'pluginManagement')),
+        'plugins',
+        'plugin',
+      );
+      const dependencies = artifacts([project], 'dependencies', 'dependency').map((artifact) =>
+        applyManagedVersion(artifact, managedDependencies),
+      );
+      const plugins = artifacts(builds, 'plugins', 'plugin').map((artifact) =>
+        applyManagedVersion(artifact, managedPlugins),
+      );
 
       model = {
         relativePath: 'pom.xml',

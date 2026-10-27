@@ -1,4 +1,5 @@
 http:
   host: '0.0.0.0'
+  port: '8081'
 db:
   url: 'jdbc:sample://db.example.invalid/orders'

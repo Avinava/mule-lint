@@ -2,6 +2,8 @@ import { ValidationContext, Issue, IssueType } from '../../types';
 import { ProjectRule } from '../base/ProjectRule';
 import { readMuleArtifact } from '../../core/MuleArtifact';
 import { readPom, type PomModel } from '../../core/ProjectSources';
+import { compareMavenVersions, isMavenVersion } from '../../core/MavenVersion';
+import { isSensitiveKey } from '../../core/SensitiveKeys';
 
 /** First MUnit release whose compatibility table lists Java 17 (released 2024-01-07). */
 const JAVA_17_MUNIT = '3.1.0';
@@ -20,20 +22,21 @@ interface MunitVersion {
   line: number;
 }
 
-/** Compare dotted numeric versions; qualifiers such as `-SNAPSHOT` are ignored. */
-function compareVersions(left: string, right: string): number {
-  const parts = (value: string) => value.split(/[.-]/).map((part) => parseInt(part, 10) || 0);
-  const a = parts(left);
-  const b = parts(right);
-  for (let index = 0; index < Math.max(a.length, b.length); index++) {
-    const difference = (a[index] ?? 0) - (b[index] ?? 0);
-    if (difference !== 0) return difference;
-  }
-  return 0;
+/**
+ * A version that is safe to judge and print: valid Maven version syntax, and
+ * not resolved through a property whose name implies a secret. Anything else
+ * is skipped, so a misplaced `${some.password}` never reaches a message.
+ */
+function printableVersion(
+  rawVersion: string | undefined,
+  resolved: string | undefined,
+): string | undefined {
+  const referenced = [...(rawVersion ?? '').matchAll(/\$\{([^}]+)\}/g)].map((match) =>
+    (match[1] ?? '').trim(),
+  );
+  if (referenced.some((name) => isSensitiveKey(name))) return undefined;
+  return isMavenVersion(resolved) ? resolved.trim() : undefined;
 }
-
-const isConcrete = (version: string | undefined): version is string =>
-  version !== undefined && version !== '' && !version.includes('${');
 
 /**
  * TEST-002: MUnit Version Parity
@@ -43,6 +46,13 @@ const isConcrete = (version: string | undefined): version is string =>
  * against a different MUnit than the plugin expects. A project declaring Java
  * 17 (mule-artifact.json `javaSpecificationVersions` or a POM Java property)
  * needs MUnit 3.1.0 or later, the first release supporting Java 17.
+ *
+ * Versions are compared in Maven order, qualifiers included, so
+ * `3.1.0-SNAPSHOT` differs from `3.1.0` and does not meet the Java 17
+ * minimum. A version omitted from the artifact is read from
+ * `<dependencyManagement>` or `<pluginManagement>`. A value that is not a
+ * version, or that comes from a property named like a secret, is not judged
+ * and never printed.
  */
 export class MUnitVersionParityRule extends ProjectRule {
   id = 'TEST-002';
@@ -68,7 +78,7 @@ export class MUnitVersionParityRule extends ProjectRule {
     const reference = versions[0];
     if (reference) {
       for (const entry of versions.slice(1)) {
-        if (compareVersions(entry.version, reference.version) === 0) continue;
+        if (compareMavenVersions(entry.version, reference.version) === 0) continue;
         issues.push(
           this.createLocatedIssue(
             pom.relativePath,
@@ -87,7 +97,7 @@ export class MUnitVersionParityRule extends ProjectRule {
     const javaSource = this.java17Source(context.projectRoot, pom);
     if (javaSource) {
       for (const entry of versions) {
-        if (compareVersions(entry.version, JAVA_17_MUNIT) >= 0) continue;
+        if (compareMavenVersions(entry.version, JAVA_17_MUNIT) >= 0) continue;
         issues.push(
           this.createLocatedIssue(
             pom.relativePath,
@@ -111,16 +121,19 @@ export class MUnitVersionParityRule extends ProjectRule {
     const plugin = pom.plugins.find((entry) => entry.artifactId === 'munit-maven-plugin');
     const property = pom.properties.get('munit.version');
 
-    if (plugin && isConcrete(plugin.version)) {
-      versions.push({ label: 'munit-maven-plugin', version: plugin.version, line: plugin.line });
-    } else if (property && isConcrete(property.value)) {
-      versions.push({ label: 'munit.version', version: property.value, line: property.line });
+    const pluginVersion = plugin && printableVersion(plugin.rawVersion, plugin.version);
+    const propertyVersion = property && printableVersion(property.value, property.value);
+    if (plugin && pluginVersion) {
+      versions.push({ label: 'munit-maven-plugin', version: pluginVersion, line: plugin.line });
+    } else if (property && propertyVersion) {
+      versions.push({ label: 'munit.version', version: propertyVersion, line: property.line });
     }
 
     for (const artifactId of ['munit-runner', 'munit-tools']) {
       const dependency = pom.dependencies.find((entry) => entry.artifactId === artifactId);
-      if (dependency && isConcrete(dependency.version)) {
-        versions.push({ label: artifactId, version: dependency.version, line: dependency.line });
+      const version = dependency && printableVersion(dependency.rawVersion, dependency.version);
+      if (dependency && version) {
+        versions.push({ label: artifactId, version, line: dependency.line });
       }
     }
     return versions;

@@ -1,7 +1,12 @@
 import { ValidationContext, Issue, IssueType } from '../../types';
 import { ProjectRule } from '../base/ProjectRule';
 import { getLineNumber } from '../../core/XPathHelper';
-import { allElements, readMuleSources, readPom } from '../../core/ProjectSources';
+import {
+  allElements,
+  mainDependencyIds,
+  readMuleSources,
+  readPom,
+} from '../../core/ProjectSources';
 import {
   CORE_ERROR_TYPES,
   findModuleByErrorNamespace,
@@ -103,11 +108,7 @@ export class UndefinedErrorTypeRule extends ProjectRule {
     }
 
     const raisedNamespaces = new Set([...raised].map((type) => type.split(':')[0] ?? ''));
-    const declared = new Set(
-      (readPom(context.projectRoot, context.projectContext)?.dependencies ?? []).map(
-        (dependency) => dependency.artifactId,
-      ),
-    );
+    const declared = mainDependencyIds(readPom(context.projectRoot, context.projectContext));
     const reported = new Set<string>();
     const issues: Issue[] = [];
 

@@ -102,7 +102,7 @@ describe('config parity fixtures', () => {
         path: 'src/main/mule/global.xml',
         line: 27,
         message:
-          '"db.password" is referenced as ${db.password} here and as ${secure::db.password} in src/main/mule/global.xml; each form resolves from a different source, so one of them fails',
+          '"db.password" is referenced both as ${db.password} and as ${secure::db.password}; ${db.password} does not resolve because only a secure properties file defines it',
       },
     ]);
   });
@@ -187,7 +187,15 @@ describe('config parity fixtures', () => {
   });
 
   it('LOG-006 leaves loggers LOG-007 owns and keeps other connector categories', () => {
-    expect(summary(run(new ConnectorDebugLoggingRule(), invalid)).map((i) => i.line)).toEqual([7]);
+    const issues = new ConnectorDebugLoggingRule().runProject({
+      ...contextFor(invalid),
+      projectContext: {
+        hasHttpListener: false,
+        hasApikitRouter: false,
+        enabledRuleIds: ['LOG-006', 'LOG-007'],
+      },
+    });
+    expect(summary(issues).map((i) => i.line)).toEqual([7]);
   });
 
   it('never prints property or secret values in messages or suggestions', () => {
@@ -230,7 +238,7 @@ describe('CFG-004 UnresolvedPropertyPlaceholderRule', () => {
     write(
       'src/main/mule/app.xml',
       mule(
-        '<http:listener-config name="l"><http:listener-connection host="${app.name}" port="${http.port}" /></http:listener-config>\n<flow name="f"><logger message="${deploy.region} ${ops.team.alias}" /></flow>',
+        '<http:listener-config name="l"><http:listener-connection host="${app.name}" port="${mule.home}" /></http:listener-config>\n<flow name="f"><logger message="${deploy.region} ${ops.team.alias}" /></flow>',
       ),
     );
     expect(run(rule, projectRoot).map((issue) => issue.message)).toEqual([
@@ -498,5 +506,167 @@ describe('LOG-007 SensitiveConnectorLoggerRule', () => {
     expect(run(rule, projectRoot)).toHaveLength(0);
     write('src/main/resources/log4j2.xml', '<Configuration><Loggers>');
     expect(run(rule, projectRoot)).toHaveLength(0);
+  });
+});
+
+describe('gate review fixes', () => {
+  const cfg = new UnresolvedPropertyPlaceholderRule();
+  const messages = (issues: Issue[]) => issues.map((issue) => issue.message);
+
+  it('CFG-004 still judges keys from located files when another load cannot be located', () => {
+    write('src/main/resources/dev.yaml', 'partner:\n  host: "a"\n');
+    write('src/main/resources/prod.yaml', 'other: "b"\n');
+    write(
+      'src/main/mule/app.xml',
+      mule(
+        '<configuration-properties file="${mule.env}.yaml" />\n<configuration-properties file="${app.home}/local.yaml" />\n<flow name="f"><logger message="${partner.host} ${maybe.external}" /></flow>',
+      ),
+    );
+    expect(messages(run(cfg, projectRoot))).toEqual([
+      '"partner.host" is missing from src/main/resources/prod.yaml, so it does not resolve in that environment',
+    ]);
+  });
+
+  it('CFG-004 checks every binding of a multi-placeholder file pattern', () => {
+    write('src/main/resources/config/eu/dev.yaml', 'region:\n  key: "a"\n');
+    write('src/main/resources/config/eu/prod.yaml', 'other: "b"\n');
+    write(
+      'src/main/mule/app.xml',
+      mule(
+        '<configuration-properties file="config/${region}/${mule.env}.yaml" />\n<flow name="f"><logger message="${region.key}" /></flow>',
+      ),
+    );
+    expect(messages(run(cfg, projectRoot, { allowedKeys: ['region'] }))).toEqual([
+      '"region.key" is missing from src/main/resources/config/eu/prod.yaml, so it does not resolve in that environment',
+    ]);
+  });
+
+  it('CFG-004 accepts a key read both ways when plain and secure files both define it', () => {
+    write('src/main/resources/app.yaml', 'shared:\n  key: "a"\n');
+    write('src/main/resources/secure.yaml', 'shared:\n  key: "![b]"\n');
+    write(
+      'src/main/mule/app.xml',
+      mule(
+        '<configuration-properties file="app.yaml" />\n<secure-properties:config name="s" file="secure.yaml" key="${k}" />\n<flow name="f"><logger message="${shared.key}" /><logger message="${secure::shared.key}" /></flow>',
+      ),
+    );
+    expect(run(cfg, projectRoot)).toHaveLength(0);
+  });
+
+  it('CFG-004 reports only the side that does not resolve for a mixed key', () => {
+    write('src/main/resources/secure.yaml', 'shared:\n  key: "![b]"\n');
+    write(
+      'src/main/mule/app.xml',
+      mule(
+        '<secure-properties:config name="s" file="secure.yaml" key="${k}" />\n<flow name="f"><logger message="${secure::shared.key}" />\n<logger message="${shared.key}" /></flow>',
+      ),
+    );
+    const issues = run(cfg, projectRoot);
+    expect(issues.map((issue) => issue.line)).toEqual([4]);
+    expect(issues[0]?.message).toBe(
+      '"shared.key" is referenced both as ${shared.key} and as ${secure::shared.key}; ${shared.key} does not resolve because only a secure properties file defines it',
+    );
+  });
+
+  it('CFG-004 reads placeholders inside CDATA but not inside comments', () => {
+    write(
+      'src/main/mule/app.xml',
+      mule(
+        '<flow name="f"><logger message="#[1]" /><!-- ${in.comment} --><ee:set-payload xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"><![CDATA[%dw 2.0\noutput json\n---\n{ k: p(\'in.cdata\') }]]></ee:set-payload></flow>',
+      ),
+    );
+    expect(messages(run(cfg, projectRoot))).toEqual([
+      '"in.cdata" is not defined in any file loaded by configuration-properties, a global-property, or mule-artifact.json secureProperties',
+    ]);
+  });
+
+  it('CFG-004 default allowlist is target-neutral: deployment port keys need allowedKeys', () => {
+    write(
+      'src/main/mule/app.xml',
+      mule(
+        '<http:listener-config name="l"><http:listener-connection host="0.0.0.0" port="${http.port}" /></http:listener-config>',
+      ),
+    );
+    expect(run(cfg, projectRoot)).toHaveLength(1);
+    expect(run(cfg, projectRoot, { allowedKeys: ['http.port'] })).toHaveLength(0);
+  });
+
+  const munit = new MUnitVersionParityRule();
+  const munitPom = (plugin: string, runner: string, tools: string, extra = '') =>
+    `<project><properties><java.version>17</java.version><anypoint.password>s3cr3t-value</anypoint.password></properties>${extra}<build><plugins><plugin><artifactId>munit-maven-plugin</artifactId>${plugin}</plugin></plugins></build><dependencies><dependency><artifactId>munit-runner</artifactId>${runner}</dependency><dependency><artifactId>munit-tools</artifactId>${tools}</dependency></dependencies></project>`;
+  const v = (version: string) => `<version>${version}</version>`;
+
+  it('TEST-002 never prints a resolved value that is not a version', () => {
+    write('pom.xml', munitPom(v('3.1.0'), v('${anypoint.password}'), v('3.1.0')));
+    const text = run(munit, projectRoot)
+      .map((issue) => `${issue.message} ${issue.suggestion ?? ''}`)
+      .join('\n');
+    expect(text).not.toContain('s3cr3t-value');
+  });
+
+  it('TEST-002 compares qualifiers and uses Maven ordering for the Java 17 minimum', () => {
+    write('pom.xml', munitPom(v('3.1.0'), v('3.1.0-SNAPSHOT'), v('3.1.0')));
+    expect(messages(run(munit, projectRoot))).toEqual([
+      'munit-runner version 3.1.0-SNAPSHOT differs from munit-maven-plugin version 3.1.0',
+      'munit-runner version 3.1.0-SNAPSHOT does not support Java 17, which pom.xml java.version declares; MUnit 3.1.0 is the first release that does',
+    ]);
+    write('pom.xml', munitPom(v('3.1.0-rc1'), v('3.1.0-rc1'), v('3.1.0-rc1')));
+    expect(run(munit, projectRoot)).toHaveLength(3);
+    write('pom.xml', munitPom(v('3.1.0-1'), v('3.1.0-1'), v('3.1.0-1')));
+    expect(run(munit, projectRoot)).toHaveLength(0);
+  });
+
+  it('TEST-002 reads versions from dependencyManagement and pluginManagement', () => {
+    write(
+      'pom.xml',
+      munitPom(
+        '',
+        '',
+        '',
+        '<dependencyManagement><dependencies><dependency><artifactId>munit-runner</artifactId><version>3.0.0</version></dependency><dependency><artifactId>munit-tools</artifactId><version>3.1.0</version></dependency></dependencies></dependencyManagement><build><pluginManagement><plugins><plugin><artifactId>munit-maven-plugin</artifactId><version>3.1.0</version></plugin></plugins></pluginManagement></build>',
+      ),
+    );
+    expect(messages(run(munit, projectRoot))).toContain(
+      'munit-runner version 3.0.0 differs from munit-maven-plugin version 3.1.0',
+    );
+  });
+
+  it('LOG-006 skips LOG-007-owned loggers only when LOG-007 is enabled', () => {
+    write(
+      'src/main/resources/log4j2.xml',
+      '<Configuration><Loggers><AsyncLogger name="org.mule.extension.salesforce" level="DEBUG"/></Loggers></Configuration>',
+    );
+    const log006 = new ConnectorDebugLoggingRule();
+    const withEnabled = (ids: string[]): ValidationContext => ({
+      ...contextFor(projectRoot),
+      projectContext: { hasHttpListener: false, hasApikitRouter: false, enabledRuleIds: ids },
+    });
+    expect(log006.runProject(withEnabled(['LOG-006']))).toHaveLength(1);
+    expect(log006.runProject(withEnabled(['LOG-006', 'LOG-007']))).toHaveLength(0);
+  });
+
+  it('PROJ-003 and ERR-005 do not count test-scoped dependencies for src/main/mule', () => {
+    write(
+      'pom.xml',
+      '<project><dependencies><dependency><artifactId>mule-db-connector</artifactId><scope>test</scope></dependency></dependencies></project>',
+    );
+    write(
+      'src/main/mule/app.xml',
+      mule(
+        '<db:config name="d" /><error-handler><on-error-continue type="VM:QUEUE_TIMEOUT" /></error-handler>',
+      ),
+    );
+    expect(run(new NamespaceDependencyRule(), projectRoot)).toHaveLength(1);
+    write(
+      'pom.xml',
+      '<project><dependencies><dependency><artifactId>mule-vm-connector</artifactId><scope>test</scope></dependency></dependencies></project>',
+    );
+    expect(run(new UndefinedErrorTypeRule(), projectRoot)).toHaveLength(1);
+  });
+
+  it('maps the Cryptography module namespace to mule-cryptography-module', () => {
+    const entry = MULE_MODULES.find((candidate) => candidate.errorNamespace === 'CRYPTO');
+    expect(entry?.namespace).toBe('http://www.mulesoft.org/schema/mule/cryptography');
+    expect(entry?.artifactIds).toEqual(['mule-cryptography-module']);
   });
 });

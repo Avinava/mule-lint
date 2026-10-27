@@ -44,7 +44,8 @@ export const MULE_MODULES: readonly MuleModule[] = [
   entry('wsc', ['mule-wsc-connector'], 'WSC'),
   entry('kafka', ['mule-kafka-connector'], 'KAFKA'),
   entry('ldap', ['mule-ldap-connector'], 'LDAP'),
-  entry('crypto', ['mule-crypto-connector'], 'CRYPTO'),
+  // Cryptography XML and Maven support: namespace .../cryptography, com.mulesoft.modules
+  entry('cryptography', ['mule-cryptography-module'], 'CRYPTO'),
   entry('validation', ['mule-validation-module'], 'VALIDATION'),
   entry('mule-apikit', ['mule-apikit-module'], 'APIKIT'),
   entry('apikit-soap', ['mule-apikit-soap-module']),

@@ -383,7 +383,7 @@ describe('LOG-006 ConnectorDebugLoggingRule', () => {
     expect(issues[0]?.relativePath).toBe('src/main/resources/log4j2.xml');
   });
 
-  it('leaves credential-writing categories to LOG-007', () => {
+  it('leaves credential-writing categories to LOG-007 when LOG-007 is enabled', () => {
     write(
       'src/main/resources/log4j2.xml',
       [
@@ -393,7 +393,9 @@ describe('LOG-006 ConnectorDebugLoggingRule', () => {
         '</Loggers></Configuration>',
       ].join('\n'),
     );
-    expect(rule.runProject(context())).toHaveLength(0);
+    expect(rule.runProject(context({}, { enabledRuleIds: ['LOG-006', 'LOG-007'] }))).toHaveLength(
+      0,
+    );
   });
 
   it('accepts additional categories', () => {

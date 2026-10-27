@@ -88,11 +88,25 @@ export function platformSecureKeys(entries: readonly string[] = []): Set<string>
   );
 }
 
+const blank = (block: string): string => block.replace(/[^\n]/g, ' ');
+
 /** Blank out XML comments and CDATA while keeping offsets and line numbers intact. */
 function maskXmlNonMarkup(content: string): string {
-  return content.replace(/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>/g, (block) =>
-    block.replace(/[^\n]/g, ' '),
-  );
+  return content.replace(/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>/g, blank);
+}
+
+/**
+ * Blank out XML comments only. CDATA holds inline DataWeave and scripts whose
+ * `${...}` placeholders and `p('...')` calls the runtime resolves, so their
+ * references are real.
+ */
+function maskXmlComments(content: string): string {
+  return content.replace(/<!--[\s\S]*?-->/g, blank);
+}
+
+/** A project-relative path under src/main/resources, always with `/`, on every OS. */
+function resourcePath(file: string): string {
+  return path.posix.join('src/main/resources', file.split(path.sep).join('/'));
 }
 
 function lineAt(content: string, offset: number): number {
@@ -114,7 +128,7 @@ export function collectReferences(
   lineOffset = 0,
 ): PropertyReference[] {
   const references: PropertyReference[] = [];
-  const searchable = relativePath.endsWith('.xml') ? maskXmlNonMarkup(content) : content;
+  const searchable = relativePath.endsWith('.xml') ? maskXmlComments(content) : content;
   for (const pattern of REFERENCE_PATTERNS) {
     for (const match of searchable.matchAll(pattern)) {
       const name = (match[2] ?? '').trim();
@@ -220,8 +234,8 @@ export function listConfigFiles(projectRoot: string, projectContext?: ProjectCon
   const specs = new Set(projectContext?.apiSpecFiles ?? []);
   return fg
     .sync(CONFIG_SOURCES, { cwd: resourcesPath, onlyFiles: true, ignore: IGNORED })
-    .map((file) => path.join('src/main/resources', file))
-    .filter((relativePath) => !specs.has(relativePath))
+    .map(resourcePath)
+    .filter((relativePath) => !specs.has(relativePath) && !specs.has(path.normalize(relativePath)))
     .sort();
 }
 
@@ -280,7 +294,7 @@ export function getSecretModel(projectRoot: string, projectContext?: ProjectCont
       ignore: IGNORED,
     });
     for (const file of scripts.sort()) {
-      const relativePath = path.join('src/main/resources', file);
+      const relativePath = resourcePath(file);
       const content = readText(path.join(projectRoot, relativePath));
       if (content !== undefined) {
         references.push(...collectReferences(content, relativePath));
