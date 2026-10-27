@@ -58,7 +58,7 @@ describe('CFG-004 on Windows-style paths', () => {
       config: { enabled: true, options: {} },
     });
     expect(issues.map((issue) => issue.message)).toEqual([
-      '"only.dev" is missing from src/main/resources/config/prod.yaml, so it does not resolve in that environment',
+      '"only.dev" is missing from src/main/resources/config/prod.yaml, so it does not resolve when mule.env=prod',
     ]);
   });
 });

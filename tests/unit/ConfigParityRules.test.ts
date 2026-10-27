@@ -84,7 +84,7 @@ describe('config parity fixtures', () => {
         path: 'src/main/mule/global.xml',
         line: 14,
         message:
-          '"partner.host" is missing from src/main/resources/prod.yaml, so it does not resolve in that environment',
+          '"partner.host" is missing from src/main/resources/prod.yaml, so it does not resolve when mule.env=prod',
       },
       {
         path: 'src/main/mule/global.xml',
@@ -280,7 +280,7 @@ describe('CFG-004 UnresolvedPropertyPlaceholderRule', () => {
       ),
     );
     expect(run(rule, projectRoot).map((issue) => issue.message)).toEqual([
-      '"only.dev" is missing from src/main/resources/prod.yaml, so it does not resolve in that environment',
+      '"only.dev" is missing from src/main/resources/prod.yaml, so it does not resolve when mule.env=prod',
     ]);
   });
 
@@ -523,7 +523,7 @@ describe('gate review fixes', () => {
       ),
     );
     expect(messages(run(cfg, projectRoot))).toEqual([
-      '"partner.host" is missing from src/main/resources/prod.yaml, so it does not resolve in that environment',
+      '"partner.host" is missing from src/main/resources/prod.yaml, so it does not resolve when mule.env=prod',
     ]);
   });
 
@@ -537,7 +537,7 @@ describe('gate review fixes', () => {
       ),
     );
     expect(messages(run(cfg, projectRoot, { allowedKeys: ['region'] }))).toEqual([
-      '"region.key" is missing from src/main/resources/config/eu/prod.yaml, so it does not resolve in that environment',
+      '"region.key" is missing from src/main/resources/config/eu/prod.yaml, so it does not resolve when mule.env=prod',
     ]);
   });
 
@@ -746,5 +746,94 @@ describe('gate review fixes', () => {
     const entry = MULE_MODULES.find((candidate) => candidate.errorNamespace === 'CRYPTO');
     expect(entry?.namespace).toBe('http://www.mulesoft.org/schema/mule/cryptography');
     expect(entry?.artifactIds).toEqual(['mule-cryptography-module']);
+  });
+});
+
+describe('gate re-review fixes', () => {
+  const cfg = new UnresolvedPropertyPlaceholderRule();
+  const munit = new MUnitVersionParityRule();
+  const leaked = (issues: Issue[]) =>
+    issues.map((issue) => `${issue.message} ${issue.suggestion ?? ''}`).join('\n');
+
+  it('TEST-002 suppresses a version resolved through a sensitive property at any depth', () => {
+    write(
+      'pom.xml',
+      [
+        '<project><properties>',
+        '<java.version>17</java.version>',
+        '<anypoint.password>3.0.0-hunter2</anypoint.password>',
+        '<munit.version>${anypoint.password}</munit.version>',
+        '<runner.version>${munit.version}</runner.version>',
+        '</properties>',
+        '<build><plugins><plugin><artifactId>munit-maven-plugin</artifactId><version>${munit.version}</version></plugin></plugins></build>',
+        '<dependencies><dependency><artifactId>munit-runner</artifactId><version>${runner.version}</version></dependency>',
+        '<dependency><artifactId>munit-tools</artifactId><version>3.1.0</version></dependency></dependencies>',
+        '</project>',
+      ].join(''),
+    );
+    expect(leaked(run(munit, projectRoot))).not.toContain('hunter2');
+  });
+
+  it('TEST-002 suppresses the munit.version fallback when it resolves through a secret', () => {
+    write(
+      'pom.xml',
+      '<project><properties><api.token>3.0.0-hunter2</api.token><munit.version>${api.token}</munit.version></properties><build><plugins><plugin><artifactId>munit-maven-plugin</artifactId></plugin></plugins></build><dependencies><dependency><artifactId>munit-runner</artifactId><version>3.1.0</version></dependency></dependencies></project>',
+    );
+    expect(leaked(run(munit, projectRoot))).not.toContain('hunter2');
+  });
+
+  it('TEST-002 still judges a non-sensitive transitive version', () => {
+    write(
+      'pom.xml',
+      '<project><properties><base.version>3.1.0</base.version><munit.version>${base.version}</munit.version></properties><build><plugins><plugin><artifactId>munit-maven-plugin</artifactId><version>${munit.version}</version></plugin></plugins></build><dependencies><dependency><artifactId>munit-runner</artifactId><version>3.2.0</version></dependency></dependencies></project>',
+    );
+    expect(run(munit, projectRoot).map((issue) => issue.message)).toEqual([
+      'munit-runner version 3.2.0 differs from munit-maven-plugin version 3.1.0',
+    ]);
+  });
+
+  it('TEST-002 compares every qualifier component', () => {
+    write(
+      'pom.xml',
+      '<project><build><plugins><plugin><artifactId>munit-maven-plugin</artifactId><version>3.2.0-rc1-1</version></plugin></plugins></build><dependencies><dependency><artifactId>munit-runner</artifactId><version>3.2.0-rc1-2</version></dependency></dependencies></project>',
+    );
+    expect(run(munit, projectRoot)).toHaveLength(1);
+  });
+
+  it('CFG-004 checks combinations across independent patterned loads', () => {
+    write('src/main/resources/env/dev.yaml', 'shared:\n  key: "a"\n');
+    write('src/main/resources/env/prod.yaml', 'other: "b"\n');
+    write('src/main/resources/region/eu.yaml', 'shared:\n  key: "c"\n');
+    write('src/main/resources/region/us.yaml', 'other: "d"\n');
+    write(
+      'src/main/mule/app.xml',
+      mule(
+        '<configuration-properties file="env/${mule.env}.yaml" />\n<configuration-properties file="region/${region}.yaml" />\n<flow name="f"><logger message="${shared.key}" /></flow>',
+      ),
+    );
+    expect(
+      run(cfg, projectRoot, { allowedKeys: ['region'] }).map((issue) => issue.message),
+    ).toEqual([
+      '"shared.key" is missing from src/main/resources/env/prod.yaml, src/main/resources/region/us.yaml, so it does not resolve when mule.env=prod, region=us',
+    ]);
+  });
+
+  it('CFG-004 reports when the combination check is limited', () => {
+    const files: string[] = [];
+    for (const name of ['a', 'b', 'c', 'd', 'e']) {
+      for (const value of ['1', '2', '3']) {
+        write(`src/main/resources/${name}/${value}.yaml`, `${name}${value}: "x"\n`);
+      }
+      files.push(`<configuration-properties file="${name}/\${${name}.sel}.yaml" />`);
+    }
+    write(
+      'src/main/mule/app.xml',
+      mule(`${files.join('\n')}\n<flow name="f"><logger message="\${a1}" /></flow>`),
+    );
+    const issues = run(cfg, projectRoot, { allowedPrefixes: ['a.', 'b.', 'c.', 'd.', 'e.'] });
+    expect(issues.map((issue) => issue.message)).toEqual([
+      'Environment combinations were not checked: the patterned configuration-properties loads select 243 combinations, more than the limit of 128',
+    ]);
+    expect(issues[0]?.severity).toBe('info');
   });
 });

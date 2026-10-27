@@ -1570,17 +1570,25 @@ startup. Reported once per key and form, at its first reference:
 - a plain `${key}` that no loaded file, global property, or platform key defines;
 - a plain `${key}` defined only in a secure properties file, which resolves only as
   `${secure::key}`;
-- a key that a patterned load defines for some placeholder values but not others, for example
-  present in `config/eu/dev.yaml` and missing from `config/eu/prod.yaml` under
-  `config/${region}/${mule.env}.yaml`;
+- a key that some combination of placeholder values leaves undefined, for example present in
+  `config/eu/dev.yaml` and missing from `config/eu/prod.yaml` under
+  `config/${region}/${mule.env}.yaml`, or, with `env/${mule.env}.yaml` and `region/${region}.yaml`
+  loaded together, defined in `env/dev.yaml` and `region/eu.yaml` only, so `mule.env=prod, region=us`
+  selects no file that defines it;
 - a `${secure::key}` defined in a scanned file, but not one `<secure-properties:config>` loads.
 
 A key read both as `${key}` and as `${secure::key}` is judged on each side: when the plain and the
 secure files both define it there is no finding, and otherwise only the side that does not resolve
 is reported, with a message naming both forms.
 
-File patterns are matched against `src/main/resources`, and every `${...}` in the path is bound
-separately, so each combination of values is checked. Each file belongs to the most specific pattern
+File patterns are matched against `src/main/resources`, and every `${...}` in a path is bound
+separately. The values each placeholder takes in the located files are crossed across all patterned
+loads of the same resolution path, and each deployable combination (one where every load selects a
+file) must select at least one file defining the key. The finding names the files and the
+combinations that fail, keeping only the placeholders that matter: a key missing only from the
+`prod` files is reported `when mule.env=prod`, whatever the region. When the cross product exceeds
+128 combinations, one info finding says the combination check was limited, and keys are still
+checked for being defined somewhere. Each file belongs to the most specific pattern
 matching it, so `${mule.env}.yaml` does not claim `secure-dev.yaml` when `secure-${mule.env}.yaml`
 loads it. A key in an unpatterned file counts for every environment. When a load names a file that
 is not in the repository, for example one under `${app.home}`, keys its resolution path does not
@@ -2532,11 +2540,13 @@ and must share one version. The plugin version (or the `munit.version` property 
 has none) is the reference; each dependency with a different version is reported at its line in
 `pom.xml`. `${...}` versions are resolved from `<properties>`, and an artifact without `<version>`
 takes it from `<dependencyManagement>` or `<pluginManagement>`, reported at that entry's line.
-Versions compare in Maven order with qualifiers included, so `3.1.0-SNAPSHOT` differs from `3.1.0`.
+Versions compare with Maven's `ComparableVersion` ordering, every qualifier component included, so
+`3.1.0-SNAPSHOT` differs from `3.1.0`, `3.1.0-rc1-1` differs from `3.1.0-rc1-2`, and `1.0`,
+`1.0.0`, and `1-ga` are equal.
 
-A value that is not valid version syntax, or that is resolved through a property named like a
-secret (for example `${anypoint.password}`), is not judged and is never printed. An unresolved
-version is not judged either.
+A value that is not valid version syntax, or that is resolved through any property named like a
+secret at any depth (for example `${munit.version}` defined as `${anypoint.password}`), is not
+judged and is never printed. An unresolved version is not judged either.
 
 When `mule-artifact.json` `javaSpecificationVersions` includes `17`, or a POM property
 (`java.version`, `maven.compiler.release`, `maven.compiler.source`, `maven.compiler.target`) is

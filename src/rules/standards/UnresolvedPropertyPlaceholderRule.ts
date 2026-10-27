@@ -75,6 +75,8 @@ interface KeySpace {
   variants: Variant[];
   /** True when a load of this path names a file that is not in src/main/resources */
   unlocated: boolean;
+  /** Deployable placeholder combinations; undefined when there are too many to check */
+  combinations?: Map<string, string>[] | undefined;
 }
 
 interface LoadedConfiguration {
@@ -121,35 +123,113 @@ function definedIn(space: KeySpace, key: string): boolean {
   return space.always.has(key) || space.variants.some((variant) => variant.keys.has(key));
 }
 
-/** Two bindings can apply together when they agree on every shared placeholder. */
-function compatible(left: Map<string, string>, right: Map<string, string>): boolean {
-  for (const [name, value] of left) {
-    const other = right.get(name);
-    if (other !== undefined && other !== value) return false;
-  }
-  return true;
-}
+/** Most placeholder combinations evaluated per resolution path before the check is limited. */
+const MAX_COMBINATIONS = 128;
+
+type Combination = Map<string, string>;
 
 /**
- * Files of patterned loads that lack a key another binding of the same load
- * defines, when no compatible file of any load supplies it either. A key in an
- * unpatterned file is available for every binding.
+ * Every combination of placeholder values the patterned loads of a resolution
+ * path can be deployed with: the cross product of the values each placeholder
+ * takes in the located files. A combination for which some load has no file
+ * is not deployable and is dropped. Returns `limited` instead when the cross
+ * product exceeds {@link MAX_COMBINATIONS}.
  */
-function missingFiles(space: KeySpace, key: string): string[] {
-  if (space.always.has(key)) return [];
-  const defining = new Set(
-    space.variants.filter((variant) => variant.keys.has(key)).map((variant) => variant.load),
+function enumerateCombinations(
+  space: KeySpace,
+): { combinations: Combination[] } | { limited: number } {
+  const domains = new Map<string, Set<string>>();
+  for (const variant of space.variants) {
+    for (const [name, value] of variant.binding) {
+      domains.set(name, (domains.get(name) ?? new Set()).add(value));
+    }
+  }
+  const names = [...domains.keys()].sort();
+  const count = names.reduce((product, name) => product * (domains.get(name)?.size ?? 1), 1);
+  if (count > MAX_COMBINATIONS) return { limited: count };
+
+  let combinations: Combination[] = [new Map<string, string>()];
+  for (const name of names) {
+    const values = [...(domains.get(name) ?? [])].sort();
+    combinations = combinations.flatMap((combination) =>
+      values.map((value) => new Map(combination).set(name, value)),
+    );
+  }
+  const loads = new Set(space.variants.map((variant) => variant.load));
+  return {
+    combinations: combinations.filter((combination) =>
+      [...loads].every((load) => selected(space, combination).some((v) => v.load === load)),
+    ),
+  };
+}
+
+/** The file each patterned load selects under a combination. */
+function selected(space: KeySpace, combination: Combination): Variant[] {
+  return space.variants.filter((variant) =>
+    [...variant.binding].every(([name, value]) => combination.get(name) === value),
   );
-  return space.variants
-    .filter((variant) => defining.has(variant.load) && !variant.keys.has(key))
-    .filter(
-      (variant) =>
-        !space.variants.some(
-          (other) => other.keys.has(key) && compatible(variant.binding, other.binding),
-        ),
-    )
-    .map((variant) => variant.file)
-    .sort();
+}
+
+const describeCombination = (combination: Combination): string =>
+  [...combination].map(([name, value]) => `${name}=${value}`).join(', ');
+
+/**
+ * Combinations under which no selected file defines a key some file of the
+ * path defines, reduced to the placeholders that matter: a placeholder is
+ * dropped when every value of it fails the same way, so a key missing only
+ * from `prod` files is reported for `mule.env=prod` alone. A key in an
+ * unpatterned file resolves under every combination.
+ */
+function unresolvedCombinations(
+  space: KeySpace,
+  combinations: Combination[],
+  key: string,
+): { when: string[]; files: string[] } {
+  if (space.always.has(key) || !space.variants.some((variant) => variant.keys.has(key))) {
+    return { when: [], files: [] };
+  }
+  const failing = combinations.filter(
+    (combination) => !selected(space, combination).some((variant) => variant.keys.has(key)),
+  );
+  if (failing.length === 0) return { when: [], files: [] };
+
+  const failingIds = new Set(failing.map(describeCombination));
+  const names = [...(failing[0]?.keys() ?? [])];
+  const varying = names.filter((name) =>
+    failing.some((combination) =>
+      combinations.some(
+        (other) =>
+          other.get(name) !== combination.get(name) &&
+          names.every((n) => n === name || other.get(n) === combination.get(n)) &&
+          !failingIds.has(describeCombination(other)),
+      ),
+    ),
+  );
+  // When no single placeholder explains the failure, keep the full combination
+  const relevant = varying.length > 0 ? varying : names;
+  const reduce = (combination: Combination): Combination =>
+    new Map([...combination].filter(([name]) => relevant.includes(name)));
+
+  const when = [...new Set(failing.map((combination) => describeCombination(reduce(combination))))];
+  const files = new Set<string>();
+  for (const combination of failing) {
+    for (const variant of selected(space, combination)) {
+      if ([...variant.binding.keys()].some((name) => relevant.includes(name))) {
+        files.add(variant.file);
+      }
+    }
+  }
+  return { when: when.sort(), files: [...files].sort() };
+}
+
+/** The unresolved combinations for a key, or undefined when it resolves or was not checked. */
+function combinationGap(
+  space: KeySpace,
+  key: string,
+): { when: string[]; files: string[] } | undefined {
+  if (!space.combinations) return undefined;
+  const gap = unresolvedCombinations(space, space.combinations, key);
+  return gap.when.length > 0 ? gap : undefined;
 }
 
 type Report = (reference: PropertyReference, message: string, suggestion: string) => void;
@@ -223,6 +303,26 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
     }
 
     const issues: Issue[] = [];
+    for (const [space, element] of [
+      [loaded.plain, 'configuration-properties'],
+      [loaded.secure, 'secure-properties'],
+    ] as const) {
+      const enumerated = enumerateCombinations(space);
+      if ('combinations' in enumerated) {
+        space.combinations = enumerated.combinations;
+      } else {
+        issues.push(
+          this.createProjectIssue(
+            `Environment combinations were not checked: the patterned ${element} loads select ${enumerated.limited} combinations, more than the limit of ${MAX_COMBINATIONS}`,
+            {
+              severity: 'info',
+              suggestion:
+                'Keys are still checked for being defined somewhere. Split independent placeholders into fewer patterned files to have every combination checked.',
+            },
+          ),
+        );
+      }
+    }
     const report: Report = (reference, message, suggestion) =>
       issues.push(
         this.createLocatedIssue(reference.relativePath, reference.line, message, {
@@ -296,12 +396,12 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
       }
       return;
     }
-    const missing = missingFiles(loaded.plain, key);
-    if (missing.length > 0) {
+    const gap = combinationGap(loaded.plain, key);
+    if (gap) {
       report(
         reference,
-        `"${key}" is missing from ${missing.join(', ')}, so it does not resolve in that environment`,
-        'Define the key in every file the patterned configuration-properties load can select.',
+        `"${key}" is missing from ${gap.files.join(', ')}, so it does not resolve when ${gap.when.join(' or ')}`,
+        'Define the key in every file the patterned configuration-properties loads can select.',
       );
     }
   }
@@ -324,12 +424,12 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
       );
       return;
     }
-    const missing = missingFiles(loaded.secure, key);
-    if (missing.length > 0) {
+    const gap = combinationGap(loaded.secure, key);
+    if (gap) {
       report(
         reference,
-        `secure::${key} is missing from ${missing.join(', ')}, so it does not resolve in that environment`,
-        'Define the encrypted key in every file the patterned secure-properties load can select.',
+        `secure::${key} is missing from ${gap.files.join(', ')}, so it does not resolve when ${gap.when.join(' or ')}`,
+        'Define the encrypted key in every file the patterned secure-properties loads can select.',
       );
     }
   }

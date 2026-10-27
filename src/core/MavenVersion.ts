@@ -1,17 +1,22 @@
 /**
  * Maven version syntax and ordering, for rules that compare POM versions.
  *
- * Ordering follows Maven's ComparableVersion for the forms POMs use: numeric
- * release segments, then a qualifier ranked
- * `alpha < beta < milestone < rc = cr < snapshot < (release) = ga = final < sp`,
- * then other text qualifiers (lexically), then numeric qualifiers. So
- * `3.1.0-SNAPSHOT` and `3.1.0-rc1` sort before `3.1.0`, while `3.1.0-1` sorts
- * after it, and `3.1` equals `3.1.0`.
+ * A port of Maven's ComparableVersion (maven-artifact), so versions order the
+ * way Maven, the Mule Maven plugin, and Exchange order them, and the way
+ * @sfdxy/mule-build's MavenVersion port orders them. Each tool keeps its own
+ * copy; the tests here pin Maven's own ComparableVersionTest vectors.
+ *
+ * A version splits on `.` and `-` and on every digit/letter transition. `-`
+ * opens a sublist. Qualifiers rank
+ * `alpha < beta < milestone < rc (= cr) < snapshot < "" (= ga, final, release) < sp`,
+ * then any other text lexically; a number outranks any qualifier. Trailing
+ * zeros and release qualifiers are dropped, so `1 == 1.0 == 1-ga`, while
+ * `3.1.0-SNAPSHOT < 3.1.0 < 3.1.0-1`.
  */
 
 /**
- * A version string: numeric segments, optionally followed by a `-` or `.`
- * qualifier made of letters and digits. Anything else, such as a resolved
+ * A version string: numeric segments, optionally followed by `-` or `.`
+ * qualifiers made of letters and digits. Anything else, such as a resolved
  * property holding unrelated text, is not a version and must not be printed.
  */
 const VERSION_SYNTAX = /^\d+(\.\d+)*([.-][A-Za-z0-9]+)*$/;
@@ -20,62 +25,147 @@ export function isMavenVersion(value: string | undefined): value is string {
   return value !== undefined && VERSION_SYNTAX.test(value.trim());
 }
 
-const QUALIFIER_RANK: Record<string, number> = {
-  alpha: 1,
-  a: 1,
-  beta: 2,
-  b: 2,
-  milestone: 3,
-  m: 3,
-  rc: 4,
-  cr: 4,
-  snapshot: 5,
-  '': 6,
-  ga: 6,
-  final: 6,
-  release: 6,
-  sp: 7,
-};
-const TEXT_RANK = 8;
-const NUMBER_RANK = 9;
+type Item = IntItem | StringItem | ListItem;
 
-interface Qualifier {
-  rank: number;
-  text: string;
-  number: number;
+const QUALIFIERS = ['alpha', 'beta', 'milestone', 'rc', 'snapshot', '', 'sp'];
+const ALIASES: Record<string, string> = { ga: '', final: '', release: '', cr: 'rc' };
+const RELEASE_INDEX = String(QUALIFIERS.indexOf(''));
+
+function compareStrings(left: string, right: string): number {
+  return left === right ? 0 : left < right ? -1 : 1;
 }
 
-function parse(version: string): { release: number[]; qualifier: Qualifier } {
-  const trimmed = version.trim();
-  const release = /^\d+(\.\d+)*/.exec(trimmed)?.[0] ?? '0';
-  const rest = trimmed.slice(release.length).replace(/^[.-]/, '').toLowerCase();
-  const numbers = release.split('.').map((part) => parseInt(part, 10));
-  while (numbers.length > 1 && numbers.at(-1) === 0) numbers.pop();
+/** Known qualifiers by rank; unknown ones after all of them, compared as text. */
+function comparableQualifier(value: string): string {
+  const index = QUALIFIERS.indexOf(value);
+  return index === -1 ? `${QUALIFIERS.length}-${value}` : String(index);
+}
 
-  const first = rest.split(/[.-]/)[0] ?? '';
-  let qualifier: Qualifier;
-  if (/^\d+$/.test(first)) {
-    qualifier = { rank: NUMBER_RANK, text: '', number: parseInt(first, 10) };
-  } else {
-    const [, name = '', digits = ''] = /^([a-z]*)(\d*)/.exec(first) ?? [];
-    qualifier = {
-      rank: QUALIFIER_RANK[name] ?? TEXT_RANK,
-      text: name,
-      number: digits ? parseInt(digits, 10) : 0,
-    };
+class IntItem {
+  constructor(readonly value: bigint) {}
+
+  isNull(): boolean {
+    return this.value === 0n;
   }
-  return { release: numbers, qualifier };
+
+  compare(other: Item | undefined): number {
+    if (other === undefined) return this.value === 0n ? 0 : 1;
+    if (other instanceof IntItem) {
+      return this.value === other.value ? 0 : this.value < other.value ? -1 : 1;
+    }
+    return 1; // a number is newer than a qualifier or a sublist
+  }
+}
+
+class StringItem {
+  readonly value: string;
+
+  constructor(value: string, followedByDigit: boolean) {
+    let normalized = value;
+    if (followedByDigit && value.length === 1) {
+      normalized = { a: 'alpha', b: 'beta', m: 'milestone' }[value] ?? value;
+    }
+    this.value = ALIASES[normalized] ?? normalized;
+  }
+
+  isNull(): boolean {
+    return comparableQualifier(this.value) === RELEASE_INDEX;
+  }
+
+  compare(other: Item | undefined): number {
+    if (other === undefined) return compareStrings(comparableQualifier(this.value), RELEASE_INDEX);
+    if (other instanceof StringItem) {
+      return compareStrings(comparableQualifier(this.value), comparableQualifier(other.value));
+    }
+    return -1; // a qualifier is older than a number or a sublist
+  }
+}
+
+class ListItem {
+  readonly items: Item[] = [];
+
+  isNull(): boolean {
+    return this.items.length === 0;
+  }
+
+  /** Drop trailing null items, looking through trailing sublists as Maven does. */
+  normalize(): void {
+    for (let index = this.items.length - 1; index >= 0; index--) {
+      const item = this.items[index];
+      if (item?.isNull()) this.items.splice(index, 1);
+      else if (!(item instanceof ListItem)) break;
+    }
+  }
+
+  compare(other: Item | undefined): number {
+    if (other === undefined) return this.items[0]?.compare(undefined) ?? 0;
+    if (other instanceof IntItem) return -1;
+    if (other instanceof StringItem) return 1;
+    const length = Math.max(this.items.length, other.items.length);
+    for (let index = 0; index < length; index++) {
+      const left = this.items[index];
+      const right = other.items[index];
+      const result =
+        left === undefined
+          ? right === undefined
+            ? 0
+            : -right.compare(undefined)
+          : left.compare(right);
+      if (result !== 0) return result;
+    }
+    return 0;
+  }
+}
+
+function parseItem(isDigit: boolean, text: string): Item {
+  return isDigit ? new IntItem(BigInt(text)) : new StringItem(text, false);
+}
+
+function parse(version: string): ListItem {
+  const value = version.trim().toLowerCase();
+  const root = new ListItem();
+  let list = root;
+  const stack: ListItem[] = [root];
+  let isDigit = false;
+  let start = 0;
+  const open = (): void => {
+    const sublist = new ListItem();
+    list.items.push(sublist);
+    list = sublist;
+    stack.push(sublist);
+  };
+
+  for (let index = 0; index < value.length; index++) {
+    const char = value.charAt(index);
+    if (char === '.' || char === '-') {
+      list.items.push(
+        index === start ? new IntItem(0n) : parseItem(isDigit, value.slice(start, index)),
+      );
+      start = index + 1;
+      if (char === '-') open();
+    } else if (char >= '0' && char <= '9') {
+      if (!isDigit && index > start) {
+        list.items.push(new StringItem(value.slice(start, index), true));
+        start = index;
+        open();
+      }
+      isDigit = true;
+    } else {
+      if (isDigit && index > start) {
+        list.items.push(parseItem(true, value.slice(start, index)));
+        start = index;
+        open();
+      }
+      isDigit = false;
+    }
+  }
+  if (value.length > start) list.items.push(parseItem(isDigit, value.slice(start)));
+
+  for (let sublist = stack.pop(); sublist; sublist = stack.pop()) sublist.normalize();
+  return root;
 }
 
 /** Negative, zero, or positive as `left` sorts before, equal to, or after `right`. */
 export function compareMavenVersions(left: string, right: string): number {
-  const a = parse(left);
-  const b = parse(right);
-  for (let index = 0; index < Math.max(a.release.length, b.release.length); index++) {
-    const difference = (a.release[index] ?? 0) - (b.release[index] ?? 0);
-    if (difference !== 0) return difference;
-  }
-  if (a.qualifier.rank !== b.qualifier.rank) return a.qualifier.rank - b.qualifier.rank;
-  if (a.qualifier.text !== b.qualifier.text) return a.qualifier.text < b.qualifier.text ? -1 : 1;
-  return a.qualifier.number - b.qualifier.number;
+  return parse(left).compare(parse(right));
 }

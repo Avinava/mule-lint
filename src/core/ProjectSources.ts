@@ -29,6 +29,8 @@ export interface PomArtifact {
   rawVersion?: string | undefined;
   /** Version with `${property}` references resolved from `<properties>` */
   version?: string | undefined;
+  /** Every property traversed while resolving the version, at any depth */
+  versionProperties: string[];
   /** Maven scope as written; absent means `compile` */
   scope?: string | undefined;
   /**
@@ -157,21 +159,33 @@ function childText(parent: Element, localName: string): string | undefined {
   return text ? text : undefined;
 }
 
-/** Resolve `${name}` references from POM properties; unknown references stay as written. */
-function resolveProperties(
-  value: string | undefined,
-  properties: Map<string, { value: string; line: number }>,
-): string | undefined {
-  if (value === undefined) return undefined;
+/** A POM value with its `${...}` references resolved, and every property it passed through. */
+export interface ResolvedPomValue {
+  value: string;
+  /** Every property name referenced while resolving, at any depth */
+  properties: string[];
+}
+
+/**
+ * Resolve `${name}` references from POM properties, recording each property
+ * traversed at every depth so a caller can refuse a value that came from a
+ * secret. Unknown references stay as written; passes are bounded so a
+ * self-referencing property cannot loop.
+ */
+export function resolvePomValue(
+  value: string,
+  properties: ReadonlyMap<string, { value: string; line: number }>,
+): ResolvedPomValue {
+  const traversed = new Set<string>();
   let resolved = value;
-  // Bounded passes so a self-referencing property cannot loop
-  for (let pass = 0; pass < 5 && resolved.includes('${'); pass++) {
-    resolved = resolved.replace(
-      /\$\{([^}]+)\}/g,
-      (whole, name: string) => properties.get(name.trim())?.value ?? whole,
-    );
+  for (let pass = 0; pass < 10 && resolved.includes('${'); pass++) {
+    resolved = resolved.replace(/\$\{([^}]+)\}/g, (whole, name: string) => {
+      const key = name.trim();
+      traversed.add(key);
+      return properties.get(key)?.value ?? whole;
+    });
   }
-  return resolved;
+  return { value: resolved, properties: [...traversed] };
 }
 
 function readArtifact(
@@ -181,11 +195,13 @@ function readArtifact(
   const artifactId = childText(element, 'artifactId');
   if (!artifactId) return undefined;
   const rawVersion = childText(element, 'version');
+  const resolved = rawVersion === undefined ? undefined : resolvePomValue(rawVersion, properties);
   return {
     groupId: childText(element, 'groupId'),
     artifactId,
     rawVersion,
-    version: resolveProperties(rawVersion, properties),
+    version: resolved?.value,
+    versionProperties: resolved?.properties ?? [],
     scope: childText(element, 'scope'),
     line: getLineNumber(element),
   };
@@ -202,7 +218,13 @@ function applyManagedVersion(artifact: PomArtifact, managed: PomArtifact[]): Pom
         candidate.groupId === artifact.groupId),
   );
   if (!entry?.rawVersion) return artifact;
-  return { ...artifact, rawVersion: entry.rawVersion, version: entry.version, line: entry.line };
+  return {
+    ...artifact,
+    rawVersion: entry.rawVersion,
+    version: entry.version,
+    versionProperties: entry.versionProperties,
+    line: entry.line,
+  };
 }
 
 /**
