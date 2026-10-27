@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/logo.svg" alt="mule-lint" width="560" />
+  <img src="docs/assets/logo.svg" alt="Mule Lint: static analysis and configuration parity for Mule 4" width="640" />
 </p>
 
 <p align="center">
@@ -8,7 +8,7 @@
   <a href="https://github.com/Avinava/mule-lint/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/@sfdxy/mule-lint?style=flat-square&color=818cf8" alt="License" /></a>
 </p>
 
-<p align="center"><strong>Find Mule 4 problems before deployment—locally, in CI, or with an AI coding agent.</strong></p>
+<p align="center"><strong>Find Mule 4 problems before deployment: locally, in CI, or with an AI coding agent.</strong></p>
 
 mule-lint scans Mule XML, DataWeave, YAML properties, and project structure. It needs no Anypoint credentials and does not connect to your MuleSoft environments. You need Node.js to run the tool, but you do not need to know JavaScript or Node development.
 
@@ -30,7 +30,7 @@ to perform the setup yourself.
 ## First run
 
 1. Install [Node.js 20 or newer](https://nodejs.org/en/download).
-2. Open a terminal in the root of a Mule project—the directory containing `pom.xml`.
+2. Open a terminal in the root of a Mule project, the directory containing `pom.xml`.
 3. Run:
 
 ```bash
@@ -142,6 +142,8 @@ Each rule is documented in the [rules catalog](https://avinava.github.io/mule-li
 - [Configuration](docs/configuration.md)
 - [MuleSoft practices handbook](docs/best-practices/mulesoft-best-practices.md)
 - [MCP setup for coding agents](docs/mcp-design.md)
+- [Ecosystem](docs/ecosystem.md): how mule-lint fits with [mule-build](https://avinava.github.io/mule-build/),
+  [anypoint-connect](https://avinava.github.io/anypoint-connect/), and [mule-skills](https://avinava.github.io/mule-skills/)
 - [Contributor guide](CONTRIBUTING.md)
 
 The searchable site is at <https://avinava.github.io/mule-lint/>.

@@ -32,6 +32,17 @@
   line-height: 1.65;
 }
 
+.hero .hero__banner {
+  margin: 0 0 1.5rem;
+}
+
+.hero__banner img {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+}
+
 .hero__eyebrow {
   color: var(--md-accent-fg-color);
   font-size: 0.72rem;
