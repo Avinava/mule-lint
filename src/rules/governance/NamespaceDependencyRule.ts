@@ -1,0 +1,72 @@
+import { ValidationContext, Issue, IssueType } from '../../types';
+import { ProjectRule } from '../base/ProjectRule';
+import { getLineNumber } from '../../core/XPathHelper';
+import { allElements, readMuleSources, readPom } from '../../core/ProjectSources';
+import { findModuleByNamespace, isModuleDeclared, type MuleModule } from '../../core/MuleModules';
+
+/**
+ * PROJ-003: Namespace Without Dependency
+ *
+ * Mule XML under src/main/mule uses elements of a connector or module whose
+ * Maven dependency pom.xml does not declare. The application then fails to
+ * build or deploy because the schema and its extension are not on the
+ * classpath. Namespaces and their artifactIds come from the MULE_MODULES
+ * table; runtime-provided namespaces (core, ee, documentation, batch, tls,
+ * api-gateway) need no dependency and are not in it.
+ *
+ * Only namespaces with at least one element are checked, so an unused
+ * declaration Studio left behind is not reported. When the POM has a
+ * `<parent>`, the dependency may be inherited, so the finding is a warning.
+ */
+export class NamespaceDependencyRule extends ProjectRule {
+  id = 'PROJ-003';
+  name = 'Namespace Without Dependency';
+  description =
+    'Every connector or module namespace used in Mule XML needs its Maven dependency in pom.xml';
+  severity = 'error' as const;
+  category = 'governance' as const;
+  override issueType: IssueType = 'bug';
+
+  protected validateProject(context: ValidationContext): Issue[] {
+    const pom = readPom(context.projectRoot, context.projectContext);
+    if (!pom) {
+      return [];
+    }
+
+    const ignored = new Set(this.getOption<string[]>(context, 'ignoredNamespaces', []));
+    const declared = new Set(pom.dependencies.map((dependency) => dependency.artifactId));
+    const firstUse = new Map<
+      MuleModule,
+      { relativePath: string; line: number; prefix: string | null }
+    >();
+
+    for (const source of readMuleSources(context.projectRoot, context.projectContext)) {
+      for (const element of allElements(source.document)) {
+        const namespace = element.namespaceURI;
+        if (!namespace || ignored.has(namespace)) continue;
+        const entry = findModuleByNamespace(namespace);
+        if (!entry || firstUse.has(entry) || isModuleDeclared(entry, declared)) continue;
+        firstUse.set(entry, {
+          relativePath: source.relativePath,
+          line: getLineNumber(element),
+          prefix: element.prefix,
+        });
+      }
+    }
+
+    return [...firstUse.entries()].map(([entry, use]) => {
+      const prefix = use.prefix ? ` (prefix "${use.prefix}")` : '';
+      const inherited = pom.hasParent ? ', unless the parent POM supplies it' : '';
+      return this.createLocatedIssue(
+        use.relativePath,
+        use.line,
+        `Namespace ${entry.namespace}${prefix} is used, but pom.xml declares no ${entry.artifactIds.join(' or ')} dependency${inherited}`,
+        {
+          projectRoot: context.projectRoot,
+          severity: pom.hasParent ? 'warning' : this.severity,
+          suggestion: `Add the ${entry.artifactIds[0] ?? 'connector'} dependency with <classifier>mule-plugin</classifier> to pom.xml, or remove the unused elements.`,
+        },
+      );
+    });
+  }
+}

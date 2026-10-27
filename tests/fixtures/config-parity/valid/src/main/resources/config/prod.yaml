@@ -1,0 +1,5 @@
+http:
+  host: '0.0.0.0'
+db:
+  url: 'jdbc:sample://db.example.invalid/orders'
+  user: 'orders_app'

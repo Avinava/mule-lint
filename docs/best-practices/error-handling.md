@@ -1,7 +1,7 @@
 # Error Handling Best Practices
 
 > **Applies to:** HTTP APIs · Event-Driven · Batch · All  
-> **Related Rules:** `MULE-001` · `MULE-003` · `MULE-005` · `MULE-007` · `MULE-009` · `ERR-001` · `ERR-002` · `ERR-003` · `ERR-004`  
+> **Related Rules:** `MULE-001` · `MULE-003` · `MULE-005` · `MULE-007` · `MULE-009` · `ERR-001` · `ERR-002` · `ERR-003` · `ERR-004` · `ERR-005`  
 > **Last Updated:** April 2026
 
 ## When to Read This

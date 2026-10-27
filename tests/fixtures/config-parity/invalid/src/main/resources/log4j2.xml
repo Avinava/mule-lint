@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Loggers>
+        <AsyncLogger name="org.cometd" level="DEBUG" />
+        <AsyncLogger name="org.apache.http" level="DEBUG" />
+        <AsyncLogger name="com.mulesoft.connectors.salesforce" level="TRACE" />
+        <AsyncLogger name="org.mule.extension.db" level="DEBUG" />
+        <AsyncRoot level="INFO" />
+    </Loggers>
+</Configuration>
