@@ -143,6 +143,16 @@ export function mainDependencyIds(pom: PomModel | undefined): Set<string> {
   );
 }
 
+/**
+ * True when a main-scope dependency's artifactId is a property the POM does
+ * not define, so it may be any connector and absence cannot be proven.
+ */
+export function hasUnresolvedDependency(pom: PomModel | undefined): boolean {
+  return (pom?.dependencies ?? []).some(
+    (dependency) => dependency.scope !== 'test' && dependency.artifactId.includes('${'),
+  );
+}
+
 /** Every element in a document. */
 export function allElements(document: Document): Element[] {
   return Array.from(document.getElementsByTagName('*'));
@@ -192,8 +202,9 @@ function readArtifact(
   element: Element,
   properties: Map<string, { value: string; line: number }>,
 ): PomArtifact | undefined {
-  const artifactId = childText(element, 'artifactId');
-  if (!artifactId) return undefined;
+  const writtenId = childText(element, 'artifactId');
+  if (!writtenId) return undefined;
+  const artifactId = resolvePomValue(writtenId, properties).value;
   const rawVersion = childText(element, 'version');
   const resolved = rawVersion === undefined ? undefined : resolvePomValue(rawVersion, properties);
   return {

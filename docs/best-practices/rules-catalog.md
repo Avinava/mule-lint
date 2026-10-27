@@ -318,7 +318,9 @@ from `on-error-continue` and `on-error-propagate` `type` (comma-separated lists 
   `CONNECTIVITY`, `EXPRESSION`, `RETRY_EXHAUSTED`, or `SOURCE_RESPONSE_SEND`;
 - a connector error namespace such as `HTTP:`, `DB:`, or `SALESFORCE:` when no element of that
   connector is used in `src/main/mule` and `pom.xml` declares no dependency for it (a `test`-scoped
-  dependency does not count);
+  dependency does not count). Judged only when the dependency list is fully visible: not without a
+  `pom.xml`, not when it declares a `<parent>`, and not when a dependency's artifactId is a property
+  the POM does not define;
 - a custom type, in `APP` or a namespace the project itself raises or maps to, that is caught but
   never raised by `raise-error` or produced by an `error-mapping` `targetType`. `APP:*` passes when
   any `APP` type is raised.
@@ -2480,8 +2482,10 @@ Service Consumer, Kafka, LDAP, Cryptography (`.../schema/mule/cryptography`,
 Compression, Secure Configuration Properties, OAuth, Spring, and Tracing. Runtime namespaces
 (`core`, `ee/core`, `documentation`, `batch`, `tls`, `api-gateway`) need no dependency, and MUnit
 namespaces belong to `src/test`. Any listed artifactId satisfies the check, whatever its groupId,
-except a `test`-scoped dependency, which is on the MUnit classpath only. When the POM declares a
-`<parent>`, the dependency may be inherited, so the finding is a warning.
+except a `test`-scoped dependency, which is on the MUnit classpath only. Without a `pom.xml` the rule
+reports nothing. When the POM declares a `<parent>`, the dependency may be inherited, so the finding
+is a warning; when a dependency's artifactId is a property the POM does not define, it may be the
+connector, so the finding is info.
 
 **Options:**
 

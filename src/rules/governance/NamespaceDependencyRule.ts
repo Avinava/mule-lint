@@ -3,6 +3,7 @@ import { ProjectRule } from '../base/ProjectRule';
 import { getLineNumber } from '../../core/XPathHelper';
 import {
   allElements,
+  hasUnresolvedDependency,
   mainDependencyIds,
   readMuleSources,
   readPom,
@@ -22,7 +23,9 @@ import { findModuleByNamespace, isModuleDeclared, type MuleModule } from '../../
  * A `test`-scoped dependency is on the MUnit classpath only, so it does not
  * count. Only namespaces with at least one element are checked, so an unused
  * declaration Studio left behind is not reported. When the POM has a
- * `<parent>`, the dependency may be inherited, so the finding is a warning.
+ * `<parent>`, the dependency may be inherited, so the finding is a warning;
+ * when a dependency's artifactId is a property the POM does not define, it may
+ * be the connector, so the finding is info. Without a POM nothing is reported.
  */
 export class NamespaceDependencyRule extends ProjectRule {
   id = 'PROJ-003';
@@ -60,16 +63,23 @@ export class NamespaceDependencyRule extends ProjectRule {
       }
     }
 
+    // Absence is unprovable when a dependency's artifactId is an undefined property
+    const unresolved = hasUnresolvedDependency(pom);
+    const severity = unresolved ? 'info' : pom.hasParent ? 'warning' : this.severity;
     return [...firstUse.entries()].map(([entry, use]) => {
       const prefix = use.prefix ? ` (prefix "${use.prefix}")` : '';
-      const inherited = pom.hasParent ? ', unless the parent POM supplies it' : '';
+      const caveat = unresolved
+        ? ', unless a dependency whose artifactId is a property may supply it'
+        : pom.hasParent
+          ? ', unless the parent POM supplies it'
+          : '';
       return this.createLocatedIssue(
         use.relativePath,
         use.line,
-        `Namespace ${entry.namespace}${prefix} is used, but pom.xml declares no ${entry.artifactIds.join(' or ')} dependency${inherited}`,
+        `Namespace ${entry.namespace}${prefix} is used, but pom.xml declares no ${entry.artifactIds.join(' or ')} dependency${caveat}`,
         {
           projectRoot: context.projectRoot,
-          severity: pom.hasParent ? 'warning' : this.severity,
+          severity,
           suggestion: `Add the ${entry.artifactIds[0] ?? 'connector'} dependency with <classifier>mule-plugin</classifier> to pom.xml, or remove the unused elements.`,
         },
       );

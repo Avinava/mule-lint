@@ -3,6 +3,7 @@ import { ProjectRule } from '../base/ProjectRule';
 import { getLineNumber } from '../../core/XPathHelper';
 import {
   allElements,
+  hasUnresolvedDependency,
   mainDependencyIds,
   readMuleSources,
   readPom,
@@ -55,7 +56,8 @@ const APP_NAMESPACE = 'APP';
  *
  * - a `MULE:` (or namespace-less) type that is not a core Mule error type;
  * - a connector error namespace, such as `HTTP:` or `DB:`, when no element of
- *   that connector is used and pom.xml declares no dependency for it;
+ *   that connector is used and pom.xml declares no dependency for it (only
+ *   judged when the POM exists, has no parent, and every artifactId resolves);
  * - a custom type, in `APP` or a namespace the project raises, that is caught
  *   but never raised by `raise-error` or produced by an `error-mapping`.
  *
@@ -108,7 +110,10 @@ export class UndefinedErrorTypeRule extends ProjectRule {
     }
 
     const raisedNamespaces = new Set([...raised].map((type) => type.split(':')[0] ?? ''));
-    const declared = mainDependencyIds(readPom(context.projectRoot, context.projectContext));
+    const pom = readPom(context.projectRoot, context.projectContext);
+    const declared = mainDependencyIds(pom);
+    // A missing POM, a parent, or a property artifactId hides what is on the classpath
+    const dependenciesKnown = pom !== undefined && !pom.hasParent && !hasUnresolvedDependency(pom);
     const reported = new Set<string>();
     const issues: Issue[] = [];
 
@@ -116,7 +121,13 @@ export class UndefinedErrorTypeRule extends ProjectRule {
       const name = typeName(use);
       if (use.namespace === '*' || ignored.has(use.namespace) || reported.has(name)) continue;
 
-      const finding = this.judge(use, { raised, raisedNamespaces, usedNamespaces, declared });
+      const finding = this.judge(use, {
+        raised,
+        raisedNamespaces,
+        usedNamespaces,
+        declared,
+        dependenciesKnown,
+      });
       if (!finding) continue;
       reported.add(name);
       issues.push(
@@ -137,6 +148,7 @@ export class UndefinedErrorTypeRule extends ProjectRule {
       raisedNamespaces: Set<string>;
       usedNamespaces: Set<string>;
       declared: Set<string>;
+      dependenciesKnown: boolean;
     },
   ): { message: string; suggestion: string } | undefined {
     const name = typeName(use);
@@ -152,6 +164,7 @@ export class UndefinedErrorTypeRule extends ProjectRule {
 
     const connector = findModuleByErrorNamespace(use.namespace);
     if (connector) {
+      if (!project.dependenciesKnown) return undefined;
       if (project.usedNamespaces.has(connector.namespace)) return undefined;
       if (isModuleDeclared(connector, project.declared)) return undefined;
       return {

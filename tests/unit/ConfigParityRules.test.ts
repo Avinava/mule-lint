@@ -723,6 +723,26 @@ describe('gate review fixes', () => {
     expect(log006.runProject(withEnabled(['LOG-006', 'LOG-007']))).toHaveLength(0);
   });
 
+  it('PROJ-003 and ERR-005 do not raise errors when a dependency artifactId cannot be resolved', () => {
+    write(
+      'pom.xml',
+      '<project><dependencies><dependency><artifactId>${connector.artifact}</artifactId></dependency></dependencies></project>',
+    );
+    write(
+      'src/main/mule/app.xml',
+      mule(
+        '<http:request-config name="r" /><error-handler><on-error-continue type="DB:CONNECTIVITY" /><on-error-continue type="MULE:BOGUS" /></error-handler>',
+      ),
+    );
+    const proj = run(new NamespaceDependencyRule(), projectRoot);
+    expect(proj.map((issue) => issue.severity)).toEqual(['info']);
+    expect(proj[0]?.message).toContain('a dependency whose artifactId is a property may supply it');
+    // Connector namespaces are not judged; the core-type check still is
+    expect(run(new UndefinedErrorTypeRule(), projectRoot).map((issue) => issue.message)).toEqual([
+      'MULE:BOGUS is not a core Mule error type, so the application fails to deploy',
+    ]);
+  });
+
   it('PROJ-003 and ERR-005 do not count test-scoped dependencies for src/main/mule', () => {
     write(
       'pom.xml',

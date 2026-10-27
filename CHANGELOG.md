@@ -44,7 +44,11 @@
   PROJ-003 and ERR-005; one table lists the core Mule error types; one table lists the sensitive log
   categories. All five rules name keys, types, categories, and files, never values.
 - PROJ-003 and ERR-005 ignore `test`-scoped dependencies when deciding whether a connector is
-  available to `src/main/mule`.
+  available to `src/main/mule`. Neither raises an error when the dependency list is not fully
+  visible: without a `pom.xml` both skip the check; with a `<parent>`, PROJ-003 warns and ERR-005
+  skips connector namespaces; with an artifactId that is an undefined property, PROJ-003 reports
+  info and ERR-005 skips connector namespaces.
+- The `tests/fixtures/valid` sample now declares the HTTP connector and APIKit module it uses.
 
 ### Fixed
 
