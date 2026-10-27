@@ -7,14 +7,20 @@ import {
   readDefinedKeys,
   type PropertyReference,
 } from '../../core/SecretModel';
-import { allElements, readMuleSources, type MuleSource } from '../../core/ProjectSources';
+import {
+  allElements,
+  readMuleSources,
+  readPom,
+  type DeploymentTarget,
+  type MuleSource,
+} from '../../core/ProjectSources';
 
 /**
  * Keys that resolve on every deployment target without a properties file:
  * Mule runtime and JVM system properties, plus the `mule.env` and `mule.key`
- * conventions passed at startup. Keys only some targets supply, such as the
- * `http.port` family CloudHub reserves, are not here; allow them per target
- * through the `allowedKeys` and `allowedPrefixes` options.
+ * conventions passed at startup. The `http.port` family CloudHub reserves is
+ * added only on a CloudHub target (see CLOUDHUB_RESERVED_KEYS); other keys a
+ * target supplies go in the `allowedKeys` and `allowedPrefixes` options.
  */
 const RUNTIME_KEYS = [
   'mule.env',
@@ -31,6 +37,26 @@ const RUNTIME_KEYS = [
   'path.separator',
 ];
 const RUNTIME_PREFIXES = ['anypoint.platform.', 'java.', 'user.', 'os.'];
+
+/**
+ * Ports CloudHub and CloudHub 2.0 reserve and set for every application
+ * (docs.mulesoft.com cloudhub-manage-props and ch2-manage-props, verified
+ * 2026-10-27). Runtime Fabric and customer-hosted runtimes document no such
+ * properties, so they count as supplied only on a CloudHub target.
+ */
+const CLOUDHUB_RESERVED_KEYS = new Set([
+  'http.port',
+  'https.port',
+  'http.private.port',
+  'https.private.port',
+]);
+const CLOUDHUB_TARGETS: ReadonlySet<DeploymentTarget> = new Set(['cloudhub', 'cloudhub2']);
+const DEPLOYMENT_TARGETS: ReadonlySet<string> = new Set([
+  'cloudhub',
+  'cloudhub2',
+  'rtf',
+  'standalone',
+]);
 
 const RESOURCES = 'src/main/resources/';
 
@@ -149,7 +175,9 @@ type Report = (reference: PropertyReference, message: string, suggestion: string
  * and only the side that does not resolve is reported. When a load of one
  * resolution path names a file that is not in the repository, keys that path
  * does not define are not judged, but keys its located files define are still
- * checked across environments. Messages name keys and files, never values.
+ * checked across environments. The CloudHub reserved ports count as supplied
+ * when every mule-maven-plugin deployment is CloudHub or CloudHub 2.0, or the
+ * `deploymentTarget` option says so. Messages name keys and files, never values.
  */
 export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
   id = 'CFG-004';
@@ -174,6 +202,9 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
       ...RUNTIME_PREFIXES,
       ...this.getOption<string[]>(context, 'allowedPrefixes', []),
     ];
+    if (this.suppliesCloudHubPorts(context)) {
+      for (const key of CLOUDHUB_RESERVED_KEYS) allowedKeys.add(key);
+    }
     const isAllowed = (key: string) =>
       allowedKeys.has(key) || allowedPrefixes.some((prefix) => key.startsWith(prefix));
 
@@ -219,6 +250,20 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
     return issues;
   }
 
+  /**
+   * True when every deployment target is CloudHub or CloudHub 2.0, so the
+   * reserved port keys are set by the platform. The `deploymentTarget` option
+   * overrides what the mule-maven-plugin declares; with neither, the target
+   * is unknown and the ports must be defined or allowed.
+   */
+  private suppliesCloudHubPorts(context: ValidationContext): boolean {
+    const option = this.getOption<string>(context, 'deploymentTarget', '');
+    const targets: ReadonlySet<DeploymentTarget> = DEPLOYMENT_TARGETS.has(option)
+      ? new Set([option as DeploymentTarget])
+      : (readPom(context.projectRoot, context.projectContext)?.deploymentTargets ?? new Set());
+    return targets.size > 0 && [...targets].every((target) => CLOUDHUB_TARGETS.has(target));
+  }
+
   private judgePlain(
     key: string,
     reference: PropertyReference,
@@ -235,6 +280,12 @@ export class UnresolvedPropertyPlaceholderRule extends ProjectRule {
             ? `"${key}" is referenced both as \${${key}} and as \${secure::${key}}; \${${key}} does not resolve because only a secure properties file defines it`
             : `"${key}" is defined only in a secure properties file, so \${${key}} does not resolve`,
           `Reference it as \${secure::${key}}.`,
+        );
+      } else if (CLOUDHUB_RESERVED_KEYS.has(key)) {
+        report(
+          reference,
+          `"${key}" is not defined in any loaded file; CloudHub and CloudHub 2.0 supply it, but no CloudHub deployment target is declared (mule-maven-plugin or the "deploymentTarget" option); on other targets define it, or add it to "allowedKeys" if the target supplies it`,
+          'Define it in the loaded properties file, declare the CloudHub deployment in the mule-maven-plugin or set this rule\'s "deploymentTarget" option, or add it to "allowedKeys" for a target that supplies it.',
         );
       } else {
         report(

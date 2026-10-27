@@ -1596,31 +1596,41 @@ Keys that resolve on every deployment target are allowed by default: `mule.env`,
 `file.encoding`, `file.separator`, `line.separator`, `path.separator`, and keys starting with
 `anypoint.platform.`, `java.`, `user.`, or `os.`. Messages name keys and files, never values.
 
-Keys that only some targets supply are not in the default list. CloudHub and CloudHub 2.0 reserve
-`http.port`, `https.port`, `http.private.port`, and `https.private.port` and set their values
+CloudHub and CloudHub 2.0 reserve `http.port`, `https.port`, `http.private.port`, and
+`https.private.port` and set their values
 ([CloudHub](https://docs.mulesoft.com/cloudhub/cloudhub-manage-props),
 [CloudHub 2.0](https://docs.mulesoft.com/cloudhub-2/ch2-manage-props), verified 2026-10-27);
-Runtime Fabric and customer-hosted runtimes document no such reserved properties. Allow them in the
-configuration for a CloudHub target, along with any Runtime Manager property the deployment sets:
+Runtime Fabric and customer-hosted runtimes document no such reserved properties. The rule
+therefore treats these four keys as supplied only on a CloudHub target:
+
+| Deployment target                                                                     | Reserved ports supplied |
+| ------------------------------------------------------------------------------------- | ----------------------- |
+| mule-maven-plugin `cloudHubDeployment` or `cloudhub2Deployment`, or both              | Yes                     |
+| `runtimeFabricDeployment`, `standaloneDeployment`, `armDeployment`, `agentDeployment` | No                      |
+| A CloudHub deployment alongside any other target                                      | No                      |
+| No deployment declared                                                                | No                      |
+
+Deployments are read from every `mule-maven-plugin` in `pom.xml`, including those in `<profiles>`
+and `<pluginManagement>`. The `deploymentTarget` option overrides this inference; an unrecognized
+value is ignored. When the ports are not supplied, the finding says so and names `allowedKeys` as
+the fix for a target that sets them another way. Any Runtime Manager property the deployment sets
+belongs in `allowedKeys` too:
 
 ```json
 {
   "rules": {
-    "CFG-004": {
-      "options": {
-        "allowedKeys": ["http.port", "https.port", "http.private.port", "https.private.port"]
-      }
-    }
+    "CFG-004": { "options": { "deploymentTarget": "cloudhub2", "allowedKeys": ["deploy.region"] } }
   }
 }
 ```
 
 **Options:**
 
-| Option            | Default | Description                                                                 |
-| ----------------- | ------- | --------------------------------------------------------------------------- |
-| `allowedKeys`     | `[]`    | Extra full key names the deployment target supplies, such as CloudHub ports |
-| `allowedPrefixes` | `[]`    | Extra key prefixes the deployment target supplies                           |
+| Option             | Default    | Description                                                                         |
+| ------------------ | ---------- | ----------------------------------------------------------------------------------- |
+| `allowedKeys`      | `[]`       | Extra full key names the deployment target supplies                                 |
+| `allowedPrefixes`  | `[]`       | Extra key prefixes the deployment target supplies                                   |
+| `deploymentTarget` | (inferred) | `cloudhub`, `cloudhub2`, `rtf`, or `standalone`; overrides the POM deployment check |
 
 **Example:**
 

@@ -47,6 +47,42 @@ export interface PomModel {
   plugins: PomArtifact[];
   /** True when the POM declares a `<parent>`, which may contribute dependencies */
   hasParent: boolean;
+  /** Targets the mule-maven-plugin declares deployments for, in any build or profile */
+  deploymentTargets: Set<DeploymentTarget>;
+}
+
+/** Where a Mule application is deployed, as the mule-maven-plugin names it. */
+export type DeploymentTarget = 'cloudhub' | 'cloudhub2' | 'rtf' | 'standalone';
+
+/**
+ * mule-maven-plugin `<configuration>` children and the target each declares.
+ * Customer-hosted runtimes (standalone, Runtime Manager REST API, and agent
+ * deployments) are all `standalone`. Source: Mule Maven plugin deployment
+ * pages on docs.mulesoft.com (deploy-to-cloudhub, deploy-to-cloudhub-2,
+ * mmp-concept, deploy-on-premises), verified 2026-10-27.
+ */
+const DEPLOYMENT_ELEMENTS: Record<string, DeploymentTarget> = {
+  cloudHubDeployment: 'cloudhub',
+  cloudhub2Deployment: 'cloudhub2',
+  runtimeFabricDeployment: 'rtf',
+  standaloneDeployment: 'standalone',
+  armDeployment: 'standalone',
+  agentDeployment: 'standalone',
+};
+
+/** Deployment targets of every mule-maven-plugin in the POM, including profiles. */
+function readDeploymentTargets(project: Element): Set<DeploymentTarget> {
+  const targets = new Set<DeploymentTarget>();
+  for (const plugin of Array.from(project.getElementsByTagName('*'))) {
+    if (plugin.localName !== 'plugin' || childText(plugin, 'artifactId') !== 'mule-maven-plugin') {
+      continue;
+    }
+    for (const element of Array.from(plugin.getElementsByTagName('*'))) {
+      const target = DEPLOYMENT_ELEMENTS[element.localName];
+      if (target) targets.add(target);
+    }
+  }
+  return targets;
 }
 
 const IGNORED = ['**/target/**', '**/node_modules/**', '**/exchange_modules/**'];
@@ -233,6 +269,7 @@ export function readPom(
         dependencies,
         plugins,
         hasParent: childElements(project, 'parent').length > 0,
+        deploymentTargets: readDeploymentTargets(project),
       };
     }
   } catch {

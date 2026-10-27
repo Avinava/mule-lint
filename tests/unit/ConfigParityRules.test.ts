@@ -580,15 +580,93 @@ describe('gate review fixes', () => {
     ]);
   });
 
-  it('CFG-004 default allowlist is target-neutral: deployment port keys need allowedKeys', () => {
-    write(
-      'src/main/mule/app.xml',
-      mule(
-        '<http:listener-config name="l"><http:listener-connection host="0.0.0.0" port="${http.port}" /></http:listener-config>',
-      ),
-    );
-    expect(run(cfg, projectRoot)).toHaveLength(1);
-    expect(run(cfg, projectRoot, { allowedKeys: ['http.port'] })).toHaveLength(0);
+  describe('CFG-004 CloudHub reserved ports by deployment target', () => {
+    const plugin = (
+      deployments: string,
+      wrap = (body: string) => `<build><plugins>${body}</plugins></build>`,
+    ) => {
+      write(
+        'pom.xml',
+        `<project>${wrap(`<plugin><artifactId>mule-maven-plugin</artifactId><configuration>${deployments}</configuration></plugin>`)}</project>`,
+      );
+    };
+    const ports = () => {
+      write(
+        'src/main/mule/app.xml',
+        mule(
+          '<http:listener-config name="l"><http:listener-connection host="0.0.0.0" port="${http.port}" /></http:listener-config>\n<http:listener-config name="p"><http:listener-connection host="0.0.0.0" port="${https.private.port}" /></http:listener-config>',
+        ),
+      );
+    };
+
+    it.each([
+      [
+        'CloudHub',
+        '<cloudHubDeployment><applicationName>a</applicationName></cloudHubDeployment>',
+        0,
+      ],
+      ['CloudHub 2.0', '<cloudhub2Deployment><target>t</target></cloudhub2Deployment>', 0],
+      ['both CloudHub targets', '<cloudHubDeployment/><cloudhub2Deployment/>', 0],
+      [
+        'Runtime Fabric',
+        '<runtimeFabricDeployment><target>t</target></runtimeFabricDeployment>',
+        2,
+      ],
+      [
+        'standalone',
+        '<standaloneDeployment><muleHome>/opt/mule</muleHome></standaloneDeployment>',
+        2,
+      ],
+      ['Runtime Manager agent', '<agentDeployment/>', 2],
+      ['CloudHub 2.0 and Runtime Fabric', '<cloudhub2Deployment/><runtimeFabricDeployment/>', 2],
+      ['no deployment', '', 2],
+    ])('%s pom.xml deployment gives %i port findings', (_name, deployments, count) => {
+      ports();
+      plugin(deployments);
+      expect(run(cfg, projectRoot)).toHaveLength(count);
+    });
+
+    it('reads deployments declared in a profile', () => {
+      ports();
+      plugin(
+        '<cloudhub2Deployment/>',
+        (body) =>
+          `<profiles><profile><build><plugins>${body}</plugins></build></profile></profiles>`,
+      );
+      expect(run(cfg, projectRoot)).toHaveLength(0);
+    });
+
+    it('lets the deploymentTarget option override inference both ways', () => {
+      ports();
+      plugin('<runtimeFabricDeployment/>');
+      expect(run(cfg, projectRoot, { deploymentTarget: 'cloudhub2' })).toHaveLength(0);
+      expect(run(cfg, projectRoot, { deploymentTarget: 'cloudhub' })).toHaveLength(0);
+      plugin('<cloudhub2Deployment/>');
+      expect(run(cfg, projectRoot, { deploymentTarget: 'rtf' })).toHaveLength(2);
+      expect(run(cfg, projectRoot, { deploymentTarget: 'standalone' })).toHaveLength(2);
+      expect(run(cfg, projectRoot, { deploymentTarget: 'not-a-target' })).toHaveLength(0);
+    });
+
+    it('names allowedKeys as the fix for other targets, and allowedKeys accepts them', () => {
+      ports();
+      plugin('<runtimeFabricDeployment/>');
+      const issues = run(cfg, projectRoot);
+      expect(issues[0]?.message).toBe(
+        '"http.port" is not defined in any loaded file; CloudHub and CloudHub 2.0 supply it, but no CloudHub deployment target is declared (mule-maven-plugin or the "deploymentTarget" option); on other targets define it, or add it to "allowedKeys" if the target supplies it',
+      );
+      expect(
+        run(cfg, projectRoot, { allowedKeys: ['http.port', 'https.private.port'] }),
+      ).toHaveLength(0);
+    });
+
+    it('ignores deployment elements outside the mule-maven-plugin', () => {
+      ports();
+      write(
+        'pom.xml',
+        '<project><build><plugins><plugin><artifactId>other-plugin</artifactId><configuration><cloudhub2Deployment/></configuration></plugin></plugins></build></project>',
+      );
+      expect(run(cfg, projectRoot)).toHaveLength(2);
+    });
   });
 
   const munit = new MUnitVersionParityRule();

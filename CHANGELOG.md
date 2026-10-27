@@ -11,10 +11,12 @@
   category (for example `org.mule.extension.salesforce` or `HttpMessageLogger`); LOG-007 reports it
   instead, as a warning. Baselines that recorded those LOG-006 findings will see them as new LOG-007
   findings. With LOG-007 disabled, LOG-006 reports them as before.
-- CFG-004's default allowlist covers only keys every deployment target resolves. The CloudHub
-  reserved ports (`http.port`, `https.port`, `http.private.port`, `https.private.port`) and Runtime
-  Manager properties go in its `allowedKeys` and `allowedPrefixes` options for the targets that
-  supply them. Add them there rather than disabling the rule.
+- CFG-004 treats the CloudHub reserved ports (`http.port`, `https.port`, `http.private.port`,
+  `https.private.port`) as supplied only when every mule-maven-plugin deployment in `pom.xml` is
+  `cloudHubDeployment` or `cloudhub2Deployment`, or when its `deploymentTarget` option is
+  `cloudhub` or `cloudhub2`. On Runtime Fabric, customer-hosted, or undeclared targets they must be
+  defined, or listed in `allowedKeys` if the target supplies them. Runtime Manager properties also
+  go in `allowedKeys` or `allowedPrefixes`; add them there rather than disabling the rule.
 - SEC-017, SEC-018, and SEC-019 now read `${...}` and `p('...')` references inside CDATA, such as
   inline DataWeave, instead of ignoring them. An inline `p('key')` now counts as a use for SEC-019,
   and an inline `${secure::key}` is now checked by SEC-017 and SEC-018.
