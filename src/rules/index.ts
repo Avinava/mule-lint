@@ -59,6 +59,11 @@ import {
   ReplayListenerPrimaryNodeRule,
 } from './connector/SalesforceRules';
 import { NonProductionEndpointRule } from './experimental/NonProductionEndpointRule';
+import { UnresolvedPropertyPlaceholderRule } from './standards/UnresolvedPropertyPlaceholderRule';
+import { NamespaceDependencyRule } from './governance/NamespaceDependencyRule';
+import { UndefinedErrorTypeRule } from './error-handling/UndefinedErrorTypeRule';
+import { MUnitVersionParityRule } from './testing/MUnitVersionParityRule';
+import { SensitiveConnectorLoggerRule } from './logging/SensitiveConnectorLoggerRule';
 
 // Import all rules - Logging
 import { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -205,6 +210,11 @@ export {
   ReplayListenerPrimaryNodeRule,
 } from './connector/SalesforceRules';
 export { NonProductionEndpointRule } from './experimental/NonProductionEndpointRule';
+export { UnresolvedPropertyPlaceholderRule } from './standards/UnresolvedPropertyPlaceholderRule';
+export { NamespaceDependencyRule } from './governance/NamespaceDependencyRule';
+export { UndefinedErrorTypeRule } from './error-handling/UndefinedErrorTypeRule';
+export { MUnitVersionParityRule } from './testing/MUnitVersionParityRule';
+export { SensitiveConnectorLoggerRule } from './logging/SensitiveConnectorLoggerRule';
 
 // Export individual rules - Logging
 export { LoggerCategoryRule } from './logging/LoggerCategoryRule';
@@ -278,7 +288,7 @@ export { PomValidationRule, GitHygieneRule } from './governance/GovernanceRules'
 
 /**
  * All available rules - instantiated and ready to use
- * Total: 108 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
+ * Total: 113 rules (including operations, resilience, hygiene, API-led, connector, and code quality rules)
  */
 export const ALL_RULES: Rule[] = [
   // Error Handling Rules (MULE-001, 003, 005, 007, 009)
@@ -433,6 +443,12 @@ export const ALL_RULES: Rule[] = [
   new BasicAuthApiVersionRule(), // SF-004: Salesforce Basic Authentication API Version
   new ReplayListenerPrimaryNodeRule(), // SF-005: Salesforce Replay Listener Primary Node
   new NonProductionEndpointRule(), // EXP-004: Non-Production Endpoint Shared With Production
+  // Configuration parity (CFG-004, PROJ-003, ERR-005, TEST-002, LOG-007)
+  new UnresolvedPropertyPlaceholderRule(), // CFG-004: Unresolved Property Placeholder
+  new NamespaceDependencyRule(), // PROJ-003: Namespace Without Dependency
+  new UndefinedErrorTypeRule(), // ERR-005: Undefined Error Type
+  new MUnitVersionParityRule(), // TEST-002: MUnit Version Parity
+  new SensitiveConnectorLoggerRule(), // LOG-007: Sensitive Connector Logger
 ];
 
 /**

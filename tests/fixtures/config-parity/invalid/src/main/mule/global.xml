@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:db="http://www.mulesoft.org/schema/mule/db"
+      xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties">
+    <configuration-properties file="${mule.env}.yaml" />
+    <secure-properties:config name="Secure_Properties" file="secure.yaml" key="${sample.decryption.key}" />
+
+    <http:listener-config name="HTTP_Listener_config">
+        <http:listener-connection host="${http.host}" port="${http.port}" />
+    </http:listener-config>
+
+    <http:request-config name="Partner_Request_config">
+        <http:request-connection host="${partner.host}">
+            <http:authentication>
+                <http:basic-authentication username="${partner.user}" password="${partner.password}" />
+            </http:authentication>
+        </http:request-connection>
+    </http:request-config>
+
+    <db:config name="Database_Config">
+        <db:generic-connection url="${db.url}" password="${secure::db.password}" />
+    </db:config>
+
+    <error-handler name="global-error-handler">
+        <on-error-propagate type="MULE:NOT_A_CORE_TYPE">
+            <logger level="ERROR" category="com.example.error" message="Uses ${db.password}" />
+        </on-error-propagate>
+        <on-error-propagate type="SALESFORCE:CONNECTIVITY">
+            <logger level="ERROR" category="com.example.error" message="CRM unavailable" />
+        </on-error-propagate>
+        <on-error-propagate type="APP:NEVER_RAISED">
+            <logger level="ERROR" category="com.example.error" message="Never raised" />
+        </on-error-propagate>
+    </error-handler>
+</mule>

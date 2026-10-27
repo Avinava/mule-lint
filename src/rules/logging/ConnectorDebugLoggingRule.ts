@@ -4,6 +4,7 @@ import { ValidationContext, Issue, IssueType } from '../../types';
 import { ProjectRule } from '../base/ProjectRule';
 import { parseXml } from '../../core/XmlParser';
 import { getLineNumber } from '../../core/XPathHelper';
+import { findSensitiveLoggers } from '../../core/SensitiveLogCategories';
 
 /**
  * LOG-006: Connector Debug Logging
@@ -14,6 +15,9 @@ import { getLineNumber } from '../../core/XPathHelper';
  * session identifiers, and tokens, to logs that are shared across an
  * environment. Raise them only while diagnosing, and not in a shared
  * environment.
+ *
+ * When LOG-007 is enabled in the scan, a logger that enables a category known
+ * to write credentials or session data is reported by LOG-007 instead.
  */
 export class ConnectorDebugLoggingRule extends ProjectRule {
   id = 'LOG-006';
@@ -53,10 +57,17 @@ export class ConnectorDebugLoggingRule extends ProjectRule {
       ...this.getOption<string[]>(context, 'additionalCategories', []),
     ];
     const issues: Issue[] = [];
+    // Loggers that enable a credential-writing category are LOG-007's finding,
+    // but only when LOG-007 runs in this scan; otherwise nothing would report them
+    const log007Enabled = context.projectContext?.enabledRuleIds?.includes('LOG-007') ?? false;
+    const ownedByLog007 = new Set(
+      log007Enabled ? findSensitiveLoggers(parsed.document).map((finding) => finding.element) : [],
+    );
 
     for (const logger of Array.from(parsed.document.getElementsByTagName('*'))) {
       const localName = logger.localName.toLowerCase();
       if (localName !== 'logger' && localName !== 'asynclogger') continue;
+      if (ownedByLog007.has(logger)) continue;
 
       const name = logger.getAttribute('name') ?? '';
       const level = (logger.getAttribute('level') ?? '').toLowerCase();

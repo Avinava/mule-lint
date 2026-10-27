@@ -10,8 +10,8 @@ with build and Anypoint Platform workflows; it does not copy or redefine the sta
 
 ## How they fit
 
-`mule-skills` is the workflow layer: it tells an agent how to document, review, or diagnose a Mule
-project, and it calls the other three as tools. The three tools are useful on their own from a
+`mule-skills` is the workflow layer: it tells an agent how to design, develop, test, review, release, and
+operate a Mule project, and it calls the other three as tools. The three tools are useful on their own from a
 terminal or a CI pipeline, with or without an agent.
 
 ```mermaid
@@ -27,8 +27,9 @@ flowchart TD
 ## Using mule-lint through mule-skills
 
 If you install `mule-skills`, `mule-lint` comes preconfigured as an MCP server with a pinned
-version, so you do not need to set it up separately. The `mule-development`, `mule-review`, and
-`mule-build` skills call it for static analysis. See
+version, so you do not need to set it up separately. The `mule-api-design`, `mule-development`,
+`mule-testing`, `mule-review`, and `mule-build` skills call it for static analysis and contract
+validation. See
 [the mule-skills MCP server reference](https://avinava.github.io/mule-skills/mcp-servers/).
 
 To use `mule-lint` on its own, follow [the getting-started guide](getting-started.md).

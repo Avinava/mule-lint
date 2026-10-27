@@ -1,7 +1,7 @@
 # Logging Best Practices
 
 > **Applies to:** All  
-> **Related Rules:** `MULE-006` · `MULE-301` · `MULE-303` · `LOG-001` · `LOG-004` · `LOG-006` · `HYG-001` · `SEC-006`  
+> **Related Rules:** `MULE-006` · `MULE-301` · `MULE-303` · `LOG-001` · `LOG-004` · `LOG-006` · `LOG-007` · `HYG-001` · `SEC-006`  
 > **Last Updated:** April 2026
 
 ## When to Read This

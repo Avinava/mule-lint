@@ -1,0 +1,7 @@
+http:
+  host: '0.0.0.0'
+  port: '8081'
+partner:
+  host: 'partner-dev.example.invalid'
+db:
+  url: 'jdbc:sample://db-dev.example.invalid/orders'

@@ -1,5 +1,5 @@
 {
-  "registeredRules": 108,
+  "registeredRules": 113,
   "categories": [
     {
       "category": "api-led",
@@ -19,7 +19,7 @@
     },
     {
       "category": "error-handling",
-      "count": 9
+      "count": 10
     },
     {
       "category": "experimental",
@@ -27,7 +27,7 @@
     },
     {
       "category": "governance",
-      "count": 2
+      "count": 3
     },
     {
       "category": "http",
@@ -35,7 +35,7 @@
     },
     {
       "category": "logging",
-      "count": 8
+      "count": 9
     },
     {
       "category": "naming",
@@ -55,7 +55,7 @@
     },
     {
       "category": "standards",
-      "count": 14
+      "count": 15
     },
     {
       "category": "structure",
@@ -63,21 +63,21 @@
     },
     {
       "category": "testing",
-      "count": 1
+      "count": 2
     }
   ],
   "profiles": [
     {
       "name": "baseline",
-      "count": 31
+      "count": 32
     },
     {
       "name": "recommended",
-      "count": 99
+      "count": 104
     },
     {
       "name": "strict",
-      "count": 104
+      "count": 109
     }
   ]
 }

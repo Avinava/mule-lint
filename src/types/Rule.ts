@@ -132,6 +132,11 @@ export interface ProjectContext {
   listenerEndpoints?: ListenerEndpoint[] | undefined;
   /** Global http:listener-config elements, for basePath resolution */
   listenerConfigs?: ListenerConfigInfo[] | undefined;
+  /**
+   * IDs of the rules enabled for this scan, so a rule that defers a finding to
+   * another rule defers only when that rule will report it
+   */
+  enabledRuleIds?: string[] | undefined;
 }
 
 /**

@@ -1,6 +1,6 @@
 # Behavior-Focused Testing with MUnit
 
-> **Standard:** `MSTD-TEST-001` · **Related rule:** `EXP-003`
+> **Standard:** `MSTD-TEST-001` · **Related rules:** `TEST-001` · `TEST-002`
 
 Use MUnit to demonstrate externally meaningful Mule behavior, not merely to execute processors. A
 useful test explains what enters the flow, which boundary conditions are controlled, and what a

@@ -20,7 +20,7 @@ Deployment compatibility changes over time. Use this page as a checklist, then v
 
 ## Java and Mule runtime migration
 
-MuleSoft’s current Java support matrix is the source of truth. Mule runtime 4.6 introduced Java 17 support, while later runtimes can have different requirements. `OPS-005` checks that `mule-artifact.json` `javaSpecificationVersions` includes a version the `minMuleVersion` runtime line supports. Custom connectors, custom Java, third-party libraries, policies, and proxies all need compatibility review—not only the application POM.
+MuleSoft’s current Java support matrix is the source of truth. Mule runtime 4.6 introduced Java 17 support, while later runtimes can have different requirements. `OPS-005` checks that `mule-artifact.json` `javaSpecificationVersions` includes a version the `minMuleVersion` runtime line supports. Custom connectors, custom Java, third-party libraries, policies, and proxies all need compatibility review—not only the application POM. `TEST-002` checks that MUnit is 3.1.0 or later when the project declares Java 17.
 
 A safe migration sequence:
 

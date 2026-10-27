@@ -366,14 +366,14 @@ describe('SEC-019 UnusedSensitivePropertyRule', () => {
 describe('LOG-006 ConnectorDebugLoggingRule', () => {
   const rule = new ConnectorDebugLoggingRule();
 
-  it('flags connector and HTTP wire categories at DEBUG/TRACE only', () => {
+  it('flags connector categories at DEBUG/TRACE only', () => {
     write(
       'src/main/resources/log4j2.xml',
       [
         '<Configuration><Loggers>',
-        '<AsyncLogger name="org.mule.extension.salesforce" level="DEBUG"/>',
-        '<AsyncLogger name="org.mule.service.http.impl.service.HttpMessageLogger" level="trace"/>',
-        '<AsyncLogger name="org.mule.extension.db" level="INFO"/>',
+        '<AsyncLogger name="org.mule.extension.db" level="DEBUG"/>',
+        '<AsyncLogger name="com.mulesoft.connectors.kafka" level="trace"/>',
+        '<AsyncLogger name="org.mule.extension.vm" level="INFO"/>',
         '<AsyncLogger name="com.example.app" level="DEBUG"/>',
         '</Loggers></Configuration>',
       ].join('\n'),
@@ -381,6 +381,21 @@ describe('LOG-006 ConnectorDebugLoggingRule', () => {
     const issues = rule.runProject(context());
     expect(issues.map((issue) => issue.line)).toEqual([2, 3]);
     expect(issues[0]?.relativePath).toBe('src/main/resources/log4j2.xml');
+  });
+
+  it('leaves credential-writing categories to LOG-007 when LOG-007 is enabled', () => {
+    write(
+      'src/main/resources/log4j2.xml',
+      [
+        '<Configuration><Loggers>',
+        '<AsyncLogger name="org.mule.extension.salesforce" level="DEBUG"/>',
+        '<AsyncLogger name="org.mule.service.http.impl.service.HttpMessageLogger" level="trace"/>',
+        '</Loggers></Configuration>',
+      ].join('\n'),
+    );
+    expect(rule.runProject(context({}, { enabledRuleIds: ['LOG-006', 'LOG-007'] }))).toHaveLength(
+      0,
+    );
   });
 
   it('accepts additional categories', () => {

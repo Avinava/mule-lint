@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/logo.svg" alt="mule-lint" width="560" />
+  <img src="docs/assets/logo.svg" alt="Mule Lint: static analysis and configuration parity for Mule 4" width="640" />
 </p>
 
 <p align="center">
@@ -8,7 +8,7 @@
   <a href="https://github.com/Avinava/mule-lint/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/@sfdxy/mule-lint?style=flat-square&color=818cf8" alt="License" /></a>
 </p>
 
-<p align="center"><strong>Find Mule 4 problems before deployment—locally, in CI, or with an AI coding agent.</strong></p>
+<p align="center"><strong>Find Mule 4 problems before deployment: locally, in CI, or with an AI coding agent.</strong></p>
 
 mule-lint scans Mule XML, DataWeave, YAML properties, and project structure. It needs no Anypoint credentials and does not connect to your MuleSoft environments. You need Node.js to run the tool, but you do not need to know JavaScript or Node development.
 
@@ -30,7 +30,7 @@ to perform the setup yourself.
 ## First run
 
 1. Install [Node.js 20 or newer](https://nodejs.org/en/download).
-2. Open a terminal in the root of a Mule project—the directory containing `pom.xml`.
+2. Open a terminal in the root of a Mule project, the directory containing `pom.xml`.
 3. Run:
 
 ```bash
@@ -100,6 +100,23 @@ The [sample project](examples/sample-orders-system-api) produces the documentati
 
 See [output formats](docs/output-formats.md) for real examples, exit codes, and `--baseline` for reporting only new issues.
 
+## What's new in 2.2
+
+Five configuration parity checks catch what otherwise fails at build, deploy, or startup:
+
+- **Unresolved placeholders** (`CFG-004`): a `${key}` no loaded properties file defines, a key
+  missing from one `${mule.env}` environment file, or a key read both with and without `secure::`.
+- **Namespace without dependency** (`PROJ-003`): a connector used in Mule XML but missing from
+  `pom.xml`.
+- **Undefined error types** (`ERR-005`): an unknown `MULE:` type, an error namespace of a connector
+  the project does not use, or a custom type caught but never raised.
+- **MUnit version parity** (`TEST-002`): plugin, runner, and tools on one version, and 3.1.0 or
+  later on Java 17.
+- **Sensitive connector loggers** (`LOG-007`): `log4j2.xml` categories that write credentials or
+  session data, set to DEBUG or TRACE.
+
+Findings name keys, types, and files, never values.
+
 ## What's new in 2.1
 
 - **Both secret models are supported.** A credential can be an encrypted file value referenced as
@@ -125,6 +142,8 @@ Each rule is documented in the [rules catalog](https://avinava.github.io/mule-li
 - [Configuration](docs/configuration.md)
 - [MuleSoft practices handbook](docs/best-practices/mulesoft-best-practices.md)
 - [MCP setup for coding agents](docs/mcp-design.md)
+- [Ecosystem](docs/ecosystem.md): how mule-lint fits with [mule-build](https://avinava.github.io/mule-build/),
+  [anypoint-connect](https://avinava.github.io/anypoint-connect/), and [mule-skills](https://avinava.github.io/mule-skills/)
 - [Contributor guide](CONTRIBUTING.md)
 
 The searchable site is at <https://avinava.github.io/mule-lint/>.
@@ -135,7 +154,7 @@ Pin the package version so local and CI scans use the same rules:
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@2.1.1 . --profile recommended --fail-on-warning
+  run: npx -y @sfdxy/mule-lint@2.2.0 . --profile recommended --fail-on-warning
 ```
 
 For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integration](docs/best-practices/ci-cd.md).
@@ -145,7 +164,7 @@ For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integrat
 mule-lint includes a local MCP server with tools for full-project analysis, snippet validation, rule explanations, XML formatting, and API contract validation:
 
 ```bash
-npx -y @sfdxy/mule-lint@2.1.1 mcp
+npx -y @sfdxy/mule-lint@2.2.0 mcp
 ```
 
 It uses standard input/output and needs no credentials. Host-specific setup is in the [MCP guide](docs/mcp-design.md).

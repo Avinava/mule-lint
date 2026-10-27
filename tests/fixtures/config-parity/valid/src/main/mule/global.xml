@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:db="http://www.mulesoft.org/schema/mule/db"
+      xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+    <configuration-properties file="config/${mule.env}.yaml" doc:name="Environment Properties" />
+    <configuration-properties file="config/common.properties" doc:name="Common Properties" />
+    <secure-properties:config name="Secure_Properties" file="config/secure-${mule.env}.yaml" key="${sample.decryption.key}" />
+    <global-property name="app.region" value="local" />
+
+    <http:listener-config name="HTTP_Listener_config">
+        <http:listener-connection host="${http.host}" port="${http.port}" />
+    </http:listener-config>
+
+    <http:request-config name="Partner_Request_config">
+        <http:request-connection host="${partner.host}">
+            <http:authentication>
+                <http:basic-authentication username="${partner.user}" password="${partner.password}" />
+            </http:authentication>
+        </http:request-connection>
+    </http:request-config>
+
+    <db:config name="Database_Config">
+        <db:generic-connection url="${db.url}" user="${db.user}" password="${secure::db.password}" />
+    </db:config>
+
+    <error-handler name="global-error-handler">
+        <on-error-propagate type="HTTP:CONNECTIVITY, DB:CONNECTIVITY">
+            <logger level="ERROR" category="com.example.error" message="Backend unavailable in ${app.region}" />
+        </on-error-propagate>
+        <on-error-propagate type="APP:ORDER_NOT_FOUND">
+            <logger level="WARN" category="com.example.error" message="Order not found" />
+        </on-error-propagate>
+        <on-error-propagate type="ORDERS:INVALID">
+            <logger level="WARN" category="com.example.error" message="Invalid order" />
+        </on-error-propagate>
+        <on-error-propagate type="ANY">
+            <logger level="ERROR" category="com.example.error" message="Unexpected error" />
+        </on-error-propagate>
+    </error-handler>
+
+    <flow name="get-order-flow">
+        <http:listener config-ref="HTTP_Listener_config" path="/orders" />
+        <db:select config-ref="Database_Config">
+            <error-mapping sourceType="DB:QUERY_EXECUTION" targetType="ORDERS:INVALID" />
+            <db:sql>SELECT 1</db:sql>
+        </db:select>
+        <raise-error type="APP:ORDER_NOT_FOUND" description="No order" />
+    </flow>
+</mule>

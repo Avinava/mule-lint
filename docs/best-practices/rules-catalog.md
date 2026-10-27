@@ -1,7 +1,7 @@
 # Rules Catalog
 
-> **Version:** 2.1.1
-> **Total Rules:** 108 implemented across 16 runtime categories
+> **Version:** 2.2.0
+> **Total Rules:** 113 implemented across 16 runtime categories
 > **Last Updated:** October 2026
 
 ---
@@ -35,26 +35,26 @@
 The catalog uses documentation families for navigation; several families share the same runtime
 `RuleCategory` value.
 
-| Family         | Prefix                                                       | Count | Description                                       |
-| -------------- | ------------------------------------------------------------ | ----- | ------------------------------------------------- |
-| Error Handling | MULE-001/003/005/007/009, ERR-001–004                        | 9     | Error handler configuration and best practices    |
-| Naming         | MULE-002/101/102                                             | 3     | Naming conventions for flows and variables        |
-| Security       | MULE-004/201/202, SEC-002–004/006–019, CFG-003, YAML-004     | 22    | Security vulnerabilities, TLS, transport, secrets |
-| Logging        | MULE-006/301/303, LOG-001/004/005/006, HYG-001               | 8     | Logging standards, structured logging, hygiene    |
-| HTTP           | MULE-401/402/403, HTTP-004/005                               | 5     | HTTP configuration, headers, responses            |
-| Performance    | MULE-501/502/503, PERF-002/003, RES-001/002                  | 7     | Performance anti-patterns and resilience          |
-| Documentation  | MULE-601/604, DOC-001                                        | 3     | Documentation requirements                        |
-| Standards      | MULE-008/010/701, OPS-001–003, API-005, CFG-001/002, STD-001 | 10    | Coding standards and operations                   |
-| Operations     | HYG-004/005, OPS-004/005, RES-003, SF-001–005                | 10    | Runtime operability and connector behaviour       |
-| Complexity     | MULE-801/805                                                 | 2     | Code complexity and flow length                   |
-| Structure      | MULE-802/803/804                                             | 3     | Project structure                                 |
-| YAML           | YAML-001/003                                                 | 2     | YAML configuration validation                     |
-| DataWeave      | DW-001–005                                                   | 5     | DataWeave file validation                         |
-| API-Led        | API-001–004/006–011                                          | 10    | API-Led patterns, contracts, interface controls   |
-| Governance     | PROJ-001/002                                                 | 2     | POM and Git hygiene                               |
-| Code Hygiene   | HYG-002/003                                                  | 2     | Commented code and unused flows                   |
-| Testing        | TEST-001                                                     | 1     | MUnit test presence                               |
-| Experimental   | EXP-001–004                                                  | 4     | Opt-in rules for evaluation (EXP-003 deprecated)  |
+| Family         | Prefix                                                           | Count | Description                                       |
+| -------------- | ---------------------------------------------------------------- | ----- | ------------------------------------------------- |
+| Error Handling | MULE-001/003/005/007/009, ERR-001–005                            | 10    | Error handler configuration and best practices    |
+| Naming         | MULE-002/101/102                                                 | 3     | Naming conventions for flows and variables        |
+| Security       | MULE-004/201/202, SEC-002–004/006–019, CFG-003, YAML-004         | 22    | Security vulnerabilities, TLS, transport, secrets |
+| Logging        | MULE-006/301/303, LOG-001/004–007, HYG-001                       | 9     | Logging standards, structured logging, hygiene    |
+| HTTP           | MULE-401/402/403, HTTP-004/005                                   | 5     | HTTP configuration, headers, responses            |
+| Performance    | MULE-501/502/503, PERF-002/003, RES-001/002                      | 7     | Performance anti-patterns and resilience          |
+| Documentation  | MULE-601/604, DOC-001                                            | 3     | Documentation requirements                        |
+| Standards      | MULE-008/010/701, OPS-001–003, API-005, CFG-001/002/004, STD-001 | 11    | Coding standards and operations                   |
+| Operations     | HYG-004/005, OPS-004/005, RES-003, SF-001–005                    | 10    | Runtime operability and connector behaviour       |
+| Complexity     | MULE-801/805                                                     | 2     | Code complexity and flow length                   |
+| Structure      | MULE-802/803/804                                                 | 3     | Project structure                                 |
+| YAML           | YAML-001/003                                                     | 2     | YAML configuration validation                     |
+| DataWeave      | DW-001–005                                                       | 5     | DataWeave file validation                         |
+| API-Led        | API-001–004/006–011                                              | 10    | API-Led patterns, contracts, interface controls   |
+| Governance     | PROJ-001–003                                                     | 3     | POM, dependencies, and Git hygiene                |
+| Code Hygiene   | HYG-002/003                                                      | 2     | Commented code and unused flows                   |
+| Testing        | TEST-001/002                                                     | 2     | MUnit test presence and version parity            |
+| Experimental   | EXP-001–004                                                      | 4     | Opt-in rules for evaluation (EXP-003 deprecated)  |
 
 > **Note:** A rule's identifier prefix and its runtime `category` do not always agree — `RES-001`
 > reports as `performance`, and `YAML-001` reports as `standards`. Configuration and quality gates
@@ -295,6 +295,58 @@ The DWL file at `src/main/resources/dwl/error-response.dwl` will be checked for 
     <on-error-propagate type="HTTP:CONNECTIVITY">...</on-error-propagate>
     <on-error-propagate type="ANY">...</on-error-propagate>
 </error-handler>
+```
+
+---
+
+### ERR-005: Undefined Error Type
+
+| Property       | Value          |
+| -------------- | -------------- |
+| **Severity**   | Error          |
+| **Category**   | Error Handling |
+| **Issue Type** | Bug            |
+| **Fixable**    | No             |
+
+**Description:** Mule resolves every error type an error handler or error mapping names when the
+application deploys, and the deployment fails when a type does not exist. Caught types are read
+from `on-error-continue` and `on-error-propagate` `type` (comma-separated lists included) and
+`error-mapping` `sourceType`; raised types from `raise-error` `type` and `error-mapping`
+`targetType`. Reported once per type:
+
+- a `MULE:` type, or a type with no namespace, that is not a core Mule error type such as `ANY`,
+  `CONNECTIVITY`, `EXPRESSION`, `RETRY_EXHAUSTED`, or `SOURCE_RESPONSE_SEND`;
+- a connector error namespace such as `HTTP:`, `DB:`, or `SALESFORCE:` when no element of that
+  connector is used in `src/main/mule` and `pom.xml` declares no dependency for it (a `test`-scoped
+  dependency does not count). Judged only when the dependency list is fully visible: not without a
+  `pom.xml`, not when it declares a `<parent>`, and not when a dependency's artifactId is a property
+  the POM does not define;
+- a custom type, in `APP` or a namespace the project itself raises or maps to, that is caught but
+  never raised by `raise-error` or produced by an `error-mapping` `targetType`. `APP:*` passes when
+  any `APP` type is raised.
+
+Namespaces that are none of these, for example an XML SDK or custom module's, may come from a
+dependency and are not judged, and `*:TYPE` wildcards are skipped. Connector namespaces and core
+types each come from one table in the source (`MULE_MODULES` and `CORE_ERROR_TYPES`), following the
+[Mule error types reference](https://docs.mulesoft.com/mule-runtime/latest/mule-error-concept),
+verified 2026-10-27.
+
+**Options:**
+
+| Option              | Default | Description                                |
+| ------------------- | ------- | ------------------------------------------ |
+| `ignoredNamespaces` | `[]`    | Error namespaces to skip, case-insensitive |
+
+**Example:**
+
+```xml
+<!-- ❌ Bad - never raised anywhere, so the application fails to deploy -->
+<on-error-propagate type="APP:ORDER_NOT_FOUND">...</on-error-propagate>
+
+<!-- ✅ Good -->
+<raise-error type="APP:ORDER_NOT_FOUND" description="No order for the requested ID" />
+...
+<on-error-propagate type="APP:ORDER_NOT_FOUND">...</on-error-propagate>
 ```
 
 ---
@@ -1013,6 +1065,58 @@ particular connector logs; it flags the level.
 <AsyncLogger name="org.mule.extension.salesforce" level="INFO" />
 ```
 
+When LOG-007 is enabled in the same scan, a logger that enables a category LOG-007 lists, such as
+`org.mule.extension.salesforce` or `HttpMessageLogger`, is reported by LOG-007 instead. With LOG-007
+disabled, LOG-006 still reports it.
+
+---
+
+### LOG-007: Sensitive Connector Logger
+
+| Property       | Value         |
+| -------------- | ------------- |
+| **Severity**   | Warning       |
+| **Category**   | Logging       |
+| **Issue Type** | Vulnerability |
+| **Fixable**    | No            |
+
+**Description:** `src/main/resources/log4j2.xml` makes a category known to write credentials or
+session data verbose (`DEBUG`, `TRACE`, or `ALL`). The categories come from one table:
+
+| Category                                                        | Can write                                       |
+| --------------------------------------------------------------- | ----------------------------------------------- |
+| `org.cometd`                                                    | Bayeux handshake and session identifiers        |
+| `org.eclipse.jetty.client`                                      | HTTP request headers, including Authorization   |
+| `com.mulesoft.connectors.salesforce`                            | Salesforce session identifiers and OAuth tokens |
+| `org.mule.extension.salesforce`                                 | Salesforce session identifiers and OAuth tokens |
+| `org.mule.service.http.impl.service.HttpMessageLogger`          | HTTP wire content, including Authorization      |
+| `httpclient.wire`                                               | HTTP wire content, including Authorization      |
+| `org.apache.http.wire`, `org.apache.hc.client5.http.wire`       | HTTP wire content, including Authorization      |
+| `org.apache.http.headers`, `org.apache.hc.client5.http.headers` | HTTP headers, including Authorization           |
+
+The level is resolved the way log4j2 resolves it: the most specific configured logger that is the
+category or one of its ancestors wins, so `org.apache.http` at `DEBUG` enables
+`org.apache.http.wire` unless `org.apache.http.wire` is configured at `INFO`, and a `DEBUG` root
+logger enables every category no specific logger overrides. A verbose logger below a listed
+category, such as `org.cometd.client`, is reported too. One finding per configured logger names the
+categories it enables; values are never read.
+
+**Options:**
+
+| Option                 | Default | Description                               |
+| ---------------------- | ------- | ----------------------------------------- |
+| `additionalCategories` | `[]`    | Extra logger names that write credentials |
+
+**Example:**
+
+```xml
+<!-- ❌ Bad - enables org.apache.http.wire and org.apache.http.headers -->
+<AsyncLogger name="org.apache.http" level="DEBUG" />
+
+<!-- ✅ Good -->
+<AsyncLogger name="org.apache.http" level="INFO" />
+```
+
 ---
 
 ---
@@ -1405,7 +1509,10 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 | **Category** | Standards |
 | **Fixable**  | No        |
 
-**Description:** Property placeholders referenced in XML files (`${property.name}`) should have corresponding entries in the project's YAML configuration files. Detects potential runtime failures from missing property definitions.
+**Description:** When `src/main/resources` holds environment-named YAML files (`dev.yaml`,
+`prod.yaml`, `qa.yaml`, and similar), the project must have both `dev` and `prod` files, and when it
+uses `secure-*.yaml` files, both `secure-dev.yaml` and `secure-prod.yaml`. Whether each referenced
+key is defined in those files is CFG-004's check.
 
 ---
 
@@ -1444,6 +1551,113 @@ When headers are set via a DataWeave expression (patterns B/C) but `Content-Type
 **Why This Matters:** The finding names the key and the line but never the value, so a report can be shared without leaking the secret it found.
 
 > **Note:** `.yaml` and `.yml` files are owned by YAML-004; the same file is never reported by both rules.
+
+---
+
+### CFG-004: Unresolved Property Placeholder
+
+| Property       | Value     |
+| -------------- | --------- |
+| **Severity**   | Warning   |
+| **Category**   | Standards |
+| **Issue Type** | Bug       |
+| **Fixable**    | No        |
+
+**Description:** A `${key}` or `${secure::key}` in Mule XML under `src/main/mule` resolves only when
+a file loaded by `<configuration-properties>` or `<secure-properties:config>` defines the key, a
+`<global-property>` declares it, `mule-artifact.json` `secureProperties` lists it as a platform
+secure property, or the runtime supplies it. A key that resolves nowhere stops the application at
+startup. Reported once per key and form, at its first reference:
+
+- a plain `${key}` that no loaded file, global property, or platform key defines;
+- a plain `${key}` defined only in a secure properties file, which resolves only as
+  `${secure::key}`;
+- a key that some combination of placeholder values leaves undefined, for example present in
+  `config/eu/dev.yaml` and missing from `config/eu/prod.yaml` under
+  `config/${region}/${mule.env}.yaml`, or, with `env/${mule.env}.yaml` and `region/${region}.yaml`
+  loaded together, defined in `env/dev.yaml` and `region/eu.yaml` only, so `mule.env=prod, region=us`
+  selects no file that defines it;
+- a `${secure::key}` defined in a scanned file, but not one `<secure-properties:config>` loads.
+
+A key read both as `${key}` and as `${secure::key}` is judged on each side: when the plain and the
+secure files both define it there is no finding, and otherwise only the side that does not resolve
+is reported, with a message naming both forms.
+
+File patterns are matched against `src/main/resources`, and every `${...}` in a path is bound
+separately. The values each placeholder takes in the located files are crossed across all patterned
+loads of the same resolution path, and each deployable combination (one where every load selects a
+file) must select at least one file defining the key. The finding names the files and the
+combinations that fail, keeping only the placeholders that matter: a key missing only from the
+`prod` files is reported `when mule.env=prod`, whatever the region. When the cross product exceeds
+128 combinations, one info finding says the combination check was limited, and keys are still
+checked for being defined somewhere. Each file belongs to the most specific pattern
+matching it, so `${mule.env}.yaml` does not claim `secure-dev.yaml` when `secure-${mule.env}.yaml`
+loads it. A key in an unpatterned file counts for every environment. When a load names a file that
+is not in the repository, for example one under `${app.home}`, keys its resolution path does not
+otherwise define are not judged, because that file may define them; keys the located files define
+are still checked across environments. References inside XML comments are ignored; references in
+CDATA, such as `p('key')` in inline DataWeave, are read. Nested placeholders, DataWeave expressions,
+and the `<secure-properties:config>` decryption `key` (supplied at startup) are not judged. A
+`${secure::key}` with no `<secure-properties:config>` or no definition at all is SEC-018's finding,
+and a platform key referenced with `secure::` is SEC-017's.
+
+Keys that resolve on every deployment target are allowed by default: `mule.env`, `mule.key`,
+`mule.home`, `mule.base`, `mule.clusterId`, `mule.nodeId`, `app.name`, `app.home`,
+`file.encoding`, `file.separator`, `line.separator`, `path.separator`, and keys starting with
+`anypoint.platform.`, `java.`, `user.`, or `os.`. Messages name keys and files, never values.
+
+CloudHub and CloudHub 2.0 reserve `http.port`, `https.port`, `http.private.port`, and
+`https.private.port` and set their values
+([CloudHub](https://docs.mulesoft.com/cloudhub/cloudhub-manage-props),
+[CloudHub 2.0](https://docs.mulesoft.com/cloudhub-2/ch2-manage-props), verified 2026-10-27);
+Runtime Fabric and customer-hosted runtimes document no such reserved properties. The rule
+therefore treats these four keys as supplied only on a CloudHub target:
+
+| Deployment target                                                                     | Reserved ports supplied |
+| ------------------------------------------------------------------------------------- | ----------------------- |
+| mule-maven-plugin `cloudHubDeployment` or `cloudhub2Deployment`, or both              | Yes                     |
+| `runtimeFabricDeployment`, `standaloneDeployment`, `armDeployment`, `agentDeployment` | No                      |
+| A CloudHub deployment alongside any other target                                      | No                      |
+| No deployment declared                                                                | No                      |
+
+Deployments are read from every `mule-maven-plugin` in `pom.xml`, including those in `<profiles>`
+and `<pluginManagement>`. The `deploymentTarget` option overrides this inference; an unrecognized
+value is ignored. When the ports are not supplied, the finding says so and names `allowedKeys` as
+the fix for a target that sets them another way. Any Runtime Manager property the deployment sets
+belongs in `allowedKeys` too:
+
+```json
+{
+  "rules": {
+    "CFG-004": { "options": { "deploymentTarget": "cloudhub2", "allowedKeys": ["deploy.region"] } }
+  }
+}
+```
+
+**Options:**
+
+| Option             | Default    | Description                                                                         |
+| ------------------ | ---------- | ----------------------------------------------------------------------------------- |
+| `allowedKeys`      | `[]`       | Extra full key names the deployment target supplies                                 |
+| `allowedPrefixes`  | `[]`       | Extra key prefixes the deployment target supplies                                   |
+| `deploymentTarget` | (inferred) | `cloudhub`, `cloudhub2`, `rtf`, or `standalone`; overrides the POM deployment check |
+
+**Example:**
+
+```xml
+<configuration-properties file="config/${mule.env}.yaml" />
+
+<!-- ❌ Bad - partner.host is in config/dev.yaml but not config/prod.yaml -->
+<http:request-connection host="${partner.host}" />
+
+<!-- ❌ Bad - only the secure file defines db.password, so the plain reference fails -->
+<db:generic-connection password="${secure::db.password}" />
+<db:generic-connection password="${db.password}" />
+```
+
+```json
+{ "rules": { "CFG-004": { "options": { "allowedKeys": ["deploy.region"] } } } }
+```
 
 ---
 
@@ -2247,6 +2461,57 @@ Source: [MuleSoft Java support](https://docs.mulesoft.com/general/java-support),
 
 ---
 
+### PROJ-003: Namespace Without Dependency
+
+| Property       | Value      |
+| -------------- | ---------- |
+| **Severity**   | Error      |
+| **Category**   | Governance |
+| **Issue Type** | Bug        |
+| **Fixable**    | No         |
+
+**Description:** Mule XML under `src/main/mule` uses elements of a connector or module whose Maven
+dependency `pom.xml` does not declare, so the application fails to build or deploy. Reported once
+per namespace, at its first element. Only namespaces with at least one element are checked, so an
+unused declaration left by Studio is not reported.
+
+The namespace-to-artifactId map is one table in the source (`MULE_MODULES`), covering HTTP,
+Database, Salesforce, VM, Anypoint MQ, Object Store, File, FTP, SFTP, Email, JMS, Sockets, Web
+Service Consumer, Kafka, LDAP, Cryptography (`.../schema/mule/cryptography`,
+`mule-cryptography-module`), Validation, APIKit, APIKit for SOAP, JSON, XML, Java, Scripting,
+Compression, Secure Configuration Properties, OAuth, Spring, and Tracing. Runtime namespaces
+(`core`, `ee/core`, `documentation`, `batch`, `tls`, `api-gateway`) need no dependency, and MUnit
+namespaces belong to `src/test`. Any listed artifactId satisfies the check, whatever its groupId,
+except a `test`-scoped dependency, which is on the MUnit classpath only. Without a `pom.xml` the rule
+reports nothing. When the POM declares a `<parent>`, the dependency may be inherited, so the finding
+is a warning; when a dependency's artifactId is a property the POM does not define, it may be the
+connector, so the finding is info.
+
+**Options:**
+
+| Option              | Default | Description                 |
+| ------------------- | ------- | --------------------------- |
+| `ignoredNamespaces` | `[]`    | Full namespace URIs to skip |
+
+**Example:**
+
+```xml
+<!-- ❌ Bad - pom.xml has no mule-db-connector dependency -->
+<db:config name="Database_Config">...</db:config>
+```
+
+```xml
+<!-- ✅ Good - pom.xml -->
+<dependency>
+    <groupId>org.mule.connectors</groupId>
+    <artifactId>mule-db-connector</artifactId>
+    <version>1.14.0</version>
+    <classifier>mule-plugin</classifier>
+</dependency>
+```
+
+---
+
 ## Testing Rules
 
 ### TEST-001: MUnit Executable Test Presence
@@ -2262,6 +2527,57 @@ non-ignored MUnit test in `src/test/munit`. Empty directories, malformed suites,
 namespaces, and ignored-only suites do not satisfy the check. Libraries are skipped.
 
 **Profiles:** `recommended`, `strict`. Graduated from EXP-003 in 1.31.0.
+
+---
+
+### TEST-002: MUnit Version Parity
+
+| Property       | Value   |
+| -------------- | ------- |
+| **Severity**   | Warning |
+| **Category**   | Testing |
+| **Issue Type** | Bug     |
+| **Fixable**    | No      |
+
+**Description:** The `munit-maven-plugin`, `munit-runner`, and `munit-tools` are released together
+and must share one version. The plugin version (or the `munit.version` property when the plugin
+has none) is the reference; each dependency with a different version is reported at its line in
+`pom.xml`. `${...}` versions are resolved from `<properties>`, and an artifact without `<version>`
+takes it from `<dependencyManagement>` or `<pluginManagement>`, reported at that entry's line.
+Versions compare with Maven's `ComparableVersion` ordering, every qualifier component included, so
+`3.1.0-SNAPSHOT` differs from `3.1.0`, `3.1.0-rc1-1` differs from `3.1.0-rc1-2`, and `1.0`,
+`1.0.0`, and `1-ga` are equal.
+
+A value that is not valid version syntax, or that is resolved through any property named like a
+secret at any depth (for example `${munit.version}` defined as `${anypoint.password}`), is not
+judged and is never printed. An unresolved version is not judged either.
+
+When `mule-artifact.json` `javaSpecificationVersions` includes `17`, or a POM property
+(`java.version`, `maven.compiler.release`, `maven.compiler.source`, `maven.compiler.target`) is
+`17`, each MUnit artifact below 3.1.0 in Maven order is reported, including pre-releases such as
+`3.1.0-SNAPSHOT` and `3.1.0-rc1` (a numeric build such as `3.1.0-1` sorts after `3.1.0`, as in Maven):
+MUnit 3.1.0 (released 2024-01-07) is the first
+release whose compatibility table lists Java 17. Source:
+[MUnit 3.1.0 release notes](https://archive.docs.mulesoft.com/release-notes/munit/munit-3.1.0-release-notes),
+verified 2026-10-27.
+
+**Example:**
+
+```xml
+<!-- ✅ Good - one property drives all three -->
+<properties>
+    <munit.version>3.1.0</munit.version>
+</properties>
+...
+<artifactId>munit-maven-plugin</artifactId>
+<version>${munit.version}</version>
+...
+<artifactId>munit-runner</artifactId>
+<version>${munit.version}</version>
+...
+<artifactId>munit-tools</artifactId>
+<version>${munit.version}</version>
+```
 
 ---
 
@@ -2332,11 +2648,11 @@ ignored.
 
 <!-- Generated from the rule registry; regenerate rather than editing by hand. -->
 
-| Severity | Count | Rules                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| -------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Error    | 18    | CFG-003, DW-004, ERR-004, HYG-004, LOG-004, MULE-003, MULE-004, MULE-201, MULE-202, PROJ-001, SEC-002, SEC-006, SEC-007, SEC-008, SEC-009, SEC-012, SEC-017, YAML-004                                                                                                                                                                                                                                                                                                                                            |
-| Warning  | 53    | API-004, API-006, API-008, API-009, API-010, CFG-002, DW-001, ERR-002, HYG-001, HYG-003, LOG-005, MULE-001, MULE-002, MULE-005, MULE-006, MULE-007, MULE-008, MULE-009, MULE-101, MULE-102, MULE-301, MULE-303, MULE-402, MULE-403, MULE-502, MULE-503, MULE-604, MULE-701, MULE-801, MULE-802, MULE-803, MULE-804, OPS-002, OPS-003, OPS-005, PERF-002, PERF-003, PROJ-002, RES-001, RES-002, SEC-003, SEC-004, SEC-010, SEC-011, SEC-013, SEC-014, SEC-016, SEC-018, SEC-019, SF-001, SF-003, SF-004, YAML-001 |
-| Info     | 37    | API-001, API-002, API-003, API-005, API-007, API-011, CFG-001, DOC-001, DW-002, DW-003, DW-005, ERR-001, ERR-003, EXP-001, EXP-002, EXP-003, EXP-004, HTTP-004, HTTP-005, HYG-002, HYG-005, LOG-001, LOG-006, MULE-010, MULE-401, MULE-501, MULE-601, MULE-805, OPS-001, OPS-004, RES-003, SEC-015, SF-002, SF-005, STD-001, TEST-001, YAML-003                                                                                                                                                                  |
+| Severity | Count | Rules                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| -------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Error    | 20    | CFG-003, DW-004, ERR-004, ERR-005, HYG-004, LOG-004, MULE-003, MULE-004, MULE-201, MULE-202, PROJ-001, PROJ-003, SEC-002, SEC-006, SEC-007, SEC-008, SEC-009, SEC-012, SEC-017, YAML-004                                                                                                                                                                                                                                                                                                                                                     |
+| Warning  | 56    | API-004, API-006, API-008, API-009, API-010, CFG-002, CFG-004, DW-001, ERR-002, HYG-001, HYG-003, LOG-005, LOG-007, MULE-001, MULE-002, MULE-005, MULE-006, MULE-007, MULE-008, MULE-009, MULE-101, MULE-102, MULE-301, MULE-303, MULE-402, MULE-403, MULE-502, MULE-503, MULE-604, MULE-701, MULE-801, MULE-802, MULE-803, MULE-804, OPS-002, OPS-003, OPS-005, PERF-002, PERF-003, PROJ-002, RES-001, RES-002, SEC-003, SEC-004, SEC-010, SEC-011, SEC-013, SEC-014, SEC-016, SEC-018, SEC-019, SF-001, SF-003, SF-004, TEST-002, YAML-001 |
+| Info     | 37    | API-001, API-002, API-003, API-005, API-007, API-011, CFG-001, DOC-001, DW-002, DW-003, DW-005, ERR-001, ERR-003, EXP-001, EXP-002, EXP-003, EXP-004, HTTP-004, HTTP-005, HYG-002, HYG-005, LOG-001, LOG-006, MULE-010, MULE-401, MULE-501, MULE-601, MULE-805, OPS-001, OPS-004, RES-003, SEC-015, SF-002, SF-005, STD-001, TEST-001, YAML-003                                                                                                                                                                                              |
 
 ---
 

@@ -1,7 +1,7 @@
 # Security Best Practices
 
 > **Applies to:** All  
-> **Related Rules:** `MULE-004` · `MULE-201` · `MULE-202` · `SEC-002` – `SEC-019` · `CFG-003` · `YAML-004` · `LOG-004` · `LOG-006`  
+> **Related Rules:** `MULE-004` · `MULE-201` · `MULE-202` · `SEC-002` – `SEC-019` · `CFG-003` · `CFG-004` · `YAML-004` · `LOG-004` · `LOG-006` · `LOG-007`  
 > **Last Updated:** October 2026
 
 ## When to Read This
@@ -86,6 +86,10 @@ What lint checks:
 - `SEC-017`: a platform secure property is not referenced with `secure::`.
 - `SEC-018`: every `${secure::key}` has a `<secure-properties:config>` and a definition.
 - `SEC-019`: no sensitive key is defined but never referenced.
+- `CFG-004`: each `${key}` resolves from a file loaded by `configuration-properties` or
+  `secure-properties:config` in every environment, a `<global-property>`, a platform secure
+  property in `mule-artifact.json`, or a runtime-supplied key (plus any keys you allow for your
+  deployment target), and a key read both with and without `secure::` resolves on each side.
 
 ### Pattern 3: TLS Configuration
 
@@ -187,7 +191,7 @@ config/
 
 - [ ] All credentials use `${secure::...}` (encrypted file) or a declared platform secure property `${key}`
 - [ ] No platform secure property is referenced with `secure::`
-- [ ] Connector and HTTP wire-logging categories are not committed at DEBUG/TRACE (`LOG-006`)
+- [ ] Connector and HTTP wire-logging categories are not committed at DEBUG/TRACE (`LOG-006`, `LOG-007`)
 - [ ] Secure properties encryption key is externalized (`${secure.key}`)
 - [ ] Encryption algorithm is AES or Blowfish (not DES)
 - [ ] TLS contexts use TLSv1.2+ only — no SSLv3, TLSv1.0, TLSv1.1

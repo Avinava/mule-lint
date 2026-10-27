@@ -1,4 +1,5 @@
 <div class="hero">
+  <p class="hero__banner"><img src="assets/logo.svg" alt="Mule Lint: static analysis and configuration parity for Mule 4" width="560" /></p>
   <div class="hero__eyebrow">Mule 4 static analysis</div>
   <h1>See project risks before deployment</h1>
   <p>Run one local command from your Mule project root. No Anypoint credentials, no platform access, and no JavaScript knowledge required.</p>
@@ -66,6 +67,8 @@ Every screenshot and output example comes from the repository’s [sample Orders
 - Mule XML: flows, error handlers, connectors, logging, naming, and cross-file references
 - DataWeave: maintainability, duplication, and compatibility patterns
 - YAML: environment coverage, property naming, and plaintext secrets
+- Configuration parity: unresolved `${...}` placeholders, connectors missing from `pom.xml`,
+  undefined error types, MUnit version alignment, and credential-writing connector loggers
 - Project structure: Maven setup, common folders, and source-control hygiene
 - RAML and OpenAPI: a separate `api validate` command for contract conformance
 
