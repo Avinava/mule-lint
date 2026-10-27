@@ -86,8 +86,10 @@ What lint checks:
 - `SEC-017`: a platform secure property is not referenced with `secure::`.
 - `SEC-018`: every `${secure::key}` has a `<secure-properties:config>` and a definition.
 - `SEC-019`: no sensitive key is defined but never referenced.
-- `CFG-004`: every `${key}` resolves from a loaded file in every environment, and no key is read
-  both with and without `secure::`.
+- `CFG-004`: each `${key}` resolves from a file loaded by `configuration-properties` or
+  `secure-properties:config` in every environment, a `<global-property>`, a platform secure
+  property in `mule-artifact.json`, or a runtime-supplied key (plus any keys you allow for your
+  deployment target), and a key read both with and without `secure::` resolves on each side.
 
 ### Pattern 3: TLS Configuration
 

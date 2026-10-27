@@ -7,29 +7,44 @@
 - New stable rules join profiles: ERR-005 (`baseline`), CFG-004, PROJ-003, TEST-002, and LOG-007
   (`recommended`). Review their findings before tightening gates; CFG-004 and PROJ-003 are the most
   likely to report on existing projects.
-- LOG-006 no longer reports a logger that enables a credential-writing category (for example
-  `org.mule.extension.salesforce` or `HttpMessageLogger`); LOG-007 reports it instead, as a warning.
-  Baselines that recorded those LOG-006 findings will see them as new LOG-007 findings.
-- CFG-004 allows keys the deployment supplies, such as Runtime Manager properties, only through its
-  `allowedKeys` and `allowedPrefixes` options. Add them there rather than disabling the rule.
+- When LOG-007 is enabled, LOG-006 no longer reports a logger that enables a credential-writing
+  category (for example `org.mule.extension.salesforce` or `HttpMessageLogger`); LOG-007 reports it
+  instead, as a warning. Baselines that recorded those LOG-006 findings will see them as new LOG-007
+  findings. With LOG-007 disabled, LOG-006 reports them as before.
+- CFG-004's default allowlist covers only keys every deployment target resolves. The CloudHub
+  reserved ports (`http.port`, `https.port`, `http.private.port`, `https.private.port`) and Runtime
+  Manager properties go in its `allowedKeys` and `allowedPrefixes` options for the targets that
+  supply them. Add them there rather than disabling the rule.
+- SEC-017, SEC-018, and SEC-019 now read `${...}` and `p('...')` references inside CDATA, such as
+  inline DataWeave, instead of ignoring them. An inline `p('key')` now counts as a use for SEC-019,
+  and an inline `${secure::key}` is now checked by SEC-017 and SEC-018.
 
 ### Added
 
 - CFG-004 Unresolved Property Placeholder (warning): a `${key}` or `${secure::key}` in Mule XML that
   no file loaded by `configuration-properties` or `secure-properties:config`, global property,
-  platform secure property, or runtime-supplied key defines; a key missing from some
-  `${mule.env}` environment files; and a key referenced both with and without `secure::`.
+  platform secure property, or runtime-supplied key defines; a key missing for some values of a
+  patterned load such as `config/${region}/${mule.env}.yaml`; and, for a key read both with and
+  without `secure::`, the side that does not resolve.
 - PROJ-003 Namespace Without Dependency (error): a connector or module namespace used in Mule XML
   without its Maven dependency in `pom.xml`; a warning when a parent POM may supply it.
 - ERR-005 Undefined Error Type (error): a caught or mapped error type that is not a core Mule type,
   belongs to a connector the project does not use, or is a custom type never raised or mapped.
 - TEST-002 MUnit Version Parity (warning): `munit-maven-plugin`, `munit-runner`, and `munit-tools`
-  versions must match, and must be at least 3.1.0 when the project declares Java 17.
+  versions must match in Maven order, qualifiers included, and must be at least 3.1.0 when the
+  project declares Java 17. Managed versions are read; non-version values are never printed.
 - LOG-007 Sensitive Connector Logger (warning): `log4j2.xml` makes a credential- or session-writing
   category verbose, directly, through an ancestor, or through the root logger.
 - One connector table (`MULE_MODULES`) maps namespaces to artifactIds and error namespaces for
   PROJ-003 and ERR-005; one table lists the core Mule error types; one table lists the sensitive log
   categories. All five rules name keys, types, categories, and files, never values.
+- PROJ-003 and ERR-005 ignore `test`-scoped dependencies when deciding whether a connector is
+  available to `src/main/mule`.
+
+### Fixed
+
+- Configuration file paths under `src/main/resources` use `/` on every OS, so file patterns and
+  reported paths match on Windows.
 
 ### Documentation
 

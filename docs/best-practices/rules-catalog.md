@@ -317,7 +317,8 @@ from `on-error-continue` and `on-error-propagate` `type` (comma-separated lists 
 - a `MULE:` type, or a type with no namespace, that is not a core Mule error type such as `ANY`,
   `CONNECTIVITY`, `EXPRESSION`, `RETRY_EXHAUSTED`, or `SOURCE_RESPONSE_SEND`;
 - a connector error namespace such as `HTTP:`, `DB:`, or `SALESFORCE:` when no element of that
-  connector is used in `src/main/mule` and `pom.xml` declares no dependency for it;
+  connector is used in `src/main/mule` and `pom.xml` declares no dependency for it (a `test`-scoped
+  dependency does not count);
 - a custom type, in `APP` or a namespace the project itself raises or maps to, that is caught but
   never raised by `raise-error` or produced by an `error-mapping` `targetType`. `APP:*` passes when
   any `APP` type is raised.
@@ -1062,8 +1063,9 @@ particular connector logs; it flags the level.
 <AsyncLogger name="org.mule.extension.salesforce" level="INFO" />
 ```
 
-A logger that enables a category LOG-007 lists, such as `org.mule.extension.salesforce` or
-`HttpMessageLogger`, is reported by LOG-007 instead.
+When LOG-007 is enabled in the same scan, a logger that enables a category LOG-007 lists, such as
+`org.mule.extension.salesforce` or `HttpMessageLogger`, is reported by LOG-007 instead. With LOG-007
+disabled, LOG-006 still reports it.
 
 ---
 
@@ -1563,38 +1565,62 @@ key is defined in those files is CFG-004's check.
 a file loaded by `<configuration-properties>` or `<secure-properties:config>` defines the key, a
 `<global-property>` declares it, `mule-artifact.json` `secureProperties` lists it as a platform
 secure property, or the runtime supplies it. A key that resolves nowhere stops the application at
-startup. Reported once per key, at its first reference:
+startup. Reported once per key and form, at its first reference:
 
 - a plain `${key}` that no loaded file, global property, or platform key defines;
 - a plain `${key}` defined only in a secure properties file, which resolves only as
   `${secure::key}`;
-- a key that a `${mule.env}`-style file pattern defines for some environments but not others, for
-  example present in `dev.yaml` and missing from `prod.yaml`;
-- a `${secure::key}` defined in a scanned file, but not one `<secure-properties:config>` loads;
-- a key referenced both as `${secure::key}` and as `${key}`, since each form resolves from a
-  different source.
+- a key that a patterned load defines for some placeholder values but not others, for example
+  present in `config/eu/dev.yaml` and missing from `config/eu/prod.yaml` under
+  `config/${region}/${mule.env}.yaml`;
+- a `${secure::key}` defined in a scanned file, but not one `<secure-properties:config>` loads.
 
-File patterns such as `config/${mule.env}.yaml` are matched against `src/main/resources`; each file
-belongs to the most specific pattern matching it, so `${mule.env}.yaml` does not claim
-`secure-dev.yaml` when `secure-${mule.env}.yaml` loads it. A key in an unpatterned file counts for
-every environment. When a loaded file name matches no file in the repository, for example one under
-`${app.home}`, the key set is unknown and only the mixed-reference check runs. Nested placeholders,
-DataWeave expressions, and the `<secure-properties:config>` decryption `key` (supplied at startup)
-are not judged. A `${secure::key}` with no `<secure-properties:config>` or no definition at all is
-SEC-018's finding, and a platform key referenced with `secure::` is SEC-017's.
+A key read both as `${key}` and as `${secure::key}` is judged on each side: when the plain and the
+secure files both define it there is no finding, and otherwise only the side that does not resolve
+is reported, with a message naming both forms.
 
-Keys supplied by the runtime, the deployment target, or the JVM are allowed by default:
-`mule.env`, `mule.key`, `mule.home`, `mule.base`, `mule.clusterId`, `mule.nodeId`, `app.name`,
-`app.home`, `http.port`, `https.port`, `http.private.port`, `https.private.port`, `file.encoding`,
-`file.separator`, `line.separator`, `path.separator`, and keys starting with `anypoint.platform.`,
-`java.`, `user.`, or `os.`. Messages name keys and files, never values.
+File patterns are matched against `src/main/resources`, and every `${...}` in the path is bound
+separately, so each combination of values is checked. Each file belongs to the most specific pattern
+matching it, so `${mule.env}.yaml` does not claim `secure-dev.yaml` when `secure-${mule.env}.yaml`
+loads it. A key in an unpatterned file counts for every environment. When a load names a file that
+is not in the repository, for example one under `${app.home}`, keys its resolution path does not
+otherwise define are not judged, because that file may define them; keys the located files define
+are still checked across environments. References inside XML comments are ignored; references in
+CDATA, such as `p('key')` in inline DataWeave, are read. Nested placeholders, DataWeave expressions,
+and the `<secure-properties:config>` decryption `key` (supplied at startup) are not judged. A
+`${secure::key}` with no `<secure-properties:config>` or no definition at all is SEC-018's finding,
+and a platform key referenced with `secure::` is SEC-017's.
+
+Keys that resolve on every deployment target are allowed by default: `mule.env`, `mule.key`,
+`mule.home`, `mule.base`, `mule.clusterId`, `mule.nodeId`, `app.name`, `app.home`,
+`file.encoding`, `file.separator`, `line.separator`, `path.separator`, and keys starting with
+`anypoint.platform.`, `java.`, `user.`, or `os.`. Messages name keys and files, never values.
+
+Keys that only some targets supply are not in the default list. CloudHub and CloudHub 2.0 reserve
+`http.port`, `https.port`, `http.private.port`, and `https.private.port` and set their values
+([CloudHub](https://docs.mulesoft.com/cloudhub/cloudhub-manage-props),
+[CloudHub 2.0](https://docs.mulesoft.com/cloudhub-2/ch2-manage-props), verified 2026-10-27);
+Runtime Fabric and customer-hosted runtimes document no such reserved properties. Allow them in the
+configuration for a CloudHub target, along with any Runtime Manager property the deployment sets:
+
+```json
+{
+  "rules": {
+    "CFG-004": {
+      "options": {
+        "allowedKeys": ["http.port", "https.port", "http.private.port", "https.private.port"]
+      }
+    }
+  }
+}
+```
 
 **Options:**
 
-| Option            | Default | Description                                                          |
-| ----------------- | ------- | -------------------------------------------------------------------- |
-| `allowedKeys`     | `[]`    | Extra full key names supplied at deployment, such as Runtime Manager |
-| `allowedPrefixes` | `[]`    | Extra key prefixes supplied at deployment                            |
+| Option            | Default | Description                                                                 |
+| ----------------- | ------- | --------------------------------------------------------------------------- |
+| `allowedKeys`     | `[]`    | Extra full key names the deployment target supplies, such as CloudHub ports |
+| `allowedPrefixes` | `[]`    | Extra key prefixes the deployment target supplies                           |
 
 **Example:**
 
@@ -1604,7 +1630,7 @@ Keys supplied by the runtime, the deployment target, or the JVM are allowed by d
 <!-- ❌ Bad - partner.host is in config/dev.yaml but not config/prod.yaml -->
 <http:request-connection host="${partner.host}" />
 
-<!-- ❌ Bad - the same key read through both resolution paths, in two configs -->
+<!-- ❌ Bad - only the secure file defines db.password, so the plain reference fails -->
 <db:generic-connection password="${secure::db.password}" />
 <db:generic-connection password="${db.password}" />
 ```
@@ -2431,12 +2457,13 @@ unused declaration left by Studio is not reported.
 
 The namespace-to-artifactId map is one table in the source (`MULE_MODULES`), covering HTTP,
 Database, Salesforce, VM, Anypoint MQ, Object Store, File, FTP, SFTP, Email, JMS, Sockets, Web
-Service Consumer, Kafka, LDAP, Crypto, Validation, APIKit, APIKit for SOAP, JSON, XML, Java,
-Scripting, Compression, Secure Configuration Properties, OAuth, Spring, and Tracing. Runtime
-namespaces (`core`, `ee/core`, `documentation`, `batch`, `tls`, `api-gateway`) need no dependency,
-and MUnit namespaces belong to `src/test`. Any listed artifactId satisfies the check, whatever its
-groupId. When the POM declares a `<parent>`, the dependency may be inherited, so the finding is a
-warning.
+Service Consumer, Kafka, LDAP, Cryptography (`.../schema/mule/cryptography`,
+`mule-cryptography-module`), Validation, APIKit, APIKit for SOAP, JSON, XML, Java, Scripting,
+Compression, Secure Configuration Properties, OAuth, Spring, and Tracing. Runtime namespaces
+(`core`, `ee/core`, `documentation`, `batch`, `tls`, `api-gateway`) need no dependency, and MUnit
+namespaces belong to `src/test`. Any listed artifactId satisfies the check, whatever its groupId,
+except a `test`-scoped dependency, which is on the MUnit classpath only. When the POM declares a
+`<parent>`, the dependency may be inherited, so the finding is a warning.
 
 **Options:**
 
@@ -2493,12 +2520,19 @@ namespaces, and ignored-only suites do not satisfy the check. Libraries are skip
 **Description:** The `munit-maven-plugin`, `munit-runner`, and `munit-tools` are released together
 and must share one version. The plugin version (or the `munit.version` property when the plugin
 has none) is the reference; each dependency with a different version is reported at its line in
-`pom.xml`. `${...}` versions are resolved from `<properties>`; a version that cannot be resolved is
-not judged.
+`pom.xml`. `${...}` versions are resolved from `<properties>`, and an artifact without `<version>`
+takes it from `<dependencyManagement>` or `<pluginManagement>`, reported at that entry's line.
+Versions compare in Maven order with qualifiers included, so `3.1.0-SNAPSHOT` differs from `3.1.0`.
+
+A value that is not valid version syntax, or that is resolved through a property named like a
+secret (for example `${anypoint.password}`), is not judged and is never printed. An unresolved
+version is not judged either.
 
 When `mule-artifact.json` `javaSpecificationVersions` includes `17`, or a POM property
 (`java.version`, `maven.compiler.release`, `maven.compiler.source`, `maven.compiler.target`) is
-`17`, each MUnit artifact below 3.1.0 is reported: MUnit 3.1.0 (released 2024-01-07) is the first
+`17`, each MUnit artifact below 3.1.0 in Maven order is reported, including pre-releases such as
+`3.1.0-SNAPSHOT` and `3.1.0-rc1` (a numeric build such as `3.1.0-1` sorts after `3.1.0`, as in Maven):
+MUnit 3.1.0 (released 2024-01-07) is the first
 release whose compatibility table lists Java 17. Source:
 [MUnit 3.1.0 release notes](https://archive.docs.mulesoft.com/release-notes/munit/munit-3.1.0-release-notes),
 verified 2026-10-27.
