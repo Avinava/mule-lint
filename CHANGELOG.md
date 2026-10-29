@@ -33,6 +33,9 @@
 - Parse-error fallback positions used by automation are not presented as measured line
   numbers in the HTML report. Automation contracts remain unchanged.
 
+- Included reviewed Dependabot updates: AMF client 5.15.0, jsdom 27.4.0, Knip 6.43.0,
+  and Lefthook 2.2.2.
+
 ### Security
 
 - Updated transitive `@hono/node-server` from 2.1.0 to 2.1.5 within the MCP SDK's supported
