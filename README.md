@@ -91,8 +91,7 @@ The report embeds its assets and works offline, with light and dark themes.
 
 Screenshots use the [sample project](examples/sample-orders-system-api). Generated reports
 can contain local paths and source details; review them before sharing. See the
-[HTML report guide](docs/output-formats.md#html) for details. The redesigned interface is
-included in this source tree; screenshots may differ from the latest published npm release.
+[HTML report guide](docs/output-formats.md#html) for details. These screenshots show the HTML report in version 2.3.0.
 
 ## What a finding means
 
@@ -178,7 +177,7 @@ Pin the package version so local and CI scans use the same rules:
 
 ```yaml
 - name: Scan Mule project
-  run: npx -y @sfdxy/mule-lint@2.2.0 . --profile recommended --fail-on-warning
+  run: npx -y @sfdxy/mule-lint@2.3.0 . --profile recommended --fail-on-warning
 ```
 
 For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integration](docs/best-practices/ci-cd.md).
@@ -188,7 +187,7 @@ For GitHub annotations, generate SARIF and upload it as shown in [CI/CD integrat
 mule-lint includes a local MCP server with tools for full-project analysis, snippet validation, rule explanations, XML formatting, and API contract validation:
 
 ```bash
-npx -y @sfdxy/mule-lint@2.2.0 mcp
+npx -y @sfdxy/mule-lint@2.3.0 mcp
 ```
 
 It uses standard input/output and needs no credentials. Host-specific setup is in the [MCP guide](docs/mcp-design.md).
