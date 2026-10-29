@@ -70,6 +70,30 @@ mule-lint format ./src/main/mule
 
 Linting is read-only. The `format` command is the only command above that changes source files; use `format --check` for a read-only preview.
 
+## Explore the HTML report
+
+```bash
+mule-lint . --profile recommended --format html --output mule-lint-report.html
+```
+
+This writes `mule-lint-report.html` in the current directory. Open it locally to review
+Overview, Findings, Files, Rules, and Architecture. Search and group findings, open a
+finding for its location and suggested fix, or export the filtered results as CSV.
+The report embeds its assets and works offline, with light and dark themes.
+
+**Overview — scan outcome, severity, priorities, and quality grades**
+
+![HTML report Overview from the synthetic Orders System API](docs/linter/images/html-report-dashboard.png)
+
+**Findings — severity filters, grouping, and complete finding details**
+
+![HTML report Findings from the synthetic Orders System API](docs/linter/images/html-report-issues.png)
+
+Screenshots use the [sample project](examples/sample-orders-system-api). Generated reports
+can contain local paths and source details; review them before sharing. See the
+[HTML report guide](docs/output-formats.md#html) for details. The redesigned interface is
+included in this source tree; screenshots may differ from the latest published npm release.
+
 ## What a finding means
 
 ```text

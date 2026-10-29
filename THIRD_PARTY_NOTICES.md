@@ -13,12 +13,8 @@ HTML reports embed the following browser dependencies and their complete license
 texts. They make no network requests for scripts, styles, fonts or connector icons.
 Connector documentation links open only when the reader follows them.
 
-- Chart.js 4.5.1 — MIT; <https://github.com/chartjs/Chart.js>
-- @kurkle/color 0.3.4 — MIT; <https://github.com/kurkle/color>
-- Tabulator 6.2.1 — MIT; <https://github.com/olifolkerd/tabulator>
-- Tailwind CSS 4.3.3 generated utilities — MIT; <https://github.com/tailwindlabs/tailwindcss>
-- Inter — SIL Open Font License 1.1; <https://github.com/rsms/inter>
-- JetBrains Mono — SIL Open Font License 1.1; <https://github.com/JetBrains/JetBrainsMono>
+- Geist — SIL Open Font License 1.1; <https://github.com/vercel/geist-font>
+- Geist Mono — SIL Open Font License 1.1; <https://github.com/vercel/geist-font>
 
 Fontsource packages pin the distributed font binaries. Browser packages are build
 inputs; they are bundled into generated report assets rather than required from a

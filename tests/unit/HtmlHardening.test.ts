@@ -61,9 +61,9 @@ describe('HtmlFormatter accessibility and offline packaging', () => {
   const html = formatHtml(report, [hostileRule]);
 
   it('labels the search box and exposes the side panel as a dialog', () => {
-    expect(html).toContain('aria-label="Search issues"');
-    expect(html).toContain('role="dialog"');
-    expect(html).toContain('aria-label="Close details"');
+    expect(html).toContain('aria-label="Search findings"');
+    expect(html).toContain('<dialog');
+    expect(html).toContain('aria-label="Close finding"');
     expect(html).toContain('Escape');
   });
 

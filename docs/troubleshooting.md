@@ -63,14 +63,16 @@ mule-lint . --profile recommended
 
 Group findings by rule in the HTML report. Fix genuine errors, then review repeated warnings as a team. Prefer changing severity to `info` for a deliberate exception; disable a rule only when it cannot apply to the project.
 
-## HTML opens without charts or a table
+<span id="html-opens-without-charts-or-a-table"></span>
 
-New reports embed their interactive assets and do not need network access. Regenerate an old
-report with a version supporting offline output; older releases used public CDNs. If a current
-report cannot initialize its charts or table, findings remain available in the fallback list
-with search and CSV export. Keep the original file intact, inspect browser errors and regenerate
-it from the source. Report loading does not upload lint data. JavaScript must be enabled for
-interactive controls; a script-disabled browser is not the same as a missing chart library.
+## HTML report views do not appear
+
+Current reports embed their interactive assets and work offline. Open the original HTML
+file in a supported browser with JavaScript enabled. If the views fail to initialize,
+the scan summary and diagnostics remain readable; check the browser console and regenerate
+the report from source. Interactive search, grouped findings, and CSV export require the
+client script to initialize successfully. Report loading does not upload lint data.
+Older reports may require public CDN access; regenerate them with an offline-capable version.
 
 ## The MCP server appears to hang on first use
 

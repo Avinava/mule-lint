@@ -14,13 +14,22 @@ function enrichFiles(report: LintReport, rules: Rule[], contract: ReportContract
       .filter((finding) => (finding.location.path ?? 'Project Structure') === relativePath)
       .map((finding) => ({
         ...finding,
-        line: finding.location.line ?? 0,
-        column: finding.location.column,
+        // The automation projection uses line 1 for parse failures; that is not a measured source location.
+        location:
+          finding.ruleId === 'PARSE-ERROR'
+            ? { ...finding.location, line: undefined, column: undefined }
+            : finding.location,
+        line: finding.ruleId === 'PARSE-ERROR' ? 0 : (finding.location.line ?? 0),
+        column: finding.ruleId === 'PARSE-ERROR' ? undefined : finding.location.column,
         category: finding.category ?? 'General',
-        ruleDescription: rulesById.get(finding.ruleId)?.description ?? 'Analysis diagnostic',
+        ruleDescription:
+          rulesById.get(finding.ruleId)?.description ??
+          (finding.ruleId === 'PARSE-ERROR'
+            ? 'The XML file could not be parsed.'
+            : 'Rule description not supplied.'),
         ruleName: rulesById.get(finding.ruleId)?.name ?? finding.ruleId,
         issueType:
-          finding.issueType ?? (finding.ruleId === 'PARSE-ERROR' ? 'diagnostic' : 'code-smell'),
+          finding.issueType ?? (finding.ruleId === 'PARSE-ERROR' ? 'diagnostic' : 'unknown'),
         file: relativePath,
       })),
   }));
@@ -34,6 +43,8 @@ export function buildClientData(report: LintReport, rules: Rule[], contract: Rep
   const projectName = report.projectRoot.split(/[\\/]/).filter(Boolean).pop() ?? 'MuleSoft Project';
 
   return {
+    metricsAvailable: Boolean(report.metrics),
+    gateDetails: report.gate,
     metadata: {
       projectName,
       projectRoot: report.projectRoot,
@@ -56,23 +67,7 @@ export function buildClientData(report: LintReport, rules: Rule[], contract: Rep
       description: r.description,
       issueType: r.issueType ?? 'code-smell',
     })),
-    metrics: report.metrics ?? {
-      flowCount: 0,
-      subFlowCount: 0,
-      dwTransformCount: 0,
-      connectorConfigCount: 0,
-      httpListenerCount: 0,
-      connectorTypes: [],
-      errorHandlerCount: 0,
-      choiceRouterCount: 0,
-      apiEndpoints: [],
-      environments: [],
-      securityPatterns: [],
-      externalServices: [],
-      schedulers: [],
-      fileComplexity: {},
-      flowComplexityData: [],
-    },
+    metrics: report.metrics,
   };
 }
 

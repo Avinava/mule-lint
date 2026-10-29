@@ -64,21 +64,15 @@ describe('Formatters', () => {
       const output = formatHtml(mockReport);
 
       expect(output).toContain('<!DOCTYPE html>');
-      expect(output).toContain('Mule-Lint');
+      expect(output).toContain('mule-lint report');
       expect(output).toContain('file1.xml');
       expect(output).toContain('Test error message');
       expect(output).toContain('TEST-001');
-      // New format uses Tabulator and Tailwind
-      expect(output).toContain('issues-table');
-      expect(output).toContain('global-search');
-      expect(output).toContain('chart-severity');
-      expect(output).toContain('Findings to review');
+      expect(output).toContain('report-app');
       expect(output).toContain('execution-status');
-      expect(output).toContain('Export visible CSV');
-      expect(output).toContain('Select a row to see the complete message');
+      expect(output).toContain('finding-dialog');
       expect(output).not.toMatch(/<script[^>]+src=/);
       expect(output).toContain('Browser dependency licenses:');
-      expect(output).toContain('issues-table');
     });
 
     it('should include parse error files in the report data', () => {
@@ -115,7 +109,7 @@ describe('Formatters', () => {
       });
 
       expect(output).toContain('"filesScanned":3');
-      expect(output).toContain('>3 files</strong>');
+      expect(output).toContain('3 files</code>');
     });
   });
 
