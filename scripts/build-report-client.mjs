@@ -1,14 +1,12 @@
 import { build } from 'esbuild';
-import postcss from 'postcss';
-import tailwind from '@tailwindcss/postcss';
 import { readFile, mkdir, writeFile, copyFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const fontRoots = {
-  inter: path.dirname(require.resolve('@fontsource/inter/package.json')),
-  'jetbrains-mono': path.dirname(require.resolve('@fontsource/jetbrains-mono/package.json')),
+  geist: path.dirname(require.resolve('@fontsource/geist/package.json')),
+  'geist-mono': path.dirname(require.resolve('@fontsource/geist-mono/package.json')),
 };
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -24,21 +22,10 @@ const client = await build({
   legalComments: 'inline',
   write: false,
 });
-const stylesheet = path.join(root, 'src/formatters/html/client/styles.css');
-const utilityCss = await postcss([tailwind({ base: root, optimize: true })]).process(
-  await readFile(stylesheet, 'utf8'),
-  { from: stylesheet },
-);
-// The report's existing component CSS is unlayered. Preserve the previous
-// specificity-based cascade: otherwise its universal reset overrides v4 utilities.
-utilityCss.root.walkAtRules('layer', (rule) => {
-  if (rule.nodes) rule.replaceWith(...rule.nodes);
-  else rule.remove();
-});
 const fonts = [];
 for (const [packageName, family, weights] of [
-  ['inter', 'Inter', [400, 500, 600, 700]],
-  ['jetbrains-mono', 'JetBrains Mono', [400, 500]],
+  ['geist', 'Geist', [400, 500, 600, 700]],
+  ['geist-mono', 'Geist Mono', [400, 500, 600, 700]],
 ]) {
   for (const weight of weights) {
     const font = await readFile(
@@ -49,18 +36,10 @@ for (const [packageName, family, weights] of [
     );
   }
 }
-const tableCss = await readFile(
-  path.join(root, 'node_modules/tabulator-tables/dist/css/tabulator.min.css'),
-  'utf8',
-);
 const notices = [];
 for (const [label, licensePath] of [
-  ['Chart.js 4.5.1 (MIT)', 'chart.js/LICENSE.md'],
-  ['@kurkle/color (MIT)', '@kurkle/color/LICENSE.md'],
-  ['Tabulator 6.2.1 (MIT)', 'tabulator-tables/LICENSE'],
-  ['Tailwind CSS 4.3.3 (MIT)', 'tailwindcss/LICENSE'],
-  ['Inter (SIL OFL 1.1)', '@fontsource/inter/LICENSE'],
-  ['JetBrains Mono (SIL OFL 1.1)', '@fontsource/jetbrains-mono/LICENSE'],
+  ['Geist (SIL OFL 1.1)', '@fontsource/geist/LICENSE'],
+  ['Geist Mono (SIL OFL 1.1)', '@fontsource/geist-mono/LICENSE'],
 ])
   notices.push(`${label}\n${await readFile(path.join(root, 'node_modules', licensePath), 'utf8')}`);
 await writeFile(path.join(generated, 'client.mjs'), client.outputFiles[0].text);
@@ -68,8 +47,7 @@ await writeFile(
   path.join(generated, 'client.css'),
   [
     ...fonts,
-    utilityCss.root.toString(),
-    tableCss.replace(/\/\*# sourceMappingURL=.*?\*\//g, ''),
+    await readFile(path.join(root, 'src/formatters/html/client/redesign.css'), 'utf8'),
   ].join('\n'),
 );
 await writeFile(path.join(generated, 'licenses.txt'), notices.join('\n\n'));

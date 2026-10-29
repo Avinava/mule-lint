@@ -28,7 +28,7 @@ Use an absolute project path in long-running integrations so the result does not
 
 ## Shared analysis policy
 
-This section describes the unreleased shared-service addition; older published versions may
+This section describes the shared analysis service; older published versions may
 only expose the existing engine API.
 
 For the same explicit configuration, selection, baseline, gate and exit policy as the CLI,

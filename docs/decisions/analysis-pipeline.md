@@ -1,6 +1,6 @@
 # Shared analysis pipeline
 
-Status: accepted for the next unreleased implementation.
+Status: accepted and implemented.
 
 ## Decision
 

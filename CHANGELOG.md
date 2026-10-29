@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.3.0] - 2026-10-29
+
+### Upgrade notes
+
+- HTML reports now have Overview, Findings, Files, Rules, and Architecture views.
+  Findings uses searchable, filtered lists grouped by severity, file, rule, or category;
+  the previous table and column-filter interface is replaced. CSV export includes every
+  finding matching the active filters, including rows behind “Show more.”
+- CLI options, rule IDs and profiles, automation formats, exit codes, and library entry
+  points are unchanged. Generated reports can contain local paths and source details;
+  review them before sharing.
+
+### Added
+
+- A shared report design system with embedded Geist fonts, SVG icons, light/dark themes,
+  responsive layouts, accessible controls, and a full-width resource footer.
+- Finding details with source locations, suggestions, optional snippets, standards,
+  documentation links, copy feedback, and keyboard navigation.
+- Explicit unavailable and incomplete states for missing measurements and failed scans,
+  with grade explanations drawn from the existing scoring thresholds.
+- Browser checks for all five views, displayed values against actual scan data, offline
+  loading, mobile layouts, themes, drawer focus, and large finding collections.
+- Current sample-project screenshots in the README and documentation.
+
+### Changed
+
+- Replaced bundled Chart.js, Tabulator, Tailwind/PostCSS, Inter, and JetBrains Mono assets
+  with native browser rendering, shared CSS tokens, and embedded Geist/Geist Mono.
+- File findings follow source-line order, rule-category totals respect filters, and
+  unknown metrics and scope no longer appear as invented zero values.
+- Parse-error fallback positions used by automation are not presented as measured line
+  numbers in the HTML report. Automation contracts remain unchanged.
+
+- Included reviewed Dependabot updates: AMF client 5.15.0, jsdom 27.4.0, Knip 6.43.0,
+  and Lefthook 2.2.2.
+
+### Security
+
+- Updated transitive `@hono/node-server` from 2.1.0 to 2.1.5 within the MCP SDK's supported
+  range, resolving the audited static-path middleware-bypass advisory.
+
 ## [2.2.0] - 2026-10-27
 
 ### Upgrade notes

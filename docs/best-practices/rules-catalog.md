@@ -1,6 +1,6 @@
 # Rules Catalog
 
-> **Version:** 2.2.0
+> **Version:** 2.3.0
 > **Total Rules:** 113 implemented across 16 runtime categories
 > **Last Updated:** October 2026
 

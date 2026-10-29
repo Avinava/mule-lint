@@ -1,3 +1,5 @@
+import { buildClientData } from '../../src/formatters/html/reportData';
+import { createReportContract } from '../../src/core/ReportContract';
 import fixture from '../fixtures/reports/html-characterization.json';
 import { formatHtml } from '../../src/formatters/HtmlFormatter';
 import type { LintReport } from '../../src/types/Report';
@@ -9,31 +11,7 @@ describe('HTML report characterization', () => {
 
   it('preserves stable DOM hooks for navigation, filters, charts and dialogs', () => {
     const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
-    for (const id of [
-      'report-data',
-      'view-dashboard',
-      'view-issues',
-      'global-search',
-      'sidebar-toggle',
-      'sidebar-severity',
-      'sidebar-categories',
-      'sidebar-reset',
-      'clear-filters-btn',
-      'filtered-count',
-      'download-csv',
-      'export-btn',
-      'issues-table',
-      'issues-fallback',
-      'issue-empty-state',
-      'quality-ratings',
-      'chart-rules',
-      'chart-severity',
-      'chart-categories',
-      'chart-complexity',
-      'sidepanel',
-      'modal-overlay',
-      'theme-toggle',
-    ])
+    for (const id of ['report-data', 'report-app', 'finding-dialog', 'main-content'])
       expect(ids.has(id), id).toBe(true);
   });
 
@@ -72,4 +50,26 @@ describe('HTML report characterization', () => {
       ],
     });
   });
+});
+
+it('does not serialize invented inventory metrics for legacy reports', () => {
+  const legacy = structuredClone(report);
+  delete legacy.metrics;
+  delete legacy.scope;
+  const html = formatHtml(legacy, []);
+  const payload = html.match(
+    /<script id="report-data" type="application\/json">([\s\S]*?)<\/script>/,
+  )?.[1];
+  const data = JSON.parse(payload ?? '{}') as { metrics?: unknown };
+  expect(data.metrics).toBeUndefined();
+  expect(html).toContain('class="tab-count" >—</span>');
+});
+
+it('does not present the automation parse-error fallback line as a measured location', () => {
+  const data = buildClientData(report, [], createReportContract(report, []));
+  const failure = data.files
+    .flatMap((file) => file.issues)
+    .find((issue) => issue.ruleId === 'PARSE-ERROR');
+  expect(failure?.location.line).toBeUndefined();
+  expect(failure?.location.column).toBeUndefined();
 });

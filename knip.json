@@ -11,7 +11,7 @@
     "src/formatters/html/sections/index.ts",
     "src/formatters/html/styles/index.ts",
     "src/formatters/html/views/index.ts",
-    "src/formatters/html/client/styles.css"
+    "src/formatters/html/client/redesign.css"
   ],
   "ignoreDependencies": ["@prettier/plugin-xml"],
   "ignoreExportsUsedInFile": true,
